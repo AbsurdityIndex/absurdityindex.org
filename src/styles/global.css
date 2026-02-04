@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@theme {
+  /* Government Parody Colors */
+  --color-navy-900: #0A1628;
+  --color-navy-800: #121F36;
+  --color-navy-700: #1A2D4D;
+  --color-navy-600: #2D5986;
+  --color-navy-500: #3A6FA0;
+  --color-navy-400: #5A8FBF;
+
+  --color-gold-600: #A88B4A;
+  --color-gold-500: #C5A572;
+  --color-gold-400: #D4BB8A;
+  --color-gold-300: #E8D5B0;
+  --color-gold-200: #F0E4CA;
+  --color-gold-100: #F7EFE0;
+
+  --color-cream-100: #FAF7F0;
+  --color-cream-200: #F0EBE0;
+  --color-cream-300: #E0D8C8;
+
+  --color-parchment: #F5F0E1;
+
+  --color-red-800: #6B1111;
+  --color-red-700: #8B1A1A;
+  --color-red-600: #A52020;
+  --color-red-500: #C02828;
+
+  --color-green-700: #1A6B3A;
+  --color-green-600: #228B4A;
+
+  --color-yellow-500: #EAB308;
+  --color-orange-500: #F97316;
+  --color-red-600: #DC2626;
+
+  /* Typography */
+  --font-serif: 'Libre Caslon Text', 'Georgia', 'Times New Roman', serif;
+  --font-sans: 'Inter', 'system-ui', '-apple-system', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Spacing for ornamental elements */
+  --spacing-ornament: 2rem;
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-cream-100);
+  color: var(--color-navy-900);
+  line-height: 1.6;
+}
+
+/* Official document styling for MDX bill content */
+.bill-content {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--color-navy-900);
+}
+
+.bill-content h2 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-gold-300);
+}
+
+.bill-content h3 {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.bill-content p {
+  margin-bottom: 1rem;
+  text-align: justify;
+}
+
+.bill-content ul,
+.bill-content ol {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.bill-content li {
+  margin-bottom: 0.5rem;
+}
+
+.bill-content blockquote {
+  border-left: 3px solid var(--color-gold-500);
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: var(--color-navy-700);
+}
+
+/* Drop cap for first paragraph of bill text */
+.bill-content > p:first-of-type::first-letter {
+  font-family: var(--font-serif);
+  font-size: 3.5em;
+  float: left;
+  line-height: 0.8;
+  padding-right: 0.1em;
+  padding-top: 0.05em;
+  color: var(--color-navy-700);
+  font-weight: 700;
+}
+
+/* Ornamental gold rule */
+.gold-rule {
+  border: none;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-gold-500) 20%,
+    var(--color-gold-500) 80%,
+    transparent
+  );
+  margin: 1.5rem 0;
+}
+
+/* Rubber stamp overlay */
+.stamp-overlay {
+  position: absolute;
+  transform: rotate(-12deg);
+  opacity: 0.15;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 4px solid currentColor;
+  border-radius: 8px;
+  padding: 0.5rem 1.5rem;
+  pointer-events: none;
+}
+
+/* Ticker animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-animate {
+  animation: ticker-scroll 30s linear infinite;
+}
+
+/* Session badge pulse */
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.pulse-subtle {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}

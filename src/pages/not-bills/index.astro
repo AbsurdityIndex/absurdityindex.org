@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BillCard from '../../components/bills/BillCard.astro';
+import SearchBar from '../../components/ui/SearchBar.astro';
+import FilterPanel from '../../components/ui/FilterPanel.astro';
+import { getCollection } from 'astro:content';
+
+const allBills = await getCollection('bills');
+const notBills = allBills.filter((b) => b.data.billType === 'sensible' || b.data.billType === 'absurd');
+const categories = [...new Set(notBills.map((b) => b.data.category))].sort();
+
+const bills = notBills.sort(
+  (a, b) => b.data.dateIntroduced.getTime() - a.data.dateIntroduced.getTime()
+);
+---
+
+<BaseLayout title="Not Bills" description="Satirical parody bills that actually make sense — proposed by the Not-Congress, where common sense isn't an oxymoron.">
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <div class="text-center mb-8">
+      <p class="text-sm text-green-700 font-mono uppercase tracking-widest mb-2">From the Not-Congress</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Not Bills</h1>
+      <p class="text-navy-600 font-serif italic mt-2">Satirical legislation that actually makes sense — a novel concept</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <div class="mt-8 mb-6">
+      <SearchBar />
+    </div>
+
+    <FilterPanel categories={categories} currentType="not-bill" />
+
+    <div id="bills-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      {bills.map((bill) => (
+        <div class="bill-item" data-title={bill.data.title.toLowerCase()} data-category={bill.data.category.toLowerCase()} data-type={bill.data.billType} data-sponsor={bill.data.sponsor.toLowerCase()} data-tags={bill.data.tags.join(',').toLowerCase()}>
+          <BillCard bill={bill} />
+        </div>
+      ))}
+    </div>
+
+    <div id="no-results" class="hidden text-center py-16">
+      <p class="font-serif text-2xl text-navy-600 mb-2">No bills found.</p>
+      <p class="text-navy-400 italic">The Not-Congress is on recess. Again.</p>
+    </div>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('bill-search') as HTMLInputElement;
+    const billItems = document.querySelectorAll('.bill-item');
+    const noResults = document.getElementById('no-results');
+    const billsGrid = document.getElementById('bills-grid');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        billItems.forEach((item) => {
+          const el = item as HTMLElement;
+          const title = el.dataset.title || '';
+          const category = el.dataset.category || '';
+          const sponsor = el.dataset.sponsor || '';
+          const tags = el.dataset.tags || '';
+          const matches = !query || title.includes(query) || category.includes(query) || sponsor.includes(query) || tags.includes(query);
+          el.style.display = matches ? '' : 'none';
+          if (matches) visibleCount++;
+        });
+
+        if (noResults && billsGrid) {
+          noResults.classList.toggle('hidden', visibleCount > 0);
+          billsGrid.classList.toggle('hidden', visibleCount === 0);
+        }
+      });
+    }
+  </script>
+</BaseLayout>

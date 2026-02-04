@@ -1,0 +1,19 @@
+---
+interface Props {
+  text: string;
+  color?: string;
+}
+
+const { text, color = 'red-700' } = Astro.props;
+---
+
+<span
+  class:list={[
+    'absolute font-serif font-bold text-xl uppercase tracking-[0.1em] rotate-[-12deg] opacity-20 pointer-events-none select-none px-4 py-2 rounded-lg',
+    `text-${color}`,
+  ]}
+  style={`border: 4px double currentColor;`}
+  aria-hidden="true"
+>
+  {text}
+</span>

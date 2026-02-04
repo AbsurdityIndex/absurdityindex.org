@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BillCard from '../../components/bills/BillCard.astro';
+import FilterPanel from '../../components/ui/FilterPanel.astro';
+import { getCollection } from 'astro:content';
+
+const allBills = await getCollection('bills');
+const categories = [...new Set(allBills.map((b) => b.data.category))].sort();
+const bills = allBills
+  .filter((b) => b.data.billType === 'sensible')
+  .sort((a, b) => b.data.dateIntroduced.getTime() - a.data.dateIntroduced.getTime());
+---
+
+<BaseLayout title="Sensible Bills" description="Bills that actually make sense — proposed by the Not-Congress, where common sense isn't an oxymoron.">
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <div class="text-center mb-8">
+      <p class="text-sm text-green-700 font-mono uppercase tracking-widest mb-2">Bill Type</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Sensible Bills</h1>
+      <p class="text-navy-600 font-serif italic mt-2">Legislation that actually makes sense — a novel concept</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <FilterPanel categories={categories} currentType="sensible" />
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      {bills.map((bill) => (
+        <BillCard bill={bill} />
+      ))}
+    </div>
+  </div>
+</BaseLayout>

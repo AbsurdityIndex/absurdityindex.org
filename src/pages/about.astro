@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+---
+
+<BaseLayout title="About This Institution" description="Learn about the Not-Congress of the United States — a satirical institution dedicated to common sense legislation and cataloging real absurdity.">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <OfficialSeal size="160" />
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">About</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">The Not-Congress of the United States</h1>
+      <p class="text-navy-600 font-serif italic mt-3">Established whenever we felt like it</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <div class="bill-content">
+        <p>Be it known to all citizens, residents, and anyone who accidentally stumbled upon this website that the Absurdity Index was established for three noble purposes: to score real federal legislation on a scale of absurdity, to propose satirical legislation that actually makes sense, and to make congressional records accessible to humans who don't have a law degree.</p>
+
+        <h2>Our Mission</h2>
+        <p>In an era where actual legislative bodies debate the merits of declaring pizza a vegetable while simultaneously failing to agree that the sky is, in fact, blue, the Absurdity Index exists as a beacon of satirical hope and genuine transparency.</p>
+        <p>We accomplish our mission through three tracks:</p>
+        <ul>
+          <li><strong>Real Bills</strong> — Actual federal legislation scored on our Absurdity Index (1-10). We summarize them in plain language so you can understand what your representatives are actually doing with their 147 days in session.</li>
+          <li><strong>Not Bills</strong> — Satirical legislation so reasonable, so fundamentally obvious, that no actual Congress would ever pass it. These are the bills that make you say, "Wait, that isn't already a law?"</li>
+          <li><strong>Under Consideration</strong> — Bills currently sitting in committee, waiting for Congress to get around to them. Each links directly to Congress.gov so you can read the real thing.</li>
+        </ul>
+
+        <h2>Accuracy &amp; Editorial Policy</h2>
+        <p>Real bill data is sourced from publicly available congressional records. Our absurdity scores are <strong>subjective editorial ratings</strong> — they represent our opinion about the legislation, not statements of fact about any legislator's character or intent. Bill summaries may be simplified for readability and should always be verified at <a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer">Congress.gov</a>.</p>
+        <p>This site is a work in progress. If you spot an error or a bill that's been mischaracterized, let us know. We're committed to being funny without being unfair.</p>
+
+        <h2>Our Leadership</h2>
+        <p>The Not-Congress is led by absolutely nobody, which, upon reflection, represents a marked improvement over some alternatives. Our committees are staffed by an elite cadre of people who have strong opinions about things that don't matter and no opinions about things that do.</p>
+
+        <h3>Standing Committees</h3>
+        <ul>
+          <li><strong>Committee on Obvious Ideas</strong> — Chaired by someone whose name we've forgotten, tasked with identifying things everyone already knows.</li>
+          <li><strong>Subcommittee on Things Everyone Already Agrees On</strong> — Has never successfully held a meeting, as all members agree there's no point.</li>
+          <li><strong>Joint Committee on Pretending to Work</strong> — Our most active committee, meeting daily from 10:00 AM to 10:07 AM.</li>
+          <li><strong>Committee on Technology (avg. member age: 78)</strong> — Recently discovered that "the email" is not, in fact, a physical location.</li>
+          <li><strong>Ad Hoc Committee on Making More Committees</strong> — Their greatest achievement was establishing a subcommittee to study whether they needed more subcommittees.</li>
+        </ul>
+
+        <h2>Frequently Asked Questions</h2>
+
+        <h3>Is this a real government website?</h3>
+        <p>No. If this were a real government website, it would have taken four years and twelve billion dollars to build, the search function wouldn't work, and it would only be compatible with Internet Explorer 6.</p>
+
+        <h3>Are the "Real Absurdity" bills actually real?</h3>
+        <p>Yes. Every bill tagged as a "Real Absurdity" is based on actual legislation or laws. We provide source links so you can verify for yourself and experience the same existential crisis we did.</p>
+
+        <h3>Can I submit a bill?</h3>
+        <p>Absolutely. Unlike actual Congress, we encourage public participation and promise to read your submission within a reasonable timeframe, which is to say, faster than Congress reads anything.</p>
+
+        <h3>How do I contact my Not-Representative?</h3>
+        <p>You don't. They're on recess. They're always on recess.</p>
+
+        <blockquote>"Any resemblance to functioning governance is purely coincidental."<br/>— The Not-Congressional Record, Volume 1, Page 1 (and also the only page)</blockquote>
+      </div>
+    </div>
+
+    <Divider withSeal={true} />
+
+    <div class="text-center mt-8">
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4">Want to Participate?</h2>
+      <p class="text-navy-600 mb-6">Submit your own bill to the Not-Congress. All proposals will be given exactly as much consideration as real bills receive.</p>
+      <a href="/submit" class="inline-block px-8 py-3 bg-gold-500 text-navy-900 font-serif text-lg rounded hover:bg-gold-400 transition-colors font-bold">
+        Submit a Bill
+      </a>
+    </div>
+  </div>
+</BaseLayout>

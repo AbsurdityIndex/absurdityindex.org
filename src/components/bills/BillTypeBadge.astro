@@ -1,0 +1,28 @@
+---
+interface Props {
+  billType: 'sensible' | 'absurd' | 'real';
+}
+
+const { billType } = Astro.props;
+
+const config = {
+  sensible: {
+    label: 'Not Bill',
+    classes: 'bg-green-700 text-white',
+  },
+  absurd: {
+    label: 'Not Bill',
+    classes: 'bg-green-700 text-white',
+  },
+  real: {
+    label: 'Real Bill',
+    classes: 'bg-navy-600 text-white',
+  },
+};
+
+const { label, classes } = config[billType];
+---
+
+<span class:list={['inline-block text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full', classes]}>
+  {label}
+</span>

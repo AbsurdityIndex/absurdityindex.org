@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+
+interface Props {
+  pairedBillId: string;
+  currentBillType: 'sensible' | 'absurd' | 'real';
+}
+
+const { pairedBillId, currentBillType } = Astro.props;
+
+const allBills = await getCollection('bills');
+const paired = allBills.find((b) => b.id === pairedBillId);
+
+const isReal = currentBillType === 'real';
+const calloutLabel = isReal ? 'See the Not Bill' : 'See the Real Bill';
+const calloutDesc = isReal
+  ? 'Our satirical counterpart to this real legislation'
+  : 'The real bill that inspired this parody';
+const href = paired
+  ? (paired.data.billType === 'real' ? `/bills/${paired.id}` : `/not-bills/${paired.id}`)
+  : null;
+---
+
+{paired && href && (
+  <div class:list={[
+    'border rounded-lg p-4 mt-6',
+    isReal
+      ? 'bg-green-700/5 border-green-700/30'
+      : 'bg-navy-600/5 border-navy-600/30',
+  ]}>
+    <p class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-600 mb-1">
+      {calloutLabel}
+    </p>
+    <a
+      href={href}
+      class="font-serif text-lg font-bold text-navy-900 hover:text-navy-600 transition-colors"
+    >
+      {paired.data.billNumber} — {paired.data.title}
+    </a>
+    <p class="text-sm text-navy-600 italic mt-1">{calloutDesc}</p>
+  </div>
+)}

@@ -1,0 +1,122 @@
+---
+import MobileMenu from './MobileMenu.astro';
+
+const navLinks = [
+  { href: '/bills', label: 'Bills' },
+  { href: '/not-bills', label: 'Not Bills' },
+  { href: '/under-consideration', label: 'Under Consideration' },
+  { href: '/about', label: 'About' },
+];
+---
+
+<header class="sticky top-0 z-50 bg-navy-900">
+  <!-- Session bar -->
+  <div class="text-center py-1.5 bg-navy-800 border-b border-navy-700">
+    <p class="text-gold-400 text-xs tracking-widest uppercase font-sans">
+      119th Not-Congress &mdash; 1st Session of Futility
+    </p>
+  </div>
+
+  <!-- Main nav -->
+  <nav class="max-w-7xl mx-auto px-4 flex items-center justify-between h-14 sm:h-16">
+    <!-- Logo / site name -->
+    <a href="/" class="flex items-center gap-3 group">
+      <!-- Inline official seal SVG -->
+      <svg
+        class="w-8 h-8 text-gold-500 shrink-0"
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2" />
+        <circle cx="32" cy="32" r="24" stroke="currentColor" stroke-width="1.5" />
+        <circle cx="32" cy="32" r="18" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
+        <text
+          x="32"
+          y="30"
+          text-anchor="middle"
+          font-size="10"
+          font-weight="700"
+          fill="currentColor"
+          font-family="serif"
+        >NOT</text>
+        <text
+          x="32"
+          y="42"
+          text-anchor="middle"
+          font-size="7"
+          fill="currentColor"
+          font-family="serif"
+        >CONGRESS</text>
+        <!-- Stars at cardinal points -->
+        <circle cx="32" cy="4" r="1.5" fill="currentColor" />
+        <circle cx="32" cy="60" r="1.5" fill="currentColor" />
+        <circle cx="4" cy="32" r="1.5" fill="currentColor" />
+        <circle cx="60" cy="32" r="1.5" fill="currentColor" />
+      </svg>
+      <span class="font-serif font-bold text-lg sm:text-xl text-gold-400 group-hover:text-gold-300 transition-colors">
+        ABSURDITY INDEX
+      </span>
+    </a>
+
+    <!-- Desktop nav links -->
+    <ul class="hidden md:flex items-center gap-6">
+      {navLinks.map(({ href, label }) => (
+        <li>
+          <a
+            href={href}
+            class="text-gold-400 hover:text-gold-300 font-sans text-sm tracking-wide uppercase transition-colors"
+          >
+            {label}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <!-- Mobile hamburger -->
+    <button
+      id="mobile-menu-toggle"
+      class="md:hidden text-gold-400 hover:text-gold-300 transition-colors"
+      aria-label="Open menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+  </nav>
+
+  <hr class="gold-rule !my-0" />
+</header>
+
+<MobileMenu navLinks={navLinks} />
+
+<script>
+  const toggle = document.getElementById('mobile-menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const close = document.getElementById('mobile-menu-close');
+
+  function openMenu() {
+    menu?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    toggle?.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeMenu() {
+    menu?.classList.add('hidden');
+    document.body.style.overflow = '';
+    toggle?.setAttribute('aria-expanded', 'false');
+  }
+
+  toggle?.addEventListener('click', openMenu);
+  close?.addEventListener('click', closeMenu);
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu?.classList.contains('hidden')) {
+      closeMenu();
+    }
+  });
+</script>

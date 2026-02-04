@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BillCard from '../../components/bills/BillCard.astro';
+import FilterPanel from '../../components/ui/FilterPanel.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const allBills = await getCollection('bills');
+  const categories = [...new Set(allBills.map((b) => b.data.category))];
+
+  return categories.map((category) => {
+    const slug = category.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+    return {
+      params: { category: slug },
+      props: {
+        category,
+        bills: allBills
+          .filter((b) => b.data.category === category)
+          .sort((a, b) => b.data.dateIntroduced.getTime() - a.data.dateIntroduced.getTime()),
+        allCategories: categories,
+      },
+    };
+  });
+}
+
+const { category, bills, allCategories } = Astro.props;
+---
+
+<BaseLayout title={`${category} Bills`} description={`All Not-Congress bills in the ${category} category.`}>
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <div class="text-center mb-8">
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mb-2">Category</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">{category}</h1>
+      <p class="text-navy-600 font-serif italic mt-2">{bills.length} bill{bills.length !== 1 ? 's' : ''} in this category</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <FilterPanel categories={allCategories} currentCategory={category} />
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      {bills.map((bill) => (
+        <BillCard bill={bill} />
+      ))}
+    </div>
+
+    {bills.length === 0 && (
+      <div class="text-center py-16">
+        <p class="font-serif text-2xl text-navy-600 mb-2">No bills in this category.</p>
+        <p class="text-navy-400 italic">The committee hasn't gotten around to it yet.</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

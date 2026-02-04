@@ -1,0 +1,46 @@
+---
+interface Props {
+  navLinks: { href: string; label: string }[];
+}
+
+const { navLinks } = Astro.props;
+---
+
+<div
+  id="mobile-menu"
+  class="hidden fixed inset-0 z-[60] bg-navy-900/98 flex flex-col items-center justify-center"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Navigation menu"
+>
+  <!-- Close button -->
+  <button
+    id="mobile-menu-close"
+    class="absolute top-4 right-4 text-gold-400 hover:text-gold-300 transition-colors"
+    aria-label="Close menu"
+  >
+    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+
+  <!-- Nav links -->
+  <nav>
+    <ul class="flex flex-col items-center gap-8">
+      {navLinks.map(({ href, label }) => (
+        <li>
+          <a
+            href={href}
+            class="font-serif text-3xl text-gold-400 hover:text-gold-300 tracking-wide transition-colors"
+          >
+            {label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <p class="absolute bottom-8 text-navy-500 text-xs font-sans tracking-widest uppercase">
+    Session adjourned? Never.
+  </p>
+</div>

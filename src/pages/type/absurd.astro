@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BillCard from '../../components/bills/BillCard.astro';
+import FilterPanel from '../../components/ui/FilterPanel.astro';
+import { getCollection } from 'astro:content';
+
+const allBills = await getCollection('bills');
+const categories = [...new Set(allBills.map((b) => b.data.category))].sort();
+const bills = allBills
+  .filter((b) => b.data.billType === 'absurd')
+  .sort((a, b) => b.data.dateIntroduced.getTime() - a.data.dateIntroduced.getTime());
+---
+
+<BaseLayout title="Real Absurdities" description="These aren't jokes — these are real laws and bills that actually exist. We couldn't make this stuff up if we tried.">
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <div class="text-center mb-8">
+      <p class="text-sm text-red-700 font-mono uppercase tracking-widest mb-2">Bill Type</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Real Absurdities</h1>
+      <p class="text-navy-600 font-serif italic mt-2">You can't make this stuff up — because someone already did, and it became law</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <FilterPanel categories={categories} currentType="absurd" />
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      {bills.map((bill) => (
+        <BillCard bill={bill} />
+      ))}
+    </div>
+  </div>
+</BaseLayout>

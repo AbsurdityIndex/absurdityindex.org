@@ -1,0 +1,138 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+---
+
+<BaseLayout title="Submit a Bill" description="Submit your own satirical bill to the Not-Congress. All proposals will be given exactly as much consideration as real bills receive.">
+  <div class="max-w-3xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <OfficialSeal size="100" />
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Citizen Submission</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Submit a Bill</h1>
+      <p class="text-navy-600 font-serif italic mt-3">Your voice matters here — unlike in actual Congress</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <form class="space-y-6" method="POST" data-netlify="true" name="bill-submission">
+        <div>
+          <label for="bill-title" class="block font-serif font-bold text-navy-900 mb-2">
+            Bill Title <span class="text-red-700">*</span>
+          </label>
+          <input
+            type="text"
+            id="bill-title"
+            name="title"
+            required
+            placeholder='e.g., "The Mandatory Nap Time for Adults Act"'
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-sans text-navy-900 placeholder:text-navy-400 focus:outline-none focus:border-gold-500 transition-colors"
+          />
+        </div>
+
+        <div>
+          <label for="bill-type" class="block font-serif font-bold text-navy-900 mb-2">
+            Bill Type <span class="text-red-700">*</span>
+          </label>
+          <select
+            id="bill-type"
+            name="type"
+            required
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-sans text-navy-900 focus:outline-none focus:border-gold-500 transition-colors"
+          >
+            <option value="">Select type...</option>
+            <option value="sensible">Sensible Bill — A law that actually makes sense</option>
+            <option value="absurd">Real Absurdity — A real law that's genuinely absurd</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="bill-category" class="block font-serif font-bold text-navy-900 mb-2">
+            Category <span class="text-red-700">*</span>
+          </label>
+          <select
+            id="bill-category"
+            name="category"
+            required
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-sans text-navy-900 focus:outline-none focus:border-gold-500 transition-colors"
+          >
+            <option value="">Select category...</option>
+            <option value="Technology">Technology</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Education">Education</option>
+            <option value="Environment">Environment</option>
+            <option value="Transportation">Transportation</option>
+            <option value="Finance">Finance</option>
+            <option value="Common Sense">Common Sense</option>
+            <option value="Food & Drink">Food & Drink</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="bill-summary" class="block font-serif font-bold text-navy-900 mb-2">
+            Summary <span class="text-red-700">*</span>
+          </label>
+          <textarea
+            id="bill-summary"
+            name="summary"
+            required
+            rows="3"
+            placeholder="A brief description of what this bill does and why it's either genius or genuinely absurd..."
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-sans text-navy-900 placeholder:text-navy-400 focus:outline-none focus:border-gold-500 transition-colors"
+          ></textarea>
+        </div>
+
+        <div>
+          <label for="bill-text" class="block font-serif font-bold text-navy-900 mb-2">
+            Full Bill Text
+          </label>
+          <p class="text-sm text-navy-600 mb-2">Write the bill in the most bureaucratic, overly-formal language you can muster. Bonus points for unnecessary subsections.</p>
+          <textarea
+            id="bill-text"
+            name="text"
+            rows="8"
+            placeholder="Be it enacted by the Not-Congress of the United States..."
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-serif text-navy-900 placeholder:text-navy-400 focus:outline-none focus:border-gold-500 transition-colors"
+          ></textarea>
+        </div>
+
+        <div>
+          <label for="bill-source" class="block font-serif font-bold text-navy-900 mb-2">
+            Real Source URL <span class="text-navy-400 font-normal">(for Real Absurdities only)</span>
+          </label>
+          <input
+            type="url"
+            id="bill-source"
+            name="realSource"
+            placeholder="https://en.wikipedia.org/wiki/..."
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-sans text-navy-900 placeholder:text-navy-400 focus:outline-none focus:border-gold-500 transition-colors"
+          />
+        </div>
+
+        <div>
+          <label for="sponsor-name" class="block font-serif font-bold text-navy-900 mb-2">
+            Your Pen Name <span class="text-navy-400 font-normal">(optional)</span>
+          </label>
+          <input
+            type="text"
+            id="sponsor-name"
+            name="sponsor"
+            placeholder='e.g., "Rep. Ben There (I-Done That)"'
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-sans text-navy-900 placeholder:text-navy-400 focus:outline-none focus:border-gold-500 transition-colors"
+          />
+        </div>
+
+        <div class="pt-4">
+          <button
+            type="submit"
+            class="w-full px-8 py-4 bg-navy-800 text-gold-300 font-serif text-lg font-bold rounded hover:bg-navy-700 transition-colors"
+          >
+            Submit to the Not-Congress
+          </button>
+          <p class="text-center text-sm text-navy-400 mt-3 italic">
+            Your bill will be reviewed by our committee, which meets every other leap year.
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</BaseLayout>

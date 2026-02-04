@@ -1,0 +1,56 @@
+---
+interface Props {
+  categories: string[];
+  currentCategory?: string;
+  currentType?: string;
+}
+
+const { categories, currentCategory, currentType } = Astro.props;
+
+const typeFilters = [
+  { label: 'All Bills', href: '/bills', value: 'real' },
+  { label: 'Not Bills', href: '/not-bills', value: 'not-bill' },
+];
+
+function categorySlug(cat: string) {
+  return cat.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+}
+---
+
+<nav class="flex flex-wrap items-center gap-2" aria-label="Filter bills">
+  {typeFilters.map(({ label, href, value }) => {
+    const isActive = currentType === value && !currentCategory;
+    return (
+      <a
+        href={href}
+        class:list={[
+          'inline-block text-xs font-sans font-semibold px-3 py-1.5 rounded-full border transition-colors',
+          isActive
+            ? 'bg-navy-800 text-white border-navy-800'
+            : 'border-navy-700 text-navy-700 hover:bg-navy-800 hover:text-white hover:border-navy-800',
+        ]}
+      >
+        {label}
+      </a>
+    );
+  })}
+
+  <span class="w-px h-5 bg-cream-300 mx-1" aria-hidden="true" />
+
+  {categories.map((cat) => {
+    const isActive = currentCategory === cat;
+    return (
+      <a
+        href={`/category/${categorySlug(cat)}`}
+        class:list={[
+          'inline-block text-xs font-sans font-semibold px-3 py-1.5 rounded-full border transition-colors',
+          isActive
+            ? 'bg-navy-800 text-white border-navy-800'
+            : 'border-navy-700 text-navy-700 hover:bg-navy-800 hover:text-white hover:border-navy-800',
+        ]}
+      >
+        {cat}
+      </a>
+    );
+  })}
+</nav>

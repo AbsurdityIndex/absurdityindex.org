@@ -1,0 +1,57 @@
+---
+interface Props {
+  score: number; // 1-10
+  compact?: boolean;
+}
+
+const { score, compact = false } = Astro.props;
+
+const clampedScore = Math.max(1, Math.min(10, Math.round(score)));
+
+function getLabel(s: number) {
+  if (s <= 3) return 'Business as Usual';
+  if (s <= 6) return 'Questionable';
+  if (s <= 8) return 'Your Tax Dollars';
+  return 'Fish on Meth';
+}
+
+function getColor(segment: number) {
+  if (segment <= 3) return 'bg-green-600';
+  if (segment <= 6) return 'bg-yellow-500';
+  if (segment <= 8) return 'bg-orange-500';
+  return 'bg-red-600';
+}
+
+const label = getLabel(clampedScore);
+---
+
+<div class:list={['absurdity-meter', compact && 'absurdity-meter--compact']}>
+  {!compact && (
+    <div class="flex items-baseline justify-between mb-1.5">
+      <span class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-700">
+        Absurdity Index
+      </span>
+      <span class="font-mono text-lg font-bold text-navy-900">{clampedScore}<span class="text-navy-500 text-sm">/10</span></span>
+    </div>
+  )}
+
+  <div class="flex gap-0.5" role="meter" aria-valuenow={clampedScore} aria-valuemin={1} aria-valuemax={10} aria-label={`Absurdity Index: ${clampedScore} out of 10 — ${label}`}>
+    {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
+      <div
+        class:list={[
+          compact ? 'h-1.5 rounded-sm' : 'h-2.5 rounded-sm',
+          'flex-1 transition-colors',
+          seg <= clampedScore ? getColor(seg) : 'bg-cream-300',
+        ]}
+      />
+    ))}
+  </div>
+
+  {!compact && (
+    <p class="text-xs font-sans italic text-navy-600 mt-1">{label}</p>
+  )}
+
+  {compact && (
+    <span class="text-xs font-mono font-bold text-navy-800 ml-1.5">{clampedScore}</span>
+  )}
+</div>

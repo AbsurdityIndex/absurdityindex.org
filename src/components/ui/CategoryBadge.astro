@@ -1,0 +1,23 @@
+---
+interface Props {
+  category: string;
+  linked?: boolean;
+}
+
+const { category, linked = true } = Astro.props;
+
+const slug = category.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+---
+
+{linked ? (
+  <a
+    href={`/category/${slug}`}
+    class="inline-block text-xs font-sans font-medium border border-navy-700 text-navy-700 px-2 py-0.5 rounded-full hover:bg-navy-800 hover:text-white transition-colors"
+  >
+    {category}
+  </a>
+) : (
+  <span class="inline-block text-xs font-sans font-medium border border-navy-700 text-navy-700 px-2 py-0.5 rounded-full">
+    {category}
+  </span>
+)}

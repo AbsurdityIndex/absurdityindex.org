@@ -1,0 +1,140 @@
+---
+import BillStatus from './BillStatus.astro';
+import AbsurdityMeter from './AbsurdityMeter.astro';
+
+interface Props {
+  sponsor: string;
+  cosponsors?: string[];
+  committee?: string;
+  status: string;
+  dateIntroduced: Date;
+  dateUpdated?: Date;
+  realSource?: string;
+  realJurisdiction?: string;
+  absurdityIndex?: number;
+  congressDotGovUrl?: string;
+  congressNumber?: number;
+  excerpt?: string;
+}
+
+const {
+  sponsor,
+  cosponsors = [],
+  committee,
+  status,
+  dateIntroduced,
+  dateUpdated,
+  realSource,
+  realJurisdiction,
+  absurdityIndex,
+  congressDotGovUrl,
+  congressNumber,
+  excerpt,
+} = Astro.props;
+
+function formatDate(date: Date) {
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+---
+
+<aside class="bg-parchment border border-gold-300 rounded p-5 space-y-4">
+  <h2 class="font-serif font-bold text-sm uppercase tracking-wider text-navy-800 border-b border-gold-300 pb-2">
+    Bill Information
+  </h2>
+
+  <dl class="space-y-3 text-sm">
+    <div>
+      <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Sponsor</dt>
+      <dd class="font-serif text-navy-900">{sponsor}</dd>
+    </div>
+
+    {cosponsors.length > 0 && (
+      <div>
+        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Cosponsors</dt>
+        <dd class="font-serif text-navy-900">{cosponsors.join(', ')}</dd>
+      </div>
+    )}
+
+    {committee && (
+      <div>
+        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Committee</dt>
+        <dd class="font-serif text-navy-900">{committee}</dd>
+      </div>
+    )}
+
+    <div>
+      <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide mb-1">Status</dt>
+      <dd>
+        <BillStatus status={status} />
+      </dd>
+    </div>
+
+    <div>
+      <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Date Introduced</dt>
+      <dd class="font-serif text-navy-900">{formatDate(dateIntroduced)}</dd>
+    </div>
+
+    {dateUpdated && (
+      <div>
+        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Last Updated</dt>
+        <dd class="font-serif text-navy-900">{formatDate(dateUpdated)}</dd>
+      </div>
+    )}
+
+    {realJurisdiction && (
+      <div>
+        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Real Jurisdiction</dt>
+        <dd class="font-serif text-navy-900">{realJurisdiction}</dd>
+      </div>
+    )}
+
+    {absurdityIndex && (
+      <div>
+        <AbsurdityMeter score={absurdityIndex} />
+      </div>
+    )}
+
+    {congressNumber && (
+      <div>
+        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Congress</dt>
+        <dd class="font-serif text-navy-900">{congressNumber}th Congress</dd>
+      </div>
+    )}
+
+    {realSource && (
+      <div class="pt-2 border-t border-gold-300">
+        <a
+          href={realSource}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1 text-xs font-sans font-semibold text-navy-600 hover:text-navy-800 transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Real Source
+        </a>
+      </div>
+    )}
+
+    {congressDotGovUrl && (
+      <div class="pt-2 border-t border-gold-300">
+        <a
+          href={congressDotGovUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1 text-xs font-sans font-semibold text-navy-600 hover:text-navy-800 transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          View on Congress.gov
+        </a>
+      </div>
+    )}
+  </dl>
+</aside>

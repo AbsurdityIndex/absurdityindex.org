@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BillHeader from '../../components/bills/BillHeader.astro';
+import BillMeta from '../../components/bills/BillMeta.astro';
+import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
+import PairedBillCallout from '../../components/bills/PairedBillCallout.astro';
+import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
+import Disclaimer from '../../components/ui/Disclaimer.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const bills = await getCollection('bills');
+  return bills
+    .filter((bill) => bill.data.billType === 'real')
+    .map((bill) => ({
+      params: { slug: bill.id },
+      props: { bill },
+    }));
+}
+
+const { bill } = Astro.props;
+const { Content } = await render(bill);
+const d = bill.data;
+---
+
+<BaseLayout title={`${d.billNumber} — ${d.title}`} description={d.summary}>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 relative overflow-hidden">
+      <CommitteeStamp text={d.status} />
+
+      <BillHeader
+        title={d.title}
+        billNumber={d.billNumber}
+        billType={d.billType}
+        status={d.status}
+      />
+
+      {d.absurdityIndex && (
+        <div class="max-w-xs mx-auto mb-8">
+          <AbsurdityMeter score={d.absurdityIndex} />
+        </div>
+      )}
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+        <div class="md:col-span-2">
+          <div class="bill-content">
+            <Content />
+          </div>
+
+          <Disclaimer context="bill-detail" />
+
+          {d.pairedBillId && (
+            <PairedBillCallout pairedBillId={d.pairedBillId} currentBillType={d.billType} />
+          )}
+        </div>
+
+        <aside>
+          <BillMeta
+            sponsor={d.sponsor}
+            cosponsors={d.cosponsors}
+            committee={d.committee}
+            status={d.status}
+            dateIntroduced={d.dateIntroduced}
+            dateUpdated={d.dateUpdated}
+            absurdityIndex={d.absurdityIndex}
+            congressDotGovUrl={d.congressDotGovUrl}
+            congressNumber={d.congressNumber}
+            excerpt={d.excerpt}
+          />
+        </aside>
+      </div>
+    </div>
+
+    <div class="text-center mt-8">
+      <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; Back to Real Bills
+      </a>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+---
+
+<BaseLayout title="H.R. 404 — Page Not Found" description="This page has been filibustered out of existence.">
+  <div class="min-h-[60vh] flex items-center justify-center px-4">
+    <div class="text-center max-w-2xl">
+      <OfficialSeal size="120" />
+
+      <div class="mt-8 mb-6">
+        <span class="font-mono text-lg text-gold-600 bg-navy-800 px-4 py-1 rounded">H.R. 404</span>
+      </div>
+
+      <h1 class="font-serif text-4xl md:text-5xl text-navy-900 font-bold mb-4">
+        Page Not Found Act
+      </h1>
+
+      <div class="gold-rule max-w-md mx-auto"></div>
+
+      <div class="bg-parchment rounded-lg p-8 mt-6 relative overflow-hidden">
+        <div class="stamp-overlay text-red-700 text-3xl top-4 right-4">
+          FILIBUSTERED
+        </div>
+
+        <p class="font-serif text-navy-800 text-lg leading-relaxed">
+          <em>Be it resolved</em> that the page you are looking for has been filibustered out of existence
+          by the Honorable Senator from the State of Confusion.
+        </p>
+        <p class="font-serif text-navy-600 mt-4">
+          The motion to locate this page was defeated 0-535, with all members voting "present"
+          (which is more attendance than we usually get).
+        </p>
+      </div>
+
+      <div class="mt-10 space-x-4">
+        <a href="/" class="inline-block px-6 py-3 bg-navy-800 text-gold-300 font-serif rounded hover:bg-navy-700 transition-colors">
+          Return to the Floor
+        </a>
+        <a href="/bills" class="inline-block px-6 py-3 border-2 border-navy-800 text-navy-800 font-serif rounded hover:bg-navy-800 hover:text-gold-300 transition-colors">
+          Browse Bills
+        </a>
+      </div>
+
+      <p class="text-navy-400 text-sm mt-8 italic">
+        "Any resemblance to a functioning URL is purely coincidental."
+      </p>
+    </div>
+  </div>
+</BaseLayout>

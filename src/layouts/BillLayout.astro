@@ -1,0 +1,103 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  frontmatter: {
+    billNumber: string;
+    title: string;
+    type: string;
+    status: string;
+    sponsor: string;
+    committee: string;
+    dateIntroduced: string;
+    description?: string;
+    [key: string]: any;
+  };
+}
+
+const { frontmatter } = Astro.props;
+
+const statusColors: Record<string, string> = {
+  introduced: 'text-navy-500',
+  'in-committee': 'text-gold-600',
+  passed: 'text-green-700',
+  vetoed: 'text-red-700',
+  enacted: 'text-green-700',
+  tabled: 'text-red-600',
+  filibustered: 'text-red-800',
+};
+
+const statusColor = statusColors[frontmatter.status?.toLowerCase()] ?? 'text-navy-700';
+
+const typeLabels: Record<string, string> = {
+  bill: 'Bill',
+  resolution: 'Resolution',
+  amendment: 'Amendment',
+  'joint-resolution': 'Joint Resolution',
+  act: 'Act',
+};
+
+const typeLabel = typeLabels[frontmatter.type?.toLowerCase()] ?? frontmatter.type;
+---
+
+<BaseLayout title={frontmatter.title} description={frontmatter.description}>
+  <div class="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+    <article class="bg-parchment rounded-lg shadow-lg p-6 sm:p-10 relative overflow-hidden">
+      <!-- Official header -->
+      <header class="text-center mb-8">
+        <p class="font-serif text-xs sm:text-sm tracking-[0.2em] uppercase text-navy-700 mb-4">
+          In the Not-Congress of the United States
+        </p>
+
+        <div class="flex items-center justify-center gap-3 mb-4">
+          <span class="inline-block bg-navy-800 text-gold-400 font-mono text-sm px-3 py-1 rounded">
+            {frontmatter.billNumber}
+          </span>
+          <span class="inline-block bg-gold-200 text-navy-800 font-sans text-xs uppercase tracking-wider px-3 py-1 rounded">
+            {typeLabel}
+          </span>
+        </div>
+
+        <h1 class="font-serif text-2xl sm:text-3xl font-bold text-navy-900 leading-tight">
+          {frontmatter.title}
+        </h1>
+      </header>
+
+      <hr class="gold-rule" />
+
+      <!-- Meta section -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-sans text-navy-700 my-6">
+        <div>
+          <span class="font-semibold uppercase tracking-wide text-xs text-navy-500">Sponsor</span>
+          <p class="mt-1">{frontmatter.sponsor}</p>
+        </div>
+        <div>
+          <span class="font-semibold uppercase tracking-wide text-xs text-navy-500">Committee</span>
+          <p class="mt-1">{frontmatter.committee}</p>
+        </div>
+        <div>
+          <span class="font-semibold uppercase tracking-wide text-xs text-navy-500">Status</span>
+          <p class={`mt-1 font-semibold uppercase tracking-wide ${statusColor}`}>
+            {frontmatter.status}
+          </p>
+        </div>
+        <div>
+          <span class="font-semibold uppercase tracking-wide text-xs text-navy-500">Date Introduced</span>
+          <p class="mt-1">{frontmatter.dateIntroduced}</p>
+        </div>
+      </div>
+
+      <hr class="gold-rule" />
+
+      <!-- Bill body (MDX content) -->
+      <div class="bill-content mt-8">
+        <slot />
+      </div>
+
+      <!-- Stamp overlay -->
+      <div class={`stamp-overlay text-4xl sm:text-5xl top-16 right-4 sm:right-10 ${statusColor}`}>
+        {frontmatter.status}
+      </div>
+    </article>
+  </div>
+</BaseLayout>

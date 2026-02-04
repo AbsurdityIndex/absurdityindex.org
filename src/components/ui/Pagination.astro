@@ -1,0 +1,61 @@
+---
+interface Props {
+  currentPage: number;
+  totalPages: number;
+  baseUrl: string;
+}
+
+const { currentPage, totalPages, baseUrl } = Astro.props;
+
+function pageUrl(page: number) {
+  if (page === 1) return baseUrl;
+  return `${baseUrl}/${page}`;
+}
+
+const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+const hasPrev = currentPage > 1;
+const hasNext = currentPage < totalPages;
+---
+
+<nav class="flex items-center justify-center gap-1" aria-label="Pagination">
+  <a
+    href={hasPrev ? pageUrl(currentPage - 1) : undefined}
+    class:list={[
+      'inline-flex items-center px-3 py-1.5 text-sm font-sans rounded transition-colors',
+      hasPrev
+        ? 'text-navy-700 hover:bg-cream-200'
+        : 'text-cream-300 pointer-events-none',
+    ]}
+    aria-disabled={!hasPrev}
+  >
+    &larr; Previous
+  </a>
+
+  {pages.map((page) => (
+    <a
+      href={pageUrl(page)}
+      class:list={[
+        'inline-flex items-center justify-center w-8 h-8 text-sm font-sans rounded transition-colors',
+        page === currentPage
+          ? 'bg-gold-500 text-white font-bold'
+          : 'text-navy-700 hover:bg-cream-200',
+      ]}
+      aria-current={page === currentPage ? 'page' : undefined}
+    >
+      {page}
+    </a>
+  ))}
+
+  <a
+    href={hasNext ? pageUrl(currentPage + 1) : undefined}
+    class:list={[
+      'inline-flex items-center px-3 py-1.5 text-sm font-sans rounded transition-colors',
+      hasNext
+        ? 'text-navy-700 hover:bg-cream-200'
+        : 'text-cream-300 pointer-events-none',
+    ]}
+    aria-disabled={!hasNext}
+  >
+    Next &rarr;
+  </a>
+</nav>

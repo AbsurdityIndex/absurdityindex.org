@@ -1,0 +1,43 @@
+---
+/**
+ * Under-construction banner styled as yellow caution tape.
+ * Includes a rotating joke about congressional work schedules.
+ */
+const jokes = [
+  "Under Construction — Congress averages 147 days in session per year. We're trying to match their work ethic.",
+  "Under Construction — The 118th Congress passed 27 laws in its first year. Our site has more pages than that.",
+  "Under Construction — Pardon our dust. Unlike Congress, we actually plan to finish.",
+  "Under Construction — Moving faster than a bipartisan bill in an election year.",
+  "Under Construction — We've been in session longer today than the average Friday in the House.",
+  "Under Construction — Our build pipeline has fewer delays than the legislative process.",
+];
+
+// Pick one based on day of year so it changes daily but stays consistent per build
+const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+const joke = jokes[dayOfYear % jokes.length];
+---
+
+<div class="construction-banner relative overflow-hidden bg-yellow-500 text-navy-900" role="status">
+  <div class="construction-stripe" aria-hidden="true"></div>
+  <div class="relative py-2 px-4 text-center">
+    <p class="text-xs sm:text-sm font-sans font-bold tracking-wide">
+      <span aria-hidden="true" class="mr-1">&#9888;</span>
+      {joke}
+      <span aria-hidden="true" class="ml-1">&#9888;</span>
+    </p>
+  </div>
+  <div class="construction-stripe" aria-hidden="true"></div>
+</div>
+
+<style>
+  .construction-stripe {
+    height: 6px;
+    background: repeating-linear-gradient(
+      -45deg,
+      #0A1628,
+      #0A1628 10px,
+      #EAB308 10px,
+      #EAB308 20px
+    );
+  }
+</style>

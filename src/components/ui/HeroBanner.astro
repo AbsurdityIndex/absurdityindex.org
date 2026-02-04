@@ -1,0 +1,47 @@
+---
+import OfficialSeal from './OfficialSeal.astro';
+---
+
+<section class="relative bg-navy-900 overflow-hidden">
+  <!-- Parchment texture overlay via CSS gradient -->
+  <div
+    class="absolute inset-0 opacity-[0.04]"
+    style="background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(245,240,225,0.3) 2px, rgba(245,240,225,0.3) 4px), repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(245,240,225,0.2) 2px, rgba(245,240,225,0.2) 4px);"
+    aria-hidden="true"
+  />
+
+  <div class="relative max-w-3xl mx-auto px-6 py-20 text-center">
+    <div class="flex justify-center mb-6">
+      <OfficialSeal size="140" />
+    </div>
+
+    <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-gold-400 tracking-tight mb-4">
+      THE ABSURDITY INDEX
+    </h1>
+
+    <p class="font-serif text-lg md:text-xl text-cream-200 italic mb-6">
+      Real bills. Real absurdity. Satirical common sense.
+    </p>
+
+    <div class="inline-block pulse-subtle mb-8">
+      <span class="font-sans text-xs uppercase tracking-[0.15em] text-gold-300 border border-gold-500/40 rounded-full px-4 py-1.5">
+        119th Not-Congress, 1st Session of Futility
+      </span>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-center gap-4">
+      <a
+        href="/bills"
+        class="inline-block font-sans font-semibold text-sm bg-gold-500 text-navy-900 px-6 py-2.5 rounded hover:bg-gold-400 transition-colors"
+      >
+        Browse Bills
+      </a>
+      <a
+        href="/submit"
+        class="inline-block font-sans font-semibold text-sm border-2 border-gold-500 text-gold-400 px-6 py-2.5 rounded hover:bg-gold-500/10 transition-colors"
+      >
+        Submit a Bill
+      </a>
+    </div>
+  </div>
+</section>

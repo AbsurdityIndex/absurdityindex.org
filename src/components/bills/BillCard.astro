@@ -1,0 +1,83 @@
+---
+import BillNumberBadge from './BillNumberBadge.astro';
+import BillTypeBadge from './BillTypeBadge.astro';
+import AbsurdityMeter from './AbsurdityMeter.astro';
+import CategoryBadge from '../ui/CategoryBadge.astro';
+
+interface Props {
+  bill: {
+    id: string;
+    data: {
+      title: string;
+      billNumber: string;
+      billType: 'sensible' | 'absurd' | 'real';
+      category: string;
+      sponsor: string;
+      status: string;
+      summary: string;
+      dateIntroduced: Date;
+      tags?: string[];
+      featured?: boolean;
+      absurdityIndex?: number;
+      pairedBillId?: string;
+    };
+  };
+}
+
+const { bill } = Astro.props;
+const { data } = bill;
+
+const isReal = data.billType === 'real';
+const detailHref = isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`;
+
+const formattedDate = new Date(data.dateIntroduced).toLocaleDateString('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+});
+---
+
+<article
+  class:list={[
+    'group relative bg-white border-l-4 rounded-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200',
+    data.featured ? 'border-l-gold-500 ring-1 ring-gold-300' : isReal ? 'border-l-navy-500' : 'border-l-gold-400',
+  ]}
+>
+  {data.featured && (
+    <div class="absolute inset-0 rounded-sm pointer-events-none bg-gradient-to-r from-gold-100/40 to-transparent" />
+  )}
+
+  <div class="relative p-5">
+    <div class="flex items-center justify-between mb-3">
+      <BillNumberBadge billNumber={data.billNumber} />
+      <BillTypeBadge billType={data.billType} />
+    </div>
+
+    <h3 class="font-serif text-lg font-bold text-navy-900 mb-2 leading-snug">
+      <a
+        href={detailHref}
+        class="hover:text-navy-600 transition-colors after:absolute after:inset-0"
+      >
+        {data.title}
+      </a>
+    </h3>
+
+    <p class="text-sm text-navy-700 leading-relaxed line-clamp-2 mb-4">
+      {data.summary}
+    </p>
+
+    {isReal && data.absurdityIndex && (
+      <div class="mb-4">
+        <AbsurdityMeter score={data.absurdityIndex} compact />
+      </div>
+    )}
+
+    <div class="flex items-center justify-between text-xs text-navy-600 pt-3 border-t border-cream-200">
+      <span class="font-sans font-medium">{data.sponsor}</span>
+      <div class="flex items-center gap-3">
+        <CategoryBadge category={data.category} linked={false} />
+        <time datetime={data.dateIntroduced.toISOString()}>{formattedDate}</time>
+      </div>
+    </div>
+  </div>
+</article>
