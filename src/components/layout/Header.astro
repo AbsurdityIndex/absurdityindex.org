@@ -27,6 +27,13 @@ const toolsDropdown = [
   { href: '/lobbyists', label: 'K Street' },
   { href: '/calendar', label: 'Session Calendar' },
 ];
+
+const currentPath = Astro.url.pathname;
+
+function isActivePath(href: string) {
+  if (href === '/') return currentPath === '/';
+  return currentPath === href || currentPath.startsWith(`${href}/`);
+}
 ---
 
 <header class="sticky top-0 z-50 bg-navy-900">
@@ -36,12 +43,12 @@ const toolsDropdown = [
   </div>
 
   <!-- Main nav -->
-  <nav class="max-w-7xl mx-auto px-4 flex items-center justify-between h-14 sm:h-16">
+  <nav class="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 min-[375px]:px-4 sm:h-16">
     <!-- Logo / site name -->
-    <a href="/" class="flex items-center gap-3 group">
+    <a href="/" class="group flex items-center gap-2 min-[375px]:gap-3">
       <!-- Inline official seal SVG -->
       <svg
-        class="w-8 h-8 text-gold-500 shrink-0"
+        class="h-7 w-7 shrink-0 text-gold-500 min-[375px]:h-8 min-[375px]:w-8"
         viewBox="0 0 64 64"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -73,8 +80,8 @@ const toolsDropdown = [
         <circle cx="4" cy="32" r="1.5" fill="currentColor" />
         <circle cx="60" cy="32" r="1.5" fill="currentColor" />
       </svg>
-      <span class="font-serif font-bold text-lg sm:text-xl text-gold-400 group-hover:text-gold-300 transition-colors">
-        ABSURDITY INDEX
+      <span class="font-serif font-bold text-sm text-gold-400 transition-colors group-hover:text-gold-300 min-[375px]:text-base sm:text-xl">
+        ABSURDITY INDEX™
       </span>
     </a>
 
@@ -84,7 +91,13 @@ const toolsDropdown = [
         <li>
           <a
             href={href}
-            class="text-gold-400 hover:text-gold-300 font-sans text-sm tracking-wide uppercase transition-colors"
+            aria-current={isActivePath(href) ? 'page' : undefined}
+            class:list={[
+              'font-sans text-sm tracking-wide uppercase transition-colors',
+              isActivePath(href)
+                ? 'text-gold-200'
+                : 'text-gold-400 hover:text-gold-300',
+            ]}
           >
             {label}
           </a>
@@ -94,7 +107,12 @@ const toolsDropdown = [
       <li id="tools-menu-container" class="relative">
         <button
           id="tools-menu-button"
-          class="text-gold-400 hover:text-gold-300 font-sans text-sm tracking-wide uppercase transition-colors flex items-center gap-1"
+          class:list={[
+            'font-sans text-sm tracking-wide uppercase transition-colors flex items-center gap-1',
+            toolsDropdown.some((item) => isActivePath(item.href))
+              ? 'text-gold-200'
+              : 'text-gold-400 hover:text-gold-300',
+          ]}
           aria-haspopup="true"
           aria-expanded="false"
           aria-controls="tools-menu"
@@ -115,7 +133,13 @@ const toolsDropdown = [
               <a
                 href={href}
                 role="menuitem"
-                class="block px-4 py-2 text-sm text-gold-300 hover:bg-navy-700 hover:text-gold-200 transition-colors"
+                aria-current={isActivePath(href) ? 'page' : undefined}
+                class:list={[
+                  'block px-4 py-2 text-sm transition-colors',
+                  isActivePath(href)
+                    ? 'bg-navy-700 text-gold-200'
+                    : 'text-gold-300 hover:bg-navy-700 hover:text-gold-200',
+                ]}
               >
                 {label}
               </a>
@@ -126,11 +150,11 @@ const toolsDropdown = [
     </ul>
 
     <!-- Utility icons -->
-    <div class="flex items-center gap-3 sm:gap-4">
+    <div class="flex items-center gap-1.5 min-[375px]:gap-2 sm:gap-3">
       <!-- Founding Documents -->
       <button
         id="founding-docs-trigger"
-        class="text-gold-400 hover:text-gold-300 transition-colors"
+        class="hidden rounded-md p-2 text-gold-400 transition-colors hover:bg-navy-800 hover:text-gold-300 focus:outline-none focus:ring-2 focus:ring-gold-400 sm:inline-flex"
         aria-label="Founding Documents"
         title="Constitution & Bill of Rights"
       >
@@ -145,7 +169,12 @@ const toolsDropdown = [
       <!-- Search icon -->
       <a
         href="/search"
-        class="text-gold-400 hover:text-gold-300 transition-colors"
+        class:list={[
+          'inline-flex rounded-md p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-gold-400 min-[375px]:p-2',
+          isActivePath('/search')
+            ? 'bg-navy-800 text-gold-200'
+            : 'text-gold-400 hover:bg-navy-800 hover:text-gold-300',
+        ]}
         aria-label="Search"
         title="Search bills"
       >
@@ -158,7 +187,7 @@ const toolsDropdown = [
       <!-- Dark mode toggle -->
     <button
       id="theme-toggle"
-      class="text-gold-400 hover:text-gold-300 transition-colors"
+      class="inline-flex rounded-md p-1.5 text-gold-400 transition-colors hover:bg-navy-800 hover:text-gold-300 focus:outline-none focus:ring-2 focus:ring-gold-400 min-[375px]:p-2"
       aria-label="Toggle dark mode"
       title="Toggle dark mode"
     >
@@ -173,26 +202,26 @@ const toolsDropdown = [
         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
       </svg>
     </button>
+      <!-- Mobile hamburger -->
+      <button
+        id="mobile-menu-toggle"
+        class="inline-flex items-center gap-1.5 rounded-md border border-navy-700 px-2 py-1.5 text-gold-300 transition-colors hover:border-gold-500 hover:text-gold-200 focus:outline-none focus:ring-2 focus:ring-gold-400 min-[375px]:px-2.5 min-[375px]:py-2 md:hidden"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <span class="hidden font-sans text-xs uppercase tracking-wider min-[375px]:inline">Menu</span>
+      </button>
     </div>
-
-    <!-- Mobile hamburger -->
-    <button
-      id="mobile-menu-toggle"
-      class="md:hidden text-gold-400 hover:text-gold-300 transition-colors"
-      aria-label="Open menu"
-      aria-expanded="false"
-      aria-controls="mobile-menu"
-    >
-      <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    </button>
   </nav>
 
   <hr class="gold-rule !my-0" />
 </header>
 
-<MobileMenu navLinks={[...navLinks, { href: '#tools', label: 'Tools ▾', isHeader: true }, ...toolsDropdown]} />
+<MobileMenu navLinks={navLinks} toolsLinks={toolsDropdown} currentPath={currentPath} />
 
 <script>
   const toolsMenuContainer = document.getElementById('tools-menu-container');
@@ -299,31 +328,209 @@ const toolsDropdown = [
     toolsMenuContainer?.addEventListener('mouseleave', () => closeToolsMenu());
   }
 
-  const toggle = document.getElementById('mobile-menu-toggle');
-  const menu = document.getElementById('mobile-menu');
-  const close = document.getElementById('mobile-menu-close');
+  const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileMenuPanel = document.getElementById('mobile-menu-panel');
+  const mobileMenuClose = document.getElementById('mobile-menu-close');
+  const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
+  const mobileMenuLinks = Array.from(document.querySelectorAll('[data-mobile-link]'));
+  const mobileSectionToggles = Array.from(document.querySelectorAll('[data-mobile-section-toggle]'));
 
-  function openMenu() {
-    menu?.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    toggle?.setAttribute('aria-expanded', 'true');
-  }
+  let isMobileMenuOpen = false;
+  let mobileCloseTimeoutId = null;
+  let previousFocusedElement = null;
 
-  function closeMenu() {
-    menu?.classList.add('hidden');
-    document.body.style.overflow = '';
-    toggle?.setAttribute('aria-expanded', 'false');
-  }
-
-  toggle?.addEventListener('click', openMenu);
-  close?.addEventListener('click', closeMenu);
-
-  // Close on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !menu?.classList.contains('hidden')) {
-      closeMenu();
+  function clearMobileCloseTimeout() {
+    if (mobileCloseTimeoutId !== null) {
+      window.clearTimeout(mobileCloseTimeoutId);
+      mobileCloseTimeoutId = null;
     }
+  }
+
+  function lockDocumentScroll() {
+    document.documentElement.classList.add('overflow-hidden');
+    document.body.classList.add('overflow-hidden');
+  }
+
+  function unlockDocumentScroll() {
+    document.documentElement.classList.remove('overflow-hidden');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  function getMobileFocusableElements() {
+    if (!mobileMenuPanel) return [];
+
+    const selector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex=\"-1\"])';
+    return Array.from(mobileMenuPanel.querySelectorAll(selector)).filter((element) => {
+      if (!(element instanceof HTMLElement)) return false;
+      if (element.hidden || element.closest('[hidden]')) return false;
+      const style = window.getComputedStyle(element);
+      return style.display !== 'none' && style.visibility !== 'hidden';
+    });
+  }
+
+  function setMobileSectionState(sectionName, expanded) {
+    const sectionToggle = document.querySelector(`[data-mobile-section-toggle=\"${sectionName}\"]`);
+    const section = document.querySelector(`[data-mobile-section=\"${sectionName}\"]`);
+    const icon = document.querySelector(`[data-mobile-section-icon=\"${sectionName}\"]`);
+
+    if (!sectionToggle || !section) return;
+
+    sectionToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    section.classList.toggle('hidden', !expanded);
+    icon?.classList.toggle('rotate-180', expanded);
+  }
+
+  function initializeMobileSections() {
+    const sectionNames = mobileSectionToggles
+      .map((sectionToggle) => sectionToggle.getAttribute('data-mobile-section-toggle'))
+      .filter((sectionName) => Boolean(sectionName));
+
+    const expandedSections = sectionNames.filter((sectionName) => {
+      const sectionToggle = document.querySelector(`[data-mobile-section-toggle=\"${sectionName}\"]`);
+      return sectionToggle?.getAttribute('aria-expanded') === 'true';
+    });
+
+    if (expandedSections.length > 1) {
+      expandedSections.slice(1).forEach((sectionName) => setMobileSectionState(sectionName, false));
+    }
+
+    mobileSectionToggles.forEach((sectionToggle) => {
+      const sectionName = sectionToggle.getAttribute('data-mobile-section-toggle');
+      if (!sectionName) return;
+
+      const expanded = sectionToggle.getAttribute('aria-expanded') === 'true';
+      setMobileSectionState(sectionName, expanded);
+
+      sectionToggle.addEventListener('click', () => {
+        const isExpanded = sectionToggle.getAttribute('aria-expanded') === 'true';
+        if (isExpanded) {
+          setMobileSectionState(sectionName, false);
+          return;
+        }
+
+        sectionNames.forEach((name) => {
+          if (name !== sectionName) {
+            setMobileSectionState(name, false);
+          }
+        });
+        setMobileSectionState(sectionName, true);
+      });
+    });
+  }
+
+  function finishMobileMenuClose(restoreFocus = true) {
+    if (!mobileMenu || !mobileMenuPanel) return;
+
+    mobileMenu.classList.add('hidden');
+    mobileMenu.setAttribute('aria-hidden', 'true');
+    mobileMenuToggle?.setAttribute('aria-expanded', 'false');
+    mobileMenuToggle?.setAttribute('aria-label', 'Open menu');
+    unlockDocumentScroll();
+
+    if (
+      restoreFocus &&
+      previousFocusedElement &&
+      previousFocusedElement instanceof HTMLElement &&
+      previousFocusedElement.isConnected
+    ) {
+      previousFocusedElement.focus();
+    }
+
+    previousFocusedElement = null;
+    clearMobileCloseTimeout();
+  }
+
+  function closeMobileMenu(options = {}) {
+    if (!mobileMenu || !mobileMenuPanel || !isMobileMenuOpen) return;
+
+    const { restoreFocus = true } = options;
+    isMobileMenuOpen = false;
+    document.removeEventListener('keydown', handleMobileMenuKeydown);
+    mobileMenuPanel.classList.add('translate-x-full');
+
+    const onTransitionEnd = (event) => {
+      if (event.target !== mobileMenuPanel) return;
+      finishMobileMenuClose(restoreFocus);
+    };
+
+    mobileMenuPanel.addEventListener('transitionend', onTransitionEnd, { once: true });
+    clearMobileCloseTimeout();
+    mobileCloseTimeoutId = window.setTimeout(() => finishMobileMenuClose(restoreFocus), 360);
+  }
+
+  function openMobileMenu() {
+    if (!mobileMenu || !mobileMenuPanel || isMobileMenuOpen) return;
+
+    clearMobileCloseTimeout();
+    isMobileMenuOpen = true;
+    closeToolsMenu();
+    previousFocusedElement = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    mobileMenu.classList.remove('hidden');
+    mobileMenu.setAttribute('aria-hidden', 'false');
+    mobileMenuToggle?.setAttribute('aria-expanded', 'true');
+    mobileMenuToggle?.setAttribute('aria-label', 'Close menu');
+    lockDocumentScroll();
+    document.addEventListener('keydown', handleMobileMenuKeydown);
+
+    requestAnimationFrame(() => {
+      mobileMenuPanel.classList.remove('translate-x-full');
+      const [firstFocusable] = getMobileFocusableElements();
+      (mobileMenuClose || firstFocusable)?.focus();
+    });
+  }
+
+  function handleMobileMenuKeydown(event) {
+    if (!isMobileMenuOpen) return;
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeMobileMenu();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const focusableElements = getMobileFocusableElements();
+    if (focusableElements.length === 0) return;
+
+    const first = focusableElements[0];
+    const last = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  mobileMenuToggle?.addEventListener('click', openMobileMenu);
+  mobileMenuClose?.addEventListener('click', () => closeMobileMenu());
+  mobileMenuBackdrop?.addEventListener('click', () => closeMobileMenu());
+
+  mobileMenuLinks.forEach((link) => {
+    link.addEventListener('click', () => closeMobileMenu({ restoreFocus: false }));
   });
+
+  const desktopMediaQuery = window.matchMedia('(min-width: 768px)');
+  const handleDesktopMediaChange = (event) => {
+    if (event.matches) {
+      closeMobileMenu({ restoreFocus: false });
+    }
+  };
+
+  if (typeof desktopMediaQuery.addEventListener === 'function') {
+    desktopMediaQuery.addEventListener('change', handleDesktopMediaChange);
+  } else if (typeof desktopMediaQuery.addListener === 'function') {
+    desktopMediaQuery.addListener(handleDesktopMediaChange);
+  }
+
+  initializeMobileSections();
 
   // Dark mode toggle
   const themeToggle = document.getElementById('theme-toggle');
@@ -349,5 +556,11 @@ const toolsDropdown = [
   const foundingDocsTrigger = document.getElementById('founding-docs-trigger');
   foundingDocsTrigger?.addEventListener('click', () => {
     document.dispatchEvent(new CustomEvent('open-founding-docs'));
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isToolsMenuOpen()) {
+      closeToolsMenu(true);
+    }
   });
 </script>

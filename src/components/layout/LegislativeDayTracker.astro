@@ -40,9 +40,23 @@ const featured = houseCalendarDays >= senateCalendarDays ?
   { chamber: 'House', data: house, calendarDays: houseCalendarDays } :
   { chamber: 'Senate', data: senate, calendarDays: senateCalendarDays };
 
-// Status emoji
-const statusEmoji = featured.data.status === 'session' ? '🟢' :
-                    featured.data.status === 'recess' ? '🟡' : '🔴';
+const statusMeta = featured.data.status === 'session'
+  ? {
+      badgeClasses: 'bg-green-900/50 text-green-300',
+      dotClass: 'bg-green-400',
+      label: 'In Session',
+    }
+  : featured.data.status === 'recess'
+    ? {
+        badgeClasses: 'bg-yellow-900/50 text-yellow-300',
+        dotClass: 'bg-yellow-400',
+        label: 'Recess',
+      }
+    : {
+        badgeClasses: 'bg-red-900/50 text-red-300',
+        dotClass: 'bg-red-400',
+        label: 'Adjourned',
+      };
 
 // The "day of week" that's been going on
 const legislativeDayOfWeek = featured.data.currentLegislativeDay.startDayOfWeek;
@@ -53,28 +67,33 @@ const efficiency = Math.round((featured.data.totalSessionDays / featured.data.to
 
 <div class="legislative-day-tracker">
   <!-- Visual calendar comparison -->
-  <div class="tracker-compact flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs font-mono">
+  <div class="tracker-compact flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] font-mono min-[375px]:text-xs">
     <!-- Your calendar -->
-    <span class="text-gold-300/80">
+    <span class="hidden text-gold-300/80 min-[375px]:inline">
       Your week: <span class="text-gold-200">Mon → Tue → Wed</span>
     </span>
 
-    <span class="text-gold-600">•</span>
+    <span class="hidden text-gold-600 min-[375px]:inline">•</span>
+
+    <span class="text-gold-300/80 min-[375px]:hidden">
+      Leg day: <span class="text-gold-400">{legislativeDayOfWeek.slice(0, 3)} → {legislativeDayOfWeek.slice(0, 3)}</span>
+      <span class="font-bold text-gold-500"> ({featured.calendarDays}d)</span>
+    </span>
 
     <!-- Congress calendar - show both chambers briefly -->
-    <span class="text-gold-300/80">
+    <span class="hidden text-gold-300/80 min-[375px]:inline">
       <span style="color: #60A5FA;">House</span>/<span style="color: #A78BFA;">Senate</span>:
       <span class="text-gold-400">{legislativeDayOfWeek.slice(0,3)} → {legislativeDayOfWeek.slice(0,3)} → {legislativeDayOfWeek.slice(0,3)}</span>
       <span class="text-gold-500 font-bold">({featured.calendarDays}d)</span>
     </span>
 
     <!-- Status badge -->
-    <span class={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide ${
-      featured.data.status === 'session' ? 'bg-green-900/50 text-green-400' :
-      featured.data.status === 'recess' ? 'bg-yellow-900/50 text-yellow-400' :
-      'bg-red-900/50 text-red-400'
-    }`}>
-      {statusEmoji} {featured.data.status}
+    <span class:list={[
+      'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+      statusMeta.badgeClasses,
+    ]}>
+      <span class:list={['h-1.5 w-1.5 rounded-full', statusMeta.dotClass]} aria-hidden="true" />
+      {statusMeta.label}
     </span>
 
     <!-- Info button -->

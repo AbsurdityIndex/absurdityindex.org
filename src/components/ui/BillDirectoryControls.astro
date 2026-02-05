@@ -71,7 +71,7 @@ function toCategorySlug(value: string) {
 
 <section
   id="bill-directory-controls"
-  class="mt-8 space-y-5 rounded-xl border border-gold-200 bg-white/75 p-4 backdrop-blur-sm md:p-5"
+  class="mt-6 space-y-4 rounded-xl border border-gold-200 bg-white/75 p-3 backdrop-blur-sm min-[375px]:p-4 min-[430px]:space-y-5 md:mt-8 md:p-5"
   data-default-sort={defaultSortValue}
   data-search-debounce-ms={searchDebounceMs}
   data-api-page-path={apiPagePath}
@@ -81,29 +81,31 @@ function toCategorySlug(value: string) {
   data-card-variant={cardVariant}
   data-directory-label={directoryLabel}
 >
-  <div class="flex flex-wrap items-center justify-between gap-3">
+  <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
     {tabs.length > 0 && (
-      <nav class="inline-flex flex-wrap items-center rounded-full border border-navy-700 bg-cream-100 p-1" aria-label="Directory views">
-        {tabs.map((tab) => (
-          <a
-            href={tab.href}
-            aria-current={tab.active ? 'page' : undefined}
-            class:list={[
-              'rounded-full px-4 py-1.5 text-sm font-sans font-semibold transition-colors',
-              tab.active ? 'bg-navy-800 text-white' : 'text-navy-700 hover:bg-cream-200',
-            ]}
-          >
-            {tab.label}
-          </a>
-        ))}
-      </nav>
+      <div class="hide-scrollbar w-full overflow-x-auto pb-1 sm:w-auto sm:overflow-visible sm:pb-0">
+        <nav class="inline-flex min-w-max items-center rounded-full border border-navy-700 bg-cream-100 p-1" aria-label="Directory views">
+          {tabs.map((tab) => (
+            <a
+              href={tab.href}
+              aria-current={tab.active ? 'page' : undefined}
+              class:list={[
+                'rounded-full px-3 py-1.5 text-[13px] font-sans font-semibold transition-colors min-[375px]:px-4 min-[375px]:text-sm',
+                tab.active ? 'bg-navy-800 text-white' : 'text-navy-700 hover:bg-cream-200',
+              ]}
+            >
+              {tab.label}
+            </a>
+          ))}
+        </nav>
+      </div>
     )}
 
-    <div class="flex items-center gap-2">
-      <label for="bill-sort" class="text-sm font-sans font-medium text-navy-700">Sort</label>
+    <div class="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
+      <label for="bill-sort" class="text-[13px] font-sans font-medium text-navy-700 min-[375px]:text-sm">Sort</label>
       <select
         id="bill-sort"
-        class="rounded-md border border-gold-300 bg-cream-100 px-3 py-1.5 text-sm text-navy-800 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-300"
+        class="w-full rounded-md border border-gold-300 bg-cream-100 px-3 py-2 text-base text-navy-800 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-300 min-[430px]:w-auto min-[430px]:min-w-[10rem] sm:text-sm"
       >
         {sortOptions.map((option) => (
           <option value={option.value} selected={option.value === defaultSortValue}>{option.label}</option>
@@ -118,12 +120,12 @@ function toCategorySlug(value: string) {
 
   {showCategoryFilters && (
     <div class="space-y-3">
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="hide-scrollbar flex items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
         <button
           type="button"
           data-category-filter="all"
           aria-pressed="true"
-          class="category-filter-chip inline-flex items-center rounded-full border bg-navy-800 px-3 py-1.5 text-sm font-sans font-semibold text-white border-navy-800 transition-colors"
+          class="category-filter-chip inline-flex items-center rounded-full border border-navy-800 bg-navy-800 px-3 py-1.5 text-[13px] font-sans font-semibold text-white transition-colors min-[375px]:text-sm"
         >
           All categories
         </button>
@@ -132,7 +134,7 @@ function toCategorySlug(value: string) {
             type="button"
             data-category-filter={toCategorySlug(category)}
             aria-pressed="false"
-            class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white"
+            class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white min-[375px]:text-sm"
           >
             {category}
           </button>
@@ -143,7 +145,7 @@ function toCategorySlug(value: string) {
             type="button"
             aria-expanded="false"
             aria-controls="extra-category-filters"
-            class="inline-flex items-center rounded-full border border-gold-300 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:bg-cream-200"
+            class="inline-flex items-center rounded-full border border-gold-300 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-700 transition-colors hover:bg-cream-200 min-[375px]:text-sm"
           >
             More filters
           </button>
@@ -152,7 +154,7 @@ function toCategorySlug(value: string) {
           <button
             id="clear-filters"
             type="button"
-            class="inline-flex items-center rounded-full border border-cream-300 px-3 py-1.5 text-sm font-sans font-semibold text-navy-600 transition-colors hover:bg-cream-200"
+            class="inline-flex items-center rounded-full border border-cream-300 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-sm"
           >
             Reset
           </button>
@@ -160,13 +162,13 @@ function toCategorySlug(value: string) {
       </div>
 
       {overflowCategories.length > 0 && (
-        <div id="extra-category-filters" class="hidden flex-wrap items-center gap-2">
+        <div id="extra-category-filters" class="hidden flex-wrap items-center gap-2 pt-1">
           {overflowCategories.map((category) => (
             <button
               type="button"
               data-category-filter={toCategorySlug(category)}
               aria-pressed="false"
-              class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white"
+              class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white min-[375px]:text-sm"
             >
               {category}
             </button>
@@ -176,19 +178,19 @@ function toCategorySlug(value: string) {
     </div>
   )}
 
-  <div class="flex flex-wrap items-center justify-between gap-2 border-t border-gold-200 pt-3 text-sm text-navy-600">
+  <div class="flex flex-col gap-1 border-t border-gold-200 pt-3 text-sm text-navy-600 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
     <p id="results-summary" class="font-sans font-medium" aria-live="polite" aria-atomic="true">
       Showing {initialCount} {initialCount === 1 ? 'bill' : 'bills'}
     </p>
-    <p id="sort-summary" class="font-sans">{resolvedInitialSortSummary}</p>
+    <p id="sort-summary" class="font-sans text-xs min-[375px]:text-sm">{resolvedInitialSortSummary}</p>
   </div>
 
   {hasApiPaging && (
-    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-gold-200 pt-3">
+    <div class="flex flex-col gap-2 border-t border-gold-200 pt-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
       <button
         id="load-more-bills"
         type="button"
-        class="inline-flex items-center rounded-md border border-navy-700 bg-navy-800 px-4 py-2 text-sm font-sans font-semibold text-white transition-colors hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50"
+        class="inline-flex w-full items-center justify-center rounded-md border border-navy-700 bg-navy-800 px-4 py-2 text-sm font-sans font-semibold text-white transition-colors hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50 min-[430px]:w-auto"
       >
         Load More
       </button>
@@ -564,16 +566,16 @@ function toCategorySlug(value: string) {
       const featured = Boolean(bill.featured);
       const stage = getStageBadge(bill.status || '');
       const scoreBadge = score !== null
-        ? `<span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-mono font-bold ${getScoreBadgeClasses(score)}">${score}/10</span>`
+        ? `<span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-mono font-bold min-[375px]:text-xs ${getScoreBadgeClasses(score)}">${score}/10</span>`
         : '';
       const typeBadge = isReal
-        ? '<span class="inline-flex items-center rounded-full border border-navy-800 bg-navy-700/90 px-2.5 py-0.5 text-xs font-sans font-semibold text-white">Real Bill</span>'
-        : '<span class="inline-flex items-center rounded-full border border-green-800 bg-green-700/90 px-2.5 py-0.5 text-xs font-sans font-semibold text-white">Not Bill</span>';
+        ? '<span class="inline-flex items-center rounded-full border border-navy-800 bg-navy-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs">Real Bill</span>'
+        : '<span class="inline-flex items-center rounded-full border border-green-800 bg-green-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs">Not Bill</span>';
       const statusMarkup = isReal
-        ? `<div class="mb-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-sans font-medium ${stage.classes}">${escapeHtml(stage.label)}</span></div>`
+        ? `<div class="mb-2.5 min-[375px]:mb-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-sans font-medium min-[375px]:text-xs ${stage.classes}">${escapeHtml(stage.label)}</span></div>`
         : '';
       const absurdityMarkup = isReal && score !== null
-        ? `<div class="mb-4 space-y-1"><div class="text-xs font-sans font-medium text-navy-500">Absurdity</div><div class="flex gap-0.5">${renderAbsurdityBar(score)}</div></div>`
+        ? `<div class="mb-3.5 space-y-1 min-[375px]:mb-4"><div class="text-xs font-sans font-medium text-navy-500">Absurdity</div><div class="flex gap-0.5">${renderAbsurdityBar(score)}</div></div>`
         : '';
       const topBarClass = featured
         ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400'
@@ -582,30 +584,30 @@ function toCategorySlug(value: string) {
           : 'bg-green-600';
 
       return `
-        <article class="group relative bg-white shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden ${isRealGridCard ? 'rounded-xl hover:-translate-y-0.5 border border-gold-300 hover:border-gold-500' : 'rounded-lg border border-gold-200 hover:border-gold-400'} ${featured ? 'ring-2 ring-gold-400 border-gold-400' : ''}">
+        <article class="group relative min-h-full overflow-hidden bg-white shadow-sm transition-all duration-200 hover:shadow-lg ${isRealGridCard ? 'rounded-xl hover:-translate-y-0.5 border border-gold-300 hover:border-gold-500' : 'rounded-lg border border-gold-200 hover:border-gold-400'} ${featured ? 'ring-2 ring-gold-400 border-gold-400' : ''}">
           <div class="h-1 ${topBarClass}"></div>
           ${featured ? '<div class="absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono">FEATURED</div>' : ''}
-          <div class="p-5 ${isRealGridCard ? 'space-y-0.5' : ''}">
+          <div class="p-4 min-[375px]:p-5 ${isRealGridCard ? 'space-y-0.5' : ''}">
             <div class="mb-2 flex items-center justify-between gap-2">
-              <span class="inline-flex items-center rounded-full bg-navy-800 px-2.5 py-1 text-xs font-mono font-semibold tracking-wide text-gold-400">${escapeHtml(bill.billNumber)}</span>
+              <span class="inline-flex items-center rounded-full bg-navy-800 px-2.5 py-1 text-[11px] font-mono font-semibold tracking-wide text-gold-400 min-[375px]:text-xs">${escapeHtml(bill.billNumber)}</span>
               ${isRealGridCard && scoreBadge ? scoreBadge : typeBadge}
             </div>
             ${statusMarkup}
-            <h3 class="mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700 ${isRealGridCard ? 'text-xl' : 'text-lg'}">
+            <h3 class="mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700 ${isRealGridCard ? 'text-[1.06rem] min-[375px]:text-lg min-[430px]:text-xl' : 'text-[1.04rem] min-[375px]:text-lg'}">
               <a href="${escapeHtml(detailHref)}" class="after:absolute after:inset-0">${escapeHtml(bill.title)}</a>
             </h3>
-            <p class="mb-4 text-sm leading-relaxed text-navy-600 ${isRealGridCard ? 'line-clamp-3' : 'line-clamp-2'}">${escapeHtml(bill.summary)}</p>
+            <p class="mb-3.5 text-[13px] leading-relaxed text-navy-600 min-[375px]:mb-4 min-[375px]:text-sm ${isRealGridCard ? 'line-clamp-3' : 'line-clamp-2'}">${escapeHtml(bill.summary)}</p>
             ${absurdityMarkup}
-            <div class="space-y-2 border-t border-cream-200 pt-3">
-              <div class="flex items-center gap-1.5 text-sm">
+            <div class="space-y-2 border-t border-cream-200 pt-2.5 min-[375px]:pt-3">
+              <div class="flex items-center gap-1.5 text-[13px] min-[375px]:text-sm">
                 <span class="truncate font-medium text-navy-700" title="${escapeHtml(bill.sponsor)}">${escapeHtml(sponsorName)}</span>
-                ${sponsorParty ? `<span class="flex-shrink-0 font-mono text-xs text-navy-500">(${escapeHtml(sponsorParty)})</span>` : ''}
+                ${sponsorParty ? `<span class="flex-shrink-0 font-mono text-[11px] text-navy-500 min-[375px]:text-xs">(${escapeHtml(sponsorParty)})</span>` : ''}
               </div>
-              <div class="flex items-center justify-between gap-2">
-                <a href="/category/${escapeHtml(categorySlug)}" class="relative z-10 inline-flex items-center rounded-full bg-cream-100 px-2.5 py-1 text-xs font-medium text-navy-600 transition-colors hover:bg-cream-200">
+              <div class="flex flex-col items-start gap-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
+                <a href="/category/${escapeHtml(categorySlug)}" class="relative z-10 inline-flex items-center rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-xs">
                   ${escapeHtml(bill.category)}
                 </a>
-                <time datetime="${escapeHtml(bill.dateIntroduced)}" class="text-xs text-navy-500">${escapeHtml(dateLabel)}</time>
+                <time datetime="${escapeHtml(bill.dateIntroduced)}" class="text-[11px] text-navy-500 min-[375px]:text-xs">${escapeHtml(dateLabel)}</time>
               </div>
             </div>
           </div>

@@ -282,6 +282,16 @@ html.dark tr:hover {
   background-color: #0F1A2E;
 }
 
+/* Hide scrollbars while preserving swipe scroll on mobile chip rows */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Print-friendly styles */
 @media print {
   @page {

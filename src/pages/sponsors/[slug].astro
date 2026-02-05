@@ -68,7 +68,7 @@ const {
 ---
 
 <BaseLayout title={sponsor} description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}>
-  <section class="mx-auto max-w-6xl px-4 py-12">
+  <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-2">
       <a href="/sponsors" class="text-sm font-sans text-gold-600 transition-colors hover:text-gold-500">&larr; All Sponsors</a>
     </div>
@@ -123,12 +123,12 @@ const {
       directoryLabel="sponsor bills"
     />
 
-    <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs font-sans text-navy-500">
+    <div class="mt-4 flex flex-col gap-1 text-xs font-sans text-navy-500 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
       <p>Page {currentPage} of {totalPages}</p>
       <p>{totalCount} total bills by this sponsor</p>
     </div>
 
-    <div id="bills-grid" class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div id="bills-grid" class="mt-5 grid grid-cols-1 gap-4 min-[375px]:mt-6 min-[430px]:gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {bills.map((bill) => (
         <div
           class="bill-item"
@@ -148,7 +148,7 @@ const {
       ))}
     </div>
 
-    <div id="no-results" class="hidden py-16 text-center">
+    <div id="no-results" class="hidden py-12 text-center min-[430px]:py-16">
       <p class="mb-2 font-serif text-2xl text-navy-600">No bills found.</p>
       <p class="italic text-navy-400">No matching records for this sponsor with the current filters.</p>
     </div>

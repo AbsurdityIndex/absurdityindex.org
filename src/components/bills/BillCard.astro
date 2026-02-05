@@ -55,7 +55,7 @@ function getAbsurdityScoreClasses(score: number): string {
 
 <article
   class:list={[
-    'group relative bg-white shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden',
+    'group relative min-h-full overflow-hidden bg-white shadow-sm transition-all duration-200 hover:shadow-lg',
     isRealGridCard ? 'rounded-xl hover:-translate-y-0.5' : 'rounded-lg',
     data.featured
       ? 'ring-2 ring-gold-400 border border-gold-400'
@@ -76,13 +76,13 @@ function getAbsurdityScoreClasses(score: number): string {
     </div>
   )}
 
-  <div class:list={['p-5', isRealGridCard && 'space-y-0.5']}>
+  <div class:list={['p-4 min-[375px]:p-5', isRealGridCard && 'space-y-0.5']}>
     {/* Header row: badges */}
-    <div class="flex items-center justify-between gap-2 mb-2">
+    <div class="mb-2 flex items-center justify-between gap-2">
       <BillNumberBadge billNumber={data.billNumber} />
       {isRealGridCard && data.absurdityIndex ? (
         <span class:list={[
-          'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-mono font-bold',
+          'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-mono font-bold min-[375px]:text-xs',
           getAbsurdityScoreClasses(data.absurdityIndex),
         ]}>
           <Icon name="zap" size={11} />
@@ -95,15 +95,17 @@ function getAbsurdityScoreClasses(score: number): string {
 
     {/* Status badge */}
     {isReal && (
-      <div class="mb-3">
+      <div class="mb-2.5 min-[375px]:mb-3">
         <BillStageBadge status={data.status} size="sm" />
       </div>
     )}
 
     {/* Title */}
     <h3 class:list={[
-      'font-serif font-bold text-navy-900 mb-2 leading-snug group-hover:text-navy-700 transition-colors',
-      isRealGridCard ? 'text-xl' : 'text-lg',
+      'mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700',
+      isRealGridCard
+        ? 'text-[1.06rem] min-[375px]:text-lg min-[430px]:text-xl'
+        : 'text-[1.04rem] min-[375px]:text-lg',
     ]}>
       <a
         href={detailHref}
@@ -115,7 +117,7 @@ function getAbsurdityScoreClasses(score: number): string {
 
     {/* Summary */}
     <p class:list={[
-      'text-sm text-navy-600 leading-relaxed mb-4',
+      'mb-3.5 text-[13px] leading-relaxed text-navy-600 min-[375px]:mb-4 min-[375px]:text-sm',
       isRealGridCard ? 'line-clamp-3' : 'line-clamp-2',
     ]}>
       {data.summary}
@@ -123,36 +125,36 @@ function getAbsurdityScoreClasses(score: number): string {
 
     {/* Absurdity meter for real bills */}
     {isReal && data.absurdityIndex && (
-      <div class="mb-4">
+      <div class="mb-3.5 min-[375px]:mb-4">
         <AbsurdityMeter score={data.absurdityIndex} compact />
       </div>
     )}
 
     {/* Footer */}
-    <div class="pt-3 border-t border-cream-200 space-y-2">
+    <div class="space-y-2 border-t border-cream-200 pt-2.5 min-[375px]:pt-3">
       {/* Sponsor row */}
-      <div class="flex items-center gap-2 text-sm">
+      <div class="flex items-center gap-2 text-[13px] min-[375px]:text-sm">
         <div class="w-5 h-5 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0">
           <Icon name="user" size={12} class="text-navy-600" />
         </div>
-        <span class="text-navy-700 text-sm font-medium truncate" title={data.sponsor}>
+        <span class="text-navy-700 font-medium truncate" title={data.sponsor}>
           {sponsorName}
         </span>
         {sponsorParty && (
-          <span class="text-xs text-navy-500 font-mono flex-shrink-0">({sponsorParty})</span>
+          <span class="text-[11px] text-navy-500 font-mono flex-shrink-0 min-[375px]:text-xs">({sponsorParty})</span>
         )}
       </div>
 
       {/* Category and date row */}
-      <div class="flex items-center justify-between gap-2">
+      <div class="flex flex-col items-start gap-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
         <a
           href={`/category/${categorySlug}`}
-          class="relative z-10 inline-flex items-center gap-1 text-xs font-medium text-navy-600 bg-cream-100 hover:bg-cream-200 px-2.5 py-1 rounded-full transition-colors"
+          class="relative z-10 inline-flex items-center gap-1 rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-xs"
         >
           <Icon name="tag" size={10} class="text-navy-400" />
           {data.category}
         </a>
-        <div class="flex items-center gap-1.5 text-xs text-navy-500">
+        <div class="flex items-center gap-1.5 text-[11px] text-navy-500 min-[375px]:text-xs">
           <Icon name="calendar" size={12} class="text-navy-400" />
           <time datetime={data.dateIntroduced.toISOString()}>{formattedDate}</time>
         </div>
