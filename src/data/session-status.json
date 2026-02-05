@@ -1,0 +1,54 @@
+{
+  "house": {
+    "congressNumber": 119,
+    "session": 2,
+    "currentLegislativeDay": {
+      "number": 8,
+      "startDate": "2026-01-27",
+      "startDayOfWeek": "Tuesday"
+    },
+    "status": "recess",
+    "statusSince": "2026-01-30",
+    "nextScheduledSession": "2026-02-09",
+    "totalSessionDays": 8,
+    "totalCalendarDays": 36,
+    "longestLegislativeDayThisSession": {
+      "number": 2,
+      "calendarDays": 11,
+      "startDate": "2026-01-06",
+      "endDate": "2026-01-16"
+    }
+  },
+  "senate": {
+    "congressNumber": 119,
+    "session": 2,
+    "currentLegislativeDay": {
+      "number": 6,
+      "startDate": "2026-01-23",
+      "startDayOfWeek": "Friday"
+    },
+    "status": "recess",
+    "statusSince": "2026-01-30",
+    "nextScheduledSession": "2026-02-09",
+    "totalSessionDays": 6,
+    "totalCalendarDays": 36,
+    "longestLegislativeDayThisSession": {
+      "number": 1,
+      "calendarDays": 14,
+      "startDate": "2026-01-03",
+      "endDate": "2026-01-16"
+    }
+  },
+  "historicalRecords": {
+    "longestLegislativeDay": {
+      "chamber": "senate",
+      "startDate": "1980-01-03",
+      "endDate": "1980-06-12",
+      "calendarDays": 162,
+      "congress": 96,
+      "description": "The Senate's 'Monday' that lasted from January to June"
+    }
+  },
+  "lastUpdated": "2026-02-05T12:00:00Z",
+  "dataSource": "Manual tracking based on Congress.gov session calendar"
+}

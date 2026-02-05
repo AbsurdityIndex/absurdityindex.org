@@ -2,6 +2,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BillTypeBadge from '../../components/bills/BillTypeBadge.astro';
 import BillTimeline from '../../components/bills/BillTimeline.astro';
+import BicameralTimeline from '../../components/bills/BicameralTimeline.astro';
+import ChamberBadge from '../../components/bills/ChamberBadge.astro';
 import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
 import PorkMeter from '../../components/bills/PorkMeter.astro';
 import TheGist from '../../components/bills/TheGist.astro';
@@ -13,6 +15,7 @@ import BillEvolutionModal from '../../components/bills/BillEvolutionModal.astro'
 import PartyBalance from '../../components/bills/PartyBalance.astro';
 import Icon from '../../components/ui/Icon.astro';
 import { getCollection, render } from 'astro:content';
+import { parseBillType } from '../../utils/billParser';
 
 export async function getStaticPaths() {
   const bills = await getCollection('bills');
@@ -27,6 +30,10 @@ export async function getStaticPaths() {
 const { bill } = Astro.props;
 const { Content } = await render(bill);
 const d = bill.data;
+
+// Parse bill type for intelligent timeline rendering
+const billType = parseBillType(d.billNumber);
+const isBicameral = billType?.needsBothChambers ?? false;
 
 // Format dates
 const formatDate = (date: Date) => {
@@ -87,6 +94,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     {/* Compact header bar */}
     <div class="flex flex-wrap items-center gap-3 mb-6">
       <span class="font-mono text-lg font-bold text-navy-900">{d.billNumber}</span>
+      {billType && <ChamberBadge chamber={billType.originChamber} size="sm" />}
       <BillTypeBadge billType={d.billType} size="sm" />
       <span class="px-2 py-1 text-xs font-mono bg-green-100 text-green-800 rounded">
         {d.status.length > 40 ? d.status.slice(0, 37) + '...' : d.status}
@@ -105,7 +113,16 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     )}
 
     {/* Legislative Progress Timeline */}
-    <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} billNumber={d.billNumber} />
+    {isBicameral ? (
+      <BicameralTimeline
+        billNumber={d.billNumber}
+        status={d.status}
+        dateIntroduced={d.dateIntroduced}
+        actions={d.actions}
+      />
+    ) : (
+      <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} billNumber={d.billNumber} />
+    )}
 
     {/* Absurdity Meter - Prominent */}
     {d.absurdityIndex !== undefined && (
@@ -133,25 +150,47 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
     {/* Compact metadata - 2x2 on mobile, 4-col on desktop */}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8 text-sm">
-      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg">
-        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1">Sponsor</dt>
-        <dd class="font-sans text-navy-800 text-sm leading-tight line-clamp-2" title={d.sponsor}>
+      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all">
+        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+          <Icon name="user" size={12} class="text-gold-600" />
+          Sponsor
+        </dt>
+        <dd class="font-sans text-navy-800 text-sm leading-tight line-clamp-2 font-medium" title={d.sponsor}>
           {d.sponsor?.replace(/^(Rep\.|Sen\.)\s*/, '').trim() || 'Unknown'}
+          {d.sponsorParty && (
+            <span class:list={[
+              'ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold',
+              d.sponsorParty === 'R' ? 'bg-red-100 text-red-700' :
+              d.sponsorParty === 'D' ? 'bg-blue-100 text-blue-700' :
+              'bg-purple-100 text-purple-700'
+            ]}>
+              {d.sponsorParty}
+            </span>
+          )}
         </dd>
       </div>
-      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg">
-        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1">Committee</dt>
+      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all">
+        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+          <Icon name="users" size={12} class="text-gold-600" />
+          Committee
+        </dt>
         <dd class="font-sans text-navy-800 text-sm leading-tight line-clamp-2" title={d.committee}>
           {d.committee?.replace(/^House |^Senate /, '').trim() || 'N/A'}
         </dd>
       </div>
-      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg">
-        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1">Introduced</dt>
-        <dd class="font-sans text-navy-800 text-sm">{formatDate(d.dateIntroduced)}</dd>
+      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all">
+        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+          <Icon name="calendar" size={12} class="text-gold-600" />
+          Introduced
+        </dt>
+        <dd class="font-sans text-navy-800 text-sm font-medium">{formatDate(d.dateIntroduced)}</dd>
       </div>
-      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg">
-        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1">Category</dt>
-        <dd class="font-sans text-navy-800 text-sm">{d.category}</dd>
+      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all">
+        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+          <Icon name="tag" size={12} class="text-gold-600" />
+          Category
+        </dt>
+        <dd class="font-sans text-navy-800 text-sm font-medium">{d.category}</dd>
       </div>
     </div>
 

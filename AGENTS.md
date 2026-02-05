@@ -13,6 +13,8 @@ npm run dev           # Start dev server at localhost:4321
 npm run build         # Build production site + run Pagefind search indexing
 npm run preview       # Preview production build locally
 npm run fetch-bills   # Fetch bills from Congress.gov API (requires CONGRESS_GOV_API_KEY)
+npm run validate      # Validate all bill MDX files for required fields
+npm run validate:build # Run validation, then build (recommended for CI)
 ```
 
 ### Fetch Bills Script Options
@@ -88,12 +90,69 @@ The deploy command will output a preview URL (e.g., `https://abc123.absurdity-in
 
 ## Content Guidelines
 
-When creating new bill MDX files:
-1. Frontmatter must match schema in `content.config.ts`
-2. Use appropriate `billType`: `real`, `sensible`, or `absurd`
-3. Real bills should include `congressDotGovUrl` and `absurdityIndex` (1-10)
-4. Satirical bills use fictional sponsors with pun names (e.g., "Rep. Wifi McRouterface")
-5. MDX content uses official-document styling conventions (Section headers, blockquotes for findings)
+### Creating New Bills
+
+**Always use templates** located at `src/data/bills/_templates/`:
+- `sensible-bill.template.md` - for satirical fictional bills
+- `real-bill.template.md` - for real Congress.gov bills
+- `absurd-bill.template.md` - for historical absurd laws
+
+**Steps to create a new bill:**
+1. Copy the appropriate template from `src/data/bills/_templates/`
+2. Rename to the bill ID with `.mdx` extension (e.g., `hr-999.mdx` or `real-hr-1234.mdx`)
+3. Fill in all fields (templates have comments explaining each)
+4. Run `npm run build` to validate against schema
+
+### Critical Schema Rules
+
+| Rule | Correct | Wrong |
+|------|---------|-------|
+| Vote field name | `votes:` (plural) | `vote:` (singular) |
+| Date format | `2025-01-01` | `2025-01-01T12:00:00` |
+| Bill evolution stages | Each stage unique | Duplicate stages |
+
+### Bill Type Requirements
+
+| Field | sensible | absurd | real |
+|-------|----------|--------|------|
+| `votes` | Required | Required | Optional |
+| `sponsorParty` | N/A | N/A | **Required** |
+| `sponsorState` | N/A | N/A | **Required** |
+| `congressNumber` | N/A | N/A | **Required** |
+| `absurdityIndex` | N/A | N/A | **Required** (1-10) |
+| `congressDotGovUrl` | N/A | N/A | **Required** |
+| `realSource` | N/A | Optional | N/A |
+
+### Bill Naming Conventions
+
+- **Sensible bills:** `hr-XXX.mdx` or `s-XXX.mdx`
+- **Absurd bills:** `ra-XXX.mdx` (R.A. = Real Absurd)
+- **Real bills:** `real-{type}-{number}.mdx` or `real-{type}-{number}-{congress}.mdx`
+  - Examples: `real-hr-25.mdx`, `real-s-686.mdx`, `real-hres-5-119.mdx`
+
+### Content Conventions
+
+1. **Real bills** should include `congressDotGovUrl` linking to Congress.gov
+2. **Satirical bills** use fictional sponsors with pun names (e.g., "Rep. Wifi McRouterface")
+3. MDX content uses official-document styling (Section headers, blockquotes for findings)
+4. Bill evolution stages track pork spending through legislative process
+5. Each `porkItem` needs `description`, `amount`, `addedBy`, and `category`
+
+### Validation Script
+
+Run `npm run validate` to check all bills for required UI component fields:
+
+**Validates:**
+- All required fields present (title, billNumber, status, sponsor, summary, etc.)
+- Real bill requirements (congressNumber, sponsorParty, absurdityIndex, etc.)
+- Satirical bill requirements (votes structure)
+- No duplicate `billEvolution` stages
+- Correct field names (`votes:` not `vote:`)
+- Date format (plain dates, not ISO timestamps)
+
+**Exit codes:**
+- `0` = Pass (no errors, warnings OK)
+- `1` = Fail (errors found)
 
 ## Key Patterns
 

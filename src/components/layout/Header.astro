@@ -1,5 +1,6 @@
 ---
 import MobileMenu from './MobileMenu.astro';
+import LegislativeDayTracker from './LegislativeDayTracker.astro';
 
 const navLinks = [
   { href: '/bills', label: 'Bills' },
@@ -29,11 +30,9 @@ const toolsDropdown = [
 ---
 
 <header class="sticky top-0 z-50 bg-navy-900">
-  <!-- Session bar -->
+  <!-- Legislative Day Tracker -->
   <div class="text-center py-1.5 bg-navy-800 border-b border-navy-700">
-    <p class="text-gold-400 text-xs tracking-widest uppercase font-sans">
-      119th Not-Congress &mdash; 1st Session of Futility
-    </p>
+    <LegislativeDayTracker />
   </div>
 
   <!-- Main nav -->

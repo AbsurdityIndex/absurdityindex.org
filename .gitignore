@@ -26,6 +26,9 @@ pnpm-debug.log*
 # playwright MCP logs
 .playwright-mcp/
 
+# browser session state (contains auth cookies)
+cli/data/.browser-state/
+
 # screenshots (root level only)
 /*.png
 

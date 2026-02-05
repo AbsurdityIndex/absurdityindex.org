@@ -1,0 +1,983 @@
+---
+/**
+ * BicameralTimeline
+ *
+ * Enhanced timeline showing House/Senate/Executive dimensions for bills
+ * that require passage by both chambers.
+ *
+ * Desktop: Dual tracks showing parallel progress
+ * Mobile: Vertical timeline with chamber sections
+ */
+import Icon from '../ui/Icon.astro';
+import {
+  parseBillType,
+  analyzeChamberProgress,
+  formatChamberName,
+  type BillTypeInfo,
+  type ChamberProgress,
+} from '../../utils/billParser';
+
+interface Props {
+  billNumber: string;
+  status: string;
+  dateIntroduced: Date;
+  actions?: Array<{ date: Date; text: string; chamber?: 'house' | 'senate' | 'both' }>;
+}
+
+const { billNumber, status, dateIntroduced, actions = [] } = Astro.props;
+
+// Parse bill type
+const billType = parseBillType(billNumber);
+const isBicameral = billType?.needsBothChambers ?? false;
+const needsPresident = billType?.needsPresident ?? false;
+const originChamber = billType?.originChamber ?? 'house';
+const receivingChamber = originChamber === 'house' ? 'senate' : 'house';
+
+// Analyze progress
+const progress = billType ? analyzeChamberProgress(actions, billType) : null;
+
+// Format the introduction date
+const formattedDate =
+  dateIntroduced instanceof Date
+    ? dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : String(dateIntroduced);
+
+// Determine stages based on bill type
+interface Stage {
+  id: string;
+  label: string;
+  chamber: 'origin' | 'receiving' | 'president' | 'conference';
+  completed: boolean;
+  current: boolean;
+  failed?: boolean;
+}
+
+function getStages(): Stage[] {
+  const s = status.toLowerCase();
+  const stages: Stage[] = [];
+
+  // Origin chamber stages
+  stages.push({
+    id: 'origin-intro',
+    label: 'Introduced',
+    chamber: 'origin',
+    completed: true, // If we have the bill, it's been introduced
+    current: false,
+  });
+
+  const originInCommittee =
+    progress?.originPhase === 'committee' ||
+    progress?.originPhase === 'floor' ||
+    progress?.originPhase === 'passed';
+  stages.push({
+    id: 'origin-committee',
+    label: 'Committee',
+    chamber: 'origin',
+    completed: progress?.originPhase === 'floor' || progress?.originPhase === 'passed',
+    current: progress?.originPhase === 'committee',
+  });
+
+  const originPassed = progress?.originPhase === 'passed';
+  stages.push({
+    id: 'origin-passed',
+    label: `Passed ${formatChamberName(originChamber)}`,
+    chamber: 'origin',
+    completed: originPassed,
+    current: progress?.originPhase === 'floor',
+    failed: progress?.failed && !originPassed,
+  });
+
+  // Only show receiving chamber if bicameral
+  if (isBicameral) {
+    const receivingReceived =
+      progress?.receivingPhase === 'received' ||
+      progress?.receivingPhase === 'committee' ||
+      progress?.receivingPhase === 'floor' ||
+      progress?.receivingPhase === 'passed';
+    stages.push({
+      id: 'receiving-received',
+      label: `Received in ${formatChamberName(receivingChamber)}`,
+      chamber: 'receiving',
+      completed:
+        progress?.receivingPhase === 'committee' ||
+        progress?.receivingPhase === 'floor' ||
+        progress?.receivingPhase === 'passed',
+      current: progress?.receivingPhase === 'received',
+    });
+
+    stages.push({
+      id: 'receiving-committee',
+      label: 'Committee',
+      chamber: 'receiving',
+      completed:
+        progress?.receivingPhase === 'floor' || progress?.receivingPhase === 'passed',
+      current: progress?.receivingPhase === 'committee',
+    });
+
+    const receivingPassed = progress?.receivingPhase === 'passed';
+    stages.push({
+      id: 'receiving-passed',
+      label: `Passed ${formatChamberName(receivingChamber)}`,
+      chamber: 'receiving',
+      completed: receivingPassed,
+      current: progress?.receivingPhase === 'floor',
+      failed: progress?.failed && originPassed && !receivingPassed,
+    });
+
+    // Conference (if applicable)
+    if (progress?.inConference) {
+      stages.push({
+        id: 'conference',
+        label: 'Conference',
+        chamber: 'conference',
+        completed: progress?.enrolled || false,
+        current: !progress?.enrolled,
+      });
+    }
+  }
+
+  // President stage (if applicable)
+  if (needsPresident) {
+    const presidentComplete =
+      progress?.presidentPhase === 'signed' || progress?.presidentPhase === 'vetoed';
+    stages.push({
+      id: 'president',
+      label:
+        progress?.presidentPhase === 'signed'
+          ? 'Signed into Law'
+          : progress?.presidentPhase === 'vetoed'
+            ? 'Vetoed'
+            : 'President',
+      chamber: 'president',
+      completed: progress?.presidentPhase === 'signed',
+      current: progress?.presidentPhase === 'pending',
+      failed: progress?.presidentPhase === 'vetoed' || progress?.presidentPhase === 'pocket-vetoed',
+    });
+  }
+
+  return stages;
+}
+
+const stages = getStages();
+
+// Group stages by chamber for mobile view
+const originStages = stages.filter((s) => s.chamber === 'origin');
+const receivingStages = stages.filter((s) => s.chamber === 'receiving');
+const conferenceStages = stages.filter((s) => s.chamber === 'conference');
+const presidentStages = stages.filter((s) => s.chamber === 'president');
+
+// Colors
+const COLORS = {
+  house: { bg: '#3B82F6', light: '#DBEAFE', text: '#1E40AF' },
+  senate: { bg: '#8B5CF6', light: '#EDE9FE', text: '#5B21B6' },
+  president: { bg: '#C5A572', light: '#F7EFE0', text: '#92400E' },
+  completed: { bg: '#228B4A', light: '#DCFCE7', text: '#166534' },
+  failed: { bg: '#DC2626', light: '#FEE2E2', text: '#991B1B' },
+  pending: { bg: '#E0D8C8', light: '#F5F0E1', text: '#6B7280' },
+};
+
+function getChamberColor(chamber: 'origin' | 'receiving' | 'president' | 'conference') {
+  if (chamber === 'president') return COLORS.president;
+  if (chamber === 'conference') return COLORS.completed;
+  if (chamber === 'origin') {
+    return originChamber === 'house' ? COLORS.house : COLORS.senate;
+  }
+  return receivingChamber === 'house' ? COLORS.house : COLORS.senate;
+}
+
+function getStageColor(stage: Stage) {
+  if (stage.failed) return COLORS.failed;
+  if (stage.completed) return COLORS.completed;
+  if (stage.current) return getChamberColor(stage.chamber);
+  return COLORS.pending;
+}
+
+// Find current stage index for progress bar
+const currentStageIndex = stages.findIndex((s) => s.current);
+const progressPercent =
+  currentStageIndex >= 0
+    ? ((currentStageIndex + 0.5) / stages.length) * 100
+    : stages.every((s) => s.completed)
+      ? 100
+      : 0;
+---
+
+<div class="bicameral-timeline mb-8">
+  <div class="flex items-center justify-between mb-2">
+    <span class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-700">
+      Legislative Progress
+    </span>
+    <span class="text-xs font-sans text-navy-600">
+      Introduced {formattedDate}
+    </span>
+  </div>
+
+  <!-- Chamber indicators -->
+  <div class="flex items-center gap-2 mb-3">
+    <span
+      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
+      style={`background: ${originChamber === 'house' ? COLORS.house.light : COLORS.senate.light}; color: ${originChamber === 'house' ? COLORS.house.text : COLORS.senate.text};`}
+    >
+      <Icon name={originChamber === 'house' ? 'landmark' : 'columns'} size={10} />
+      {formatChamberName(originChamber)} Origin
+    </span>
+    {isBicameral && needsPresident && (
+      <span class="text-xs text-navy-400">→ Both Chambers → President</span>
+    )}
+    {isBicameral && !needsPresident && (
+      <span class="text-xs text-navy-400">→ Both Chambers</span>
+    )}
+  </div>
+
+  <!-- Desktop dual-track timeline -->
+  <div class="hidden md:block">
+    <svg
+      class="w-full"
+      viewBox="0 0 700 180"
+      preserveAspectRatio="xMidYMid meet"
+      aria-label={`Bill progress through ${isBicameral ? 'both chambers' : formatChamberName(originChamber)}`}
+      role="img"
+    >
+      <!-- Origin chamber track -->
+      <g class="origin-track">
+        <!-- Track label -->
+        <text
+          x="12"
+          y="35"
+          fill={originChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg}
+          font-size="10"
+          font-family="var(--font-sans)"
+          font-weight="700"
+          text-transform="uppercase"
+        >
+          {formatChamberName(originChamber).toUpperCase()}
+        </text>
+
+        <!-- Origin stages -->
+        {originStages.map((stage, i) => {
+          const cx = 80 + i * 100;
+          const cy = 50;
+          const color = getStageColor(stage);
+          const isLast = i === originStages.length - 1;
+
+          return (
+            <g>
+              {/* Connection line */}
+              {!isLast && (
+                <line
+                  x1={cx + 14}
+                  y1={cy}
+                  x2={cx + 86}
+                  y2={cy}
+                  stroke={stage.completed ? COLORS.completed.bg : '#E0D8C8'}
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              )}
+
+              {/* Pulse for current */}
+              {stage.current && (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r="18"
+                  fill={color.bg}
+                  opacity="0.25"
+                  class="animate-pulse-ring"
+                />
+              )}
+
+              {/* Main circle */}
+              <circle
+                cx={cx}
+                cy={cy}
+                r={stage.current ? 14 : stage.completed || stage.failed ? 12 : 10}
+                fill={color.bg}
+                stroke={stage.current ? color.bg : 'transparent'}
+                stroke-width="2"
+              />
+
+              {/* Icon/checkmark */}
+              {stage.completed && (
+                <path
+                  d={`M${cx - 5} ${cy} L${cx - 1} ${cy + 4} L${cx + 6} ${cy - 4}`}
+                  stroke="white"
+                  stroke-width="2"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              )}
+              {stage.failed && (
+                <g>
+                  <line
+                    x1={cx - 4}
+                    y1={cy - 4}
+                    x2={cx + 4}
+                    y2={cy + 4}
+                    stroke="white"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                  <line
+                    x1={cx + 4}
+                    y1={cy - 4}
+                    x2={cx - 4}
+                    y2={cy + 4}
+                    stroke="white"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </g>
+              )}
+              {!stage.completed && !stage.failed && (
+                <text
+                  x={cx}
+                  y={cy + 4}
+                  text-anchor="middle"
+                  fill={stage.current ? 'white' : '#8899AA'}
+                  font-size={stage.current ? '11' : '9'}
+                  font-family="var(--font-mono)"
+                  font-weight="600"
+                >
+                  {i + 1}
+                </text>
+              )}
+
+              {/* Label */}
+              <text
+                x={cx}
+                y={cy + 28}
+                text-anchor="middle"
+                fill={stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#667788'}
+                font-size="9"
+                font-family="var(--font-sans)"
+                font-weight={stage.current ? '600' : '400'}
+              >
+                {stage.label}
+              </text>
+            </g>
+          );
+        })}
+      </g>
+
+      {/* Connection between chambers */}
+      {isBicameral && originStages.length > 0 && receivingStages.length > 0 && (
+        <g class="chamber-connector">
+          <path
+            d={`M${80 + (originStages.length - 1) * 100 + 14} 50
+                Q${80 + (originStages.length - 1) * 100 + 50} 50
+                  ${80 + (originStages.length - 1) * 100 + 50} 90
+                Q${80 + (originStages.length - 1) * 100 + 50} 130
+                  ${80} 130`}
+            stroke={progress?.originPhase === 'passed' ? COLORS.completed.bg : '#E0D8C8'}
+            stroke-width="2"
+            fill="none"
+            stroke-dasharray={progress?.originPhase === 'passed' ? '0' : '4 4'}
+          />
+          <polygon
+            points={`${80 - 6},126 ${80},130 ${80 - 6},134`}
+            fill={progress?.originPhase === 'passed' ? COLORS.completed.bg : '#E0D8C8'}
+          />
+        </g>
+      )}
+
+      {/* Receiving chamber track */}
+      {isBicameral && (
+        <g class="receiving-track">
+          <!-- Track label -->
+          <text
+            x="12"
+            y="135"
+            fill={receivingChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg}
+            font-size="10"
+            font-family="var(--font-sans)"
+            font-weight="700"
+          >
+            {formatChamberName(receivingChamber).toUpperCase()}
+          </text>
+
+          <!-- Receiving stages -->
+          {receivingStages.map((stage, i) => {
+            const cx = 80 + i * 100;
+            const cy = 130;
+            const color = getStageColor(stage);
+            const isLast = i === receivingStages.length - 1;
+
+            return (
+              <g>
+                {/* Connection line */}
+                {!isLast && (
+                  <line
+                    x1={cx + 14}
+                    y1={cy}
+                    x2={cx + 86}
+                    y2={cy}
+                    stroke={stage.completed ? COLORS.completed.bg : '#E0D8C8'}
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                )}
+
+                {/* Pulse for current */}
+                {stage.current && (
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r="18"
+                    fill={color.bg}
+                    opacity="0.25"
+                    class="animate-pulse-ring"
+                  />
+                )}
+
+                {/* Main circle */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={stage.current ? 14 : stage.completed || stage.failed ? 12 : 10}
+                  fill={color.bg}
+                  stroke={stage.current ? color.bg : 'transparent'}
+                  stroke-width="2"
+                />
+
+                {/* Icon/checkmark */}
+                {stage.completed && (
+                  <path
+                    d={`M${cx - 5} ${cy} L${cx - 1} ${cy + 4} L${cx + 6} ${cy - 4}`}
+                    stroke="white"
+                    stroke-width="2"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                )}
+                {stage.failed && (
+                  <g>
+                    <line
+                      x1={cx - 4}
+                      y1={cy - 4}
+                      x2={cx + 4}
+                      y2={cy + 4}
+                      stroke="white"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1={cx + 4}
+                      y1={cy - 4}
+                      x2={cx - 4}
+                      y2={cy + 4}
+                      stroke="white"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </g>
+                )}
+                {!stage.completed && !stage.failed && (
+                  <text
+                    x={cx}
+                    y={cy + 4}
+                    text-anchor="middle"
+                    fill={stage.current ? 'white' : '#8899AA'}
+                    font-size={stage.current ? '11' : '9'}
+                    font-family="var(--font-mono)"
+                    font-weight="600"
+                  >
+                    {originStages.length + i + 1}
+                  </text>
+                )}
+
+                {/* Label */}
+                <text
+                  x={cx}
+                  y={cy + 28}
+                  text-anchor="middle"
+                  fill={stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#667788'}
+                  font-size="9"
+                  font-family="var(--font-sans)"
+                  font-weight={stage.current ? '600' : '400'}
+                >
+                  {stage.label}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      )}
+
+      {/* President stage */}
+      {needsPresident && presidentStages.length > 0 && (
+        <g class="president-track">
+          {presidentStages.map((stage) => {
+            const cx = isBicameral ? 80 + (receivingStages.length - 1) * 100 + 100 : 80 + originStages.length * 100;
+            const cy = isBicameral ? 130 : 50;
+            const color = getStageColor(stage);
+
+            return (
+              <g>
+                {/* Connection line from last stage */}
+                {isBicameral && (
+                  <line
+                    x1={cx - 86}
+                    y1={cy}
+                    x2={cx - 20}
+                    y2={cy}
+                    stroke={progress?.enrolled ? COLORS.completed.bg : '#E0D8C8'}
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-dasharray={progress?.enrolled ? '0' : '4 4'}
+                  />
+                )}
+
+                {/* Glow for final outcome */}
+                {(stage.completed || stage.failed) && (
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r="26"
+                    fill={color.bg}
+                    opacity="0.15"
+                  />
+                )}
+
+                {/* Pulse for current/pending */}
+                {stage.current && (
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r="22"
+                    fill={COLORS.president.bg}
+                    opacity="0.25"
+                    class="animate-pulse-ring"
+                  />
+                )}
+
+                {/* Main circle - larger for president */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={stage.completed || stage.failed ? 18 : stage.current ? 16 : 12}
+                  fill={color.bg}
+                  stroke={stage.current ? COLORS.president.bg : 'transparent'}
+                  stroke-width="2"
+                />
+
+                {/* Icon */}
+                {stage.completed && (
+                  <path
+                    d={`M${cx - 7} ${cy} L${cx - 2} ${cy + 5} L${cx + 8} ${cy - 5}`}
+                    stroke="white"
+                    stroke-width="3"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                )}
+                {stage.failed && (
+                  <g>
+                    <line
+                      x1={cx - 6}
+                      y1={cy - 6}
+                      x2={cx + 6}
+                      y2={cy + 6}
+                      stroke="white"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1={cx + 6}
+                      y1={cy - 6}
+                      x2={cx - 6}
+                      y2={cy + 6}
+                      stroke="white"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                    />
+                  </g>
+                )}
+                {!stage.completed && !stage.failed && (
+                  <foreignObject x={cx - 8} y={cy - 8} width="16" height="16">
+                    <Icon name="pen-tool" size={14} class="text-white" />
+                  </foreignObject>
+                )}
+
+                {/* Label */}
+                <text
+                  x={cx}
+                  y={cy + 34}
+                  text-anchor="middle"
+                  fill={stage.completed ? COLORS.completed.bg : stage.failed ? COLORS.failed.bg : COLORS.president.bg}
+                  font-size="10"
+                  font-family="var(--font-sans)"
+                  font-weight="600"
+                >
+                  {stage.label}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      )}
+    </svg>
+  </div>
+
+  <!-- Mobile vertical timeline -->
+  <div class="md:hidden">
+    <div class="mobile-timeline">
+      <!-- Origin Chamber Section -->
+      <div class="chamber-section">
+        <div
+          class="chamber-header"
+          style={`background: ${originChamber === 'house' ? COLORS.house.light : COLORS.senate.light}; border-color: ${originChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg};`}
+        >
+          <Icon name={originChamber === 'house' ? 'landmark' : 'columns'} size={12} />
+          <span style={`color: ${originChamber === 'house' ? COLORS.house.text : COLORS.senate.text};`}>
+            {formatChamberName(originChamber)} (origin)
+          </span>
+        </div>
+        <div class="chamber-stages">
+          {originStages.map((stage, i) => {
+            const color = getStageColor(stage);
+            const isLast = i === originStages.length - 1;
+
+            return (
+              <div class="stage-row">
+                <div class="stage-indicator-col">
+                  <div
+                    class:list={['stage-circle', stage.current && 'pulse-subtle']}
+                    style={`background: ${color.bg}; width: ${stage.current ? '1.75rem' : '1.25rem'}; height: ${stage.current ? '1.75rem' : '1.25rem'};`}
+                  >
+                    {stage.completed && (
+                      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {stage.failed && (
+                      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                    {!stage.completed && !stage.failed && (
+                      <span class="stage-num" style={`color: ${stage.current ? 'white' : '#6B7280'};`}>
+                        {i + 1}
+                      </span>
+                    )}
+                  </div>
+                  {!isLast && (
+                    <div
+                      class="stage-line"
+                      style={`background: ${stage.completed ? COLORS.completed.bg : '#E0D8C8'};`}
+                    />
+                  )}
+                </div>
+                <div class="stage-label-col">
+                  <span
+                    class:list={['stage-label', stage.current && 'font-semibold']}
+                    style={`color: ${stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#4B5563'};`}
+                  >
+                    {stage.label}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <!-- Receiving Chamber Section (if bicameral) -->
+      {isBicameral && receivingStages.length > 0 && (
+        <div class="chamber-section">
+          <div
+            class="chamber-header"
+            style={`background: ${receivingChamber === 'house' ? COLORS.house.light : COLORS.senate.light}; border-color: ${receivingChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg};`}
+          >
+            <Icon name={receivingChamber === 'house' ? 'landmark' : 'columns'} size={12} />
+            <span style={`color: ${receivingChamber === 'house' ? COLORS.house.text : COLORS.senate.text};`}>
+              {formatChamberName(receivingChamber)}
+            </span>
+          </div>
+          <div class="chamber-stages">
+            {receivingStages.map((stage, i) => {
+              const color = getStageColor(stage);
+              const isLast = i === receivingStages.length - 1 && !needsPresident;
+
+              return (
+                <div class="stage-row">
+                  <div class="stage-indicator-col">
+                    <div
+                      class:list={['stage-circle', stage.current && 'pulse-subtle']}
+                      style={`background: ${color.bg}; width: ${stage.current ? '1.75rem' : '1.25rem'}; height: ${stage.current ? '1.75rem' : '1.25rem'};`}
+                    >
+                      {stage.completed && (
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      {stage.failed && (
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                      {!stage.completed && !stage.failed && (
+                        <span class="stage-num" style={`color: ${stage.current ? 'white' : '#6B7280'};`}>
+                          {originStages.length + i + 1}
+                        </span>
+                      )}
+                    </div>
+                    {!isLast && (
+                      <div
+                        class="stage-line"
+                        style={`background: ${stage.completed ? COLORS.completed.bg : '#E0D8C8'};`}
+                      />
+                    )}
+                  </div>
+                  <div class="stage-label-col">
+                    <span
+                      class:list={['stage-label', stage.current && 'font-semibold']}
+                      style={`color: ${stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#4B5563'};`}
+                    >
+                      {stage.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <!-- President Section (if applicable) -->
+      {needsPresident && presidentStages.length > 0 && (
+        <div class="chamber-section">
+          <div
+            class="chamber-header"
+            style={`background: ${COLORS.president.light}; border-color: ${COLORS.president.bg};`}
+          >
+            <Icon name="pen-tool" size={12} />
+            <span style={`color: ${COLORS.president.text};`}>President</span>
+          </div>
+          <div class="chamber-stages">
+            {presidentStages.map((stage) => {
+              const color = getStageColor(stage);
+
+              return (
+                <div class="stage-row">
+                  <div class="stage-indicator-col">
+                    <div
+                      class:list={[
+                        'stage-circle',
+                        stage.current && 'pulse-subtle',
+                        (stage.completed || stage.failed) && 'stage-circle-large',
+                      ]}
+                      style={`background: ${color.bg}; width: ${stage.completed || stage.failed ? '2.5rem' : stage.current ? '1.75rem' : '1.25rem'}; height: ${stage.completed || stage.failed ? '2.5rem' : stage.current ? '1.75rem' : '1.25rem'};`}
+                    >
+                      {stage.completed && (
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      {stage.failed && (
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                      {!stage.completed && !stage.failed && (
+                        <Icon name="pen-tool" size={12} class="text-white" />
+                      )}
+                    </div>
+                  </div>
+                  <div class="stage-label-col">
+                    <span
+                      class:list={['stage-label font-semibold']}
+                      style={`color: ${stage.completed ? COLORS.completed.bg : stage.failed ? COLORS.failed.bg : COLORS.president.bg};`}
+                    >
+                      {stage.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <!-- Help button to open glossary -->
+  <button
+    type="button"
+    class="glossary-help-btn"
+    aria-label="Learn about bill types and the legislative process"
+  >
+    <Icon name="help-circle" size={14} />
+    <span>What do these stages mean?</span>
+  </button>
+</div>
+
+<style>
+  .bicameral-timeline {
+    position: relative;
+  }
+
+  /* Mobile timeline styles */
+  .mobile-timeline {
+    border: 1px solid var(--color-cream-300);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: white;
+  }
+
+  .chamber-section {
+    border-bottom: 1px solid var(--color-cream-300);
+  }
+
+  .chamber-section:last-child {
+    border-bottom: none;
+  }
+
+  .chamber-header {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-left: 3px solid;
+  }
+
+  .chamber-stages {
+    padding: 0.75rem 1rem;
+  }
+
+  .stage-row {
+    display: flex;
+    gap: 0.75rem;
+    min-height: 2.5rem;
+  }
+
+  .stage-row:last-child {
+    min-height: auto;
+  }
+
+  .stage-indicator-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1.75rem;
+    flex-shrink: 0;
+  }
+
+  .stage-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    flex-shrink: 0;
+  }
+
+  .stage-circle-large {
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .stage-num {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+  }
+
+  .stage-line {
+    flex: 1;
+    width: 2px;
+    margin: 0.25rem 0;
+    min-height: 1rem;
+  }
+
+  .stage-label-col {
+    display: flex;
+    align-items: center;
+    padding-bottom: 0.5rem;
+  }
+
+  .stage-label {
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+  }
+
+  /* Help button */
+  .glossary-help-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.75rem;
+    padding: 0.375rem 0.625rem;
+    background: transparent;
+    border: 1px solid var(--color-cream-300);
+    border-radius: 9999px;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    color: var(--color-navy-500);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .glossary-help-btn:hover {
+    background: var(--color-cream-200);
+    border-color: var(--color-navy-400);
+    color: var(--color-navy-700);
+  }
+
+  /* Pulse animation */
+  @keyframes pulse-ring {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.25;
+    }
+    50% {
+      transform: scale(1.15);
+      opacity: 0.1;
+    }
+  }
+
+  .animate-pulse-ring {
+    animation: pulse-ring 2s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  /* Dark mode */
+  :global(html.dark) .mobile-timeline {
+    background: #1a2535;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  :global(html.dark) .chamber-section {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  :global(html.dark) .stage-label {
+    color: var(--color-cream-200);
+  }
+
+  :global(html.dark) .glossary-help-btn {
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--color-cream-300);
+  }
+
+  :global(html.dark) .glossary-help-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: var(--color-cream-100);
+  }
+</style>
+
+<script>
+  // Open glossary drawer on help button click
+  const helpBtn = document.querySelector('.glossary-help-btn');
+  helpBtn?.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('open-legislative-glossary'));
+  });
+</script>

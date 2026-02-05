@@ -118,34 +118,35 @@ const formatDate = (date: Date) => {
   </div>
 
   {milestones.length > 0 ? (
-    <div class="space-y-3">
-      {milestones.map((milestone, i) => (
-        <div class="flex items-start gap-3">
-          <div class="flex flex-col items-center">
+    <div class="relative">
+      {/* Connecting line - runs the full height behind the icons */}
+      <div class="absolute left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-gold-300 via-gold-200 to-gold-100" aria-hidden="true"></div>
+
+      <div class="space-y-0">
+        {milestones.map((milestone, i) => (
+          <div class="flex items-start gap-3 relative">
+            {/* Icon with background to cover the line */}
             <div class:list={[
-              'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+              'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 relative z-10 border-2 shadow-sm',
               milestone.type === 'law' || milestone.type === 'signed'
-                ? 'bg-green-100 text-green-700'
+                ? 'bg-green-100 text-green-700 border-green-200'
                 : milestone.type === 'vetoed'
-                ? 'bg-red-100 text-red-700'
-                : 'bg-gold-100 text-gold-700'
+                ? 'bg-red-100 text-red-700 border-red-200'
+                : 'bg-gold-100 text-gold-700 border-gold-200'
             ]}>
               <Icon name={milestone.icon} size={14} />
             </div>
-            {i < milestones.length - 1 && (
-              <div class="w-0.5 h-full min-h-[1rem] bg-gold-200 my-1"></div>
-            )}
+            <div class="flex-1 min-w-0 pb-4">
+              <time class="text-xs font-mono text-navy-400 block mb-0.5">
+                {formatDate(milestone.date)}
+              </time>
+              <p class="text-sm font-sans text-navy-700 leading-snug">
+                {milestone.text.length > 120 ? milestone.text.slice(0, 117) + '...' : milestone.text}
+              </p>
+            </div>
           </div>
-          <div class="flex-1 min-w-0 pb-2">
-            <time class="text-xs font-mono text-navy-400 block mb-0.5">
-              {formatDate(milestone.date)}
-            </time>
-            <p class="text-sm font-sans text-navy-700 leading-snug">
-              {milestone.text.length > 120 ? milestone.text.slice(0, 117) + '...' : milestone.text}
-            </p>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   ) : (
     <p class="text-sm text-navy-500 italic">No major milestones recorded yet.</p>

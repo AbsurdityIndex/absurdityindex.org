@@ -58,7 +58,7 @@ interface PorkItem {
 }
 
 interface EvolutionStage {
-  stage: 'introduced' | 'committee-markup' | 'house-passed' | 'senate-amended' | 'conference' | 'final';
+  stage: string; // Chamber-agnostic stage names
   date: Date;
   paraphrasedText: string;
   cumulativePork: number;
@@ -66,6 +66,7 @@ interface EvolutionStage {
   keyChanges: string[];
   amendmentsIncluded?: string[];
   porkItems?: PorkItem[];
+  chamber?: 'house' | 'senate' | 'both' | 'president';
 }
 
 interface Props {
@@ -74,18 +75,80 @@ interface Props {
   stages: EvolutionStage[];
   totalPork: number;
   congressDotGovUrl?: string;
+  originChamber?: 'house' | 'senate'; // For resolving origin/receiving labels
 }
 
-const { billNumber, billTitle, stages, totalPork, congressDotGovUrl } = Astro.props;
+const { billNumber, billTitle, stages, totalPork, congressDotGovUrl, originChamber = 'house' } = Astro.props;
 
-const stageLabels: Record<EvolutionStage['stage'], string> = {
+// Resolve chamber-agnostic names to display labels
+const receivingChamber = originChamber === 'house' ? 'Senate' : 'House';
+const originLabel = originChamber === 'house' ? 'House' : 'Senate';
+
+// Comprehensive stage label mapping for chamber-agnostic schema
+const stageLabels: Record<string, string> = {
+  // Introduction
   'introduced': 'Introduced',
+
+  // Origin chamber stages
+  'origin-committee': `${originLabel} Committee`,
+  'origin-reported': `Reported from ${originLabel}`,
+  'origin-floor': `${originLabel} Floor`,
+  'origin-passed': `Passed ${originLabel}`,
+
+  // Receiving chamber stages
+  'receiving-received': `Received in ${receivingChamber}`,
+  'receiving-committee': `${receivingChamber} Committee`,
+  'receiving-reported': `Reported from ${receivingChamber}`,
+  'receiving-floor': `${receivingChamber} Floor`,
+  'receiving-passed': `Passed ${receivingChamber}`,
+  'receiving-amended': `${receivingChamber} Amended`,
+
+  // Ping-pong stages
+  'origin-considers-amendments': `${originLabel} Reviews`,
+  'origin-concurs': `${originLabel} Concurs`,
+  'origin-disagrees': `${originLabel} Disagrees`,
+
+  // Conference stages
+  'conference-requested': 'Conference Requested',
+  'conference-appointed': 'Conferees Appointed',
+  'conference-report-filed': 'Conference Report',
+  'conference-house-adopts': 'House Adopts Report',
+  'conference-senate-adopts': 'Senate Adopts Report',
+
+  // Enrollment
+  'enrolled': 'Enrolled',
+
+  // Presidential action
+  'presented-to-president': 'Sent to President',
+  'signed': 'Signed',
+  'vetoed': 'Vetoed',
+  'pocket-vetoed': 'Pocket Vetoed',
+
+  // Veto override
+  'override-house-vote': 'House Override Vote',
+  'override-senate-vote': 'Senate Override Vote',
+  'override-successful': 'Veto Overridden',
+  'veto-sustained': 'Veto Sustained',
+
+  // Terminal states
+  'became-law': 'Became Law',
+  'died-in-committee': 'Died in Committee',
+  'died-on-floor': 'Died on Floor',
+  'died-in-conference': 'Died in Conference',
+  'expired': 'Expired',
+
+  // Legacy stage names (for backwards compatibility)
   'committee-markup': 'Committee Markup',
-  'house-passed': 'House Passed',
+  'house-passed': 'Passed House',
   'senate-amended': 'Senate Amended',
   'conference': 'Conference Committee',
-  'final': 'Signed into Law'
+  'final': 'Signed into Law',
 };
+
+// Fallback for unknown stages
+function getStageLabel(stage: string): string {
+  return stageLabels[stage] || stage.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -207,7 +270,7 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
         <span>Stages</span>
       </h3>
       <div class="timeline-container" id={`${modalId}-timeline`}>
-        <EvolutionTimeline stages={stages} currentStageIndex={0} />
+        <EvolutionTimeline stages={stages} currentStageIndex={0} originChamber={originChamber} />
       </div>
     </aside>
 
@@ -222,7 +285,7 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
         >
           {/* Stage header */}
           <div class="stage-header">
-            <h3 class="stage-title">{stageLabels[stage.stage]}</h3>
+            <h3 class="stage-title">{getStageLabel(stage.stage)}</h3>
             <time class="stage-date" datetime={stage.date.toISOString()}>
               {formatDate(stage.date)}
             </time>

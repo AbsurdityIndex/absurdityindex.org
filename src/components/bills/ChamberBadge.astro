@@ -1,0 +1,104 @@
+---
+/**
+ * ChamberBadge
+ *
+ * Visual indicator showing which chamber a bill originated in.
+ * House = Blue, Senate = Purple
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Props {
+  chamber: 'house' | 'senate';
+  size?: 'sm' | 'md';
+  showOrigin?: boolean;
+}
+
+const { chamber, size = 'sm', showOrigin = false } = Astro.props;
+
+const config = {
+  house: {
+    label: 'House',
+    icon: 'landmark' as const,
+    bgClass: 'bg-blue-100',
+    textClass: 'text-blue-800',
+    borderClass: 'border-blue-200',
+  },
+  senate: {
+    label: 'Senate',
+    icon: 'columns' as const,
+    bgClass: 'bg-purple-100',
+    textClass: 'text-purple-800',
+    borderClass: 'border-purple-200',
+  },
+};
+
+const { label, icon, bgClass, textClass, borderClass } = config[chamber];
+const sizeClasses = size === 'sm' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1';
+const iconSize = size === 'sm' ? 10 : 12;
+---
+
+<span
+  class:list={[
+    'inline-flex items-center gap-1 font-sans font-bold rounded-full border',
+    bgClass,
+    textClass,
+    borderClass,
+    sizeClasses,
+  ]}
+>
+  <Icon name={icon} size={iconSize} strokeWidth={2.5} />
+  {label}
+  {showOrigin && <span class="font-normal opacity-75">origin</span>}
+</span>
+
+<style>
+  /* Custom colors for house/senate that work in dark mode */
+  .bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+
+  .text-blue-800 {
+    color: #1e40af;
+  }
+
+  .border-blue-200 {
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  .bg-purple-100 {
+    background-color: rgba(139, 92, 246, 0.15);
+  }
+
+  .text-purple-800 {
+    color: #5b21b6;
+  }
+
+  .border-purple-200 {
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+
+  /* Dark mode adjustments */
+  :global(html.dark) .bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.2);
+  }
+
+  :global(html.dark) .text-blue-800 {
+    color: #93c5fd;
+  }
+
+  :global(html.dark) .border-blue-200 {
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+
+  :global(html.dark) .bg-purple-100 {
+    background-color: rgba(139, 92, 246, 0.2);
+  }
+
+  :global(html.dark) .text-purple-800 {
+    color: #c4b5fd;
+  }
+
+  :global(html.dark) .border-purple-200 {
+    border-color: rgba(139, 92, 246, 0.35);
+  }
+</style>

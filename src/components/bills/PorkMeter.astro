@@ -208,15 +208,11 @@ const comparison = getComparison(amount);
         )}
       </div>
 
-      <!-- Scale labels around the arc -->
+      <!-- Scale labels - simplified to avoid overlap -->
       <div class="scale-labels">
-        <span class="scale-label" style="left: 8%; bottom: 15%;">$0</span>
-        <span class="scale-label" style="left: 2%; bottom: 55%;">$10M</span>
-        <span class="scale-label" style="left: 20%; bottom: 85%;">$1B</span>
-        <span class="scale-label" style="left: 50%; bottom: 95%; transform: translateX(-50%);">$100B</span>
-        <span class="scale-label" style="right: 20%; bottom: 85%;">$500B</span>
-        <span class="scale-label" style="right: 2%; bottom: 55%;">$1T</span>
-        <span class="scale-label" style="right: 8%; bottom: 15%;">$1.5T</span>
+        <span class="scale-label scale-min">$0</span>
+        <span class="scale-label scale-mid">$100B</span>
+        <span class="scale-label scale-max">$1T+</span>
       </div>
     </div>
 
@@ -419,7 +415,7 @@ const comparison = getComparison(amount);
     50% { transform: translateX(-50%) translateY(-2px); }
   }
 
-  /* Scale labels */
+  /* Scale labels - simplified 3-point scale */
   .scale-labels {
     position: absolute;
     inset: 0;
@@ -429,9 +425,29 @@ const comparison = getComparison(amount);
   .scale-label {
     position: absolute;
     font-family: var(--font-mono);
-    font-size: 0.5625rem;
-    color: var(--color-navy-400);
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: var(--color-navy-500);
     white-space: nowrap;
+    background: var(--color-cream-100);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+  }
+
+  .scale-min {
+    left: 10%;
+    bottom: 8%;
+  }
+
+  .scale-mid {
+    left: 50%;
+    bottom: 92%;
+    transform: translateX(-50%);
+  }
+
+  .scale-max {
+    right: 10%;
+    bottom: 8%;
   }
 
   /* Tier badge */

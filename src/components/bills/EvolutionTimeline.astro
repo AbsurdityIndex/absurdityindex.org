@@ -8,28 +8,84 @@
 import Icon from '../ui/Icon.astro';
 
 interface Stage {
-  stage: 'introduced' | 'committee-markup' | 'house-passed' | 'senate-amended' | 'conference' | 'final';
+  stage: string; // Chamber-agnostic stage names
   date: Date;
   porkAddedThisStage: number;
   cumulativePork: number;
+  chamber?: 'house' | 'senate' | 'both' | 'president';
 }
 
 interface Props {
   stages: Stage[];
   currentStageIndex: number;
   onStageSelect?: string; // ID of callback function in window
+  originChamber?: 'house' | 'senate'; // For resolving origin/receiving labels
 }
 
-const { stages, currentStageIndex } = Astro.props;
+const { stages, currentStageIndex, originChamber = 'house' } = Astro.props;
 
-const stageLabels: Record<Stage['stage'], { label: string; icon: string }> = {
+// Resolve chamber-agnostic names to display labels
+const receivingChamber = originChamber === 'house' ? 'Senate' : 'House';
+const originLabel = originChamber === 'house' ? 'House' : 'Senate';
+
+// Comprehensive stage label mapping for the new chamber-agnostic schema
+const stageLabels: Record<string, { label: string; icon: string }> = {
+  // Introduction
   'introduced': { label: 'Introduced', icon: 'file-plus' },
-  'committee-markup': { label: 'Committee', icon: 'users' },
-  'house-passed': { label: 'House Passed', icon: 'landmark' },
-  'senate-amended': { label: 'Senate Amended', icon: 'edit-3' },
-  'conference': { label: 'Conference', icon: 'git-merge' },
-  'final': { label: 'Signed into Law', icon: 'check-circle' }
+
+  // Origin chamber stages
+  'origin-committee': { label: `${originLabel} Committee`, icon: 'users' },
+  'origin-reported': { label: `Reported from ${originLabel}`, icon: 'file-check' },
+  'origin-floor': { label: `${originLabel} Floor`, icon: 'message-square' },
+  'origin-passed': { label: `Passed ${originLabel}`, icon: 'landmark' },
+
+  // Receiving chamber stages
+  'receiving-received': { label: `Received in ${receivingChamber}`, icon: 'inbox' },
+  'receiving-committee': { label: `${receivingChamber} Committee`, icon: 'users' },
+  'receiving-reported': { label: `Reported from ${receivingChamber}`, icon: 'file-check' },
+  'receiving-floor': { label: `${receivingChamber} Floor`, icon: 'message-square' },
+  'receiving-passed': { label: `Passed ${receivingChamber}`, icon: 'check-circle' },
+  'receiving-amended': { label: `${receivingChamber} Amended`, icon: 'edit-3' },
+
+  // Ping-pong stages
+  'origin-considers-amendments': { label: `${originLabel} Reviews`, icon: 'eye' },
+  'origin-concurs': { label: `${originLabel} Concurs`, icon: 'check' },
+  'origin-disagrees': { label: `${originLabel} Disagrees`, icon: 'x' },
+
+  // Conference stages
+  'conference-requested': { label: 'Conference Requested', icon: 'git-pull-request' },
+  'conference-appointed': { label: 'Conferees Appointed', icon: 'users' },
+  'conference-report-filed': { label: 'Conference Report', icon: 'git-merge' },
+  'conference-house-adopts': { label: 'House Adopts Report', icon: 'landmark' },
+  'conference-senate-adopts': { label: 'Senate Adopts Report', icon: 'columns' },
+
+  // Enrollment
+  'enrolled': { label: 'Enrolled', icon: 'scroll' },
+
+  // Presidential action
+  'presented-to-president': { label: 'Sent to President', icon: 'send' },
+  'signed': { label: 'Signed', icon: 'pen-tool' },
+  'vetoed': { label: 'Vetoed', icon: 'x-circle' },
+  'pocket-vetoed': { label: 'Pocket Vetoed', icon: 'clock' },
+
+  // Veto override
+  'override-house-vote': { label: 'House Override Vote', icon: 'landmark' },
+  'override-senate-vote': { label: 'Senate Override Vote', icon: 'columns' },
+  'override-successful': { label: 'Veto Overridden', icon: 'shield' },
+  'veto-sustained': { label: 'Veto Sustained', icon: 'shield-off' },
+
+  // Terminal states
+  'became-law': { label: 'Became Law', icon: 'check-circle' },
+  'died-in-committee': { label: 'Died in Committee', icon: 'archive' },
+  'died-on-floor': { label: 'Died on Floor', icon: 'x-circle' },
+  'died-in-conference': { label: 'Died in Conference', icon: 'x-circle' },
+  'expired': { label: 'Expired', icon: 'clock' },
 };
+
+// Fallback for unknown stages
+function getStageConfig(stage: string): { label: string; icon: string } {
+  return stageLabels[stage] || { label: stage.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), icon: 'circle' };
+}
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
@@ -50,7 +106,7 @@ function formatPorkDelta(amount: number): string {
 <nav class="evolution-timeline" aria-label="Bill evolution stages">
   <ol class="timeline-list">
     {stages.map((stage, index) => {
-      const config = stageLabels[stage.stage];
+      const config = getStageConfig(stage.stage);
       const isActive = index === currentStageIndex;
       const isPast = index < currentStageIndex;
       const isFuture = index > currentStageIndex;

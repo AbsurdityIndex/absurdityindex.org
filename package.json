@@ -8,7 +8,12 @@
     "search:index": "npx pagefind --site dist",
     "preview": "astro preview",
     "astro": "astro",
-    "fetch-bills": "node scripts/fetch-bills.mjs"
+    "fetch-bills": "node scripts/fetch-bills.mjs",
+    "validate": "node scripts/validate-bills.mjs",
+    "validate:build": "npm run validate && npm run build",
+    "cli": "node cli/bin/not-congress.mjs",
+    "cli:build": "cd cli && npm run build",
+    "cli:dev": "cd cli && npx tsx src/index.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.13",

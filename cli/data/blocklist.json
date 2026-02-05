@@ -1,0 +1,37 @@
+{
+  "description": "Topics and keywords that trigger instant rejection. Never touch these.",
+  "keywords": [
+    "assassination",
+    "bomb threat",
+    "school shooting",
+    "mass shooting",
+    "suicide",
+    "self-harm",
+    "child abuse",
+    "sexual assault",
+    "rape",
+    "genocide",
+    "holocaust denial",
+    "slavery apologist",
+    "white supremacy",
+    "ethnic cleansing",
+    "kill",
+    "murder",
+    "death threat"
+  ],
+  "patterns": [
+    "\\b(kill|murder|assassinate)\\s+(the\\s+)?president\\b",
+    "\\b(bomb|shoot|attack)\\s+(the\\s+)?(capitol|congress|white\\s*house)\\b",
+    "\\bN[-_]?word\\b",
+    "\\b(retard|retarded)\\b"
+  ],
+  "topics": [
+    "active mass casualty events",
+    "ongoing terrorist attacks",
+    "natural disaster death tolls while rescue ongoing",
+    "military member casualties (within 48h)",
+    "child exploitation",
+    "specific threats to public officials"
+  ],
+  "notes": "This list is intentionally conservative. Better to miss a post opportunity than to touch anything near these topics."
+}

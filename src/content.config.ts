@@ -83,23 +83,90 @@ const amendmentSchema = z.object({
   passedDate: z.coerce.date().optional()
 });
 
-// Bill evolution stage schema
+// Stage-specific vote schema (for bill evolution stages)
+const stageVoteSchema = z.object({
+  yeas: z.number(),
+  nays: z.number(),
+  notVoting: z.number().optional(),
+  passed: z.boolean(),
+  chamber: z.enum(['house', 'senate']),
+  rollCallNumber: z.number().optional(),
+  rollCallUrl: z.string().url().optional(),
+});
+
+// Bill evolution stage schema - chamber-agnostic design
+// "origin" = the chamber where the bill was introduced (House for H.R., Senate for S.)
+// "receiving" = the other chamber that receives the bill after origin passes it
 const billEvolutionStageSchema = z.object({
   stage: z.enum([
+    // Introduction
     'introduced',
-    'committee-markup',
-    'house-passed',
-    'senate-amended',
-    'conference',
-    'final'
+
+    // Origin chamber (House for H.R., Senate for S.)
+    'origin-committee',        // Referred to committee(s)
+    'origin-reported',         // Reported out of committee
+    'origin-floor',            // Floor consideration/debate
+    'origin-passed',           // Passed origin chamber
+
+    // Receiving chamber
+    'receiving-received',      // Received in other chamber
+    'receiving-committee',     // In receiving chamber's committee
+    'receiving-reported',      // Reported out of receiving committee
+    'receiving-floor',         // Floor consideration in receiving chamber
+    'receiving-passed',        // Passed without changes → enrolled
+    'receiving-amended',       // Passed WITH changes → ping-pong
+
+    // Ping-pong (origin reconsiders receiving's amendments)
+    'origin-considers-amendments',
+    'origin-concurs',          // Accepts receiving's changes → enrolled
+    'origin-disagrees',        // Rejects → conference or more amendments
+
+    // Conference committee
+    'conference-requested',
+    'conference-appointed',
+    'conference-report-filed',
+    'conference-house-adopts',
+    'conference-senate-adopts',
+
+    // Enrollment
+    'enrolled',
+
+    // Presidential action
+    'presented-to-president',
+    'signed',
+    'vetoed',
+    'pocket-vetoed',
+
+    // Veto override
+    'override-house-vote',
+    'override-senate-vote',
+    'override-successful',
+    'veto-sustained',
+
+    // Terminal states
+    'became-law',
+    'died-in-committee',
+    'died-on-floor',
+    'died-in-conference',
+    'expired',                 // Congress ended without action
   ]),
+
+  // Track which chamber this occurred in (for explicit display)
+  chamber: z.enum(['house', 'senate', 'both', 'president']).optional(),
+
+  // For ping-pong scenarios, track the round number (1 = first pass, 2 = after amendments, etc.)
+  round: z.number().optional(),
+
   date: z.coerce.date(),
   paraphrasedText: z.string(),        // AI summary at this stage
   cumulativePork: z.number(),         // Running total
   porkAddedThisStage: z.number(),
   keyChanges: z.array(z.string()),    // Bullet points of what changed
   amendmentsIncluded: z.array(z.string()).optional(), // Amendment numbers
-  porkItems: z.array(porkItemSchema).optional() // Pork added this stage
+  porkItems: z.array(porkItemSchema).optional(), // Pork added this stage
+
+  // Vote data for this specific stage (if applicable)
+  vote: stageVoteSchema.optional(),
 });
 
 const cosponsorSchema = z.object({
@@ -142,119 +209,213 @@ const textVersionSchema = z.object({
   }).optional(),
 });
 
+// Votes schema - shared between bill types
+const votesSchema = z.object({
+  yeas: z.number(),
+  nays: z.number(),
+  notVoting: z.number().default(0),
+  passed: z.boolean(),
+  chamber: z.enum(['house', 'senate']).optional(),
+  method: z.string().optional(), // e.g., "unanimous consent"
+  rollCallNumber: z.number().optional(),
+  rollCallUrl: z.string().url().optional(),
+});
+
+// Base schema shared by all bill types
+const baseBillSchema = z.object({
+  // Core identification (required for all)
+  title: z.string(),
+  subtitle: z.string().optional(),
+  billNumber: z.string(),
+  billType: z.enum(['sensible', 'absurd', 'real']),
+  category: z.string(),
+  tags: z.array(z.string()).default([]),
+
+  // Sponsor (required for all - format varies by type)
+  sponsor: z.string(),
+  cosponsors: z.array(z.union([z.string(), cosponsorSchema])).default([]),
+
+  // Committee info (required for all)
+  committee: z.string(),
+
+  // Status & Timeline (required for all)
+  status: z.string(),
+  dateIntroduced: z.coerce.date(),
+
+  // Summary (required for all)
+  summary: z.string(),
+
+  // Display & Features
+  featured: z.boolean().default(false),
+
+  // Votes (optional - not all bills have recorded votes)
+  votes: votesSchema.optional(),
+
+  // Bill evolution & pork tracking
+  billEvolution: z.array(billEvolutionStageSchema).optional(),
+  totalPork: z.number().default(0),
+  porkPerCapita: z.number().default(0),
+});
+
+// Additional fields for "real" bills (from Congress.gov)
+const realBillExtensions = z.object({
+  // Sponsor details (real bills have separate fields)
+  sponsorParty: z.string(),
+  sponsorState: z.string(),
+  sponsorUrl: z.string().url().optional(),
+  cosponsorCount: z.number().optional(),
+
+  // Committee details
+  committees: z.array(committeeSchema).default([]),
+
+  // Timeline
+  dateUpdated: z.coerce.date().optional(),
+  actions: z.array(actionSchema).default([]),
+
+  // Key milestones
+  keyMilestones: z.array(z.object({
+    type: z.string(),
+    date: z.coerce.date(),
+    text: z.string(),
+    icon: z.string(),
+  })).optional(),
+
+  // Titles
+  officialTitle: z.string(),
+  shortTitles: z.array(titleSchema).default([]),
+  popularTitle: z.string().optional(),
+
+  // Summaries
+  plainLanguageSummary: z.string().optional(),
+  crsSummary: z.string().optional(),
+
+  // Editorial content
+  theGist: z.string().optional(),
+  whyItMatters: z.string().optional(),
+
+  // Amendments
+  amendments: z.array(amendmentSchema).default([]),
+  amendmentCount: z.number().default(0),
+
+  // Related legislation
+  relatedBills: z.array(relatedBillSchema).default([]),
+
+  // Text versions
+  textVersions: z.array(textVersionSchema).default([]),
+  latestTextUrl: z.string().url().optional(),
+
+  // Real bill metadata
+  absurdityIndex: z.number().min(1).max(10),
+  congressDotGovUrl: z.string().url(),
+  congressNumber: z.number(),
+  excerpt: z.string().optional(),
+  pairedBillId: z.string().optional(),
+
+  // Omnibus bill fields
+  isOmnibus: z.boolean().default(false),
+  omnibusData: z.object({
+    totalSpending: z.number(),
+    pageCount: z.number(),
+    divisions: z.array(z.object({
+      title: z.string(),
+      shortTitle: z.string().optional(),
+      spending: z.number(),
+      description: z.string().optional(),
+    })),
+    riders: z.array(z.object({
+      title: z.string(),
+      description: z.string(),
+      category: z.enum(['policy', 'spending', 'tax', 'controversial', 'sneaky']).optional(),
+    })).optional(),
+    timeline: z.array(z.object({
+      date: z.coerce.date(),
+      event: z.string(),
+    })).optional(),
+  }).optional(),
+});
+
+// Additional fields for "absurd" bills (real historical laws)
+const absurdBillExtensions = z.object({
+  realSource: z.string().url().optional(),
+  realJurisdiction: z.string().optional(),
+});
+
+// Sensible bills use only the base schema (no extensions required)
+
 const bills = defineCollection({
   loader: glob({ pattern: '**/*.mdx', base: './src/data/bills' }),
-  schema: z.object({
-    // Core identification
-    title: z.string(),
-    subtitle: z.string().optional(),
-    billNumber: z.string(),
-    billType: z.enum(['sensible', 'absurd', 'real']),
-    category: z.string(),
-    tags: z.array(z.string()).default([]),
-
-    // Sponsor & Cosponsors
-    sponsor: z.string(),
-    sponsorParty: z.string().optional(),
-    sponsorState: z.string().optional(),
-    sponsorUrl: z.string().url().optional(),
-    cosponsors: z.array(z.union([z.string(), cosponsorSchema])).default([]),
-    cosponsorCount: z.number().optional(),
-
-    // Committee info
-    committee: z.string(),
-    committees: z.array(committeeSchema).optional(),
-
-    // Status & Timeline
-    status: z.string(),
-    dateIntroduced: z.coerce.date(),
-    dateUpdated: z.coerce.date().optional(),
-    actions: z.array(actionSchema).optional(),
-
-    // Key milestones (AI-extracted from actions)
-    keyMilestones: z.array(z.object({
-      type: z.string(),  // 'introduced', 'committee', 'passed-house', 'passed-senate', 'signed', 'vetoed', etc.
-      date: z.coerce.date(),
-      text: z.string(),
-      icon: z.string(),  // Icon name for display
-    })).optional(),
-
-    // Titles
-    officialTitle: z.string().optional(),
-    shortTitles: z.array(titleSchema).optional(),
-    popularTitle: z.string().optional(),
-
-    // Summaries
-    summary: z.string(),
-    plainLanguageSummary: z.string().optional(),
-    crsSummary: z.string().optional(),
-
-    // Editorial content (AI-generated)
-    theGist: z.string().optional(),
-    whyItMatters: z.string().optional(),
-
-    // Amendments
-    amendments: z.array(amendmentSchema).optional(),
-    amendmentCount: z.number().optional(),
-
-    // Related legislation
-    relatedBills: z.array(relatedBillSchema).optional(),
-
-    // Text versions
-    textVersions: z.array(textVersionSchema).optional(),
-    latestTextUrl: z.string().url().optional(),
-
-    // Display & Features
-    featured: z.boolean().default(false),
-    image: z.string().optional(),
-
-    // Legacy fields
-    realSource: z.string().optional(),
-    realJurisdiction: z.string().optional(),
-
-    // Real bill metadata
-    absurdityIndex: z.number().min(1).max(10).optional(),
-    congressDotGovUrl: z.string().url().optional(),
-    congressNumber: z.number().optional(),
-    excerpt: z.string().optional(),
-    pairedBillId: z.string().optional(),
-
-    // Votes
-    votes: z.object({
-      yeas: z.number(),
-      nays: z.number(),
-      notVoting: z.number(),
-      passed: z.boolean(),
-      chamber: z.enum(['house', 'senate']).optional(),
-    }).optional(),
-
-    // Bill evolution & pork tracking
-    billEvolution: z.array(billEvolutionStageSchema).optional(),
-    totalPork: z.number().optional(),     // Final pork tally
-    porkPerCapita: z.number().optional(), // totalPork / US population (~333M)
-
-    // Omnibus bill fields
-    isOmnibus: z.boolean().default(false),
-    omnibusData: z.object({
-      totalSpending: z.number(),
-      pageCount: z.number(),
-      divisions: z.array(z.object({
-        title: z.string(),
-        shortTitle: z.string().optional(),
-        spending: z.number(),
-        description: z.string().optional(),
-      })),
-      riders: z.array(z.object({
-        title: z.string(),
-        description: z.string(),
-        category: z.enum(['policy', 'spending', 'tax', 'controversial', 'sneaky']).optional(),
-      })).optional(),
-      timeline: z.array(z.object({
+  schema: baseBillSchema
+    // Merge optional fields that real bills use
+    .extend({
+      // Real bill optional fields (not required for sensible/absurd)
+      sponsorParty: z.string().optional(),
+      sponsorState: z.string().optional(),
+      sponsorUrl: z.string().url().optional(),
+      cosponsorCount: z.number().optional(),
+      committees: z.array(committeeSchema).optional(),
+      dateUpdated: z.coerce.date().optional(),
+      actions: z.array(actionSchema).optional(),
+      keyMilestones: z.array(z.object({
+        type: z.string(),
         date: z.coerce.date(),
-        event: z.string(),
+        text: z.string(),
+        icon: z.string(),
       })).optional(),
-    }).optional(),
-  }),
+      officialTitle: z.string().optional(),
+      shortTitles: z.array(titleSchema).optional(),
+      popularTitle: z.string().optional(),
+      plainLanguageSummary: z.string().optional(),
+      crsSummary: z.string().optional(),
+      theGist: z.string().optional(),
+      whyItMatters: z.string().optional(),
+      amendments: z.array(amendmentSchema).optional(),
+      amendmentCount: z.number().optional(),
+      relatedBills: z.array(relatedBillSchema).optional(),
+      textVersions: z.array(textVersionSchema).optional(),
+      latestTextUrl: z.string().url().optional(),
+      image: z.string().optional(),
+      absurdityIndex: z.number().min(1).max(10).optional(),
+      congressDotGovUrl: z.string().url().optional(),
+      congressNumber: z.number().optional(),
+      excerpt: z.string().optional(),
+      pairedBillId: z.string().optional(),
+      isOmnibus: z.boolean().default(false),
+      omnibusData: z.object({
+        totalSpending: z.number(),
+        pageCount: z.number(),
+        divisions: z.array(z.object({
+          title: z.string(),
+          shortTitle: z.string().optional(),
+          spending: z.number(),
+          description: z.string().optional(),
+        })),
+        riders: z.array(z.object({
+          title: z.string(),
+          description: z.string(),
+          category: z.enum(['policy', 'spending', 'tax', 'controversial', 'sneaky']).optional(),
+        })).optional(),
+        timeline: z.array(z.object({
+          date: z.coerce.date(),
+          event: z.string(),
+        })).optional(),
+      }).optional(),
+      // Absurd bill fields
+      realSource: z.string().optional(),
+      realJurisdiction: z.string().optional(),
+    })
+    // Add refinement to validate bill-type-specific requirements
+    .refine(
+      (data) => {
+        // Real bills must have certain fields
+        if (data.billType === 'real') {
+          return data.sponsorParty !== undefined &&
+                 data.sponsorState !== undefined &&
+                 data.congressNumber !== undefined;
+        }
+        return true;
+      },
+      { message: "Real bills require sponsorParty, sponsorState, and congressNumber" }
+    ),
 });
 
 // Congressional Rules packages
