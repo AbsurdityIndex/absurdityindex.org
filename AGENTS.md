@@ -66,9 +66,22 @@ API endpoints in `src/pages/api/` return JSON for bills, stats, etc.
 - Dark mode support via `html.dark` class
 
 ### Deployment
-- Hosted on **Cloudflare Pages**
+- Hosted on **Cloudflare Pages** at `absurdityindex.org`
 - `functions/_middleware.js` restricts access to US visitors only
 - Search powered by **Pagefind** (indexed at build time)
+
+#### Deploy to Production
+```bash
+npm run build                                          # Build site + Pagefind index
+npx wrangler pages deploy dist --project-name=absurdity-index   # Deploy to Cloudflare
+```
+
+The deploy command will output a preview URL (e.g., `https://abc123.absurdity-index.pages.dev`) and automatically promote to production domains (`absurdityindex.org`, `www.absurdityindex.org`).
+
+#### Environment Variables
+- **Build-time secrets** (API keys) are only used by `scripts/fetch-bills.mjs` and are NOT bundled into the static site
+- The `.env` file is gitignored and never deployed
+- Safe to verify: `grep -r "API_KEY" dist/` should return no matches
 
 ### Browser Extension
 `extension/` contains a Chrome extension that shows Absurdity Index scores on Congress.gov bill pages. Uses Manifest V3.
