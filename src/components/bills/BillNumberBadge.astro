@@ -1,11 +1,24 @@
 ---
+import Icon from '../ui/Icon.astro';
+
 interface Props {
   billNumber: string;
+  size?: 'sm' | 'md';
 }
 
-const { billNumber } = Astro.props;
+const { billNumber, size = 'sm' } = Astro.props;
+
+const sizeClasses = size === 'sm'
+  ? 'text-xs px-2.5 py-1 gap-1.5'
+  : 'text-sm px-3 py-1.5 gap-2';
+
+const iconSize = size === 'sm' ? 12 : 14;
 ---
 
-<span class="inline-block font-mono text-xs font-semibold bg-navy-800 text-gold-400 px-2.5 py-0.5 rounded-full tracking-wide">
+<span class:list={[
+  'inline-flex items-center font-mono font-semibold bg-navy-800 text-gold-400 rounded-full tracking-wide',
+  sizeClasses
+]}>
+  <Icon name="file-text" size={iconSize} class="text-gold-500" strokeWidth={2.5} />
   {billNumber}
 </span>

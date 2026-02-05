@@ -1,14 +1,53 @@
 ---
+import Icon from '../ui/Icon.astro';
+
 interface Props {
   status: string;
+  size?: 'sm' | 'md';
 }
 
-const { status } = Astro.props;
+const { status, size = 'md' } = Astro.props;
+
+// Determine status category and styling
+const statusLower = status.toLowerCase();
+
+type StatusConfig = {
+  icon: 'check-circle' | 'clock' | 'x-circle' | 'alert-triangle' | 'gavel';
+  colors: string;
+};
+
+function getStatusConfig(): StatusConfig {
+  if (statusLower.includes('enacted') || statusLower.includes('became law') || statusLower.includes('signed')) {
+    return { icon: 'check-circle', colors: 'text-green-700 border-green-700 bg-green-50' };
+  }
+  if (statusLower.includes('passed') || statusLower.includes('agreed')) {
+    return { icon: 'check-circle', colors: 'text-green-600 border-green-600 bg-green-50' };
+  }
+  if (statusLower.includes('vetoed') || statusLower.includes('failed') || statusLower.includes('rejected')) {
+    return { icon: 'x-circle', colors: 'text-red-700 border-red-700 bg-red-50' };
+  }
+  if (statusLower.includes('committee') || statusLower.includes('referred')) {
+    return { icon: 'clock', colors: 'text-navy-700 border-navy-700 bg-navy-50' };
+  }
+  if (statusLower.includes('introduced')) {
+    return { icon: 'gavel', colors: 'text-navy-600 border-navy-600 bg-cream-100' };
+  }
+  // Default
+  return { icon: 'alert-triangle', colors: 'text-gold-700 border-gold-700 bg-gold-50' };
+}
+
+const config = getStatusConfig();
+const sizeClasses = size === 'sm' ? 'text-xs px-2 py-0.5' : 'text-sm px-3 py-1';
+const iconSize = size === 'sm' ? 12 : 14;
 ---
 
 <span
-  class="inline-block font-serif font-bold text-sm uppercase tracking-widest text-red-700 border-2 border-red-700 rounded px-3 py-1 -rotate-3"
-  style="letter-spacing: 0.12em;"
+  class:list={[
+    'inline-flex items-center gap-1.5 font-mono font-bold uppercase tracking-wide border-2 rounded -rotate-1',
+    config.colors,
+    sizeClasses
+  ]}
 >
+  <Icon name={config.icon} size={iconSize} strokeWidth={2.5} />
   {status}
 </span>

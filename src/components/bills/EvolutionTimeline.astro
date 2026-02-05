@@ -1,0 +1,349 @@
+---
+/**
+ * EvolutionTimeline Component
+ *
+ * Vertical timeline showing bill evolution stages with clickable nodes,
+ * current stage highlighting, pork deltas, and dates.
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Stage {
+  stage: 'introduced' | 'committee-markup' | 'house-passed' | 'senate-amended' | 'conference' | 'final';
+  date: Date;
+  porkAddedThisStage: number;
+  cumulativePork: number;
+}
+
+interface Props {
+  stages: Stage[];
+  currentStageIndex: number;
+  onStageSelect?: string; // ID of callback function in window
+}
+
+const { stages, currentStageIndex } = Astro.props;
+
+const stageLabels: Record<Stage['stage'], { label: string; icon: string }> = {
+  'introduced': { label: 'Introduced', icon: 'file-plus' },
+  'committee-markup': { label: 'Committee', icon: 'users' },
+  'house-passed': { label: 'House Passed', icon: 'landmark' },
+  'senate-amended': { label: 'Senate Amended', icon: 'edit-3' },
+  'conference': { label: 'Conference', icon: 'git-merge' },
+  'final': { label: 'Signed into Law', icon: 'check-circle' }
+};
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+}
+
+function formatPorkDelta(amount: number): string {
+  if (amount === 0) return '';
+  const sign = amount > 0 ? '+' : '';
+  if (Math.abs(amount) >= 1_000_000_000) {
+    return `${sign}$${(amount / 1_000_000_000).toFixed(1)}B`;
+  } else if (Math.abs(amount) >= 1_000_000) {
+    return `${sign}$${(amount / 1_000_000).toFixed(1)}M`;
+  }
+  return `${sign}$${(amount / 1_000).toFixed(0)}K`;
+}
+---
+
+<nav class="evolution-timeline" aria-label="Bill evolution stages">
+  <ol class="timeline-list">
+    {stages.map((stage, index) => {
+      const config = stageLabels[stage.stage];
+      const isActive = index === currentStageIndex;
+      const isPast = index < currentStageIndex;
+      const isFuture = index > currentStageIndex;
+      const porkDelta = formatPorkDelta(stage.porkAddedThisStage);
+
+      return (
+        <li class="timeline-item" data-index={index}>
+          <button
+            type="button"
+            class:list={[
+              'timeline-node',
+              { 'active': isActive, 'past': isPast, 'future': isFuture }
+            ]}
+            data-stage-index={index}
+            aria-current={isActive ? 'step' : undefined}
+            aria-label={`${config.label} - ${formatDate(stage.date)}${porkDelta ? ` (${porkDelta} pork)` : ''}`}
+          >
+            {/* Connector line */}
+            {index < stages.length - 1 && (
+              <div class:list={[
+                'connector',
+                { 'connector-filled': isPast || isActive }
+              ]} />
+            )}
+
+            {/* Node circle */}
+            <div class:list={[
+              'node-circle',
+              { 'node-active': isActive, 'node-past': isPast, 'node-future': isFuture }
+            ]}>
+              <Icon name={config.icon} size={14} />
+            </div>
+
+            {/* Content */}
+            <div class="node-content">
+              <span class:list={[
+                'node-label',
+                { 'label-active': isActive }
+              ]}>
+                {config.label}
+              </span>
+              <time class="node-date" datetime={stage.date.toISOString()}>
+                {formatDate(stage.date)}
+              </time>
+              {porkDelta && (
+                <span class:list={[
+                  'pork-delta',
+                  { 'delta-positive': stage.porkAddedThisStage > 0 }
+                ]}>
+                  {porkDelta}
+                </span>
+              )}
+            </div>
+          </button>
+        </li>
+      );
+    })}
+  </ol>
+</nav>
+
+<style>
+  .evolution-timeline {
+    padding: 0.5rem 0;
+  }
+
+  .timeline-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .timeline-item {
+    position: relative;
+  }
+
+  .timeline-node {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.625rem 0.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+    border-radius: 0.375rem;
+    position: relative;
+  }
+
+  .timeline-node:hover {
+    background: rgba(197, 165, 114, 0.1);
+  }
+
+  .timeline-node:focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
+  }
+
+  /* Connector line */
+  .connector {
+    position: absolute;
+    left: calc(0.5rem + 12px); /* padding + half of circle */
+    top: calc(0.625rem + 24px + 4px); /* padding + circle height + gap */
+    width: 2px;
+    height: calc(100% - 24px);
+    background: var(--color-cream-300);
+    transition: background 0.3s ease;
+  }
+
+  .connector-filled {
+    background: var(--color-gold-500);
+  }
+
+  /* Node circle */
+  .node-circle {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid var(--color-cream-300);
+    background: var(--color-cream-100);
+    color: var(--color-navy-400);
+    transition: all 0.3s ease;
+    z-index: 1;
+  }
+
+  .node-past {
+    border-color: var(--color-gold-500);
+    background: var(--color-gold-100);
+    color: var(--color-gold-600);
+  }
+
+  .node-active {
+    border-color: var(--color-gold-500);
+    background: var(--color-gold-500);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(197, 165, 114, 0.25);
+  }
+
+  .node-future {
+    border-color: var(--color-cream-300);
+    background: var(--color-cream-100);
+    color: var(--color-navy-300);
+  }
+
+  /* Node content */
+  .node-content {
+    flex: 1;
+    min-width: 0;
+    padding-top: 2px;
+  }
+
+  .node-label {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-navy-600);
+    line-height: 1.3;
+    transition: color 0.2s ease;
+  }
+
+  .label-active {
+    color: var(--color-navy-900);
+    font-weight: 600;
+  }
+
+  .node-date {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-navy-400);
+    margin-top: 0.125rem;
+  }
+
+  .pork-delta {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--color-navy-500);
+    background: var(--color-cream-200);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    margin-top: 0.25rem;
+  }
+
+  .delta-positive {
+    color: var(--color-red-600);
+    background: rgba(220, 38, 38, 0.1);
+  }
+
+  /* Dark mode */
+  :global(html.dark) .connector {
+    background: rgba(197, 165, 114, 0.2);
+  }
+
+  :global(html.dark) .connector-filled {
+    background: var(--color-gold-500);
+  }
+
+  :global(html.dark) .node-circle {
+    background: rgba(15, 26, 46, 0.8);
+    border-color: rgba(197, 165, 114, 0.3);
+  }
+
+  :global(html.dark) .node-past {
+    background: rgba(197, 165, 114, 0.2);
+    border-color: var(--color-gold-500);
+  }
+
+  :global(html.dark) .node-active {
+    background: var(--color-gold-500);
+    border-color: var(--color-gold-500);
+  }
+
+  :global(html.dark) .timeline-node:hover {
+    background: rgba(197, 165, 114, 0.15);
+  }
+
+  :global(html.dark) .pork-delta {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  :global(html.dark) .delta-positive {
+    background: rgba(220, 38, 38, 0.2);
+  }
+
+  /* Mobile horizontal layout */
+  @media (max-width: 640px) {
+    .evolution-timeline {
+      overflow-x: auto;
+      padding: 0.5rem;
+      margin: 0 -0.5rem;
+    }
+
+    .timeline-list {
+      display: flex;
+      gap: 0.25rem;
+      min-width: max-content;
+    }
+
+    .timeline-item {
+      flex-shrink: 0;
+    }
+
+    .timeline-node {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0.5rem;
+      min-width: 80px;
+    }
+
+    .connector {
+      display: none;
+    }
+
+    /* Horizontal connector for mobile */
+    .timeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: calc(0.5rem + 12px);
+      right: -0.375rem;
+      width: 0.5rem;
+      height: 2px;
+      background: var(--color-cream-300);
+    }
+
+    .timeline-item.past::after,
+    .timeline-item:has(.active)::after {
+      background: var(--color-gold-500);
+    }
+
+    .node-content {
+      padding-top: 0.5rem;
+    }
+
+    .node-label {
+      font-size: 0.6875rem;
+    }
+
+    .node-date {
+      font-size: 0.625rem;
+    }
+
+    .pork-delta {
+      font-size: 0.625rem;
+      padding: 0.0625rem 0.25rem;
+    }
+  }
+</style>

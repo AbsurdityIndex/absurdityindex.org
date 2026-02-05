@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Icon from '../components/ui/Icon.astro';
 ---
 
 <BaseLayout title="Submit a Bill" description="Submit your own satirical bill to the Not-Congress. All proposals will be given exactly as much consideration as real bills receive.">
@@ -139,7 +140,7 @@ import OfficialSeal from '../components/ui/OfficialSeal.astro';
   <!-- Popup modal -->
   <div id="submit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
     <div class="bg-parchment rounded-lg shadow-2xl max-w-md w-full p-8 text-center border-4 border-gold-500 relative">
-      <div class="text-5xl mb-4">🏛️</div>
+      <div class="flex justify-center text-gold-600 mb-4"><Icon name="landmark" size={48} /></div>
       <h2 class="font-serif text-2xl text-navy-900 font-bold mb-3">Just Kidding.</h2>
       <p class="text-navy-700 font-serif text-lg mb-2">
         You think we actually work around here?

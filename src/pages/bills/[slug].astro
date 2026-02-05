@@ -1,15 +1,16 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import BillHeader from '../../components/bills/BillHeader.astro';
+import BillTypeBadge from '../../components/bills/BillTypeBadge.astro';
 import BillTimeline from '../../components/bills/BillTimeline.astro';
-import BillMeta from '../../components/bills/BillMeta.astro';
-import CostEstimate from '../../components/bills/CostEstimate.astro';
-import VoteBreakdown from '../../components/bills/VoteBreakdown.astro';
 import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
+import PorkMeter from '../../components/bills/PorkMeter.astro';
+import TheGist from '../../components/bills/TheGist.astro';
+import KeyMilestones from '../../components/bills/KeyMilestones.astro';
+import CostEstimate from '../../components/bills/CostEstimate.astro';
+import CollapsibleSection from '../../components/ui/CollapsibleSection.astro';
 import PairedBillCallout from '../../components/bills/PairedBillCallout.astro';
-import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
-import Disclaimer from '../../components/ui/Disclaimer.astro';
-import ShareButtons from '../../components/ui/ShareButtons.astro';
+import BillEvolutionModal from '../../components/bills/BillEvolutionModal.astro';
+import Icon from '../../components/ui/Icon.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -26,100 +27,361 @@ const { bill } = Astro.props;
 const { Content } = await render(bill);
 const d = bill.data;
 
-// Estimate reading time content from summary + excerpt + base estimate for bill content
-// Real bills tend to have more detailed analysis, so we add padding
-const readingTimeContent = [
-  d.summary || '',
-  d.excerpt || '',
-  ' '.repeat(400), // Base padding for typical bill content (~2 min baseline)
-].join(' ');
+// Format dates
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
+// Check for detailed data
+const hasActions = (d.actions?.length || 0) > 0;
+const hasAmendments = (d.amendments?.length || 0) > 0 || (d.amendmentCount || 0) > 0;
+const hasRelated = (d.relatedBills?.length || 0) > 0;
+const hasTextVersions = (d.textVersions?.length || 0) > 0;
+const hasCrsSummary = !!d.crsSummary;
+const hasBillEvolution = (d.billEvolution?.length || 0) > 0;
+const hasPork = d.totalPork !== undefined;
+
+// Schema.org structured data
 const billSchema = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": d.title,
   "description": d.summary,
   "datePublished": d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
-  "author": {
-    "@type": "Organization",
-    "name": "Absurdity Index",
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "Absurdity Index",
-    "url": "https://absurdityindex.org",
-  },
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": `https://absurdityindex.org/bills/${bill.id}`,
-  },
+  "author": { "@type": "Organization", "name": "Absurdity Index" },
+  "publisher": { "@type": "Organization", "name": "Absurdity Index", "url": "https://absurdityindex.org" },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": `https://absurdityindex.org/bills/${bill.id}` },
 };
+
+// Share URLs
+const shareUrl = `https://absurdityindex.org/bills/${bill.id}/`;
+const encodedUrl = encodeURIComponent(shareUrl);
+const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.summary}`);
 ---
 
-<BaseLayout title={`${d.billNumber} — ${d.title}`} description={d.summary} ogType="article" article={{ publishedTime: d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced), section: d.category, tags: d.tags }}>
+<BaseLayout
+  title={`${d.billNumber} — ${d.title}`}
+  description={d.summary}
+  ogType="article"
+  article={{ publishedTime: d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced), section: d.category, tags: d.tags }}
+>
   <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
-  <div class="max-w-4xl mx-auto px-4 py-12">
-    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 relative overflow-hidden">
-      <CommitteeStamp text={d.status} />
 
-      <BillHeader
-        title={d.title}
-        billNumber={d.billNumber}
-        billType={d.billType}
-        status={d.status}
-        readingTimeContent={readingTimeContent}
-      />
+  <div class="max-w-3xl mx-auto px-4 py-8 md:py-12">
 
-      <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} />
+    {/* Compact header bar */}
+    <div class="flex flex-wrap items-center gap-3 mb-6">
+      <span class="font-mono text-lg font-bold text-navy-900">{d.billNumber}</span>
+      <BillTypeBadge billType={d.billType} size="sm" />
+      <span class="px-2 py-1 text-xs font-mono bg-green-100 text-green-800 rounded">
+        {d.status.length > 40 ? d.status.slice(0, 37) + '...' : d.status}
+      </span>
+      <span class="text-xs text-navy-500 ml-auto">
+        {d.congressNumber}th Congress
+      </span>
+    </div>
 
-      {d.absurdityIndex && (
-        <div class="max-w-xs mx-auto mb-8">
-          <AbsurdityMeter score={d.absurdityIndex} />
-        </div>
-      )}
+    {/* Title */}
+    <h1 class="text-2xl md:text-3xl font-serif font-bold text-navy-900 leading-tight mb-6">
+      {d.title}
+    </h1>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-        <div class="md:col-span-2">
-          <div class="bill-content">
-            <Content />
-          </div>
+    {/* Legislative Progress Timeline */}
+    <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} />
 
-          <ShareButtons
-            title={`${d.billNumber} — ${d.title}`}
-            summary={d.summary}
-            url={`https://absurdityindex.org/bills/${bill.id}/`}
-          />
+    {/* Absurdity Meter - Prominent */}
+    {d.absurdityIndex && (
+      <div class="mb-8">
+        <AbsurdityMeter score={d.absurdityIndex} />
+      </div>
+    )}
 
-          <Disclaimer context="bill-detail" />
+    {/* The Gist - Editorial Summary */}
+    {d.theGist ? (
+      <div class="mb-8 p-6 bg-parchment rounded-lg border border-gold-200">
+        <TheGist
+          theGist={d.theGist}
+          whyItMatters={d.whyItMatters}
+          absurdityIndex={d.absurdityIndex}
+        />
+      </div>
+    ) : d.summary && (
+      <div class="mb-8 p-6 bg-parchment rounded-lg border border-gold-200">
+        <p class="text-lg font-serif text-navy-800 leading-relaxed">
+          {d.summary}
+        </p>
+      </div>
+    )}
 
-          {d.pairedBillId && (
-            <PairedBillCallout pairedBillId={d.pairedBillId} currentBillType={d.billType} />
-          )}
-        </div>
-
-        <aside>
-          <BillMeta
-            sponsor={d.sponsor}
-            cosponsors={d.cosponsors}
-            committee={d.committee}
-            status={d.status}
-            dateIntroduced={d.dateIntroduced}
-            dateUpdated={d.dateUpdated}
-            absurdityIndex={d.absurdityIndex}
-            congressDotGovUrl={d.congressDotGovUrl}
-            congressNumber={d.congressNumber}
-            excerpt={d.excerpt}
-          />
-          <CostEstimate status={d.status} billNumber={d.billNumber} />
-          <VoteBreakdown votes={d.votes} />
-        </aside>
+    {/* Compact metadata */}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 text-sm">
+      <div class="p-3 bg-cream-100 rounded-lg">
+        <dt class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Sponsor</dt>
+        <dd class="font-sans text-navy-800 truncate" title={d.sponsor}>{d.sponsor}</dd>
+      </div>
+      <div class="p-3 bg-cream-100 rounded-lg">
+        <dt class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Committee</dt>
+        <dd class="font-sans text-navy-800 truncate" title={d.committee}>{d.committee}</dd>
+      </div>
+      <div class="p-3 bg-cream-100 rounded-lg">
+        <dt class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Introduced</dt>
+        <dd class="font-sans text-navy-800">{formatDate(d.dateIntroduced)}</dd>
+      </div>
+      <div class="p-3 bg-cream-100 rounded-lg">
+        <dt class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Category</dt>
+        <dd class="font-sans text-navy-800">{d.category}</dd>
       </div>
     </div>
 
-    <div class="text-center mt-8">
-      <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
-        &larr; Back to Real Bills
+    {/* Key Milestones */}
+    {(hasActions || d.keyMilestones) && (
+      <div class="mb-8 p-5 bg-white rounded-lg border border-gold-200">
+        <KeyMilestones
+          actions={d.actions || []}
+          status={d.status}
+          totalActions={d.actions?.length || 0}
+          keyMilestones={d.keyMilestones}
+        />
+      </div>
+    )}
+
+    {/* Cost Estimate */}
+    <div class="mb-8">
+      <CostEstimate status={d.status} billNumber={d.billNumber} />
+    </div>
+
+    {/* Pork Barrel Meter */}
+    {hasPork && (
+      <div class="mb-8">
+        <PorkMeter amount={d.totalPork || 0} />
+      </div>
+    )}
+
+    {/* Bill Evolution Modal (if evolution data exists) */}
+    {hasBillEvolution && (
+      <div class="mb-8 p-5 bg-gradient-to-r from-navy-800 to-navy-900 rounded-lg border border-gold-500">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-sm font-sans font-semibold text-gold-400 uppercase tracking-wide mb-1">
+              Watch the Sausage Get Made
+            </h3>
+            <p class="text-xs text-cream-300">
+              See how this bill transformed through {d.billEvolution?.length} stages of the legislative process.
+            </p>
+          </div>
+          <BillEvolutionModal
+            billNumber={d.billNumber}
+            billTitle={d.title}
+            stages={d.billEvolution || []}
+            totalPork={d.totalPork || 0}
+            congressDotGovUrl={d.congressDotGovUrl}
+          />
+        </div>
+      </div>
+    )}
+
+    {/* Collapsible Deep Dive Sections */}
+    <div class="space-y-3 mb-8">
+      <h3 class="text-xs font-sans font-semibold text-navy-500 uppercase tracking-wide mb-3">
+        Deep Dive
+      </h3>
+
+      {/* CRS Summary */}
+      {hasCrsSummary && (
+        <CollapsibleSection title="Official CRS Summary" icon="file-text">
+          <div class="prose prose-sm prose-navy max-w-none">
+            <p class="text-sm text-navy-700 leading-relaxed whitespace-pre-line">
+              {d.crsSummary}
+            </p>
+            {d.congressDotGovUrl && (
+              <a
+                href={d.congressDotGovUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 text-sm text-gold-700 hover:text-gold-800 mt-3"
+              >
+                Read full summary on Congress.gov
+                <Icon name="external-link" size={12} />
+              </a>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* All Actions */}
+      {hasActions && (
+        <CollapsibleSection title="All Legislative Actions" count={d.actions?.length} icon="list">
+          <div class="max-h-96 overflow-y-auto space-y-2">
+            {d.actions?.slice(0, 50).map((action) => (
+              <div class="flex gap-3 text-sm py-2 border-b border-cream-200 last:border-0">
+                <time class="flex-shrink-0 font-mono text-xs text-navy-400 w-24">
+                  {formatDate(action.date)}
+                </time>
+                <span class="text-navy-700">{action.text}</span>
+              </div>
+            ))}
+            {(d.actions?.length || 0) > 50 && (
+              <p class="text-xs text-navy-500 italic pt-2">
+                Showing 50 of {d.actions?.length} actions.
+                <a href={d.congressDotGovUrl} target="_blank" rel="noopener noreferrer" class="text-gold-700 hover:underline ml-1">
+                  See all on Congress.gov
+                </a>
+              </p>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Amendments */}
+      {hasAmendments && (
+        <CollapsibleSection title="Amendments" count={d.amendmentCount || d.amendments?.length} icon="edit-3">
+          <div class="space-y-2">
+            {d.amendments?.slice(0, 20).map((amend) => (
+              <div class="p-3 bg-cream-50 rounded text-sm">
+                <span class="font-mono text-navy-600">{amend.number}</span>
+                {amend.description && (
+                  <p class="text-navy-700 mt-1">{amend.description}</p>
+                )}
+              </div>
+            ))}
+            {(d.amendmentCount || 0) > 20 && (
+              <p class="text-xs text-navy-500 italic">
+                Showing 20 of {d.amendmentCount} amendments.
+              </p>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Related Bills */}
+      {hasRelated && (
+        <CollapsibleSection title="Related Bills" count={d.relatedBills?.length} icon="git-branch">
+          <div class="space-y-2">
+            {d.relatedBills?.map((related) => (
+              <div class="flex items-start gap-3 p-3 bg-cream-50 rounded text-sm">
+                <span class="font-mono text-navy-600 flex-shrink-0">{related.billNumber}</span>
+                <div class="min-w-0">
+                  {related.title && (
+                    <p class="text-navy-700 truncate">{related.title}</p>
+                  )}
+                  <span class="text-xs text-navy-500">{related.relationship}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Text Versions */}
+      {hasTextVersions && (
+        <CollapsibleSection title="Text Versions" count={d.textVersions?.length} icon="book-open">
+          <div class="space-y-2">
+            {d.textVersions?.map((version) => (
+              <div class="flex items-center justify-between p-3 bg-cream-50 rounded text-sm">
+                <span class="font-medium text-navy-700">{version.type}</span>
+                {version.date && (
+                  <time class="text-xs font-mono text-navy-400">
+                    {formatDate(version.date)}
+                  </time>
+                )}
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+    </div>
+
+    {/* Paired bill callout */}
+    {d.pairedBillId && (
+      <div class="mb-8">
+        <PairedBillCallout pairedBillId={d.pairedBillId} currentBillType={d.billType} />
+      </div>
+    )}
+
+    {/* Action bar */}
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-navy-800 rounded-lg mb-8">
+      {/* Share buttons */}
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-sans font-medium text-gold-400 uppercase tracking-wide">Share</span>
+        <div class="flex gap-2">
+          <a
+            href={`https://twitter.com/intent/tweet?text=${twitterText}&url=${encodedUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-navy-700 text-gold-400 hover:bg-navy-600 hover:text-gold-300 transition-colors"
+            aria-label="Share on X"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+          <a
+            href={`https://reddit.com/submit?url=${encodedUrl}&title=${encodeURIComponent(d.title)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-navy-700 text-gold-400 hover:bg-navy-600 hover:text-gold-300 transition-colors"
+            aria-label="Share on Reddit"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+            </svg>
+          </a>
+          <button
+            id="copy-link-btn"
+            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-navy-700 text-gold-400 hover:bg-navy-600 hover:text-gold-300 transition-colors"
+            aria-label="Copy link"
+            data-url={shareUrl}
+          >
+            <Icon name="link" size={14} />
+          </button>
+        </div>
+        <span id="copy-feedback" class="text-xs text-green-400 font-sans hidden">Copied!</span>
+      </div>
+
+      {/* Official link */}
+      {d.congressDotGovUrl && (
+        <a
+          href={d.congressDotGovUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-gold-500 text-navy-900 rounded font-mono text-sm font-semibold hover:bg-gold-400 transition-colors"
+        >
+          <Icon name="landmark" size={14} />
+          View on Congress.gov
+          <Icon name="external-link" size={12} />
+        </a>
+      )}
+    </div>
+
+    {/* Footer disclaimer */}
+    <div class="text-center p-4 bg-cream-100 rounded-lg border border-gold-200">
+      <p class="text-xs text-navy-600 leading-relaxed">
+        <Icon name="info" size={12} class="inline -mt-0.5 mr-1" />
+        Editorial commentary by AbsurdityIndex.org. Bill data from public congressional records.
+        Absurdity scores are subjective editorial ratings.
+        <a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer" class="text-navy-800 underline hover:text-gold-700 ml-1">
+          Verify at Congress.gov
+        </a>
+      </p>
+    </div>
+
+    {/* Back link */}
+    <div class="text-center mt-6">
+      <a href="/bills" class="inline-flex items-center gap-2 text-navy-600 hover:text-gold-600 font-sans transition-colors">
+        <Icon name="chevron-right" size={16} class="rotate-180" />
+        Back to Bills
       </a>
     </div>
   </div>
 </BaseLayout>
+
+<script>
+  const btn = document.getElementById('copy-link-btn');
+  const feedback = document.getElementById('copy-feedback');
+  btn?.addEventListener('click', async () => {
+    const url = btn.getAttribute('data-url') || window.location.href;
+    await navigator.clipboard.writeText(url);
+    feedback?.classList.remove('hidden');
+    setTimeout(() => feedback?.classList.add('hidden'), 2000);
+  });
+</script>

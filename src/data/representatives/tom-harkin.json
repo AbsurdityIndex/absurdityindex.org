@@ -1,0 +1,50 @@
+{
+  "name": "Tom Harkin",
+  "bioguideId": "H000206",
+  "party": "Democrat",
+  "state": "IA",
+  "imageUrl": "https://bioguide.congress.gov/bioguide/photo/H/H000206.jpg",
+  "terms": [
+    {
+      "chamber": "house",
+      "state": "IA",
+      "district": 5,
+      "startDate": "1975-01-14",
+      "endDate": "1985-01-03",
+      "party": "Democrat"
+    },
+    {
+      "chamber": "senate",
+      "state": "IA",
+      "startDate": "1985-01-03",
+      "endDate": "2015-01-03",
+      "party": "Democrat"
+    }
+  ],
+  "totalPorkAmount": 8400000000,
+  "porkContributions": [
+    {
+      "billId": "real-hr-2112-demo",
+      "billNumber": "H.R. 2112",
+      "amount": 4500000000,
+      "description": "Rural economic development programs",
+      "date": "2011-08-02",
+      "category": "program-expansion"
+    },
+    {
+      "billId": "real-hr-2112-demo",
+      "billNumber": "H.R. 2112",
+      "amount": 3900000000,
+      "description": "Agricultural research funding",
+      "date": "2011-08-02",
+      "category": "program-expansion"
+    }
+  ],
+  "financialDisclosures": [
+    { "year": 2008, "minNetWorth": 3200000, "maxNetWorth": 9800000 },
+    { "year": 2010, "minNetWorth": 4100000, "maxNetWorth": 12500000 },
+    { "year": 2012, "minNetWorth": 5600000, "maxNetWorth": 16000000 },
+    { "year": 2014, "minNetWorth": 7200000, "maxNetWorth": 21000000 }
+  ],
+  "congressDotGovUrl": "https://www.congress.gov/member/tom-harkin/H000206"
+}

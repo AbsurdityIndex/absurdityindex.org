@@ -163,12 +163,23 @@ import Divider from '../components/ui/Divider.astro';
     // US total population
     const usPopulation = 335000000;
 
-    // Example bills with cost estimates
+    // Example bills with cost estimates - using Lucide icon SVGs
+    const iconSvgs = {
+      road: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19L8 5"/><path d="M16 5l4 14"/><path d="M12 5v2"/><path d="M12 11v2"/><path d="M12 17v2"/></svg>`,
+      cpu: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>`,
+      banknote: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>`,
+      hardhat: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 15v-3a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v3"/></svg>`,
+      coffee: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>`,
+      tv: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>`,
+      salad: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10"/><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z"/><path d="M11.38 12a2.4 2.4 0 0 1-.4-4.77 2.4 2.4 0 0 1 3.2-2.77 2.4 2.4 0 0 1 3.47-.63 2.4 2.4 0 0 1 3.37 3.37 2.4 2.4 0 0 1-1.1 3.7 2.51 2.51 0 0 1 .03 1.1"/></svg>`,
+      fuel: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v17"/><path d="M3 22h10"/><path d="M13 6h1a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V5"/><path d="M18 2v3"/><circle cx="18" cy="16" r="3"/></svg>`,
+      home: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    };
     const exampleBills = [
-      { name: 'Infrastructure Investment and Jobs Act (2021)', cost: 1200000000000, emoji: '🛣️' },
-      { name: 'CHIPS and Science Act (2022)', cost: 280000000000, emoji: '💻' },
-      { name: 'American Rescue Plan (2021)', cost: 1900000000000, emoji: '💰' },
-      { name: 'Build Back Better (proposed)', cost: 3500000000000, emoji: '🏗️' }
+      { name: 'Infrastructure Investment and Jobs Act (2021)', cost: 1200000000000, icon: 'road' },
+      { name: 'CHIPS and Science Act (2022)', cost: 280000000000, icon: 'cpu' },
+      { name: 'American Rescue Plan (2021)', cost: 1900000000000, icon: 'banknote' },
+      { name: 'Build Back Better (proposed)', cost: 3500000000000, icon: 'hardhat' }
     ];
 
     // Populate state dropdown
@@ -222,11 +233,11 @@ import Divider from '../components/ui/Divider.astro';
 
       const comparisons = document.getElementById('comparisons');
       comparisons.innerHTML = `
-        <p>☕ <strong>${Math.round(shareTrillion / coffeePrice).toLocaleString()}</strong> cups of overpriced coffee</p>
-        <p>📺 <strong>${Math.round(shareTrillion / netflixPrice).toLocaleString()}</strong> months of Netflix</p>
-        <p>🥑 <strong>${Math.round(shareTrillion / avocadoToastPrice).toLocaleString()}</strong> avocado toasts (the reason millennials can't buy houses, apparently)</p>
-        <p>⛽ <strong>${Math.round(shareTrillion / gasPrice).toLocaleString()}</strong> gallons of gas</p>
-        <p>🏠 About <strong>${(shareTrillion / 350000 * 100).toFixed(3)}%</strong> of a median U.S. home</p>
+        <p class="flex items-center gap-2">${iconSvgs.coffee} <strong>${Math.round(shareTrillion / coffeePrice).toLocaleString()}</strong> cups of overpriced coffee</p>
+        <p class="flex items-center gap-2">${iconSvgs.tv} <strong>${Math.round(shareTrillion / netflixPrice).toLocaleString()}</strong> months of Netflix</p>
+        <p class="flex items-center gap-2">${iconSvgs.salad} <strong>${Math.round(shareTrillion / avocadoToastPrice).toLocaleString()}</strong> avocado toasts (the reason millennials can't buy houses, apparently)</p>
+        <p class="flex items-center gap-2">${iconSvgs.fuel} <strong>${Math.round(shareTrillion / gasPrice).toLocaleString()}</strong> gallons of gas</p>
+        <p class="flex items-center gap-2">${iconSvgs.home} About <strong>${(shareTrillion / 350000 * 100).toFixed(3)}%</strong> of a median U.S. home</p>
       `;
 
       // Show results
@@ -238,7 +249,7 @@ import Divider from '../components/ui/Divider.astro';
         const perCapita = bill.cost / usPopulation;
         return `
           <div class="bg-parchment rounded-lg p-6 shadow">
-            <div class="text-3xl mb-2">${bill.emoji}</div>
+            <div class="text-navy-700 mb-2">${iconSvgs[bill.icon]}</div>
             <h3 class="font-serif font-bold text-navy-900 mb-2">${bill.name}</h3>
             <p class="text-navy-600 text-sm mb-3">Total Cost: ${formatCurrency(bill.cost)}</p>
             <p class="text-lg font-bold text-gold-600">Your Share: ${formatCurrency(perCapita)}</p>
@@ -266,7 +277,7 @@ import Divider from '../components/ui/Divider.astro';
       const perCapita = bill.cost / usPopulation;
       return `
         <div class="bg-parchment rounded-lg p-6 shadow">
-          <div class="text-3xl mb-2">${bill.emoji}</div>
+          <div class="text-navy-700 mb-2">${iconSvgs[bill.icon]}</div>
           <h3 class="font-serif font-bold text-navy-900 mb-2">${bill.name}</h3>
           <p class="text-navy-600 text-sm mb-3">Total Cost: ${formatCurrency(bill.cost)}</p>
           <p class="text-lg font-bold text-gold-600">Your Share: ${formatCurrency(perCapita)}</p>

@@ -1,0 +1,557 @@
+---
+/**
+ * Absurdity Index Drawer
+ *
+ * A slide-out drawer explaining the Absurdity Index scoring system.
+ * Can be triggered from anywhere via custom event: 'open-absurdity-help'
+ */
+import Icon from './Icon.astro';
+---
+
+<!-- Drawer Backdrop -->
+<div id="absurdity-help-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
+
+<!-- Slide-out Drawer -->
+<aside
+  id="absurdity-help-drawer"
+  class="absurdity-help-drawer"
+  aria-label="Absurdity Index Explanation"
+  aria-hidden="true"
+>
+  <!-- Drawer Header -->
+  <header class="drawer-header">
+    <div class="header-title">
+      <Icon name="zap" size={20} />
+      <h2>Absurdity Index</h2>
+    </div>
+    <button
+      id="absurdity-drawer-close"
+      class="drawer-close"
+      aria-label="Close drawer"
+    >
+      <Icon name="x" size={20} />
+    </button>
+  </header>
+
+  <!-- Drawer Content -->
+  <div class="drawer-content">
+    <!-- Intro Section -->
+    <section class="intro-section">
+      <p class="intro-text">
+        A completely scientific methodology for measuring legislative absurdity,
+        developed by people who read too many congressional records.
+      </p>
+    </section>
+
+    <!-- The Scale -->
+    <section class="scale-section">
+      <h3 class="section-title">The Scale</h3>
+
+      <!-- Scale visualization -->
+      <div class="scale-bar">
+        <div class="scale-gradient">
+          <div class="scale-segment green"></div>
+          <div class="scale-segment yellow"></div>
+          <div class="scale-segment orange"></div>
+          <div class="scale-segment red"></div>
+        </div>
+        <div class="scale-numbers">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+            <span class="scale-num">{n}</span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Tiers -->
+      <div class="tiers">
+        <div class="tier tier-green">
+          <div class="tier-range">1-3</div>
+          <div class="tier-content">
+            <h4 class="tier-name">Business as Usual</h4>
+            <p class="tier-desc">Standard legislation, procedural stuff, post office namings. The kind of bills that make you say "yeah, I guess someone has to do that."</p>
+          </div>
+        </div>
+
+        <div class="tier tier-yellow">
+          <div class="tier-range">4-6</div>
+          <div class="tier-content">
+            <h4 class="tier-name">Questionable</h4>
+            <p class="tier-desc">Bills that make you raise an eyebrow. Creative acronyms, odd priorities, solutions in search of problems.</p>
+          </div>
+        </div>
+
+        <div class="tier tier-orange">
+          <div class="tier-range">7-8</div>
+          <div class="tier-content">
+            <h4 class="tier-name">Your Tax Dollars</h4>
+            <p class="tier-desc">Genuinely wasteful spending, bizarre research funding, pork barrel projects. The bills that make you wonder if anyone is paying attention.</p>
+          </div>
+        </div>
+
+        <div class="tier tier-red">
+          <div class="tier-range">9-10</div>
+          <div class="tier-content">
+            <h4 class="tier-name">Fish on Meth</h4>
+            <p class="tier-desc">The pinnacle of absurdity. Pizza-as-vegetable tier. Bills so absurd they transcend partisan criticism and unite us all in confused disbelief.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How We Score -->
+    <section class="methodology-section">
+      <h3 class="section-title">How We Score</h3>
+
+      <div class="methodology-grid">
+        <div class="method-item">
+          <Icon name="book-open" size={18} class="method-icon" />
+          <div>
+            <h4>We Read the Bills</h4>
+            <p>The full text. The amendments. So you don't have to.</p>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <Icon name="feather" size={18} class="method-icon" />
+          <div>
+            <h4>Editorial Opinion</h4>
+            <p>Our scores are opinion, not objective fact. Reasonable people can disagree.</p>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <Icon name="scale" size={18} class="method-icon" />
+          <div>
+            <h4>Non-Partisan</h4>
+            <p>Absurdity knows no party. Wasteful legislation is truly bipartisan.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <section class="disclaimer-section">
+      <p>
+        <strong>Disclaimer:</strong> This is satire and commentary. While we base our analysis on real legislation,
+        our scores are intended to entertain and provoke thought, not serve as legal or policy guidance.
+      </p>
+    </section>
+  </div>
+
+  <!-- Drawer Footer -->
+  <footer class="drawer-footer">
+    <a href="/how-we-score" class="full-methodology-link">
+      <span>Full methodology</span>
+      <Icon name="arrow-right" size={12} />
+    </a>
+  </footer>
+</aside>
+
+<style>
+  /* ========================
+     BACKDROP
+     ======================== */
+  .drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(10, 22, 40, 0.6);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .drawer-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* ========================
+     DRAWER PANEL
+     ======================== */
+  .absurdity-help-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-cream-100);
+    border-left: 4px solid var(--color-gold-500);
+    box-shadow:
+      -12px 0 40px rgba(0, 0, 0, 0.35),
+      inset 2px 0 8px rgba(0, 0, 0, 0.05);
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .absurdity-help-drawer.open {
+    transform: translateX(0);
+  }
+
+  /* ========================
+     DRAWER HEADER
+     ======================== */
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(180deg, var(--color-navy-900) 0%, var(--color-navy-800) 100%);
+    border-bottom: 3px solid var(--color-gold-500);
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--color-gold-400);
+  }
+
+  .header-title h2 {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  .drawer-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background: transparent;
+    border: 1px solid rgba(197, 165, 114, 0.3);
+    border-radius: 0.25rem;
+    color: var(--color-gold-400);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .drawer-close:hover {
+    background: rgba(197, 165, 114, 0.1);
+    border-color: var(--color-gold-500);
+    color: var(--color-gold-300);
+  }
+
+  /* ========================
+     CONTENT AREA
+     ======================== */
+  .drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1.25rem;
+  }
+
+  /* Intro */
+  .intro-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-cream-300);
+  }
+
+  .intro-text {
+    font-family: var(--font-serif);
+    font-size: 0.9375rem;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--color-navy-700);
+    margin: 0;
+  }
+
+  /* Section titles */
+  .section-title {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-navy-500);
+    margin: 0 0 1rem;
+  }
+
+  /* Scale Section */
+  .scale-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .scale-bar {
+    margin-bottom: 1.25rem;
+  }
+
+  .scale-gradient {
+    display: flex;
+    height: 1.5rem;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .scale-segment {
+    flex: 1;
+  }
+
+  .scale-segment.green { background: #16a34a; flex: 3; }
+  .scale-segment.yellow { background: #eab308; flex: 3; }
+  .scale-segment.orange { background: #f97316; flex: 2; }
+  .scale-segment.red { background: #dc2626; flex: 2; }
+
+  .scale-numbers {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.375rem 0.125rem 0;
+  }
+
+  .scale-num {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--color-navy-500);
+    width: 1rem;
+    text-align: center;
+  }
+
+  /* Tiers */
+  .tiers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .tier {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+
+  .tier-range {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    border-radius: 0.375rem;
+  }
+
+  .tier-green .tier-range { background: #16a34a; }
+  .tier-yellow .tier-range { background: #eab308; }
+  .tier-orange .tier-range { background: #f97316; }
+  .tier-red .tier-range { background: #dc2626; }
+
+  .tier-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .tier-name {
+    font-family: var(--font-serif);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-navy-900);
+    margin: 0 0 0.25rem;
+  }
+
+  .tier-desc {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--color-navy-600);
+    margin: 0;
+  }
+
+  /* Methodology Section */
+  .methodology-section {
+    margin-bottom: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-cream-300);
+  }
+
+  .methodology-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .method-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .method-icon {
+    flex-shrink: 0;
+    color: var(--color-gold-600);
+    margin-top: 0.125rem;
+  }
+
+  .method-item h4 {
+    font-family: var(--font-serif);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-navy-900);
+    margin: 0 0 0.125rem;
+  }
+
+  .method-item p {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--color-navy-600);
+    margin: 0;
+  }
+
+  /* Disclaimer */
+  .disclaimer-section {
+    padding: 0.875rem 1rem;
+    background: var(--color-navy-800);
+    border-radius: 0.5rem;
+  }
+
+  .disclaimer-section p {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    line-height: 1.5;
+    color: var(--color-cream-300);
+    margin: 0;
+  }
+
+  .disclaimer-section strong {
+    color: var(--color-gold-400);
+  }
+
+  /* ========================
+     DRAWER FOOTER
+     ======================== */
+  .drawer-footer {
+    padding: 0.75rem 1.25rem;
+    background: var(--color-navy-900);
+    border-top: 1px solid var(--color-gold-600);
+    text-align: center;
+  }
+
+  .full-methodology-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--color-gold-400);
+    font-family: var(--font-serif);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .full-methodology-link:hover {
+    color: var(--color-gold-300);
+  }
+
+  /* ========================
+     DARK MODE
+     ======================== */
+  :global(html.dark) .absurdity-help-drawer {
+    background: #1a2535;
+    border-left-color: var(--color-gold-600);
+  }
+
+  :global(html.dark) .drawer-content {
+    background: #1a2535;
+  }
+
+  :global(html.dark) .intro-text,
+  :global(html.dark) .tier-desc,
+  :global(html.dark) .method-item p {
+    color: var(--color-cream-300);
+  }
+
+  :global(html.dark) .tier-name,
+  :global(html.dark) .method-item h4 {
+    color: var(--color-cream-100);
+  }
+
+  :global(html.dark) .tier {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  :global(html.dark) .intro-section,
+  :global(html.dark) .methodology-section {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* ========================
+     RESPONSIVE
+     ======================== */
+  @media (max-width: 480px) {
+    .absurdity-help-drawer {
+      max-width: 100%;
+    }
+
+    .drawer-content {
+      padding: 1.25rem 1rem;
+    }
+
+    .tier {
+      padding: 0.625rem;
+    }
+
+    .tier-desc {
+      font-size: 0.6875rem;
+    }
+  }
+
+  /* Print: hide */
+  @media print {
+    .absurdity-help-drawer,
+    .drawer-backdrop {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  // Drawer functionality
+  const drawer = document.getElementById('absurdity-help-drawer');
+  const backdrop = document.getElementById('absurdity-help-backdrop');
+  const closeBtn = document.getElementById('absurdity-drawer-close');
+
+  function openDrawer() {
+    drawer?.classList.add('open');
+    drawer?.setAttribute('aria-hidden', 'false');
+    backdrop?.classList.add('open');
+    backdrop?.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    drawer?.classList.remove('open');
+    drawer?.setAttribute('aria-hidden', 'true');
+    backdrop?.classList.remove('open');
+    backdrop?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  // Event listeners - open via custom event
+  document.addEventListener('open-absurdity-help', openDrawer);
+  closeBtn?.addEventListener('click', closeDrawer);
+  backdrop?.addEventListener('click', closeDrawer);
+
+  // Escape key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer?.classList.contains('open')) {
+      closeDrawer();
+    }
+  });
+</script>

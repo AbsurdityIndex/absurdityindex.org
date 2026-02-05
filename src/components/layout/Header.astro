@@ -18,7 +18,7 @@ const toolsDropdown = [
   { href: '/generator', label: 'Bill Generator' },
   { href: '/filibuster', label: 'Filibuster Simulator' },
   { href: '/marathon', label: 'Reading Marathon' },
-  { href: '/pork', label: 'Pork Leaderboard' },
+  { href: '/pork-index', label: 'Pork Index' },
   { href: '/asmr', label: 'Legislation ASMR' },
   { href: '/cost-calculator', label: 'Cost Calculator' },
   { href: '/diff', label: 'Diff Tool' },
@@ -117,20 +117,37 @@ const toolsDropdown = [
       </li>
     </ul>
 
-    <!-- Search icon -->
-    <a
-      href="/search"
-      class="text-gold-400 hover:text-gold-300 transition-colors"
-      aria-label="Search"
-      title="Search bills"
-    >
-      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.35-4.35" stroke-linecap="round" />
-      </svg>
-    </a>
+    <!-- Utility icons -->
+    <div class="flex items-center gap-3 sm:gap-4">
+      <!-- Founding Documents -->
+      <button
+        id="founding-docs-trigger"
+        class="text-gold-400 hover:text-gold-300 transition-colors"
+        aria-label="Founding Documents"
+        title="Constitution & Bill of Rights"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/>
+          <path d="M19 17V5a2 2 0 0 0-2-2H4"/>
+          <path d="M15 8h-5"/>
+          <path d="M15 12h-5"/>
+        </svg>
+      </button>
 
-    <!-- Dark mode toggle -->
+      <!-- Search icon -->
+      <a
+        href="/search"
+        class="text-gold-400 hover:text-gold-300 transition-colors"
+        aria-label="Search"
+        title="Search bills"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" stroke-linecap="round" />
+        </svg>
+      </a>
+
+      <!-- Dark mode toggle -->
     <button
       id="theme-toggle"
       class="text-gold-400 hover:text-gold-300 transition-colors"
@@ -148,6 +165,7 @@ const toolsDropdown = [
         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
       </svg>
     </button>
+    </div>
 
     <!-- Mobile hamburger -->
     <button
@@ -213,5 +231,11 @@ const toolsDropdown = [
     const isDark = document.documentElement.classList.contains('dark');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     updateIcons();
+  });
+
+  // Founding Documents trigger
+  const foundingDocsTrigger = document.getElementById('founding-docs-trigger');
+  foundingDocsTrigger?.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('open-founding-docs'));
   });
 </script>

@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Fetches bills from the Congress.gov API and generates MDX files.
- * Optionally uses the Anthropic API to generate plain-language summaries.
+ * Enhanced Congress.gov API fetcher for AbsurdityIndex.org
+ * Fetches comprehensive bill data including actions, amendments, committees, etc.
  *
  * Usage:
  *   CONGRESS_GOV_API_KEY=<key> node scripts/fetch-bills.mjs
- *
- * Or set CONGRESS_GOV_API_KEY in .env and run:
- *   node scripts/fetch-bills.mjs
- *
- * Options:
- *   --no-ai   Skip AI summarization even if ANTHROPIC_API_KEY is set
+ *   node scripts/fetch-bills.mjs --bill 112/hr/2112    # fetch specific bill
+ *   node scripts/fetch-bills.mjs --update              # update existing files
+ *   node scripts/fetch-bills.mjs --no-ai              # skip AI summarization
  */
 
 import fs from 'node:fs';
@@ -21,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BILLS_DIR = path.resolve(__dirname, '../src/data/bills');
 const BASE_URL = 'https://api.congress.gov/v3';
-const DELAY_MS = 400; // stay well under 5k req/hour
+const DELAY_MS = 350; // ~10 req/sec, well under 5k/hour limit
 
 // Load .env if present
 try {
@@ -43,16 +40,20 @@ try {
 
 const API_KEY = process.env.CONGRESS_GOV_API_KEY;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const USE_AI = !process.argv.includes('--no-ai') && !!ANTHROPIC_API_KEY;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const USE_AI = !process.argv.includes('--no-ai') && !!(ANTHROPIC_API_KEY || OPENROUTER_API_KEY);
+const UPDATE_MODE = process.argv.includes('--update');
+
 if (!API_KEY) {
   console.error('Error: CONGRESS_GOV_API_KEY is required.');
   console.error('Set it in .env or pass as environment variable.');
   process.exit(1);
 }
 
-// Bills to fetch — hand-picked for absurdity + variety.
-// Format: { congress, type, number, absurdityIndex, category, pairedBillId? }
+// Bills to fetch — hand-picked for absurdity + variety
 const BILL_LIST = [
+  { congress: 112, type: 'hr', number: 2112, absurdityIndex: 9, category: 'Food & Drink', featured: true },
+  { congress: 109, type: 'hr', number: 3, absurdityIndex: 9, category: 'Transportation', featured: true },
   { congress: 118, type: 'hr', number: 8752, absurdityIndex: 8, category: 'Science' },
   { congress: 118, type: 'hr', number: 6174, absurdityIndex: 7, category: 'Food & Drink' },
   { congress: 118, type: 'hr', number: 3684, absurdityIndex: 6, category: 'Technology' },
@@ -60,26 +61,41 @@ const BILL_LIST = [
   { congress: 119, type: 's', number: 1, absurdityIndex: 4, category: 'Common Sense' },
 ];
 
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
+// Parse --bill argument
+const billArg = process.argv.find(a => a.startsWith('--bill='));
+if (billArg) {
+  const parts = billArg.split('=')[1].split('/');
+  if (parts.length === 3) {
+    BILL_LIST.length = 0;
+    BILL_LIST.push({
+      congress: parseInt(parts[0]),
+      type: parts[1].toLowerCase(),
+      number: parseInt(parts[2]),
+      absurdityIndex: 5,
+      category: 'Uncategorized',
+    });
+  }
 }
 
-async function apiFetch(endpoint) {
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function apiFetch(endpoint, options = {}) {
   const sep = endpoint.includes('?') ? '&' : '?';
-  const url = `${BASE_URL}${endpoint}${sep}api_key=${API_KEY}&format=json`;
+  const limit = options.limit || 250;
+  const url = `${BASE_URL}${endpoint}${sep}api_key=${API_KEY}&format=json&limit=${limit}`;
+
   const res = await fetch(url);
   if (!res.ok) {
+    if (res.status === 404) return null;
     throw new Error(`API ${res.status}: ${endpoint}`);
   }
   return res.json();
 }
 
 function slugify(congress, type, number) {
-  return `real-${type}-${number}`;
-}
-
-function mdxFilename(slug) {
-  return path.join(BILLS_DIR, `${slug}.mdx`);
+  return `real-${type}-${number}-${congress}`;
 }
 
 function formatBillNumber(type, number) {
@@ -89,223 +105,616 @@ function formatBillNumber(type, number) {
 
 function escapeMdx(text) {
   if (!text) return '';
-  return text.replace(/[{}]/g, (ch) => `\\${ch}`);
+  return text.replace(/[{}]/g, ch => `\\${ch}`).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-async function aiSummarize(crsSummary, billTitle, billNumber) {
-  if (!crsSummary) {
-    return null;
+function stripHtml(html) {
+  if (!html) return '';
+  return html.replace(/<[^>]+>/g, '').trim();
+}
+
+// ============================================================================
+// FETCH ALL BILL DATA
+// ============================================================================
+
+async function fetchBillData(congress, type, number) {
+  console.log(`    Fetching bill metadata...`);
+  const billRes = await apiFetch(`/bill/${congress}/${type}/${number}`);
+  if (!billRes) throw new Error('Bill not found');
+  const bill = billRes.bill;
+  await sleep(DELAY_MS);
+
+  const data = {
+    bill,
+    summaries: [],
+    actions: [],
+    amendments: [],
+    committees: [],
+    cosponsors: [],
+    relatedBills: [],
+    subjects: [],
+    titles: [],
+    textVersions: [],
+  };
+
+  // Fetch summaries
+  console.log(`    Fetching summaries...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/summaries`);
+    data.summaries = res?.summaries || [];
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (summaries not available)`);
   }
 
-  const promptText = `You are writing for AbsurdityIndex.org, a satirical commentary site about real congressional legislation. Given the following Congressional Research Service summary of a real bill, write two things:
+  // Fetch actions (may be paginated for large bills)
+  console.log(`    Fetching actions...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/actions`, { limit: 500 });
+    data.actions = res?.actions || [];
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (actions not available)`);
+  }
 
-1. SHORT_SUMMARY: A 1-2 sentence punchy, plain-language summary suitable for a card preview. Be accurate but inject dry editorial wit. Don't be mean to specific people.
+  // Fetch amendments
+  console.log(`    Fetching amendments...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/amendments`, { limit: 500 });
+    data.amendments = res?.amendments || [];
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (amendments not available)`);
+  }
 
-2. LONG_SUMMARY: A 2-3 paragraph plain-language explanation of what this bill actually does, why it matters (or doesn't), and any notable context. Write for someone with no legal background. Maintain a dry, editorial tone.
+  // Fetch committees
+  console.log(`    Fetching committees...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/committees`);
+    data.committees = res?.committees || [];
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (committees not available)`);
+  }
 
-Bill: ${billTitle} (${billNumber})
-CRS Summary: ${crsSummary}
+  // Fetch cosponsors
+  console.log(`    Fetching cosponsors...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/cosponsors`, { limit: 500 });
+    data.cosponsors = res?.cosponsors || [];
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (cosponsors not available)`);
+  }
+
+  // Fetch related bills
+  console.log(`    Fetching related bills...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/relatedbills`);
+    data.relatedBills = res?.relatedBills || [];
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (related bills not available)`);
+  }
+
+  // Fetch subjects
+  console.log(`    Fetching subjects...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/subjects`);
+    // Subjects API returns { subjects: { legislativeSubjects: [...], policyArea: {...} } }
+    const subjectsData = res?.subjects;
+    data.subjects = subjectsData?.legislativeSubjects || [];
+    data.policyArea = subjectsData?.policyArea || null;
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (subjects not available)`);
+  }
+
+  // Fetch titles
+  console.log(`    Fetching titles...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/titles`);
+    data.titles = res?.titles || [];
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (titles not available)`);
+  }
+
+  // Fetch text versions
+  console.log(`    Fetching text versions...`);
+  try {
+    const res = await apiFetch(`/bill/${congress}/${type}/${number}/text`);
+    data.textVersions = res?.textVersions || [];
+    await sleep(DELAY_MS);
+  } catch (e) {
+    console.log(`    (text versions not available)`);
+  }
+
+  return data;
+}
+
+// ============================================================================
+// AI SUMMARIZATION
+// ============================================================================
+
+async function aiSummarize(crsSummary, billTitle, billNumber, actions, absurdityIndex) {
+  if (!crsSummary && actions.length === 0) return null;
+
+  // Build context from actions
+  const actionsSummary = actions.slice(0, 15).map(a =>
+    `${a.actionDate}: ${a.text}`
+  ).join('\n');
+
+  const absurdityContext = absurdityIndex >= 7
+    ? 'This bill has a HIGH absurdity score. Focus on what makes it ridiculous, wasteful, or head-scratching.'
+    : absurdityIndex >= 4
+    ? 'This bill has a MODERATE absurdity score. There may be some questionable provisions or bureaucratic oddities.'
+    : 'This bill has a LOW absurdity score. It may be fairly straightforward, but find any interesting angles.';
+
+  const promptText = `You are a writer for AbsurdityIndex.org — a satirical editorial site that covers real congressional legislation with wit and accessibility.
+
+BILL: ${billTitle} (${billNumber})
+ABSURDITY SCORE: ${absurdityIndex}/10
+${absurdityContext}
+
+CRS SUMMARY:
+${crsSummary || '(Not available)'}
+
+RECENT ACTIONS:
+${actionsSummary || '(None)'}
+
+Write THREE things:
+
+1. THE_GIST: 2-3 sentences that hook the reader. What's the interesting, surprising, or absurd angle on this bill? Lead with what makes it noteworthy. Write like you're explaining it to a friend at a bar. Be witty but accurate — don't make things up.
+
+2. CARD_SUMMARY: A single punchy sentence (under 150 chars) for preview cards. Capture the essence with editorial flair.
+
+3. WHY_IT_MATTERS: 1-2 sentences on real-world impact. Who does this affect and how? If the bill is just bureaucratic nonsense with no real impact, say so.
+
+TONE: Think John Oliver meets Wikipedia. Informative, accessible, dry wit. Never preachy or partisan. Punch up at absurdity, not at individuals.
+
+RULES:
+- Be factually accurate — only reference what's actually in the bill
+- No political hot takes or partisan framing
+- If the bill is boring, be honest about that in a funny way
+- Don't start with "This bill..." — be more creative
 
 Respond in this exact format:
-SHORT_SUMMARY: [your short summary]
-LONG_SUMMARY: [your long summary]`;
+THE_GIST: [your gist]
+CARD_SUMMARY: [your card summary]
+WHY_IT_MATTERS: [your impact summary]`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: promptText }],
-      }),
-    });
+    let response;
+    let text;
 
-    if (!response.ok) {
-      const errBody = await response.text();
-      throw new Error(`Anthropic API ${response.status}: ${errBody}`);
+    if (OPENROUTER_API_KEY) {
+      // Use OpenRouter API (OpenAI-compatible format)
+      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://absurdityindex.org',
+          'X-Title': 'AbsurdityIndex Bill Fetcher',
+        },
+        body: JSON.stringify({
+          model: 'anthropic/claude-3.5-haiku',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: promptText }],
+        }),
+      });
+
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`OpenRouter API ${response.status}: ${errBody}`);
+      }
+
+      const data = await response.json();
+      text = data.choices?.[0]?.message?.content || '';
+    } else if (ANTHROPIC_API_KEY) {
+      // Use Anthropic API directly
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-haiku-20241022',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: promptText }],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Anthropic API ${response.status}`);
+      }
+
+      const data = await response.json();
+      text = data.content?.[0]?.text || '';
+    } else {
+      return null;
     }
 
-    const data = await response.json();
-    const text = data.content?.[0]?.text || '';
+    const gistMatch = text.match(/THE_GIST:\s*([\s\S]*?)(?=\nCARD_SUMMARY:)/);
+    const cardMatch = text.match(/CARD_SUMMARY:\s*([\s\S]*?)(?=\nWHY_IT_MATTERS:)/);
+    const whyMatch = text.match(/WHY_IT_MATTERS:\s*([\s\S]*)/);
 
-    const shortMatch = text.match(/SHORT_SUMMARY:\s*([\s\S]*?)(?=\nLONG_SUMMARY:)/);
-    const longMatch = text.match(/LONG_SUMMARY:\s*([\s\S]*)/);
-
-    if (!shortMatch || !longMatch) {
-      throw new Error('Could not parse AI response format');
+    if (!gistMatch || !cardMatch) {
+      throw new Error('Could not parse AI response');
     }
 
     return {
-      shortSummary: shortMatch[1].trim(),
-      longSummary: longMatch[1].trim(),
+      theGist: gistMatch[1].trim(),
+      cardSummary: cardMatch[1].trim(),
+      whyItMatters: whyMatch ? whyMatch[1].trim() : '',
     };
   } catch (err) {
-    console.warn(`  WARN  AI summarization failed: ${err.message}`);
+    console.warn(`    AI summarization failed: ${err.message}`);
     return null;
   }
 }
 
-async function fetchBillData(congress, type, number) {
-  // Fetch bill metadata
-  const bill = await apiFetch(`/bill/${congress}/${type}/${number}`);
-  await sleep(DELAY_MS);
+// ============================================================================
+// AI MILESTONE EXTRACTION
+// ============================================================================
 
-  // Fetch summaries
-  let summary = '';
+async function aiExtractMilestones(actions, billNumber, billType) {
+  if (!actions || actions.length === 0) return null;
+  if (!OPENROUTER_API_KEY && !ANTHROPIC_API_KEY) return null;
+
+  // Format actions for the prompt
+  const actionsText = actions.slice(0, 50).map(a =>
+    `${a.actionDate}: ${a.text}`
+  ).join('\n');
+
+  const billTypeContext = billType.toLowerCase().includes('res')
+    ? 'This is a resolution (not a bill), so "passing" may mean adoption/agreement rather than the typical bill process.'
+    : 'This is a bill that goes through the standard legislative process.';
+
+  const promptText = `You are analyzing congressional actions for ${billNumber}.
+${billTypeContext}
+
+ACTIONS (chronological):
+${actionsText}
+
+Extract the 3-5 MOST SIGNIFICANT milestones from these actions. Focus on:
+- Introduction (when the bill/resolution was first submitted)
+- Committee referral or action (if applicable)
+- Floor votes (passed/failed in House or Senate)
+- Final disposition (signed, vetoed, adopted, agreed to, became law, etc.)
+
+For each milestone, identify:
+1. TYPE: One of: introduced, committee, reported, passed-house, passed-senate, conference, signed, law, vetoed, adopted, agreed, failed
+2. DATE: The action date (YYYY-MM-DD format)
+3. TEXT: The original action text (do not modify)
+4. ICON: One of: file-text (introduced), users (committee), check-square (reported), vote (passed), git-merge (conference), pen-tool (signed), award (law), x-circle (vetoed/failed)
+
+RULES:
+- For resolutions, "Agreed to" or "Adopted" typically means passed/final - use type "adopted" or "agreed"
+- "On agreeing to the resolution" with yeas/nays IS a floor vote - use type "passed-house" or "passed-senate" based on chamber
+- Don't include procedural actions like "Motion to reconsider" unless they're significant
+- Maximum 5 milestones, minimum 2 (at least introduction + one other)
+- Return milestones in chronological order
+
+Respond in this exact JSON format (no markdown, just JSON):
+{
+  "milestones": [
+    {"type": "introduced", "date": "2025-01-03", "text": "Introduced in House", "icon": "file-text"},
+    {"type": "passed-house", "date": "2025-01-03", "text": "On agreeing to the resolution Agreed to by the Yeas and Nays: 215 - 209", "icon": "vote"}
+  ]
+}`;
+
   try {
-    const summaries = await apiFetch(`/bill/${congress}/${type}/${number}/summaries`);
-    if (summaries.summaries?.length > 0) {
-      // Use the latest CRS summary, strip HTML tags
-      const raw = summaries.summaries[summaries.summaries.length - 1].text || '';
-      summary = raw.replace(/<[^>]+>/g, '').trim();
-    }
-    await sleep(DELAY_MS);
-  } catch {
-    // Summaries may not be available
-  }
+    let response;
+    let text;
 
-  // Fetch text info
-  let excerpt = '';
-  try {
-    const texts = await apiFetch(`/bill/${congress}/${type}/${number}/text`);
-    if (texts.textVersions?.length > 0) {
-      // Just note the latest text version; actual text requires PDF parsing
-      const latest = texts.textVersions[texts.textVersions.length - 1];
-      excerpt = `Text available: ${latest.type || 'Latest version'}`;
-    }
-    await sleep(DELAY_MS);
-  } catch {
-    // Text may not be available
-  }
+    if (OPENROUTER_API_KEY) {
+      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://not-congress.io',
+          'X-Title': 'Not-Congress Bill Fetcher',
+        },
+        body: JSON.stringify({
+          model: 'anthropic/claude-3.5-haiku',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: promptText }],
+        }),
+      });
 
-  return { bill: bill.bill, summary, excerpt };
+      if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`OpenRouter API ${response.status}: ${errBody}`);
+      }
+
+      const data = await response.json();
+      text = data.choices?.[0]?.message?.content || '';
+    } else if (ANTHROPIC_API_KEY) {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-5-haiku-20241022',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: promptText }],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Anthropic API ${response.status}`);
+      }
+
+      const data = await response.json();
+      text = data.content?.[0]?.text || '';
+    } else {
+      return null;
+    }
+
+    // Parse JSON response (handle potential markdown code blocks)
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in response');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed.milestones || [];
+  } catch (err) {
+    console.warn(`    AI milestone extraction failed: ${err.message}`);
+    return null;
+  }
 }
 
-function generateMdx(billData, meta, aiSummary) {
-  const b = billData.bill;
+// ============================================================================
+// GENERATE MDX
+// ============================================================================
+
+function generateMdx(data, meta, aiSummary, aiMilestones) {
+  const b = data.bill;
+
+  // Basic info
   const title = (b.title || '').replace(/"/g, '\\"');
   const billNumber = formatBillNumber(meta.type, meta.number);
-  const sponsor = b.sponsors?.[0]
-    ? `${b.sponsors[0].fullName || b.sponsors[0].firstName + ' ' + b.sponsors[0].lastName}`
+
+  // Sponsor
+  const sponsorObj = b.sponsors?.[0];
+  const sponsor = sponsorObj
+    ? `${sponsorObj.fullName || sponsorObj.firstName + ' ' + sponsorObj.lastName}`
     : 'Unknown';
-  const cosponsors = (b.cosponsors?.count || 0) > 0 ? `${b.cosponsors.count} cosponsors` : '';
-  const committee = b.committees?.count > 0 ? 'See Congress.gov' : 'Not yet assigned';
-  const status = b.latestAction?.text || 'Introduced';
+  const sponsorParty = sponsorObj?.party || '';
+  const sponsorState = sponsorObj?.state || '';
+
+  // Status
+  const latestAction = b.latestAction;
+  const status = latestAction?.text || 'Introduced';
   const dateIntroduced = b.introducedDate || '2025-01-01';
-  const congressUrl = b.url
-    ? b.url.replace('api.congress.gov/v3', 'www.congress.gov')
-    : `https://www.congress.gov/bill/${meta.congress}th-congress/${meta.type === 'hr' ? 'house-bill' : 'senate-bill'}/${meta.number}`;
+  const dateUpdated = latestAction?.actionDate || null;
 
-  // Use AI short summary if available, otherwise trim CRS summary
-  let shortSummary = aiSummary?.shortSummary || billData.summary;
-  if (!aiSummary?.shortSummary && shortSummary.length > 300) {
-    const sentences = shortSummary.split(/(?<=\.)\s+/);
-    shortSummary = sentences.slice(0, 2).join(' ');
-    if (shortSummary.length > 300) shortSummary = shortSummary.slice(0, 297) + '...';
-  }
+  // Congress.gov URL
+  const congressUrl = `https://www.congress.gov/bill/${meta.congress}th-congress/${meta.type === 'hr' ? 'house-bill' : 'senate-bill'}/${meta.number}`;
 
-  const frontmatter = [
-    '---',
-    `title: "${title}"`,
-    `billNumber: "${billNumber}"`,
-    `billType: "real"`,
-    `category: "${meta.category}"`,
-    `tags: []`,
-    `sponsor: "${sponsor}"`,
-    `cosponsors: [${cosponsors ? `"${cosponsors}"` : ''}]`,
-    `committee: "${committee}"`,
-    `status: "${status.replace(/"/g, '\\"')}"`,
-    `dateIntroduced: ${dateIntroduced}`,
-    `summary: "${shortSummary.replace(/"/g, '\\"')}"`,
-    `absurdityIndex: ${meta.absurdityIndex}`,
-    `congressDotGovUrl: "${congressUrl}"`,
-    `congressNumber: ${meta.congress}`,
-    `excerpt: "${(billData.excerpt || '').replace(/"/g, '\\"')}"`,
-    meta.pairedBillId ? `pairedBillId: "${meta.pairedBillId}"` : null,
-    `featured: false`,
-    '---',
-  ]
-    .filter(Boolean)
-    .join('\n');
-
-  const aiSection = aiSummary?.longSummary
-    ? `
-## What This Bill Actually Does
-
-${escapeMdx(aiSummary.longSummary)}
-
-`
+  // CRS Summary
+  const crsSummary = data.summaries.length > 0
+    ? stripHtml(data.summaries[data.summaries.length - 1].text)
     : '';
 
+  // Short summary for card - prefer AI-generated card summary
+  let shortSummary = aiSummary?.cardSummary || crsSummary;
+  if (shortSummary.length > 200) {
+    shortSummary = shortSummary.slice(0, 197) + '...';
+  }
+
+  // Editorial content
+  const theGist = aiSummary?.theGist || '';
+  const whyItMatters = aiSummary?.whyItMatters || '';
+
+  // Actions - format for YAML array
+  const actionsYaml = data.actions.slice(0, 50).map(a => {
+    const actionText = (a.text || '').replace(/"/g, '\\"').replace(/\n/g, ' ');
+    return `  - date: ${a.actionDate || '2000-01-01'}
+    text: "${actionText}"
+    chamber: ${a.actionCode?.startsWith('H') ? 'house' : a.actionCode?.startsWith('S') ? 'senate' : 'both'}`;
+  }).join('\n');
+
+  // Titles
+  const titlesYaml = data.titles.slice(0, 10).map(t => {
+    const titleText = (t.title || '').replace(/"/g, '\\"');
+    return `  - title: "${titleText}"
+    type: ${t.titleType?.includes('Short') ? 'short' : t.titleType?.includes('Official') ? 'official' : 'display'}`;
+  }).join('\n');
+
+  // Amendments
+  const amendmentsYaml = data.amendments.slice(0, 20).map(a => {
+    const desc = (a.description || a.purpose || '').replace(/"/g, '\\"').slice(0, 200);
+    return `  - number: "${a.number || 'Unknown'}"
+    description: "${desc}"`;
+  }).join('\n');
+
+  // Cosponsors
+  const cosponsorsYaml = data.cosponsors.slice(0, 30).map(c => {
+    const name = (c.fullName || `${c.firstName} ${c.lastName}`).replace(/"/g, '\\"');
+    return `  - name: "${name}"
+    party: "${c.party || ''}"
+    state: "${c.state || ''}"`;
+  }).join('\n');
+
+  // Committees
+  const committeesYaml = data.committees.map(c => {
+    const name = (c.name || '').replace(/"/g, '\\"');
+    return `  - name: "${name}"
+    chamber: ${c.chamber?.toLowerCase() || 'house'}`;
+  }).join('\n');
+
+  // Related bills
+  const relatedBillsYaml = data.relatedBills.slice(0, 10).map(r => {
+    const num = (r.number || '').toString();
+    const relTitle = (r.title || '').replace(/"/g, '\\"').slice(0, 100);
+    return `  - billNumber: "${r.type?.toUpperCase() || ''} ${num}"
+    title: "${relTitle}"
+    relationship: "${r.relationshipDetails?.[0]?.type || 'Related'}"`;
+  }).join('\n');
+
+  // Text versions
+  const textVersionsYaml = data.textVersions.map(t => {
+    return `  - type: "${t.type || 'Unknown'}"
+    date: ${t.date || '2000-01-01'}`;
+  }).join('\n');
+
+  // Policy area / subjects
+  const subjects = Array.isArray(data.subjects) ? data.subjects : [];
+  const policyArea = data.policyArea?.name || b.policyArea?.name || subjects?.[0]?.name || meta.category;
+  const tags = subjects.slice(0, 10).map(s => `"${(s.name || '').replace(/"/g, '\\"')}"`).join(', ');
+
+  // Key milestones (AI-extracted)
+  const keyMilestonesYaml = aiMilestones && aiMilestones.length > 0
+    ? aiMilestones.map(m => {
+        const milestoneText = (m.text || '').replace(/"/g, '\\"').replace(/\n/g, ' ');
+        return `  - type: "${m.type}"
+    date: ${m.date}T12:00:00
+    text: "${milestoneText}"
+    icon: "${m.icon}"`;
+      }).join('\n')
+    : '';
+
+  // Build frontmatter
+  const frontmatter = `---
+title: "${title}"
+billNumber: "${billNumber}"
+billType: "real"
+category: "${policyArea}"
+tags: [${tags}]
+
+sponsor: "${sponsor}"
+sponsorParty: "${sponsorParty}"
+sponsorState: "${sponsorState}"
+cosponsorCount: ${data.cosponsors.length}
+${cosponsorsYaml ? `cosponsors:\n${cosponsorsYaml}` : 'cosponsors: []'}
+
+committee: "${data.committees[0]?.name || 'Not assigned'}"
+${committeesYaml ? `committees:\n${committeesYaml}` : ''}
+
+status: "${status.replace(/"/g, '\\"')}"
+dateIntroduced: ${dateIntroduced}
+${dateUpdated ? `dateUpdated: ${dateUpdated}` : ''}
+
+${actionsYaml ? `actions:\n${actionsYaml}` : ''}
+
+${keyMilestonesYaml ? `keyMilestones:\n${keyMilestonesYaml}` : ''}
+
+officialTitle: "${title}"
+${titlesYaml ? `shortTitles:\n${titlesYaml}` : ''}
+
+summary: "${shortSummary.replace(/"/g, '\\"')}"
+${theGist ? `theGist: "${theGist.replace(/"/g, '\\"').replace(/\n/g, ' ')}"` : ''}
+${whyItMatters ? `whyItMatters: "${whyItMatters.replace(/"/g, '\\"').replace(/\n/g, ' ')}"` : ''}
+${crsSummary ? `crsSummary: "${crsSummary.replace(/"/g, '\\"').replace(/\n/g, ' ').slice(0, 2000)}"` : ''}
+
+amendmentCount: ${data.amendments.length}
+${amendmentsYaml ? `amendments:\n${amendmentsYaml}` : ''}
+
+${relatedBillsYaml ? `relatedBills:\n${relatedBillsYaml}` : ''}
+
+${textVersionsYaml ? `textVersions:\n${textVersionsYaml}` : ''}
+
+absurdityIndex: ${meta.absurdityIndex}
+congressDotGovUrl: "${congressUrl}"
+congressNumber: ${meta.congress}
+featured: ${meta.featured || false}
+---`;
+
+  // Build body content (minimal - most content is in frontmatter for component rendering)
   const body = `
-${aiSection}## Congressional Research Service Summary
-
-${escapeMdx(billData.summary) || '*No CRS summary available yet.*'}
-
-## Bill Details
-
-${escapeMdx(billData.excerpt) || '*Full text not yet available in machine-readable format.*'}
-
-> **Source:** This is a real bill introduced in the ${meta.congress}th Congress. [View on Congress.gov](${congressUrl}).
+> **Source:** Real bill from the ${meta.congress}th Congress. Data from [Congress.gov](${congressUrl}).
 `;
 
   return frontmatter + '\n' + body;
 }
 
+// ============================================================================
+// MAIN
+// ============================================================================
+
 async function main() {
-  console.log(`Fetching ${BILL_LIST.length} bills from Congress.gov API...`);
+  console.log(`\n📜 AbsurdityIndex Bill Fetcher`);
+  console.log(`   Fetching ${BILL_LIST.length} bill(s) from Congress.gov API\n`);
+
   if (USE_AI) {
-    console.log('AI summarization enabled (using Anthropic API)');
-  } else if (process.argv.includes('--no-ai')) {
-    console.log('AI summarization disabled (--no-ai flag)');
-  } else if (!ANTHROPIC_API_KEY) {
-    console.log('AI summarization disabled (no ANTHROPIC_API_KEY set)');
+    const provider = OPENROUTER_API_KEY ? 'OpenRouter' : 'Anthropic';
+    console.log(`   AI summarization: ENABLED (${provider})`);
+  } else {
+    console.log('   AI summarization: DISABLED');
   }
+  if (UPDATE_MODE) console.log('   Update mode: ENABLED (will overwrite existing files)');
   console.log();
 
   let created = 0;
+  let updated = 0;
   let skipped = 0;
+  let errors = 0;
 
   for (const meta of BILL_LIST) {
     const slug = slugify(meta.congress, meta.type, meta.number);
-    const filepath = mdxFilename(slug);
+    const filepath = path.join(BILLS_DIR, `${slug}.mdx`);
 
-    if (fs.existsSync(filepath)) {
-      console.log(`  SKIP  ${slug} (already exists)`);
+    const exists = fs.existsSync(filepath);
+    if (exists && !UPDATE_MODE) {
+      console.log(`⏭️  SKIP  ${slug} (exists, use --update to overwrite)`);
       skipped++;
       continue;
     }
 
     try {
-      console.log(`  FETCH ${slug}...`);
+      console.log(`📥 FETCH ${slug}`);
       const data = await fetchBillData(meta.congress, meta.type, meta.number);
 
+      // Stats
+      console.log(`    📊 Actions: ${data.actions.length}, Amendments: ${data.amendments.length}, Cosponsors: ${data.cosponsors.length}`);
+
+      // AI summarization and milestone extraction
       let aiResult = null;
-      if (USE_AI && data.summary) {
-        const billNumber = formatBillNumber(meta.type, meta.number);
-        const billTitle = data.bill.title || '';
-        console.log(`  AI    Summarizing ${slug}...`);
-        aiResult = await aiSummarize(data.summary, billTitle, billNumber);
-        if (aiResult) {
-          console.log(`  AI    Done`);
+      let aiMilestones = null;
+      if (USE_AI) {
+        const crsSummary = data.summaries.length > 0
+          ? stripHtml(data.summaries[data.summaries.length - 1].text)
+          : '';
+        console.log(`    🤖 AI summarizing...`);
+        aiResult = await aiSummarize(crsSummary, data.bill.title, formatBillNumber(meta.type, meta.number), data.actions, meta.absurdityIndex);
+
+        console.log(`    🎯 AI extracting milestones...`);
+        aiMilestones = await aiExtractMilestones(data.actions, formatBillNumber(meta.type, meta.number), meta.type);
+        if (aiMilestones) {
+          console.log(`    📍 Extracted ${aiMilestones.length} milestones`);
         }
       }
 
-      const mdx = generateMdx(data, meta, aiResult);
+      // Generate and write MDX
+      const mdx = generateMdx(data, meta, aiResult, aiMilestones);
       fs.writeFileSync(filepath, mdx, 'utf-8');
-      console.log(`  WRITE ${slug}`);
-      created++;
+
+      if (exists) {
+        console.log(`✅ UPDATE ${slug}`);
+        updated++;
+      } else {
+        console.log(`✅ CREATE ${slug}`);
+        created++;
+      }
     } catch (err) {
-      console.error(`  ERROR ${slug}: ${err.message}`);
+      console.error(`❌ ERROR ${slug}: ${err.message}`);
+      errors++;
     }
+
+    console.log();
   }
 
-  console.log(`\nDone. Created: ${created}, Skipped: ${skipped}`);
+  console.log(`\n📊 Summary: Created ${created}, Updated ${updated}, Skipped ${skipped}, Errors ${errors}`);
 }
 
 main();

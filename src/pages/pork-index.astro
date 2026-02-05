@@ -1,0 +1,409 @@
+---
+/**
+ * Rep Pork Index
+ *
+ * A leaderboard of representatives ranked by their total pork contributions,
+ * with time sliders to track how their pork and net worth evolved over time.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/ui/Icon.astro';
+import { getCollection } from 'astro:content';
+
+const representatives = await getCollection('representatives');
+
+// Sort by total pork amount (descending)
+const sortedReps = [...representatives].sort(
+  (a, b) => b.data.totalPorkAmount - a.data.totalPorkAmount
+);
+
+function formatAmount(amt: number): string {
+  if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(1)}T`;
+  if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(1)}B`;
+  if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+  if (amt >= 1_000) return `$${(amt / 1_000).toFixed(0)}K`;
+  return `$${amt.toLocaleString()}`;
+}
+
+function formatNetWorth(min: number, max: number): string {
+  return `${formatAmount(min)} - ${formatAmount(max)}`;
+}
+
+function getPartyColor(party: string): string {
+  if (party.toLowerCase().includes('republican')) return 'bg-red-100 text-red-800 border-red-200';
+  if (party.toLowerCase().includes('democrat')) return 'bg-blue-100 text-blue-800 border-blue-200';
+  return 'bg-gray-100 text-gray-800 border-gray-200';
+}
+
+// Prepare data for client-side interactivity
+const repsData = sortedReps.map(rep => ({
+  id: rep.id,
+  name: rep.data.name,
+  party: rep.data.party,
+  state: rep.data.state,
+  totalPork: rep.data.totalPorkAmount,
+  porkContributions: rep.data.porkContributions.map(p => ({
+    ...p,
+    date: p.date.toISOString()
+  })),
+  financialDisclosures: rep.data.financialDisclosures || [],
+  congressUrl: rep.data.congressDotGovUrl,
+  terms: rep.data.terms.map(t => ({
+    ...t,
+    startDate: t.startDate.toISOString(),
+    endDate: t.endDate?.toISOString()
+  }))
+}));
+
+// Get date range for slider
+const allDates = sortedReps.flatMap(r => r.data.porkContributions.map(p => p.date.getTime()));
+const minDate = allDates.length > 0 ? new Date(Math.min(...allDates)) : new Date('2000-01-01');
+const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date();
+---
+
+<BaseLayout
+  title="Rep Pork Index — Track Congressional Spending"
+  description="See which representatives have added the most pork to legislation over time. Track their spending contributions alongside their personal wealth."
+>
+  <div class="max-w-6xl mx-auto px-4 py-8 md:py-12">
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-full bg-gold-100 flex items-center justify-center">
+          <Icon name="pig" size={28} class="text-gold-700" />
+        </div>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-3">
+        Rep Pork Index
+      </h1>
+      <p class="text-lg text-navy-600 max-w-2xl mx-auto">
+        Track which members of Congress have added the most "pork" to legislation—and how their personal finances have grown alongside their spending power.
+      </p>
+    </div>
+
+    <!-- Time Slider -->
+    <div class="mb-8 p-6 bg-parchment rounded-lg border border-gold-200">
+      <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <div class="flex items-center gap-2">
+          <Icon name="calendar" size={18} class="text-gold-600" />
+          <span class="text-sm font-sans font-semibold text-navy-700">Filter by Date Range</span>
+        </div>
+        <div class="flex-1 flex items-center gap-4">
+          <span class="text-xs font-mono text-navy-500" id="start-date-label">
+            {minDate.getFullYear()}
+          </span>
+          <input
+            type="range"
+            id="date-slider-start"
+            class="flex-1 h-2 bg-cream-200 rounded-lg appearance-none cursor-pointer accent-gold-500"
+            min={minDate.getTime()}
+            max={maxDate.getTime()}
+            value={minDate.getTime()}
+          />
+          <input
+            type="range"
+            id="date-slider-end"
+            class="flex-1 h-2 bg-cream-200 rounded-lg appearance-none cursor-pointer accent-gold-500"
+            min={minDate.getTime()}
+            max={maxDate.getTime()}
+            value={maxDate.getTime()}
+          />
+          <span class="text-xs font-mono text-navy-500" id="end-date-label">
+            {maxDate.getFullYear()}
+          </span>
+        </div>
+        <button
+          id="reset-filter"
+          class="text-xs font-sans text-gold-700 hover:text-gold-600 underline"
+        >
+          Reset
+        </button>
+      </div>
+      <p class="text-xs text-navy-500 mt-2">
+        Drag sliders to filter pork contributions by date. The leaderboard updates in real-time.
+      </p>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="p-4 bg-white rounded-lg border border-cream-200 text-center">
+        <p class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Representatives</p>
+        <p class="text-2xl font-mono font-bold text-navy-900" id="rep-count">{sortedReps.length}</p>
+      </div>
+      <div class="p-4 bg-white rounded-lg border border-cream-200 text-center">
+        <p class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Total Pork</p>
+        <p class="text-2xl font-mono font-bold text-red-600" id="total-pork">
+          {formatAmount(sortedReps.reduce((sum, r) => sum + r.data.totalPorkAmount, 0))}
+        </p>
+      </div>
+      <div class="p-4 bg-white rounded-lg border border-cream-200 text-center">
+        <p class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Avg Per Rep</p>
+        <p class="text-2xl font-mono font-bold text-orange-600" id="avg-pork">
+          {formatAmount(sortedReps.reduce((sum, r) => sum + r.data.totalPorkAmount, 0) / sortedReps.length)}
+        </p>
+      </div>
+      <div class="p-4 bg-white rounded-lg border border-cream-200 text-center">
+        <p class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Pork Items</p>
+        <p class="text-2xl font-mono font-bold text-navy-900" id="item-count">
+          {sortedReps.reduce((sum, r) => sum + r.data.porkContributions.length, 0)}
+        </p>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="space-y-4" id="leaderboard">
+      {sortedReps.map((rep, index) => {
+        const latestDisclosure = rep.data.financialDisclosures?.slice(-1)[0];
+        const firstDisclosure = rep.data.financialDisclosures?.[0];
+
+        return (
+          <div
+            class="rep-card p-5 bg-white rounded-lg border border-cream-200 shadow-sm hover:shadow-md transition-shadow"
+            data-rep-id={rep.id}
+          >
+            <div class="flex items-start gap-4">
+              {/* Rank */}
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gold-100 flex items-center justify-center">
+                <span class="font-mono text-lg font-bold text-gold-700">#{index + 1}</span>
+              </div>
+
+              {/* Rep Info */}
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <h3 class="font-serif text-lg font-bold text-navy-900">
+                    {rep.data.name}
+                  </h3>
+                  <span class:list={[
+                    'px-2 py-0.5 text-xs font-sans font-medium rounded border',
+                    getPartyColor(rep.data.party)
+                  ]}>
+                    {rep.data.party.charAt(0)}-{rep.data.state}
+                  </span>
+                  {rep.data.congressDotGovUrl && (
+                    <a
+                      href={rep.data.congressDotGovUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-gold-600 hover:text-gold-500"
+                      title="View on Congress.gov"
+                    >
+                      <Icon name="external-link" size={14} />
+                    </a>
+                  )}
+                </div>
+
+                {/* Terms */}
+                <p class="text-xs text-navy-500 mb-3">
+                  {rep.data.terms.map(t =>
+                    `${t.chamber === 'senate' ? 'Senator' : 'Rep.'} ${t.startDate.getFullYear()}–${t.endDate?.getFullYear() || 'Present'}`
+                  ).join(', ')}
+                </p>
+
+                {/* Pork Contributions Preview */}
+                <div class="flex flex-wrap gap-2">
+                  {rep.data.porkContributions.slice(0, 3).map(p => (
+                    <span class="text-xs bg-cream-100 text-navy-600 px-2 py-1 rounded">
+                      {formatAmount(p.amount)} — {p.description.slice(0, 30)}...
+                    </span>
+                  ))}
+                  {rep.data.porkContributions.length > 3 && (
+                    <span class="text-xs text-navy-400">
+                      +{rep.data.porkContributions.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div class="flex-shrink-0 text-right">
+                <p class="font-mono text-xl font-bold text-red-600 rep-pork-total">
+                  {formatAmount(rep.data.totalPorkAmount)}
+                </p>
+                <p class="text-xs text-navy-500">Total Pork</p>
+
+                {latestDisclosure && firstDisclosure && (
+                  <div class="mt-2 pt-2 border-t border-cream-200">
+                    <p class="text-xs text-navy-500">Net Worth Growth</p>
+                    <p class="font-mono text-sm text-green-600">
+                      {formatAmount(firstDisclosure.minNetWorth)} → {formatAmount(latestDisclosure.maxNetWorth)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Expandable Details */}
+            <details class="mt-4 pt-4 border-t border-cream-200">
+              <summary class="cursor-pointer text-sm font-sans font-medium text-gold-700 hover:text-gold-600">
+                View all pork contributions & financial disclosures
+              </summary>
+              <div class="mt-4 grid md:grid-cols-2 gap-6">
+                {/* Pork Timeline */}
+                <div>
+                  <h4 class="text-xs font-sans font-semibold text-navy-500 uppercase tracking-wide mb-3">
+                    <Icon name="pig" size={12} class="inline -mt-0.5 mr-1" />
+                    Pork Contributions
+                  </h4>
+                  <div class="space-y-2 max-h-64 overflow-y-auto">
+                    {rep.data.porkContributions.map(p => (
+                      <div class="p-2 bg-cream-50 rounded text-sm">
+                        <div class="flex justify-between items-start gap-2">
+                          <span class="font-medium text-navy-800">{p.description}</span>
+                          <span class="font-mono text-red-600 flex-shrink-0">{formatAmount(p.amount)}</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1 text-xs text-navy-500">
+                          <span>{p.billNumber}</span>
+                          <span>{p.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Financial Disclosures */}
+                {rep.data.financialDisclosures && rep.data.financialDisclosures.length > 0 && (
+                  <div>
+                    <h4 class="text-xs font-sans font-semibold text-navy-500 uppercase tracking-wide mb-3">
+                      <Icon name="dollar-sign" size={12} class="inline -mt-0.5 mr-1" />
+                      Financial Disclosures
+                    </h4>
+                    <div class="space-y-2">
+                      {rep.data.financialDisclosures.map(d => (
+                        <div class="flex justify-between items-center p-2 bg-cream-50 rounded text-sm">
+                          <span class="font-mono text-navy-600">{d.year}</span>
+                          <span class="font-mono text-green-600">{formatNetWorth(d.minNetWorth, d.maxNetWorth)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p class="text-xs text-navy-400 italic mt-2">
+                      Source: Public financial disclosure reports
+                    </p>
+                  </div>
+                )}
+              </div>
+            </details>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Disclaimer */}
+    <div class="mt-10 p-4 bg-cream-100 rounded-lg border border-gold-200 text-center">
+      <p class="text-xs text-navy-600">
+        <Icon name="info" size={12} class="inline -mt-0.5 mr-1" />
+        Pork amounts are estimates based on public records and CBO analyses.
+        Financial disclosure data from official congressional filings.
+        This is editorial commentary, not financial advice.
+      </p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ repsData, minDate: minDate.getTime(), maxDate: maxDate.getTime() }}>
+  const startSlider = document.getElementById('date-slider-start');
+  const endSlider = document.getElementById('date-slider-end');
+  const startLabel = document.getElementById('start-date-label');
+  const endLabel = document.getElementById('end-date-label');
+  const resetBtn = document.getElementById('reset-filter');
+  const totalPorkEl = document.getElementById('total-pork');
+  const avgPorkEl = document.getElementById('avg-pork');
+  const itemCountEl = document.getElementById('item-count');
+
+  function formatAmount(amt) {
+    if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(1)}T`;
+    if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(1)}B`;
+    if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+    if (amt >= 1_000) return `$${(amt / 1_000).toFixed(0)}K`;
+    return `$${amt.toLocaleString()}`;
+  }
+
+  function updateDisplay() {
+    const startTime = parseInt(startSlider.value);
+    const endTime = parseInt(endSlider.value);
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    startLabel.textContent = startDate.getFullYear();
+    endLabel.textContent = endDate.getFullYear();
+
+    // Calculate filtered totals
+    let totalPork = 0;
+    let totalItems = 0;
+
+    repsData.forEach(rep => {
+      const filteredPork = rep.porkContributions.filter(p => {
+        const porkTime = new Date(p.date).getTime();
+        return porkTime >= startTime && porkTime <= endTime;
+      });
+
+      const repPork = filteredPork.reduce((sum, p) => sum + p.amount, 0);
+      totalPork += repPork;
+      totalItems += filteredPork.length;
+
+      // Update individual card
+      const card = document.querySelector(`[data-rep-id="${rep.id}"]`);
+      if (card) {
+        const porkTotal = card.querySelector('.rep-pork-total');
+        if (porkTotal) {
+          porkTotal.textContent = formatAmount(repPork);
+        }
+      }
+    });
+
+    totalPorkEl.textContent = formatAmount(totalPork);
+    avgPorkEl.textContent = formatAmount(totalPork / repsData.length);
+    itemCountEl.textContent = totalItems.toString();
+  }
+
+  startSlider?.addEventListener('input', updateDisplay);
+  endSlider?.addEventListener('input', updateDisplay);
+
+  resetBtn?.addEventListener('click', () => {
+    startSlider.value = minDate;
+    endSlider.value = maxDate;
+    updateDisplay();
+  });
+</script>
+
+<style>
+  .rep-card {
+    transition: all 0.2s ease;
+  }
+
+  .rep-card:hover {
+    border-color: var(--color-gold-300);
+  }
+
+  details[open] summary {
+    margin-bottom: 0.5rem;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-gold-500);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-gold-500);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  :global(html.dark) .rep-card {
+    background: rgba(15, 26, 46, 0.6);
+    border-color: rgba(197, 165, 114, 0.2);
+  }
+
+  :global(html.dark) .rep-card:hover {
+    border-color: var(--color-gold-500);
+  }
+</style>

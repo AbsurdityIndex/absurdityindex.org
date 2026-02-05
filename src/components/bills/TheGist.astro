@@ -1,0 +1,81 @@
+---
+/**
+ * TheGist - Editorial summary card that leads the bill page
+ *
+ * This is the hook — the interesting, accessible take on what the bill does.
+ * Prominently displayed at the top of bill detail pages.
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Props {
+  theGist: string;
+  whyItMatters?: string;
+  absurdityIndex?: number;
+}
+
+const { theGist, whyItMatters, absurdityIndex } = Astro.props;
+
+// Determine the editorial tone based on absurdity score
+const getToneLabel = (score: number | undefined) => {
+  if (!score) return null;
+  if (score >= 8) return { label: 'Peak Absurdity', color: 'text-red-600 bg-red-50' };
+  if (score >= 6) return { label: 'Highly Questionable', color: 'text-orange-600 bg-orange-50' };
+  if (score >= 4) return { label: 'Eyebrow-Raising', color: 'text-amber-600 bg-amber-50' };
+  return { label: 'Relatively Sane', color: 'text-green-600 bg-green-50' };
+};
+
+const tone = getToneLabel(absurdityIndex);
+---
+
+<div class="the-gist relative">
+  {/* Editorial badge */}
+  <div class="flex items-center gap-2 mb-3">
+    <div class="flex items-center gap-2 px-3 py-1 bg-navy-800 text-gold-400 rounded-full">
+      <Icon name="sparkles" size={14} />
+      <span class="text-xs font-mono font-semibold uppercase tracking-wider">The Gist</span>
+    </div>
+    {tone && (
+      <span class:list={['text-xs font-sans font-medium px-2 py-1 rounded-full', tone.color]}>
+        {tone.label}
+      </span>
+    )}
+  </div>
+
+  {/* Main editorial content */}
+  <blockquote class="relative pl-4 border-l-4 border-gold-500">
+    <p class="text-lg md:text-xl font-serif text-navy-900 leading-relaxed">
+      {theGist}
+    </p>
+  </blockquote>
+
+  {/* Why it matters - if provided */}
+  {whyItMatters && (
+    <div class="mt-4 flex items-start gap-3 p-3 bg-cream-200 rounded-lg">
+      <div class="flex-shrink-0 w-6 h-6 rounded-full bg-navy-100 flex items-center justify-center mt-0.5">
+        <Icon name="info" size={12} class="text-navy-600" />
+      </div>
+      <div>
+        <p class="text-xs font-sans font-semibold text-navy-600 uppercase tracking-wide mb-1">
+          Why It Matters
+        </p>
+        <p class="text-sm font-sans text-navy-700 leading-relaxed">
+          {whyItMatters}
+        </p>
+      </div>
+    </div>
+  )}
+</div>
+
+<style>
+  .the-gist blockquote p::before {
+    content: '"';
+    position: absolute;
+    left: -0.5rem;
+    top: -0.5rem;
+    font-size: 3rem;
+    font-family: Georgia, serif;
+    color: var(--color-gold-300);
+    line-height: 1;
+    pointer-events: none;
+  }
+</style>

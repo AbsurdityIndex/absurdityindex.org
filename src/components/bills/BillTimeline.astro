@@ -17,15 +17,26 @@ const stages = [
 
 function getCurrentStage(status: string): number {
   const s = status.toLowerCase();
-  if (s.includes('signed') || s.includes('law') || s.includes('vetoed') || s.includes('died')) return 5;
+  if (s.includes('signed') || s.includes('law') || s.includes('vetoed') || s.includes('died') || s.includes('enacted') || s.includes('adopted') || s.includes('agreed')) return 5;
   if (s.includes('enrolled') || s.includes('passed both')) return 4;
-  if (s.includes('passed house') || s.includes('passed senate')) return 3;
+  if (s.includes('passed house') || s.includes('passed senate') || s.includes('passed/agreed')) return 3;
   if (s.includes('reported')) return 2;
   if (s.includes('committee') || s.includes('referred')) return 1;
   return 0;
 }
 
+// Determine final outcome
+type Outcome = 'signed' | 'vetoed' | 'pending';
+function getFinalOutcome(status: string): Outcome {
+  const s = status.toLowerCase();
+  if (s.includes('signed') || s.includes('law') || s.includes('enacted') || s.includes('adopted') || s.includes('agreed')) return 'signed';
+  if (s.includes('vetoed') || s.includes('died') || s.includes('failed') || s.includes('pocket')) return 'vetoed';
+  return 'pending';
+}
+
 const currentStage = getCurrentStage(status);
+const finalOutcome = getFinalOutcome(status);
+const isFinalStage = currentStage === 5;
 
 // Format the introduction date
 const formattedDate = dateIntroduced instanceof Date
@@ -46,8 +57,8 @@ const formattedDate = dateIntroduced instanceof Date
   <!-- Desktop horizontal timeline -->
   <div class="hidden md:block">
     <svg
-      class="w-full h-24"
-      viewBox="0 0 600 96"
+      class="w-full h-28"
+      viewBox="0 0 600 112"
       preserveAspectRatio="xMidYMid meet"
       aria-label={`Bill progress: currently at ${stages[currentStage].label}`}
       role="img"
@@ -61,9 +72,9 @@ const formattedDate = dateIntroduced instanceof Date
         return (
           <line
             x1={x1 + 12}
-            y1="36"
+            y1="40"
             x2={x2 - 12}
-            y2="36"
+            y2="40"
             stroke={isCompleted ? '#228B4A' : '#E0D8C8'}
             stroke-width="3"
             stroke-linecap="round"
@@ -77,6 +88,7 @@ const formattedDate = dateIntroduced instanceof Date
         const isCompleted = i < currentStage;
         const isCurrent = i === currentStage;
         const isFuture = i > currentStage;
+        const isFinal = i === stages.length - 1;
 
         let fillColor = '#E0D8C8'; // gray for future
         let strokeColor = '#C5CDD8';
@@ -87,18 +99,33 @@ const formattedDate = dateIntroduced instanceof Date
           strokeColor = '#1A6B3A';
           textColor = '#228B4A';
         } else if (isCurrent) {
-          fillColor = '#C5A572';
-          strokeColor = '#A88B4A';
-          textColor = '#A88B4A';
+          // Final stage with outcome
+          if (isFinal && finalOutcome === 'signed') {
+            fillColor = '#228B4A';
+            strokeColor = '#1A6B3A';
+            textColor = '#228B4A';
+          } else if (isFinal && finalOutcome === 'vetoed') {
+            fillColor = '#DC2626';
+            strokeColor = '#B91C1C';
+            textColor = '#DC2626';
+          } else {
+            fillColor = '#C5A572';
+            strokeColor = '#A88B4A';
+            textColor = '#A88B4A';
+          }
         }
+
+        // Larger circle for final stage with outcome
+        const isFinalWithOutcome = isFinal && isCurrent && finalOutcome !== 'pending';
+        const circleRadius = isFinalWithOutcome ? 20 : (isCurrent ? 14 : 10);
 
         return (
           <g>
-            {/* Pulse animation for current stage */}
-            {isCurrent && (
+            {/* Pulse animation for current stage (only if pending) */}
+            {isCurrent && !isFinalWithOutcome && (
               <circle
                 cx={cx}
-                cy="36"
+                cy="40"
                 r="18"
                 fill={fillColor}
                 opacity="0.3"
@@ -106,46 +133,69 @@ const formattedDate = dateIntroduced instanceof Date
               />
             )}
 
+            {/* Glow effect for final outcome */}
+            {isFinalWithOutcome && (
+              <circle
+                cx={cx}
+                cy="40"
+                r="28"
+                fill={finalOutcome === 'signed' ? '#228B4A' : '#DC2626'}
+                opacity="0.15"
+              />
+            )}
+
             {/* Main circle */}
             <circle
               cx={cx}
-              cy="36"
-              r={isCurrent ? 14 : 10}
+              cy="40"
+              r={circleRadius}
               fill={fillColor}
               stroke={strokeColor}
-              stroke-width="2"
+              stroke-width={isFinalWithOutcome ? 3 : 2}
             />
 
-            {/* Checkmark for completed stages */}
-            {isCompleted && (
+            {/* Checkmark for completed stages OR final signed */}
+            {(isCompleted || (isFinalWithOutcome && finalOutcome === 'signed')) && (
               <path
-                d={`M${cx - 4} 36 L${cx - 1} 39 L${cx + 5} 33`}
+                d={isFinalWithOutcome
+                  ? `M${cx - 8} 40 L${cx - 2} 46 L${cx + 10} 32`
+                  : `M${cx - 4} 40 L${cx - 1} 43 L${cx + 5} 37`}
                 stroke="white"
-                stroke-width="2"
+                stroke-width={isFinalWithOutcome ? 3 : 2}
                 fill="none"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
             )}
 
+            {/* X mark for vetoed/failed */}
+            {isFinalWithOutcome && finalOutcome === 'vetoed' && (
+              <g>
+                <line x1={cx - 7} y1="33" x2={cx + 7} y2="47" stroke="white" stroke-width="3" stroke-linecap="round" />
+                <line x1={cx + 7} y1="33" x2={cx - 7} y2="47" stroke="white" stroke-width="3" stroke-linecap="round" />
+              </g>
+            )}
+
             {/* Stage label */}
             <text
               x={cx}
-              y="68"
+              y="76"
               text-anchor="middle"
               fill={textColor}
               font-size="11"
               font-family="var(--font-sans)"
               font-weight={isCurrent ? '600' : '400'}
             >
-              {stage.label}
+              {isFinalWithOutcome
+                ? (finalOutcome === 'signed' ? 'Signed' : 'Vetoed')
+                : stage.label}
             </text>
 
-            {/* Stage number */}
-            {!isCompleted && (
+            {/* Stage number (only for non-completed, non-final-outcome stages) */}
+            {!isCompleted && !isFinalWithOutcome && (
               <text
                 x={cx}
-                y={isCurrent ? 40 : 39}
+                y={isCurrent ? 44 : 43}
                 text-anchor="middle"
                 fill={isCurrent ? '#0A1628' : '#8899AA'}
                 font-size={isCurrent ? '12' : '10'}
@@ -163,12 +213,13 @@ const formattedDate = dateIntroduced instanceof Date
 
   <!-- Mobile vertical timeline -->
   <div class="md:hidden">
-    <div class="relative pl-8">
+    <div class="relative pl-10">
       {stages.map((stage, i) => {
         const isCompleted = i < currentStage;
         const isCurrent = i === currentStage;
         const isFuture = i > currentStage;
         const isLast = i === stages.length - 1;
+        const isFinalWithOutcome = isLast && isCurrent && finalOutcome !== 'pending';
 
         let bgColor = 'bg-cream-300';
         let borderColor = 'border-cream-300';
@@ -179,9 +230,19 @@ const formattedDate = dateIntroduced instanceof Date
           borderColor = 'border-green-600';
           textColor = 'text-green-700';
         } else if (isCurrent) {
-          bgColor = 'bg-gold-500';
-          borderColor = 'border-gold-500';
-          textColor = 'text-gold-600';
+          if (isFinalWithOutcome && finalOutcome === 'signed') {
+            bgColor = 'bg-green-600';
+            borderColor = 'border-green-600';
+            textColor = 'text-green-700';
+          } else if (isFinalWithOutcome && finalOutcome === 'vetoed') {
+            bgColor = 'bg-red-600';
+            borderColor = 'border-red-600';
+            textColor = 'text-red-700';
+          } else {
+            bgColor = 'bg-gold-500';
+            borderColor = 'border-gold-500';
+            textColor = 'text-gold-600';
+          }
         }
 
         return (
@@ -196,21 +257,26 @@ const formattedDate = dateIntroduced instanceof Date
               />
             )}
 
-            {/* Circle */}
+            {/* Circle - larger for final outcome */}
             <div
               class:list={[
                 'absolute left-0 -translate-x-1/2 rounded-full border-2 flex items-center justify-center',
                 bgColor,
                 borderColor,
-                isCurrent ? 'w-7 h-7 pulse-subtle' : 'w-5 h-5',
+                isFinalWithOutcome ? 'w-10 h-10' : isCurrent ? 'w-7 h-7 pulse-subtle' : 'w-5 h-5',
               ]}
             >
-              {isCompleted && (
-                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {(isCompleted || (isFinalWithOutcome && finalOutcome === 'signed')) && (
+                <svg class={isFinalWithOutcome ? 'w-5 h-5 text-white' : 'w-3 h-3 text-white'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                 </svg>
               )}
-              {!isCompleted && (
+              {isFinalWithOutcome && finalOutcome === 'vetoed' && (
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+              {!isCompleted && !isFinalWithOutcome && (
                 <span class:list={['font-mono text-xs font-bold', isCurrent ? 'text-navy-900' : 'text-navy-500']}>
                   {i + 1}
                 </span>
@@ -226,7 +292,9 @@ const formattedDate = dateIntroduced instanceof Date
                   textColor,
                 ]}
               >
-                {stage.label}
+                {isFinalWithOutcome
+                  ? (finalOutcome === 'signed' ? 'Signed into Law' : 'Vetoed')
+                  : stage.label}
               </span>
             </div>
           </div>

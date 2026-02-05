@@ -1,0 +1,49 @@
+{
+  "name": "Patty Murray",
+  "bioguideId": "M001111",
+  "party": "Democrat",
+  "state": "WA",
+  "imageUrl": "https://bioguide.congress.gov/bioguide/photo/M/M001111.jpg",
+  "terms": [
+    {
+      "chamber": "senate",
+      "state": "WA",
+      "startDate": "1993-01-03",
+      "party": "Democrat"
+    }
+  ],
+  "totalPorkAmount": 24650000000,
+  "porkContributions": [
+    {
+      "billId": "real-hr-2112-demo",
+      "billNumber": "H.R. 2112",
+      "amount": 3300000000,
+      "description": "HUD community development grants",
+      "date": "2011-08-02",
+      "category": "program-expansion"
+    },
+    {
+      "billId": "real-hr-2617-fy23",
+      "billNumber": "H.R. 2617",
+      "amount": 12500000000,
+      "description": "Transportation infrastructure",
+      "date": "2022-12-20",
+      "category": "earmark"
+    },
+    {
+      "billId": "real-hr-3684",
+      "billNumber": "H.R. 3684",
+      "amount": 8850000000,
+      "description": "Infrastructure Investment and Jobs Act earmarks",
+      "date": "2021-11-15",
+      "category": "earmark"
+    }
+  ],
+  "financialDisclosures": [
+    { "year": 2010, "minNetWorth": 800000, "maxNetWorth": 2400000 },
+    { "year": 2015, "minNetWorth": 1200000, "maxNetWorth": 3600000 },
+    { "year": 2020, "minNetWorth": 1800000, "maxNetWorth": 5200000 },
+    { "year": 2023, "minNetWorth": 2400000, "maxNetWorth": 7800000 }
+  ],
+  "congressDotGovUrl": "https://www.congress.gov/member/patty-murray/M001111"
+}

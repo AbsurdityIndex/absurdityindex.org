@@ -1,0 +1,42 @@
+{
+  "name": "Rosa DeLauro",
+  "bioguideId": "D000216",
+  "party": "Democrat",
+  "state": "CT",
+  "imageUrl": "https://bioguide.congress.gov/bioguide/photo/D/D000216.jpg",
+  "terms": [
+    {
+      "chamber": "house",
+      "state": "CT",
+      "district": 3,
+      "startDate": "1991-01-03",
+      "party": "Democrat"
+    }
+  ],
+  "totalPorkAmount": 2875000000,
+  "porkContributions": [
+    {
+      "billId": "real-hr-2112-demo",
+      "billNumber": "H.R. 2112",
+      "amount": 75000000,
+      "description": "Specialty crop research block grant",
+      "date": "2011-06-10",
+      "category": "earmark"
+    },
+    {
+      "billId": "real-hr-2617-fy23",
+      "billNumber": "H.R. 2617",
+      "amount": 2800000000,
+      "description": "Child nutrition program expansion",
+      "date": "2022-12-20",
+      "category": "program-expansion"
+    }
+  ],
+  "financialDisclosures": [
+    { "year": 2010, "minNetWorth": 4500000, "maxNetWorth": 15000000 },
+    { "year": 2015, "minNetWorth": 5200000, "maxNetWorth": 18000000 },
+    { "year": 2020, "minNetWorth": 7800000, "maxNetWorth": 24000000 },
+    { "year": 2023, "minNetWorth": 9200000, "maxNetWorth": 32000000 }
+  ],
+  "congressDotGovUrl": "https://www.congress.gov/member/rosa-delauro/D000216"
+}

@@ -1,0 +1,1381 @@
+---
+/**
+ * BillEvolutionModal Component
+ *
+ * Interactive modal showing how a bill transforms through the legislative
+ * process, with a Pork Meter that visualizes spending additions at each stage.
+ *
+ * Features:
+ * - Timeline navigation (vertical on desktop, horizontal tabs on mobile)
+ * - Stage-by-stage paraphrased content
+ * - Animated Pork Meter gauge
+ * - Pork breakdown cards for each spending addition
+ */
+import Icon from '../ui/Icon.astro';
+import PorkMeter from './PorkMeter.astro';
+import PorkBreakdownCard from './PorkBreakdownCard.astro';
+import EvolutionTimeline from './EvolutionTimeline.astro';
+
+interface Sponsor {
+  name: string;
+  party: 'R' | 'D' | 'I';
+  state: string;
+  chamber: 'house' | 'senate';
+  bioguideId?: string;
+  congressUrl?: string;
+}
+
+interface CommitteeMember {
+  name: string;
+  role: 'chair' | 'ranking' | 'member';
+  party: 'R' | 'D' | 'I';
+  state: string;
+}
+
+interface Vote {
+  yeas: number;
+  nays: number;
+  notVoting?: number;
+  passed: boolean;
+  rollCallNumber?: number;
+  rollCallUrl?: string;
+}
+
+interface PorkItem {
+  description: string;
+  amount: number;
+  addedBy: string;
+  sponsor?: Sponsor;
+  cosponsors?: Sponsor[];
+  committee?: string;
+  committeeMembers?: CommitteeMember[];
+  amendmentNumber?: string;
+  amendmentType?: 'floor' | 'committee' | 'conference' | 'manager';
+  vote?: Vote;
+  category: 'earmark' | 'program-expansion' | 'new-program' | 'tax-expenditure' | 'hidden-cost';
+  satiricalNote?: string;
+  sourceUrl?: string;
+}
+
+interface EvolutionStage {
+  stage: 'introduced' | 'committee-markup' | 'house-passed' | 'senate-amended' | 'conference' | 'final';
+  date: Date;
+  paraphrasedText: string;
+  cumulativePork: number;
+  porkAddedThisStage: number;
+  keyChanges: string[];
+  amendmentsIncluded?: string[];
+  porkItems?: PorkItem[];
+}
+
+interface Props {
+  billNumber: string;
+  billTitle: string;
+  stages: EvolutionStage[];
+  totalPork: number;
+  congressDotGovUrl?: string;
+}
+
+const { billNumber, billTitle, stages, totalPork, congressDotGovUrl } = Astro.props;
+
+const stageLabels: Record<EvolutionStage['stage'], string> = {
+  'introduced': 'Introduced',
+  'committee-markup': 'Committee Markup',
+  'house-passed': 'House Passed',
+  'senate-amended': 'Senate Amended',
+  'conference': 'Conference Committee',
+  'final': 'Signed into Law'
+};
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+// Pork Meter helper functions
+const US_POPULATION = 333_000_000;
+
+function formatAmount(amt: number): string {
+  if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(1)}T`;
+  if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(1)}B`;
+  if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+  if (amt >= 1_000) return `$${(amt / 1_000).toFixed(1)}K`;
+  return `$${amt.toFixed(0)}`;
+}
+
+function formatPerCapita(amt: number): string {
+  const perCapita = amt / US_POPULATION;
+  if (perCapita >= 1000) return `$${perCapita.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+  if (perCapita >= 1) return `$${perCapita.toFixed(2)}`;
+  if (perCapita >= 0.01) return `${(perCapita * 100).toFixed(0)}c`;
+  return '$0';
+}
+
+function getFillPercentage(amt: number): number {
+  if (amt <= 0) return 0;
+  const logAmt = Math.log10(Math.max(amt, 1));
+  const logMax = Math.log10(1_000_000_000_000);
+  return Math.min(100, (logAmt / logMax) * 100);
+}
+
+type PorkTier = { threshold: number; label: string; colorClass: string };
+const tiers: PorkTier[] = [
+  { threshold: 0, label: 'Squeaky Clean', colorClass: 'tier-0' },
+  { threshold: 10_000_000, label: 'A Little Bacon', colorClass: 'tier-1' },
+  { threshold: 100_000_000, label: 'Pork Chops', colorClass: 'tier-2' },
+  { threshold: 1_000_000_000, label: 'Whole Hog', colorClass: 'tier-3' },
+  { threshold: 10_000_000_000, label: 'Industrial Pig Farm', colorClass: 'tier-4' },
+  { threshold: 100_000_000_000, label: 'Flying Pigs', colorClass: 'tier-5' },
+  { threshold: 1_000_000_000_000, label: 'Hogpocalypse', colorClass: 'tier-6' },
+];
+
+function getTierLabel(amt: number): string {
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    if (amt >= tiers[i].threshold) return tiers[i].label;
+  }
+  return tiers[0].label;
+}
+
+function getTierIndex(amt: number): number {
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    if (amt >= tiers[i].threshold) return i;
+  }
+  return 0;
+}
+
+// Stage pork data for JavaScript
+const stagePorkData = stages.map(s => ({
+  cumulativePork: s.cumulativePork,
+  porkAddedThisStage: s.porkAddedThisStage
+}));
+
+// Generate unique ID for this modal instance
+const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`;
+---
+
+<!-- Trigger Button (to be placed on the bill page) -->
+<button
+  id={`${modalId}-trigger`}
+  type="button"
+  class="evolution-trigger"
+  aria-expanded="false"
+  aria-controls={modalId}
+>
+  <Icon name="history" size={16} />
+  <span>View Bill Evolution</span>
+  <span class="trigger-badge">
+    <Icon name="pig" size={12} />
+  </span>
+</button>
+
+<!-- Backdrop -->
+<div id={`${modalId}-backdrop`} class="evolution-backdrop" aria-hidden="true"></div>
+
+<!-- Modal -->
+<div
+  id={modalId}
+  class="evolution-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby={`${modalId}-title`}
+  aria-hidden="true"
+>
+  <!-- Header -->
+  <header class="modal-header">
+    <div class="header-content">
+      <div class="flex items-center gap-2">
+        <Icon name="history" size={20} class="text-gold-400" />
+        <h2 id={`${modalId}-title`} class="header-title">Bill Evolution</h2>
+      </div>
+      <p class="header-subtitle">{billNumber} — {billTitle}</p>
+    </div>
+    <button
+      type="button"
+      id={`${modalId}-close`}
+      class="modal-close"
+      aria-label="Close modal"
+    >
+      <Icon name="x" size={20} />
+    </button>
+  </header>
+
+  <!-- Main content area -->
+  <div class="modal-body">
+    <!-- Left: Timeline (desktop) / Tabs (mobile) -->
+    <aside class="timeline-sidebar">
+      <h3 class="sidebar-title">
+        <Icon name="git-branch" size={14} />
+        <span>Stages</span>
+      </h3>
+      <div class="timeline-container" id={`${modalId}-timeline`}>
+        <EvolutionTimeline stages={stages} currentStageIndex={0} />
+      </div>
+    </aside>
+
+    <!-- Center: Stage content -->
+    <main class="stage-content">
+      {stages.map((stage, index) => (
+        <article
+          class:list={['stage-panel', { 'active': index === 0 }]}
+          id={`${modalId}-stage-${index}`}
+          data-stage-index={index}
+          aria-hidden={index !== 0}
+        >
+          {/* Stage header */}
+          <div class="stage-header">
+            <h3 class="stage-title">{stageLabels[stage.stage]}</h3>
+            <time class="stage-date" datetime={stage.date.toISOString()}>
+              {formatDate(stage.date)}
+            </time>
+          </div>
+
+          {/* Paraphrased content */}
+          <div class="paraphrased-text">
+            <p>{stage.paraphrasedText}</p>
+          </div>
+
+          {/* Key changes */}
+          {stage.keyChanges.length > 0 && (
+            <div class="key-changes">
+              <h4 class="changes-title">
+                <Icon name="edit-3" size={14} />
+                Key Changes
+              </h4>
+              <ul class="changes-list">
+                {stage.keyChanges.map((change) => (
+                  <li>{change}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Pork added this stage */}
+          {stage.porkItems && stage.porkItems.length > 0 && (
+            <div class="pork-section">
+              <h4 class="pork-title">
+                <Icon name="pig" size={14} />
+                Pork Added This Stage
+                <span class="pork-count">{stage.porkItems.length} item{stage.porkItems.length !== 1 ? 's' : ''}</span>
+              </h4>
+              <div class="pork-list">
+                {stage.porkItems.map((item) => (
+                  <PorkBreakdownCard item={item} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Amendments included */}
+          {stage.amendmentsIncluded && stage.amendmentsIncluded.length > 0 && (
+            <div class="amendments-section">
+              <h4 class="amendments-title">
+                <Icon name="file-text" size={14} />
+                Amendments Included
+              </h4>
+              <div class="amendments-list">
+                {stage.amendmentsIncluded.map((amend) => (
+                  <span class="amendment-badge">{amend}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </article>
+      ))}
+    </main>
+
+    <!-- Right: Pork Meter (dynamic) -->
+    <aside class="meter-sidebar">
+      <div class="meter-container" id={`${modalId}-meter`}>
+        <div class={`pork-meter-modal tier-${getTierIndex(stages[0].cumulativePork)}`} id={`${modalId}-pork-meter`}>
+          <!-- Header -->
+          <div class="meter-modal-header">
+            <div class="meter-modal-title">
+              <Icon name="pig" size={16} class="pork-icon" />
+              <span>Pork Barrel</span>
+            </div>
+            <div class="meter-modal-amount">
+              <span class="pork-amount">{formatAmount(stages[0].cumulativePork)}</span>
+              <span class="pork-per-capita">{formatPerCapita(stages[0].cumulativePork)}/person</span>
+            </div>
+          </div>
+
+          <!-- Semi-circular Gauge -->
+          <div class="gauge-modal-wrapper">
+            <svg viewBox="0 0 200 110" class="gauge-modal-svg">
+              <defs>
+                <linearGradient id="modal-gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#22c55e" />
+                  <stop offset="25%" stop-color="#eab308" />
+                  <stop offset="50%" stop-color="#f97316" />
+                  <stop offset="75%" stop-color="#ef4444" />
+                  <stop offset="100%" stop-color="#991b1b" />
+                </linearGradient>
+              </defs>
+              <!-- Background arc -->
+              <path d="M 20 95 A 80 80 0 0 1 180 95" fill="none" stroke="var(--color-navy-200)" stroke-width="10" stroke-linecap="round" class="gauge-modal-track" />
+              <!-- Gradient arc -->
+              <path d="M 20 95 A 80 80 0 0 1 180 95" fill="none" stroke="url(#modal-gauge-gradient)" stroke-width="7" stroke-linecap="round" opacity="0.85" />
+              <!-- Tick marks -->
+              {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+                const angle = (-135 + (i * 45)) * (Math.PI / 180);
+                const x1 = 100 + 68 * Math.cos(angle);
+                const y1 = 95 + 68 * Math.sin(angle);
+                const x2 = 100 + 78 * Math.cos(angle);
+                const y2 = 95 + 78 * Math.sin(angle);
+                return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-navy-300)" stroke-width="1.5" stroke-linecap="round" />;
+              })}
+              <!-- Needle -->
+              <g class="gauge-modal-needle" style={`--rotation: ${-135 + (getFillPercentage(stages[0].cumulativePork) / 100 * 270)}deg`}>
+                <polygon points="100,25 97,93 100,98 103,93" class="needle-modal-body" />
+                <circle cx="100" cy="95" r="6" fill="var(--color-navy-800)" />
+                <circle cx="100" cy="95" r="3.5" class="needle-modal-cap" />
+              </g>
+            </svg>
+            <!-- Tier icon -->
+            <div class="gauge-modal-icon" id={`${modalId}-tier-icon`} data-tier={getTierIndex(stages[0].cumulativePork)}>
+              <span class="tier-icon" data-tier="0"><Icon name="sparkles" size={16} /></span>
+              <span class="tier-icon" data-tier="1"><Icon name="bacon" size={16} /></span>
+              <span class="tier-icon" data-tier="2"><Icon name="ham" size={16} /></span>
+              <span class="tier-icon" data-tier="3"><Icon name="pig" size={16} /></span>
+              <span class="tier-icon" data-tier="4"><Icon name="piggy-bank" size={16} /></span>
+              <span class="tier-icon tier-dual" data-tier="5"><Icon name="plane" size={14} /><Icon name="pig" size={12} /></span>
+              <span class="tier-icon tier-dual" data-tier="6"><Icon name="skull" size={14} /><Icon name="pig" size={12} /></span>
+            </div>
+          </div>
+
+          <!-- Tier badge -->
+          <div class="tier-modal-badge">
+            <span class="tier-modal-label">&ldquo;{getTierLabel(stages[0].cumulativePork)}&rdquo;</span>
+          </div>
+
+          <!-- Bacon strips -->
+          <div class="bacon-modal-strips" aria-hidden="true">
+            {[...Array(7)].map((_, i) => (
+              <div class={`bacon-modal-strip ${i < Math.ceil(getFillPercentage(stages[0].cumulativePork) / 14.3) ? 'active' : ''}`} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation buttons */}
+      <div class="stage-nav">
+        <button
+          type="button"
+          class="nav-btn nav-prev"
+          id={`${modalId}-prev`}
+          disabled
+          aria-label="Previous stage"
+        >
+          <Icon name="chevron-right" size={16} class="rotate-180" />
+          <span>Prev</span>
+        </button>
+        <span class="nav-indicator" id={`${modalId}-indicator`}>
+          1 / {stages.length}
+        </span>
+        <button
+          type="button"
+          class="nav-btn nav-next"
+          id={`${modalId}-next`}
+          aria-label="Next stage"
+        >
+          <span>Next</span>
+          <Icon name="chevron-right" size={16} />
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Footer -->
+  <footer class="modal-footer">
+    {congressDotGovUrl && (
+      <a
+        href={congressDotGovUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="congress-link"
+      >
+        <Icon name="landmark" size={14} />
+        <span>View on Congress.gov</span>
+        <Icon name="external-link" size={12} />
+      </a>
+    )}
+    <button
+      type="button"
+      class="close-btn"
+      id={`${modalId}-close-footer`}
+    >
+      Close
+    </button>
+  </footer>
+</div>
+
+<style>
+  /* ========================
+     TRIGGER BUTTON
+     ======================== */
+  .evolution-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: linear-gradient(135deg, var(--color-navy-800) 0%, var(--color-navy-900) 100%);
+    border: 1px solid var(--color-gold-500);
+    border-radius: 0.5rem;
+    color: var(--color-gold-400);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .evolution-trigger:hover {
+    background: linear-gradient(135deg, var(--color-navy-700) 0%, var(--color-navy-800) 100%);
+    color: var(--color-gold-300);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .evolution-trigger:focus-visible {
+    outline: 2px solid var(--color-gold-400);
+    outline-offset: 2px;
+  }
+
+  .trigger-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: var(--color-gold-500);
+    border-radius: 50%;
+    color: var(--color-navy-900);
+  }
+
+  /* ========================
+     BACKDROP
+     ======================== */
+  .evolution-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(10, 22, 40, 0.7);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .evolution-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* ========================
+     MODAL
+     ======================== */
+  .evolution-modal {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-cream-100);
+    border-left: 4px solid var(--color-gold-500);
+    box-shadow:
+      -12px 0 40px rgba(0, 0, 0, 0.4),
+      inset 2px 0 8px rgba(0, 0, 0, 0.05);
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .evolution-modal.open {
+    transform: translateX(0);
+  }
+
+  /* ========================
+     HEADER
+     ======================== */
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(180deg, var(--color-navy-900) 0%, var(--color-navy-800) 100%);
+    border-bottom: 3px solid var(--color-gold-500);
+  }
+
+  .header-content {
+    min-width: 0;
+  }
+
+  .header-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-gold-400);
+    margin: 0;
+  }
+
+  .header-subtitle {
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    color: var(--color-cream-300);
+    margin: 0.25rem 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .modal-close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: transparent;
+    border: 1px solid rgba(197, 165, 114, 0.3);
+    border-radius: 0.25rem;
+    color: var(--color-gold-400);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .modal-close:hover {
+    background: rgba(197, 165, 114, 0.1);
+    border-color: var(--color-gold-500);
+  }
+
+  /* ========================
+     BODY LAYOUT
+     ======================== */
+  .modal-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 200px 1fr 280px;
+    overflow: hidden;
+  }
+
+  /* ========================
+     TIMELINE SIDEBAR
+     ======================== */
+  .timeline-sidebar {
+    padding: 1rem;
+    background: var(--color-parchment);
+    border-right: 1px solid var(--color-gold-200);
+    overflow-y: auto;
+  }
+
+  .sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-navy-500);
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-gold-200);
+  }
+
+  /* ========================
+     STAGE CONTENT
+     ======================== */
+  .stage-content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    background: white;
+  }
+
+  .stage-panel {
+    display: none;
+  }
+
+  .stage-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stage-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--color-gold-400);
+  }
+
+  .stage-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-navy-900);
+    margin: 0;
+  }
+
+  .stage-date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-navy-500);
+  }
+
+  .paraphrased-text {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--color-navy-800);
+    margin-bottom: 1.5rem;
+  }
+
+  .paraphrased-text p {
+    margin: 0;
+  }
+
+  .key-changes {
+    margin-bottom: 1.5rem;
+  }
+
+  .changes-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-navy-700);
+    margin: 0 0 0.5rem;
+  }
+
+  .changes-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    color: var(--color-navy-700);
+    line-height: 1.6;
+  }
+
+  .changes-list li {
+    margin-bottom: 0.375rem;
+  }
+
+  .pork-section,
+  .amendments-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .pork-title,
+  .amendments-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-navy-700);
+    margin: 0 0 0.75rem;
+  }
+
+  .pork-count {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-navy-500);
+    background: var(--color-cream-200);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .pork-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .amendments-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .amendment-badge {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-navy-600);
+    background: var(--color-cream-200);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--color-cream-300);
+  }
+
+  /* ========================
+     METER SIDEBAR
+     ======================== */
+  .meter-sidebar {
+    padding: 1rem;
+    background: var(--color-parchment);
+    border-left: 1px solid var(--color-gold-200);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .meter-container {
+    flex: 1;
+  }
+
+  .stage-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-gold-200);
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-navy-800);
+    border: 1px solid var(--color-gold-500);
+    border-radius: 0.25rem;
+    color: var(--color-gold-400);
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    background: var(--color-navy-700);
+    color: var(--color-gold-300);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .nav-indicator {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-navy-500);
+  }
+
+  /* ========================
+     FOOTER
+     ======================== */
+  .modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    background: var(--color-navy-900);
+    border-top: 1px solid var(--color-gold-600);
+  }
+
+  .congress-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--color-gold-400);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .congress-link:hover {
+    color: var(--color-gold-300);
+  }
+
+  .close-btn {
+    padding: 0.5rem 1rem;
+    background: var(--color-gold-500);
+    border: none;
+    border-radius: 0.25rem;
+    color: var(--color-navy-900);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .close-btn:hover {
+    background: var(--color-gold-400);
+  }
+
+  /* ========================
+     PORK METER MODAL STYLES
+     ======================== */
+  .pork-meter-modal {
+    background: linear-gradient(180deg, var(--color-cream-50) 0%, var(--color-cream-100) 100%);
+    border: 1px solid var(--color-gold-300);
+    border-radius: 0.75rem;
+    padding: 0.875rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .meter-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+  }
+
+  .meter-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: var(--font-serif);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-navy-800);
+  }
+
+  .meter-modal-amount {
+    text-align: right;
+  }
+
+  .pork-meter-modal .pork-amount {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+    transition: color 0.3s ease;
+  }
+
+  .pork-meter-modal .pork-per-capita {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.625rem;
+    color: var(--color-navy-500);
+  }
+
+  .gauge-modal-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  .gauge-modal-svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .gauge-modal-track {
+    opacity: 0.4;
+  }
+
+  .gauge-modal-needle {
+    transform-origin: 100px 95px;
+    transform: rotate(var(--rotation));
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .needle-modal-body {
+    fill: var(--color-navy-700);
+    transition: fill 0.3s ease;
+  }
+
+  .needle-modal-cap {
+    fill: var(--color-gold-500);
+    transition: fill 0.3s ease;
+  }
+
+  /* Tier icon container - shows/hides icons based on data-tier attribute */
+  .gauge-modal-icon {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    line-height: 1;
+  }
+
+  .gauge-modal-icon .tier-icon {
+    display: none;
+    color: currentColor;
+  }
+
+  /* Show icon matching parent's data-tier */
+  .gauge-modal-icon[data-tier="0"] .tier-icon[data-tier="0"],
+  .gauge-modal-icon[data-tier="1"] .tier-icon[data-tier="1"],
+  .gauge-modal-icon[data-tier="2"] .tier-icon[data-tier="2"],
+  .gauge-modal-icon[data-tier="3"] .tier-icon[data-tier="3"],
+  .gauge-modal-icon[data-tier="4"] .tier-icon[data-tier="4"],
+  .gauge-modal-icon[data-tier="5"] .tier-icon[data-tier="5"],
+  .gauge-modal-icon[data-tier="6"] .tier-icon[data-tier="6"] {
+    display: inline-flex;
+  }
+
+  .gauge-modal-icon .tier-dual {
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  /* Tier icon colors - inherit from parent pork-meter-modal tier classes */
+  .pork-meter-modal.tier-0 .gauge-modal-icon { color: #16a34a; }
+  .pork-meter-modal.tier-1 .gauge-modal-icon { color: #65a30d; }
+  .pork-meter-modal.tier-2 .gauge-modal-icon { color: #ca8a04; }
+  .pork-meter-modal.tier-3 .gauge-modal-icon { color: #ea580c; }
+  .pork-meter-modal.tier-4 .gauge-modal-icon { color: #dc2626; }
+  .pork-meter-modal.tier-5 .gauge-modal-icon { color: #b91c1c; }
+  .pork-meter-modal.tier-6 .gauge-modal-icon { color: #991b1b; }
+
+  .tier-modal-badge {
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.05);
+    transition: background 0.3s ease;
+  }
+
+  .tier-modal-label {
+    font-family: var(--font-serif);
+    font-size: 0.75rem;
+    font-style: italic;
+    transition: color 0.3s ease;
+  }
+
+  .bacon-modal-strips {
+    display: flex;
+    justify-content: center;
+    gap: 0.1875rem;
+    margin-top: 0.625rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-cream-300);
+  }
+
+  .bacon-modal-strip {
+    width: 1.125rem;
+    height: 0.25rem;
+    border-radius: 0.125rem;
+    background: var(--color-navy-200);
+    transition: all 0.3s ease;
+  }
+
+  .bacon-modal-strip.active {
+    background: var(--color-gold-500);
+  }
+
+  /* Tier colors */
+  .pork-meter-modal .pork-icon { transition: color 0.3s ease; }
+
+  .pork-meter-modal.tier-0 .pork-icon,
+  .pork-meter-modal.tier-0 .pork-amount,
+  .pork-meter-modal.tier-0 .tier-modal-label { color: #16a34a; }
+  .pork-meter-modal.tier-0 .needle-modal-body { fill: #16a34a; }
+  .pork-meter-modal.tier-0 .needle-modal-cap { fill: #22c55e; }
+  .pork-meter-modal.tier-0 .bacon-modal-strip.active { background: #22c55e; }
+
+  .pork-meter-modal.tier-1 .pork-icon,
+  .pork-meter-modal.tier-1 .pork-amount,
+  .pork-meter-modal.tier-1 .tier-modal-label { color: #65a30d; }
+  .pork-meter-modal.tier-1 .needle-modal-body { fill: #65a30d; }
+  .pork-meter-modal.tier-1 .needle-modal-cap { fill: #84cc16; }
+  .pork-meter-modal.tier-1 .bacon-modal-strip.active { background: #84cc16; }
+
+  .pork-meter-modal.tier-2 .pork-icon,
+  .pork-meter-modal.tier-2 .pork-amount,
+  .pork-meter-modal.tier-2 .tier-modal-label { color: #ca8a04; }
+  .pork-meter-modal.tier-2 .needle-modal-body { fill: #ca8a04; }
+  .pork-meter-modal.tier-2 .needle-modal-cap { fill: #eab308; }
+  .pork-meter-modal.tier-2 .bacon-modal-strip.active { background: #eab308; }
+
+  .pork-meter-modal.tier-3 .pork-icon,
+  .pork-meter-modal.tier-3 .pork-amount,
+  .pork-meter-modal.tier-3 .tier-modal-label { color: #ea580c; }
+  .pork-meter-modal.tier-3 .needle-modal-body { fill: #ea580c; }
+  .pork-meter-modal.tier-3 .needle-modal-cap { fill: #f97316; }
+  .pork-meter-modal.tier-3 .bacon-modal-strip.active { background: #f97316; }
+
+  .pork-meter-modal.tier-4 .pork-icon,
+  .pork-meter-modal.tier-4 .pork-amount,
+  .pork-meter-modal.tier-4 .tier-modal-label { color: #dc2626; }
+  .pork-meter-modal.tier-4 .needle-modal-body { fill: #dc2626; }
+  .pork-meter-modal.tier-4 .needle-modal-cap { fill: #ef4444; }
+  .pork-meter-modal.tier-4 .bacon-modal-strip.active { background: #ef4444; }
+
+  .pork-meter-modal.tier-5 .pork-icon,
+  .pork-meter-modal.tier-5 .pork-amount,
+  .pork-meter-modal.tier-5 .tier-modal-label { color: #b91c1c; }
+  .pork-meter-modal.tier-5 .needle-modal-body { fill: #b91c1c; }
+  .pork-meter-modal.tier-5 .needle-modal-cap { fill: #dc2626; }
+  .pork-meter-modal.tier-5 .bacon-modal-strip.active { background: #dc2626; }
+
+  .pork-meter-modal.tier-6 .pork-icon,
+  .pork-meter-modal.tier-6 .pork-amount,
+  .pork-meter-modal.tier-6 .tier-modal-label { color: #991b1b; }
+  .pork-meter-modal.tier-6 .needle-modal-body { fill: #991b1b; }
+  .pork-meter-modal.tier-6 .needle-modal-cap { fill: #b91c1c; }
+  .pork-meter-modal.tier-6 .bacon-modal-strip.active { background: #b91c1c; }
+
+  :global(html.dark) .pork-meter-modal {
+    background: linear-gradient(180deg, rgba(15, 26, 46, 0.9) 0%, rgba(10, 22, 40, 0.95) 100%);
+    border-color: var(--color-gold-600);
+  }
+
+  :global(html.dark) .meter-modal-title {
+    color: var(--color-cream-100);
+  }
+
+  :global(html.dark) .gauge-modal-track {
+    stroke: var(--color-navy-700);
+  }
+
+  :global(html.dark) .bacon-modal-strips {
+    border-top-color: var(--color-navy-700);
+  }
+
+  :global(html.dark) .bacon-modal-strip {
+    background: var(--color-navy-600);
+  }
+
+  /* ========================
+     DARK MODE
+     ======================== */
+  :global(html.dark) .evolution-modal {
+    background: #0f1a2e;
+    border-left-color: var(--color-gold-600);
+  }
+
+  :global(html.dark) .timeline-sidebar,
+  :global(html.dark) .meter-sidebar {
+    background: rgba(10, 18, 32, 0.8);
+    border-color: rgba(197, 165, 114, 0.2);
+  }
+
+  :global(html.dark) .stage-content {
+    background: #1a2535;
+  }
+
+  :global(html.dark) .stage-header {
+    border-bottom-color: var(--color-gold-600);
+  }
+
+  :global(html.dark) .paraphrased-text,
+  :global(html.dark) .changes-list {
+    color: var(--color-cream-200);
+  }
+
+  :global(html.dark) .pork-count,
+  :global(html.dark) .amendment-badge {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(197, 165, 114, 0.2);
+  }
+
+  /* ========================
+     RESPONSIVE
+     ======================== */
+  @media (max-width: 900px) {
+    .modal-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .timeline-sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--color-gold-200);
+      padding: 0.75rem;
+    }
+
+    .sidebar-title {
+      display: none;
+    }
+
+    .meter-sidebar {
+      border-left: none;
+      border-top: 1px solid var(--color-gold-200);
+      padding: 0.75rem;
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .stage-nav {
+      border-top: none;
+      padding-top: 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .evolution-modal {
+      max-width: 100%;
+      border-left: none;
+      border-top: 4px solid var(--color-gold-500);
+    }
+
+    .header-subtitle {
+      font-size: 0.75rem;
+    }
+
+    .stage-content {
+      padding: 1rem;
+    }
+
+    .stage-title {
+      font-size: 1.125rem;
+    }
+
+    .paraphrased-text {
+      font-size: 0.9375rem;
+    }
+  }
+
+  /* Print: hide */
+  @media print {
+    .evolution-trigger,
+    .evolution-modal,
+    .evolution-backdrop {
+      display: none !important;
+    }
+  }
+</style>
+
+<script define:vars={{ modalId, stagesCount: stages.length, stagePorkData }}>
+  // Modal functionality
+  const trigger = document.getElementById(`${modalId}-trigger`);
+  const modal = document.getElementById(modalId);
+  const backdrop = document.getElementById(`${modalId}-backdrop`);
+  const closeBtn = document.getElementById(`${modalId}-close`);
+  const closeFooterBtn = document.getElementById(`${modalId}-close-footer`);
+  const prevBtn = document.getElementById(`${modalId}-prev`);
+  const nextBtn = document.getElementById(`${modalId}-next`);
+  const indicator = document.getElementById(`${modalId}-indicator`);
+  const timelineContainer = document.getElementById(`${modalId}-timeline`);
+  const porkMeter = document.getElementById(`${modalId}-pork-meter`);
+
+  let currentStage = 0;
+
+  // Pork Meter helpers
+  const US_POPULATION = 333_000_000;
+  const tierData = [
+    { threshold: 0, label: 'Squeaky Clean', colorClass: 'tier-0' },
+    { threshold: 10_000_000, label: 'A Little Bacon', colorClass: 'tier-1' },
+    { threshold: 100_000_000, label: 'Pork Chops', colorClass: 'tier-2' },
+    { threshold: 1_000_000_000, label: 'Whole Hog', colorClass: 'tier-3' },
+    { threshold: 10_000_000_000, label: 'Industrial Pig Farm', colorClass: 'tier-4' },
+    { threshold: 100_000_000_000, label: 'Flying Pigs', colorClass: 'tier-5' },
+    { threshold: 1_000_000_000_000, label: 'Hogpocalypse', colorClass: 'tier-6' },
+  ];
+
+  function formatPorkAmount(amt) {
+    if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(1)}T`;
+    if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(1)}B`;
+    if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+    if (amt >= 1_000) return `$${(amt / 1_000).toFixed(1)}K`;
+    return `$${amt.toFixed(0)}`;
+  }
+
+  function formatPorkPerCapita(amt) {
+    const perCapita = amt / US_POPULATION;
+    if (perCapita >= 1000) return `$${perCapita.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+    if (perCapita >= 1) return `$${perCapita.toFixed(2)}`;
+    if (perCapita >= 0.01) return `${(perCapita * 100).toFixed(0)}c`;
+    return '$0';
+  }
+
+  function getPorkFillPercentage(amt) {
+    if (amt <= 0) return 0;
+    const logAmt = Math.log10(Math.max(amt, 1));
+    const logMax = Math.log10(1_000_000_000_000);
+    return Math.min(100, (logAmt / logMax) * 100);
+  }
+
+  function getTier(amt) {
+    for (let i = tierData.length - 1; i >= 0; i--) {
+      if (amt >= tierData[i].threshold) return tierData[i];
+    }
+    return tierData[0];
+  }
+
+  function getTierIndex(amt) {
+    for (let i = tierData.length - 1; i >= 0; i--) {
+      if (amt >= tierData[i].threshold) return i;
+    }
+    return 0;
+  }
+
+  function getNeedleRotation(amt) {
+    if (amt <= 0) return -135;
+    const logAmt = Math.log10(Math.max(amt, 1));
+    const logMax = Math.log10(1_500_000_000_000);
+    const percent = Math.min(1, logAmt / logMax);
+    return -135 + (percent * 270);
+  }
+
+  function updatePorkMeter(stageIndex) {
+    if (!porkMeter) return;
+    const porkData = stagePorkData[stageIndex];
+    const amount = porkData.cumulativePork;
+    const tier = getTier(amount);
+    const tierIdx = getTierIndex(amount);
+    const fillPercent = getPorkFillPercentage(amount);
+
+    // Update amount display
+    const amountEl = porkMeter.querySelector('.pork-amount');
+    if (amountEl) amountEl.textContent = formatPorkAmount(amount);
+
+    // Update per capita
+    const perCapitaEl = porkMeter.querySelector('.pork-per-capita');
+    if (perCapitaEl) perCapitaEl.textContent = `${formatPorkPerCapita(amount)}/person`;
+
+    // Update needle rotation
+    const needle = porkMeter.querySelector('.gauge-modal-needle');
+    if (needle) {
+      const rotation = getNeedleRotation(amount);
+      needle.style.setProperty('--rotation', `${rotation}deg`);
+    }
+
+    // Update tier icon (set data-tier attribute to show correct icon)
+    const tierIconContainer = document.getElementById(`${modalId}-tier-icon`);
+    if (tierIconContainer) tierIconContainer.setAttribute('data-tier', tierIdx);
+
+    // Update tier label
+    const labelEl = porkMeter.querySelector('.tier-modal-label');
+    if (labelEl) labelEl.innerHTML = `&ldquo;${tier.label}&rdquo;`;
+
+    // Update bacon strips
+    const baconStrips = porkMeter.querySelectorAll('.bacon-modal-strip');
+    const activeCount = Math.ceil(fillPercent / 14.3);
+    baconStrips.forEach((strip, i) => {
+      if (i < activeCount) {
+        strip.classList.add('active');
+      } else {
+        strip.classList.remove('active');
+      }
+    });
+
+    // Update tier class for colors
+    for (let i = 0; i <= 6; i++) {
+      porkMeter.classList.remove(`tier-${i}`);
+    }
+    porkMeter.classList.add(tier.colorClass);
+  }
+
+  function openModal() {
+    trigger?.setAttribute('aria-expanded', 'true');
+    modal?.classList.add('open');
+    modal?.setAttribute('aria-hidden', 'false');
+    backdrop?.classList.add('open');
+    backdrop?.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    closeBtn?.focus();
+  }
+
+  function closeModal() {
+    trigger?.setAttribute('aria-expanded', 'false');
+    modal?.classList.remove('open');
+    modal?.setAttribute('aria-hidden', 'true');
+    backdrop?.classList.remove('open');
+    backdrop?.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    trigger?.focus();
+  }
+
+  function goToStage(index) {
+    if (index < 0 || index >= stagesCount) return;
+
+    // Update panels
+    const panels = modal?.querySelectorAll('.stage-panel');
+    panels?.forEach((panel, i) => {
+      if (i === index) {
+        panel.classList.add('active');
+        panel.setAttribute('aria-hidden', 'false');
+      } else {
+        panel.classList.remove('active');
+        panel.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Update timeline
+    const timelineNodes = timelineContainer?.querySelectorAll('.timeline-node');
+    timelineNodes?.forEach((node, i) => {
+      const nodeCircle = node.querySelector('.node-circle');
+      const connector = node.querySelector('.connector');
+      const label = node.querySelector('.node-label');
+
+      // Reset classes
+      nodeCircle?.classList.remove('node-active', 'node-past', 'node-future');
+      connector?.classList.remove('connector-filled');
+      label?.classList.remove('label-active');
+
+      if (i < index) {
+        nodeCircle?.classList.add('node-past');
+        connector?.classList.add('connector-filled');
+      } else if (i === index) {
+        nodeCircle?.classList.add('node-active');
+        label?.classList.add('label-active');
+        node.setAttribute('aria-current', 'step');
+      } else {
+        nodeCircle?.classList.add('node-future');
+        node.removeAttribute('aria-current');
+      }
+    });
+
+    // Update navigation
+    if (prevBtn) prevBtn.disabled = index === 0;
+    if (nextBtn) nextBtn.disabled = index === stagesCount - 1;
+    if (indicator) indicator.textContent = `${index + 1} / ${stagesCount}`;
+
+    // Update Pork Meter
+    updatePorkMeter(index);
+
+    currentStage = index;
+  }
+
+  // Event listeners
+  trigger?.addEventListener('click', openModal);
+  closeBtn?.addEventListener('click', closeModal);
+  closeFooterBtn?.addEventListener('click', closeModal);
+  backdrop?.addEventListener('click', closeModal);
+
+  prevBtn?.addEventListener('click', () => goToStage(currentStage - 1));
+  nextBtn?.addEventListener('click', () => goToStage(currentStage + 1));
+
+  // Timeline clicks
+  timelineContainer?.addEventListener('click', (e) => {
+    const node = e.target.closest('.timeline-node');
+    if (node) {
+      const index = parseInt(node.dataset.stageIndex, 10);
+      if (!isNaN(index)) {
+        goToStage(index);
+      }
+    }
+  });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (!modal?.classList.contains('open')) return;
+
+    if (e.key === 'Escape') {
+      closeModal();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      goToStage(currentStage - 1);
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      goToStage(currentStage + 1);
+    }
+  });
+</script>

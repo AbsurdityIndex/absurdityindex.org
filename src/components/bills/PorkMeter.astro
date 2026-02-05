@@ -1,0 +1,559 @@
+---
+/**
+ * PorkMeter Component
+ *
+ * An elegant semi-circular gauge showing the cumulative "pork" (spending additions)
+ * in a bill. Features a vintage meter aesthetic with animated needle, expressive
+ * pig mascot, and contextual spending comparisons.
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Props {
+  amount: number;
+  previousAmount?: number;
+  compact?: boolean;
+  showPerCapita?: boolean;
+}
+
+const { amount, previousAmount = 0, compact = false, showPerCapita = true } = Astro.props;
+
+const US_POPULATION = 333_000_000;
+const perCapita = amount / US_POPULATION;
+
+// Pork tier thresholds
+type PorkTier = {
+  threshold: number;
+  label: string;
+  icon: 'sparkles' | 'bacon' | 'ham' | 'pig' | 'piggy-bank' | 'plane' | 'skull';
+  secondaryIcon?: 'pig' | 'plane';
+  color: string;
+  needleColor: string;
+  glowColor: string;
+};
+
+const tiers: PorkTier[] = [
+  { threshold: 0, label: 'Squeaky Clean', icon: 'sparkles', color: '#22c55e', needleColor: '#16a34a', glowColor: 'rgba(34, 197, 94, 0.4)' },
+  { threshold: 10_000_000, label: 'A Little Bacon', icon: 'bacon', color: '#84cc16', needleColor: '#65a30d', glowColor: 'rgba(132, 204, 22, 0.4)' },
+  { threshold: 100_000_000, label: 'Pork Chops', icon: 'ham', color: '#eab308', needleColor: '#ca8a04', glowColor: 'rgba(234, 179, 8, 0.4)' },
+  { threshold: 1_000_000_000, label: 'Whole Hog', icon: 'pig', color: '#f97316', needleColor: '#ea580c', glowColor: 'rgba(249, 115, 22, 0.4)' },
+  { threshold: 10_000_000_000, label: 'Pig Farm', icon: 'piggy-bank', color: '#ef4444', needleColor: '#dc2626', glowColor: 'rgba(239, 68, 68, 0.4)' },
+  { threshold: 100_000_000_000, label: 'Flying Pigs', icon: 'plane', secondaryIcon: 'pig', color: '#dc2626', needleColor: '#b91c1c', glowColor: 'rgba(220, 38, 38, 0.5)' },
+  { threshold: 1_000_000_000_000, label: 'Hogpocalypse', icon: 'skull', secondaryIcon: 'pig', color: '#991b1b', needleColor: '#7f1d1d', glowColor: 'rgba(153, 27, 27, 0.6)' },
+];
+
+function getCurrentTier(amt: number): PorkTier {
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    if (amt >= tiers[i].threshold) return tiers[i];
+  }
+  return tiers[0];
+}
+
+function formatAmount(amt: number): string {
+  if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(2)}T`;
+  if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(2)}B`;
+  if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+  if (amt >= 1_000) return `$${(amt / 1_000).toFixed(0)}K`;
+  return `$${amt.toFixed(0)}`;
+}
+
+function formatPerCapita(amt: number): string {
+  if (amt >= 1000) return `$${amt.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+  if (amt >= 1) return `$${amt.toFixed(2)}`;
+  if (amt >= 0.01) return `${(amt * 100).toFixed(0)}¢`;
+  return '$0';
+}
+
+// Needle rotation: 0 = -135deg (left), max = 135deg (right) — 270° sweep
+function getNeedleRotation(amt: number): number {
+  if (amt <= 0) return -135;
+  const logAmt = Math.log10(Math.max(amt, 1));
+  const logMax = Math.log10(1_500_000_000_000); // 1.5 trillion as max
+  const percent = Math.min(1, logAmt / logMax);
+  return -135 + (percent * 270);
+}
+
+const tier = getCurrentTier(amount);
+const needleRotation = getNeedleRotation(amount);
+const prevNeedleRotation = getNeedleRotation(previousAmount);
+
+// Spending comparisons for context
+function getComparison(amt: number): string | null {
+  if (amt >= 50_000_000_000) return `${Math.round(amt / 37_000_000_000)} James Webb Telescopes`;
+  if (amt >= 1_000_000_000) return `${Math.round(amt / 750_000_000)} sports stadiums`;
+  if (amt >= 100_000_000) return `${Math.round(amt / 100_000_000)} F-35 fighters`;
+  if (amt >= 10_000_000) return `${Math.round(amt / 15_000_000)} school buildings`;
+  if (amt >= 1_000_000) return `${Math.round(amt / 500_000)} median home prices`;
+  return null;
+}
+
+const comparison = getComparison(amount);
+---
+
+{compact ? (
+  <!-- Compact inline version -->
+  <div class="pork-compact">
+    <div class="compact-icon" style={`--tier-color: ${tier.color}`}>
+      <Icon name="pig" size={14} />
+    </div>
+    <div class="compact-bar">
+      <div class="compact-fill" style={`width: ${Math.min(100, (getNeedleRotation(amount) + 135) / 2.7)}%; background: ${tier.color}`} />
+    </div>
+    <span class="compact-amount" style={`color: ${tier.color}`}>{formatAmount(amount)}</span>
+  </div>
+) : (
+  <!-- Full gauge version -->
+  <div class="pork-meter" style={`--tier-color: ${tier.color}; --glow-color: ${tier.glowColor}`}>
+    <!-- Header -->
+    <div class="meter-header">
+      <div class="meter-title">
+        <Icon name="pig" size={20} class="title-icon" />
+        <span>Pork Barrel Meter</span>
+      </div>
+      <div class="meter-amount">
+        <span class="amount-value">{formatAmount(amount)}</span>
+        {showPerCapita && amount > 0 && (
+          <span class="amount-per-capita">{formatPerCapita(perCapita)} per taxpayer</span>
+        )}
+      </div>
+    </div>
+
+    <!-- Gauge -->
+    <div class="gauge-wrapper">
+      <svg viewBox="0 0 200 120" class="gauge-svg">
+        <defs>
+          <!-- Gradient for the arc -->
+          <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#22c55e" />
+            <stop offset="25%" stop-color="#eab308" />
+            <stop offset="50%" stop-color="#f97316" />
+            <stop offset="75%" stop-color="#ef4444" />
+            <stop offset="100%" stop-color="#991b1b" />
+          </linearGradient>
+          <!-- Glow filter -->
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <!-- Needle shadow -->
+          <filter id="needle-shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+
+        <!-- Background arc (track) -->
+        <path
+          d="M 20 100 A 80 80 0 0 1 180 100"
+          fill="none"
+          stroke="var(--color-navy-200)"
+          stroke-width="12"
+          stroke-linecap="round"
+          class="gauge-track"
+        />
+
+        <!-- Colored arc (gradient) -->
+        <path
+          d="M 20 100 A 80 80 0 0 1 180 100"
+          fill="none"
+          stroke="url(#gauge-gradient)"
+          stroke-width="8"
+          stroke-linecap="round"
+          opacity="0.9"
+        />
+
+        <!-- Tick marks -->
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+          const angle = (-135 + (i * 45)) * (Math.PI / 180);
+          const x1 = 100 + 72 * Math.cos(angle);
+          const y1 = 100 + 72 * Math.sin(angle);
+          const x2 = 100 + 80 * Math.cos(angle);
+          const y2 = 100 + 80 * Math.sin(angle);
+          return (
+            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-navy-400)" stroke-width="2" stroke-linecap="round" />
+          );
+        })}
+
+        <!-- Needle -->
+        <g
+          class="gauge-needle"
+          style={`--rotation: ${needleRotation}deg; --prev-rotation: ${prevNeedleRotation}deg`}
+          filter="url(#needle-shadow)"
+        >
+          <!-- Needle body -->
+          <polygon
+            points="100,30 96,98 100,105 104,98"
+            fill={tier.needleColor}
+            class="needle-body"
+          />
+          <!-- Needle cap -->
+          <circle cx="100" cy="100" r="8" fill="var(--color-navy-800)" />
+          <circle cx="100" cy="100" r="5" fill={tier.needleColor} />
+        </g>
+
+        <!-- Center pig icon area -->
+        <circle cx="100" cy="100" r="16" fill="var(--color-cream-100)" stroke="var(--color-navy-200)" stroke-width="1" class="center-circle" />
+      </svg>
+
+      <!-- Tier icon in center -->
+      <div class="gauge-icon" style={`--tier-color: ${tier.color}`}>
+        {tier.secondaryIcon ? (
+          <div class="dual-icon">
+            <Icon name={tier.icon} size={16} class="icon-primary" />
+            <Icon name={tier.secondaryIcon} size={12} class="icon-secondary" />
+          </div>
+        ) : (
+          <Icon name={tier.icon} size={20} class="icon-single" />
+        )}
+      </div>
+
+      <!-- Scale labels around the arc -->
+      <div class="scale-labels">
+        <span class="scale-label" style="left: 8%; bottom: 15%;">$0</span>
+        <span class="scale-label" style="left: 2%; bottom: 55%;">$10M</span>
+        <span class="scale-label" style="left: 20%; bottom: 85%;">$1B</span>
+        <span class="scale-label" style="left: 50%; bottom: 95%; transform: translateX(-50%);">$100B</span>
+        <span class="scale-label" style="right: 20%; bottom: 85%;">$500B</span>
+        <span class="scale-label" style="right: 2%; bottom: 55%;">$1T</span>
+        <span class="scale-label" style="right: 8%; bottom: 15%;">$1.5T</span>
+      </div>
+    </div>
+
+    <!-- Tier badge -->
+    <div class="tier-badge" style={`background: ${tier.color}15; border-color: ${tier.color}40`}>
+      <span class="tier-label" style={`color: ${tier.color}`}>"{tier.label}"</span>
+    </div>
+
+    <!-- Comparison context -->
+    {comparison && (
+      <div class="comparison">
+        <Icon name="lightbulb" size={14} class="comparison-icon" />
+        <span>Equivalent to ~{comparison}</span>
+      </div>
+    )}
+
+    <!-- Bacon strip decoration at bottom -->
+    <div class="bacon-strips" aria-hidden="true">
+      {[...Array(7)].map((_, i) => (
+        <div
+          class="bacon-strip"
+          style={`opacity: ${i < Math.ceil((getNeedleRotation(amount) + 135) / 38.5) ? 1 : 0.2}; background: ${i < Math.ceil((getNeedleRotation(amount) + 135) / 38.5) ? tier.color : 'var(--color-navy-200)'}`}
+        />
+      ))}
+    </div>
+  </div>
+)}
+
+<style>
+  /* ========================
+     COMPACT VERSION
+     ======================== */
+  .pork-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .compact-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--tier-color) 15%, transparent);
+    color: var(--tier-color);
+  }
+
+  .compact-bar {
+    flex: 1;
+    height: 0.375rem;
+    background: var(--color-cream-300);
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  .compact-fill {
+    height: 100%;
+    border-radius: 1rem;
+    transition: width 0.5s ease-out;
+  }
+
+  .compact-amount {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* ========================
+     FULL GAUGE VERSION
+     ======================== */
+  .pork-meter {
+    background: linear-gradient(180deg, var(--color-cream-50) 0%, var(--color-cream-100) 100%);
+    border: 1px solid var(--color-gold-300);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 2px 4px -1px rgba(0, 0, 0, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  /* Header */
+  .meter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+
+  .meter-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-serif);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-navy-800);
+  }
+
+  .title-icon {
+    color: var(--tier-color);
+  }
+
+  .meter-amount {
+    text-align: right;
+  }
+
+  .amount-value {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--tier-color);
+    line-height: 1.1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .amount-per-capita {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    color: var(--color-navy-500);
+    margin-top: 0.125rem;
+  }
+
+  /* Gauge */
+  .gauge-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  .gauge-svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .gauge-track {
+    opacity: 0.5;
+  }
+
+  .gauge-needle {
+    transform-origin: 100px 100px;
+    transform: rotate(var(--rotation));
+    animation: needle-swing 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes needle-swing {
+    from {
+      transform: rotate(var(--prev-rotation));
+    }
+    to {
+      transform: rotate(var(--rotation));
+    }
+  }
+
+  .needle-body {
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+  }
+
+  .center-circle {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+
+  /* Tier icon in center */
+  .gauge-icon {
+    position: absolute;
+    bottom: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--tier-color);
+    animation: icon-bounce 2s ease-in-out infinite;
+  }
+
+  .icon-single {
+    display: block;
+  }
+
+  .dual-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .icon-primary {
+    color: var(--tier-color);
+  }
+
+  .icon-secondary {
+    color: var(--tier-color);
+    opacity: 0.8;
+  }
+
+  @keyframes icon-bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-2px); }
+  }
+
+  /* Scale labels */
+  .scale-labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .scale-label {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    color: var(--color-navy-400);
+    white-space: nowrap;
+  }
+
+  /* Tier badge */
+  .tier-badge {
+    margin-top: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 2rem;
+    border: 1px solid;
+    text-align: center;
+  }
+
+  .tier-label {
+    font-family: var(--font-serif);
+    font-size: 0.875rem;
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  /* Comparison */
+  .comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    margin-top: 0.625rem;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    color: var(--color-navy-500);
+  }
+
+  .comparison-icon {
+    color: var(--color-gold-500);
+    flex-shrink: 0;
+  }
+
+  /* Bacon strips */
+  .bacon-strips {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-top: 0.875rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-cream-300);
+  }
+
+  .bacon-strip {
+    width: 1.5rem;
+    height: 0.375rem;
+    border-radius: 0.125rem;
+    transition: all 0.3s ease;
+  }
+
+  /* ========================
+     DARK MODE
+     ======================== */
+  :global(html.dark) .pork-meter {
+    background: linear-gradient(180deg, rgba(15, 26, 46, 0.9) 0%, rgba(10, 22, 40, 0.95) 100%);
+    border-color: var(--color-gold-600);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  :global(html.dark) .meter-title {
+    color: var(--color-cream-100);
+  }
+
+  :global(html.dark) .gauge-track {
+    stroke: var(--color-navy-700);
+  }
+
+  :global(html.dark) .center-circle {
+    fill: var(--color-navy-800);
+    stroke: var(--color-navy-600);
+  }
+
+  :global(html.dark) .scale-label {
+    color: var(--color-navy-400);
+  }
+
+  :global(html.dark) .amount-per-capita,
+  :global(html.dark) .comparison {
+    color: var(--color-cream-400);
+  }
+
+  :global(html.dark) .compact-bar {
+    background: var(--color-navy-700);
+  }
+
+  :global(html.dark) .bacon-strips {
+    border-top-color: var(--color-navy-700);
+  }
+
+  :global(html.dark) .bacon-strip {
+    opacity: 0.8;
+  }
+
+  /* ========================
+     RESPONSIVE
+     ======================== */
+  @media (max-width: 480px) {
+    .pork-meter {
+      padding: 1rem;
+    }
+
+    .meter-header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.5rem;
+    }
+
+    .meter-amount {
+      text-align: center;
+    }
+
+    .gauge-wrapper {
+      max-width: 220px;
+    }
+
+    .scale-label {
+      font-size: 0.5rem;
+    }
+  }
+</style>

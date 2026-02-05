@@ -1,0 +1,95 @@
+---
+/**
+ * CollapsibleSection - Progressive disclosure for detailed content
+ *
+ * Usage:
+ * <CollapsibleSection title="Official CRS Summary" count={1}>
+ *   <p>Long content here...</p>
+ * </CollapsibleSection>
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  title: string;
+  count?: number | string;
+  defaultOpen?: boolean;
+  variant?: 'default' | 'compact';
+  icon?: string;
+}
+
+const { title, count, defaultOpen = false, variant = 'default', icon } = Astro.props;
+const isCompact = variant === 'compact';
+---
+
+<details
+  class:list={[
+    'collapsible-section group',
+    isCompact ? 'border-b border-gold-200' : 'bg-cream-100 rounded-lg border border-gold-200'
+  ]}
+  open={defaultOpen}
+>
+  <summary
+    class:list={[
+      'flex items-center justify-between cursor-pointer select-none',
+      'hover:bg-cream-200 transition-colors',
+      isCompact ? 'py-3 px-1' : 'p-4'
+    ]}
+  >
+    <div class="flex items-center gap-3">
+      {icon && (
+        <div class="w-6 h-6 rounded bg-gold-100 flex items-center justify-center flex-shrink-0">
+          <Icon name={icon} size={12} class="text-gold-700" />
+        </div>
+      )}
+      <span class:list={[
+        'font-sans font-medium text-navy-800',
+        isCompact ? 'text-sm' : 'text-base'
+      ]}>
+        {title}
+      </span>
+      {count !== undefined && (
+        <span class="px-2 py-0.5 text-xs font-mono font-semibold bg-navy-100 text-navy-600 rounded-full">
+          {count}
+        </span>
+      )}
+    </div>
+    <div class="flex-shrink-0 ml-4">
+      <Icon
+        name="chevron-right"
+        size={16}
+        class="text-navy-400 transition-transform duration-200 group-open:rotate-90"
+      />
+    </div>
+  </summary>
+
+  <div class:list={[
+    'collapsible-content',
+    isCompact ? 'pb-4 px-1' : 'px-4 pb-4'
+  ]}>
+    <slot />
+  </div>
+</details>
+
+<style>
+  /* Hide default marker */
+  summary::-webkit-details-marker,
+  summary::marker {
+    display: none;
+  }
+
+  /* Smooth content reveal */
+  .collapsible-content {
+    animation: slideDown 0.2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

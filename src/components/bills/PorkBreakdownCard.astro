@@ -1,0 +1,363 @@
+---
+/**
+ * PorkBreakdownCard Component
+ *
+ * Displays a single pork item with amount, category badge,
+ * detailed sponsor/committee attribution, vote records, and satirical commentary.
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Sponsor {
+  name: string;
+  party: 'R' | 'D' | 'I';
+  state: string;
+  chamber: 'house' | 'senate';
+  bioguideId?: string;
+  congressUrl?: string;
+}
+
+interface CommitteeMember {
+  name: string;
+  role: 'chair' | 'ranking' | 'member';
+  party: 'R' | 'D' | 'I';
+  state: string;
+}
+
+interface Vote {
+  yeas: number;
+  nays: number;
+  notVoting?: number;
+  passed: boolean;
+  rollCallNumber?: number;
+  rollCallUrl?: string;
+}
+
+interface PorkItem {
+  description: string;
+  amount: number;
+  addedBy: string;
+  sponsor?: Sponsor;
+  cosponsors?: Sponsor[];
+  committee?: string;
+  committeeMembers?: CommitteeMember[];
+  amendmentNumber?: string;
+  amendmentType?: 'floor' | 'committee' | 'conference' | 'manager';
+  vote?: Vote;
+  category: 'earmark' | 'program-expansion' | 'new-program' | 'tax-expenditure' | 'hidden-cost';
+  satiricalNote?: string;
+  sourceUrl?: string;
+}
+
+interface Props {
+  item: PorkItem;
+  compact?: boolean;
+}
+
+const { item, compact = false } = Astro.props;
+
+// Category display config
+const categoryConfig = {
+  'earmark': {
+    label: 'Earmark',
+    icon: 'tag',
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
+  },
+  'program-expansion': {
+    label: 'Program Expansion',
+    icon: 'trending-up',
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
+  },
+  'new-program': {
+    label: 'New Program',
+    icon: 'sparkles',
+    color: 'bg-purple-100 text-purple-800 border-purple-200',
+  },
+  'tax-expenditure': {
+    label: 'Tax Break',
+    icon: 'receipt',
+    color: 'bg-green-100 text-green-800 border-green-200',
+  },
+  'hidden-cost': {
+    label: 'Hidden Cost',
+    icon: 'eye-off',
+    color: 'bg-red-100 text-red-800 border-red-200',
+  }
+};
+
+const amendmentTypeLabels = {
+  'floor': 'Floor Amendment',
+  'committee': 'Committee Amendment',
+  'conference': 'Conference Amendment',
+  'manager': "Manager's Amendment"
+};
+
+const config = categoryConfig[item.category];
+
+function formatAmount(amt: number): string {
+  if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(2)}T`;
+  if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(2)}B`;
+  if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+  if (amt >= 1_000) return `$${(amt / 1_000).toFixed(0)}K`;
+  return `$${amt.toLocaleString()}`;
+}
+
+function getPartyColor(party: string): string {
+  if (party === 'R') return 'text-red-600';
+  if (party === 'D') return 'text-blue-600';
+  return 'text-gray-600';
+}
+
+function getPartyBg(party: string): string {
+  if (party === 'R') return 'bg-red-50 border-red-200';
+  if (party === 'D') return 'bg-blue-50 border-blue-200';
+  return 'bg-gray-50 border-gray-200';
+}
+
+function formatSponsor(s: Sponsor): string {
+  const title = s.chamber === 'senate' ? 'Sen.' : 'Rep.';
+  return `${title} ${s.name} (${s.party}-${s.state})`;
+}
+
+// Determine if we have detailed sponsor info
+const hasDetailedSponsor = !!item.sponsor;
+const hasCommittee = !!item.committee;
+const hasVote = !!item.vote;
+const hasCosponsors = (item.cosponsors?.length || 0) > 0;
+---
+
+{compact ? (
+  <div class="pork-card-compact flex items-start gap-2 py-2 border-b border-cream-200 last:border-0">
+    <span class="font-mono text-sm font-bold text-navy-700 flex-shrink-0 w-20">
+      {formatAmount(item.amount)}
+    </span>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm text-navy-800 leading-tight">{item.description}</p>
+      <p class="text-xs text-navy-500 mt-0.5">
+        {hasDetailedSponsor ? formatSponsor(item.sponsor!) : item.addedBy}
+      </p>
+    </div>
+  </div>
+) : (
+  <div class="pork-card p-4 bg-white rounded-lg border border-cream-200 shadow-sm">
+    {/* Header with amount and badges */}
+    <div class="flex items-start justify-between gap-3 mb-2">
+      <div>
+        <span class="font-mono text-lg font-bold text-navy-900">
+          {formatAmount(item.amount)}
+        </span>
+        {item.amendmentNumber && (
+          <span class="ml-2 text-xs font-mono text-navy-500">
+            {item.amendmentNumber}
+          </span>
+        )}
+      </div>
+      <div class="flex flex-wrap gap-1 justify-end">
+        <span class:list={[
+          'inline-flex items-center gap-1 px-2 py-0.5 text-xs font-sans font-medium rounded border',
+          config.color
+        ]}>
+          <Icon name={config.icon} size={12} />
+          {config.label}
+        </span>
+        {item.amendmentType && (
+          <span class="inline-flex items-center px-2 py-0.5 text-xs font-sans font-medium rounded border bg-cream-100 text-navy-600 border-cream-300">
+            {amendmentTypeLabels[item.amendmentType]}
+          </span>
+        )}
+      </div>
+    </div>
+
+    {/* Description */}
+    <p class="text-sm text-navy-800 leading-relaxed mb-3">
+      {item.description}
+    </p>
+
+    {/* Detailed Sponsor Attribution */}
+    {hasDetailedSponsor ? (
+      <div class="sponsor-section mb-3">
+        <div class="flex items-start gap-2">
+          <Icon name="user" size={14} class="text-navy-400 mt-0.5 flex-shrink-0" />
+          <div class="flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-navy-500">Sponsored by:</span>
+              {item.sponsor!.congressUrl ? (
+                <a
+                  href={item.sponsor!.congressUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class:list={['sponsor-link text-sm font-medium hover:underline', getPartyColor(item.sponsor!.party)]}
+                >
+                  {formatSponsor(item.sponsor!)}
+                  <Icon name="external-link" size={10} class="inline ml-0.5 -mt-0.5" />
+                </a>
+              ) : (
+                <span class:list={['text-sm font-medium', getPartyColor(item.sponsor!.party)]}>
+                  {formatSponsor(item.sponsor!)}
+                </span>
+              )}
+            </div>
+
+            {/* Cosponsors */}
+            {hasCosponsors && (
+              <details class="mt-1">
+                <summary class="text-xs text-navy-500 cursor-pointer hover:text-navy-700">
+                  + {item.cosponsors!.length} cosponsor{item.cosponsors!.length !== 1 ? 's' : ''}
+                </summary>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  {item.cosponsors!.map(co => (
+                    <span class:list={['text-xs px-1.5 py-0.5 rounded border', getPartyBg(co.party)]}>
+                      {co.congressUrl ? (
+                        <a href={co.congressUrl} target="_blank" rel="noopener noreferrer" class="hover:underline">
+                          {co.name} ({co.party}-{co.state})
+                        </a>
+                      ) : (
+                        <span>{co.name} ({co.party}-{co.state})</span>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div class="flex items-center gap-1.5 text-xs text-navy-500 mb-3">
+        <Icon name="user" size={12} />
+        <span>Added by: <span class="font-medium text-navy-700">{item.addedBy}</span></span>
+      </div>
+    )}
+
+    {/* Committee Attribution */}
+    {hasCommittee && (
+      <div class="committee-section mb-3 p-2 bg-cream-50 rounded border border-cream-200">
+        <div class="flex items-start gap-2">
+          <Icon name="users" size={14} class="text-navy-400 mt-0.5 flex-shrink-0" />
+          <div class="flex-1">
+            <span class="text-xs font-medium text-navy-700">{item.committee}</span>
+            {item.committeeMembers && item.committeeMembers.length > 0 && (
+              <details class="mt-1">
+                <summary class="text-xs text-navy-500 cursor-pointer hover:text-navy-700">
+                  View committee members involved
+                </summary>
+                <div class="mt-1 space-y-0.5">
+                  {item.committeeMembers.map(m => (
+                    <div class="flex items-center gap-2 text-xs">
+                      <span class:list={[
+                        'px-1 py-0.5 rounded text-xs font-medium',
+                        m.role === 'chair' ? 'bg-gold-100 text-gold-800' :
+                        m.role === 'ranking' ? 'bg-navy-100 text-navy-700' :
+                        'bg-cream-100 text-navy-600'
+                      ]}>
+                        {m.role === 'chair' ? 'Chair' : m.role === 'ranking' ? 'Ranking' : 'Member'}
+                      </span>
+                      <span class={getPartyColor(m.party)}>{m.name} ({m.party}-{m.state})</span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Vote Record */}
+    {hasVote && (
+      <div class="vote-section mb-3">
+        <div class="flex items-center gap-3 p-2 bg-cream-50 rounded border border-cream-200">
+          <Icon name="vote" size={14} class="text-navy-400" />
+          <div class="flex items-center gap-3 text-xs">
+            <span class:list={[
+              'font-medium px-2 py-0.5 rounded',
+              item.vote!.passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            ]}>
+              {item.vote!.passed ? 'PASSED' : 'FAILED'}
+            </span>
+            <span class="text-green-600 font-mono">{item.vote!.yeas} Yea</span>
+            <span class="text-red-600 font-mono">{item.vote!.nays} Nay</span>
+            {item.vote!.notVoting !== undefined && (
+              <span class="text-navy-400 font-mono">{item.vote!.notVoting} NV</span>
+            )}
+            {item.vote!.rollCallUrl && (
+              <a
+                href={item.vote!.rollCallUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gold-700 hover:text-gold-600 flex items-center gap-1"
+              >
+                Roll Call #{item.vote!.rollCallNumber}
+                <Icon name="external-link" size={10} />
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Source Link */}
+    {item.sourceUrl && (
+      <div class="source-section mb-3">
+        <a
+          href={item.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 text-xs text-gold-700 hover:text-gold-600"
+        >
+          <Icon name="landmark" size={12} />
+          <span>View on Congress.gov</span>
+          <Icon name="external-link" size={10} />
+        </a>
+      </div>
+    )}
+
+    {/* Satirical note */}
+    {item.satiricalNote && (
+      <div class="mt-3 pt-3 border-t border-cream-200">
+        <p class="text-xs italic text-navy-600 leading-relaxed">
+          <Icon name="message-square" size={12} class="inline -mt-0.5 mr-1 text-gold-600" />
+          &ldquo;{item.satiricalNote}&rdquo;
+        </p>
+      </div>
+    )}
+  </div>
+)}
+
+<style>
+  .pork-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .pork-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  details summary {
+    list-style: none;
+  }
+
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details[open] summary {
+    color: var(--color-navy-700);
+  }
+
+  /* Dark mode */
+  :global(html.dark) .pork-card {
+    background: rgba(15, 26, 46, 0.6);
+    border-color: var(--color-gold-600);
+  }
+
+  :global(html.dark) .pork-card-compact {
+    border-color: rgba(197, 165, 114, 0.2);
+  }
+
+  :global(html.dark) .committee-section,
+  :global(html.dark) .vote-section {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(197, 165, 114, 0.2);
+  }
+</style>

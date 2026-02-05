@@ -1,4 +1,6 @@
 ---
+import Icon from '../ui/Icon.astro';
+
 interface Props {
   score: number; // 1-10
   compact?: boolean;
@@ -22,36 +24,81 @@ function getColor(segment: number) {
   return 'bg-red-600';
 }
 
+function getScoreBadgeColor(s: number) {
+  if (s <= 3) return 'bg-green-100 text-green-800 border-green-200';
+  if (s <= 6) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  if (s <= 8) return 'bg-orange-100 text-orange-800 border-orange-200';
+  return 'bg-red-100 text-red-800 border-red-200';
+}
+
 const label = getLabel(clampedScore);
 ---
 
-<div class:list={['absurdity-meter', compact && 'absurdity-meter--compact']}>
-  {!compact && (
-    <div class="flex items-baseline justify-between mb-1.5">
-      <span class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-700">
-        Absurdity Index
-      </span>
-      <span class="font-mono text-lg font-bold text-navy-900">{clampedScore}<span class="text-navy-500 text-sm">/10</span></span>
+{compact ? (
+  <div class="flex items-center gap-2">
+    <span class="text-xs font-sans font-medium text-navy-500">Absurdity</span>
+    <div class="flex gap-0.5 flex-1" role="meter" aria-valuenow={clampedScore} aria-valuemin={1} aria-valuemax={10} aria-label={`Absurdity Index: ${clampedScore} out of 10`}>
+      {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
+        <div
+          class:list={[
+            'h-2 rounded-sm flex-1',
+            seg <= clampedScore ? getColor(seg) : 'bg-cream-200',
+          ]}
+        />
+      ))}
     </div>
-  )}
-
-  <div class="flex gap-0.5" role="meter" aria-valuenow={clampedScore} aria-valuemin={1} aria-valuemax={10} aria-label={`Absurdity Index: ${clampedScore} out of 10 — ${label}`}>
-    {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
-      <div
-        class:list={[
-          compact ? 'h-1.5 rounded-sm' : 'h-2.5 rounded-sm',
-          'flex-1 transition-colors',
-          seg <= clampedScore ? getColor(seg) : 'bg-cream-300',
-        ]}
-      />
-    ))}
+    <span class:list={[
+      'font-mono text-xs font-bold px-1.5 py-0.5 rounded border',
+      getScoreBadgeColor(clampedScore)
+    ]}>
+      {clampedScore}
+    </span>
   </div>
+) : (
+  <div class="absurdity-meter">
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-full bg-gold-100 flex items-center justify-center">
+          <Icon name="zap" size={14} class="text-gold-700" />
+        </div>
+        <span class="text-sm font-sans font-semibold text-navy-800">
+          Absurdity Index
+        </span>
+        <button
+          type="button"
+          class="absurdity-help-trigger w-5 h-5 rounded-full bg-cream-200 hover:bg-cream-300 flex items-center justify-center transition-colors"
+          aria-label="What is the Absurdity Index?"
+          title="What is this?"
+        >
+          <Icon name="help-circle" size={12} class="text-navy-500" />
+        </button>
+      </div>
+      <div class="flex items-baseline gap-1">
+        <span class="font-mono text-2xl font-bold text-navy-900">{clampedScore}</span>
+        <span class="font-mono text-sm text-navy-400">/10</span>
+      </div>
+    </div>
 
-  {!compact && (
-    <p class="text-xs font-sans italic text-navy-600 mt-1">{label}</p>
-  )}
+    <div class="flex gap-1 mb-2" role="meter" aria-valuenow={clampedScore} aria-valuemin={1} aria-valuemax={10} aria-label={`Absurdity Index: ${clampedScore} out of 10 — ${label}`}>
+      {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
+        <div
+          class:list={[
+            'h-3 rounded flex-1 transition-all',
+            seg <= clampedScore ? getColor(seg) : 'bg-cream-200',
+          ]}
+        />
+      ))}
+    </div>
 
-  {compact && (
-    <span class="text-xs font-mono font-bold text-navy-800 ml-1.5">{clampedScore}</span>
-  )}
-</div>
+    <p class="text-xs font-sans italic text-navy-600 text-center">&ldquo;{label}&rdquo;</p>
+  </div>
+)}
+
+<script>
+  // Open absurdity help drawer when help button is clicked
+  document.querySelectorAll('.absurdity-help-trigger').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('open-absurdity-help'));
+    });
+  });
+</script>

@@ -1,23 +1,40 @@
 ---
+import Icon from './Icon.astro';
+
 interface Props {
   category: string;
   linked?: boolean;
+  size?: 'sm' | 'md';
 }
 
-const { category, linked = true } = Astro.props;
+const { category, linked = true, size = 'sm' } = Astro.props;
 
 const slug = category.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+
+const sizeClasses = size === 'sm'
+  ? 'text-xs px-2.5 py-1 gap-1'
+  : 'text-sm px-3 py-1.5 gap-1.5';
+
+const iconSize = size === 'sm' ? 10 : 12;
 ---
 
 {linked ? (
   <a
     href={`/category/${slug}`}
-    class="inline-block text-xs font-sans font-medium border border-navy-700 text-navy-700 px-2 py-0.5 rounded-full hover:bg-navy-800 hover:text-white transition-colors"
+    class:list={[
+      'inline-flex items-center font-sans font-medium text-navy-600 bg-cream-100 hover:bg-cream-200 rounded-full transition-colors',
+      sizeClasses
+    ]}
   >
+    <Icon name="tag" size={iconSize} class="text-navy-400" />
     {category}
   </a>
 ) : (
-  <span class="inline-block text-xs font-sans font-medium border border-navy-700 text-navy-700 px-2 py-0.5 rounded-full">
+  <span class:list={[
+    'inline-flex items-center font-sans font-medium text-navy-600 bg-cream-100 rounded-full',
+    sizeClasses
+  ]}>
+    <Icon name="tag" size={iconSize} class="text-navy-400" />
     {category}
   </span>
 )}

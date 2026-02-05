@@ -1,0 +1,52 @@
+{
+  "name": "Jack Kingston",
+  "bioguideId": "K000220",
+  "party": "Republican",
+  "state": "GA",
+  "imageUrl": "https://bioguide.congress.gov/bioguide/photo/K/K000220.jpg",
+  "terms": [
+    {
+      "chamber": "house",
+      "state": "GA",
+      "district": 1,
+      "startDate": "1993-01-05",
+      "endDate": "2015-01-03",
+      "party": "Republican"
+    }
+  ],
+  "totalPorkAmount": 16800000000,
+  "porkContributions": [
+    {
+      "billId": "real-hr-2112-demo",
+      "billNumber": "H.R. 2112",
+      "amount": 3200000000,
+      "description": "Cotton subsidies for large agribusiness",
+      "date": "2011-06-02",
+      "category": "program-expansion"
+    },
+    {
+      "billId": "real-hr-2112-demo",
+      "billNumber": "H.R. 2112",
+      "amount": 5300000000,
+      "description": "Ethanol mandates and subsidies",
+      "date": "2011-06-02",
+      "category": "program-expansion"
+    },
+    {
+      "billId": "real-hr-2112-demo",
+      "billNumber": "H.R. 2112",
+      "amount": 0,
+      "description": "Section 743: Blocking nutrition standards (pizza = vegetable)",
+      "date": "2011-06-10",
+      "category": "hidden-cost"
+    }
+  ],
+  "financialDisclosures": [
+    { "year": 2010, "minNetWorth": 1200000, "maxNetWorth": 2800000 },
+    { "year": 2011, "minNetWorth": 1400000, "maxNetWorth": 3200000 },
+    { "year": 2012, "minNetWorth": 1600000, "maxNetWorth": 3800000 },
+    { "year": 2013, "minNetWorth": 2100000, "maxNetWorth": 4500000 },
+    { "year": 2014, "minNetWorth": 2500000, "maxNetWorth": 5200000 }
+  ],
+  "congressDotGovUrl": "https://www.congress.gov/member/jack-kingston/K000220"
+}

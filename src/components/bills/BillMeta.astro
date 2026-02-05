@@ -1,6 +1,7 @@
 ---
 import BillStatus from './BillStatus.astro';
 import AbsurdityMeter from './AbsurdityMeter.astro';
+import Icon from '../ui/Icon.astro';
 
 interface Props {
   sponsor: string;
@@ -39,102 +40,149 @@ function formatDate(date: Date) {
     year: 'numeric',
   });
 }
+
+// Parse sponsor into name and party
+const sponsorName = sponsor.replace(/\s*\([^)]+\)\s*$/, '').trim();
+const sponsorParty = sponsor.match(/\(([^)]+)\)/)?.[1] || '';
 ---
 
-<aside class="bg-parchment border border-gold-300 rounded p-5 space-y-4">
-  <h2 class="font-serif font-bold text-sm uppercase tracking-wider text-navy-800 border-b border-gold-300 pb-2">
+<aside class="bg-cream-100 border border-gold-300 rounded-lg p-6 space-y-5">
+  <h2 class="font-serif font-bold text-navy-900 flex items-center gap-2">
+    <div class="w-6 h-6 rounded-full bg-gold-100 flex items-center justify-center">
+      <Icon name="clipboard-list" size={14} class="text-gold-700" />
+    </div>
     Bill Information
   </h2>
 
-  <dl class="space-y-3 text-sm">
-    <div>
-      <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Sponsor</dt>
-      <dd class="font-serif text-navy-900">{sponsor}</dd>
+  <dl class="space-y-4 text-sm">
+    {/* Sponsor */}
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <Icon name="user" size={16} class="text-navy-600" />
+      </div>
+      <div>
+        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Sponsor</dt>
+        <dd class="font-serif text-navy-900">
+          {sponsorName}
+          {sponsorParty && <span class="font-mono text-sm text-navy-500 ml-1">({sponsorParty})</span>}
+        </dd>
+      </div>
     </div>
 
+    {/* Cosponsors */}
     {cosponsors.length > 0 && (
-      <div>
-        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Cosponsors</dt>
-        <dd class="font-serif text-navy-900">{cosponsors.join(', ')}</dd>
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Icon name="users" size={16} class="text-navy-600" />
+        </div>
+        <div>
+          <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Cosponsors</dt>
+          <dd class="font-serif text-navy-900">{cosponsors.join(', ')}</dd>
+        </div>
       </div>
     )}
 
+    {/* Committee */}
     {committee && (
-      <div>
-        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Committee</dt>
-        <dd class="font-serif text-navy-900">{committee}</dd>
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Icon name="building" size={16} class="text-navy-600" />
+        </div>
+        <div>
+          <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Committee</dt>
+          <dd class="font-serif text-navy-900">{committee}</dd>
+        </div>
       </div>
     )}
 
-    <div>
-      <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide mb-1">Status</dt>
-      <dd>
-        <BillStatus status={status} />
-      </dd>
-    </div>
-
-    <div>
-      <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Date Introduced</dt>
-      <dd class="font-serif text-navy-900">{formatDate(dateIntroduced)}</dd>
-    </div>
-
-    {dateUpdated && (
-      <div>
-        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Last Updated</dt>
-        <dd class="font-serif text-navy-900">{formatDate(dateUpdated)}</dd>
+    {/* Status */}
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <Icon name="check-circle" size={16} class="text-navy-600" />
       </div>
-    )}
+      <div>
+        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-1">Status</dt>
+        <dd>
+          <BillStatus status={status} />
+        </dd>
+      </div>
+    </div>
 
+    {/* Dates */}
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <Icon name="calendar" size={16} class="text-navy-600" />
+      </div>
+      <div>
+        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Date Introduced</dt>
+        <dd class="font-serif text-navy-900">{formatDate(dateIntroduced)}</dd>
+        {dateUpdated && (
+          <dd class="font-serif text-navy-600 text-sm mt-1">Updated: {formatDate(dateUpdated)}</dd>
+        )}
+      </div>
+    </div>
+
+    {/* Jurisdiction */}
     {realJurisdiction && (
-      <div>
-        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Real Jurisdiction</dt>
-        <dd class="font-serif text-navy-900">{realJurisdiction}</dd>
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Icon name="landmark" size={16} class="text-navy-600" />
+        </div>
+        <div>
+          <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Real Jurisdiction</dt>
+          <dd class="font-serif text-navy-900">{realJurisdiction}</dd>
+        </div>
       </div>
     )}
 
-    {absurdityIndex && (
-      <div>
-        <AbsurdityMeter score={absurdityIndex} />
-      </div>
-    )}
-
+    {/* Congress */}
     {congressNumber && (
-      <div>
-        <dt class="font-sans font-semibold text-navy-700 text-xs uppercase tracking-wide">Congress</dt>
-        <dd class="font-serif text-navy-900">{congressNumber}th Congress</dd>
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Icon name="landmark" size={16} class="text-navy-600" />
+        </div>
+        <div>
+          <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Congress</dt>
+          <dd class="font-serif text-navy-900">{congressNumber}th Congress</dd>
+        </div>
       </div>
     )}
+  </dl>
 
-    {realSource && (
-      <div class="pt-2 border-t border-gold-300">
+  {/* Absurdity Meter */}
+  {absurdityIndex && (
+    <div class="pt-4 border-t border-gold-300">
+      <AbsurdityMeter score={absurdityIndex} />
+    </div>
+  )}
+
+  {/* External Links */}
+  {(realSource || congressDotGovUrl) && (
+    <div class="pt-4 border-t border-gold-300 space-y-2">
+      {realSource && (
         <a
           href={realSource}
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-xs font-sans font-semibold text-navy-600 hover:text-navy-800 transition-colors"
+          class="flex items-center gap-2 text-sm font-sans font-medium text-navy-600 hover:text-gold-700 transition-colors"
         >
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
+          <Icon name="link" size={14} />
           Real Source
+          <Icon name="external-link" size={12} class="ml-auto" />
         </a>
-      </div>
-    )}
-
-    {congressDotGovUrl && (
-      <div class="pt-2 border-t border-gold-300">
+      )}
+      {congressDotGovUrl && (
         <a
           href={congressDotGovUrl}
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-xs font-sans font-semibold text-navy-600 hover:text-navy-800 transition-colors"
+          class="flex items-center gap-2 text-sm font-sans font-medium text-navy-600 hover:text-gold-700 transition-colors"
         >
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
+          <Icon name="landmark" size={14} />
           View on Congress.gov
+          <Icon name="external-link" size={12} class="ml-auto" />
         </a>
-      </div>
-    )}
-  </dl>
+      )}
+    </div>
+  )}
 </aside>

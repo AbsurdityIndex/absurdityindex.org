@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/ui/Icon.astro';
 
 // State data with populations (2023 estimates) and fake pork amounts
 const stateData = [
@@ -95,7 +96,9 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
       <p class="text-xl md:text-2xl text-navy-600 font-serif italic mb-4">
         Bringing home the bacon since 1789
       </p>
-      <div class="text-6xl mb-6" aria-hidden="true">🐷</div>
+      <div class="flex justify-center mb-6" aria-hidden="true">
+        <Icon name="pig" size={72} class="text-pink-400" />
+      </div>
       <div class="gold-rule max-w-md mx-auto"></div>
     </div>
 
@@ -162,9 +165,9 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
               data-earmarks={state.earmarks}
             >
               <td class="px-4 py-4 font-mono text-navy-800">
-                {state.rank === 1 && <span class="text-2xl mr-1" title="Gold Medal">🥇</span>}
-                {state.rank === 2 && <span class="text-2xl mr-1" title="Silver Medal">🥈</span>}
-                {state.rank === 3 && <span class="text-2xl mr-1" title="Bronze Medal">🥉</span>}
+                {state.rank === 1 && <span class="inline-flex items-center mr-1 text-amber-500" title="Gold Medal"><Icon name="trophy" size={24} /></span>}
+                {state.rank === 2 && <span class="inline-flex items-center mr-1 text-slate-400" title="Silver Medal"><Icon name="medal" size={24} /></span>}
+                {state.rank === 3 && <span class="inline-flex items-center mr-1 text-amber-700" title="Bronze Medal"><Icon name="award" size={24} /></span>}
                 {state.rank > 3 && <span class="text-lg font-bold">{state.rank}</span>}
               </td>
               <td class="px-4 py-4">
@@ -201,9 +204,9 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
-              {state.rank === 1 && <span class="text-2xl">🥇</span>}
-              {state.rank === 2 && <span class="text-2xl">🥈</span>}
-              {state.rank === 3 && <span class="text-2xl">🥉</span>}
+              {state.rank === 1 && <span class="text-amber-500"><Icon name="trophy" size={24} /></span>}
+              {state.rank === 2 && <span class="text-slate-400"><Icon name="medal" size={24} /></span>}
+              {state.rank === 3 && <span class="text-amber-700"><Icon name="award" size={24} /></span>}
               {state.rank > 3 && <span class="font-mono text-lg font-bold text-navy-600">#{state.rank}</span>}
               <span class="font-serif text-lg font-bold text-navy-900">{state.state}</span>
             </div>
@@ -340,6 +343,13 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
 
     const formatPerCapita = (num) => `$${num.toFixed(2)}`;
 
+    // Lucide icon SVGs for ranking medals
+    const icons = {
+      trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
+      medal: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="m13 12 5.88-9.8"/><path d="M8 7h8"/><circle cx="12" cy="17" r="5"/><path d="M12 18v-2h-.5"/></svg>`,
+      award: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-700"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
+    };
+
     const sortFunctions = {
       total: (a, b) => b.pork - a.pork,
       percapita: (a, b) => b.perCapita - a.perCapita,
@@ -361,9 +371,9 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
           data-state="${state.state.toLowerCase()}"
         >
           <td class="px-4 py-4 font-mono text-navy-800">
-            ${state.rank === 1 ? '<span class="text-2xl mr-1" title="Gold Medal">🥇</span>' : ''}
-            ${state.rank === 2 ? '<span class="text-2xl mr-1" title="Silver Medal">🥈</span>' : ''}
-            ${state.rank === 3 ? '<span class="text-2xl mr-1" title="Bronze Medal">🥉</span>' : ''}
+            ${state.rank === 1 ? `<span class="inline-flex items-center mr-1" title="Gold Medal">${icons.trophy}</span>` : ''}
+            ${state.rank === 2 ? `<span class="inline-flex items-center mr-1" title="Silver Medal">${icons.medal}</span>` : ''}
+            ${state.rank === 3 ? `<span class="inline-flex items-center mr-1" title="Bronze Medal">${icons.award}</span>` : ''}
             ${state.rank > 3 ? `<span class="text-lg font-bold">${state.rank}</span>` : ''}
           </td>
           <td class="px-4 py-4">
@@ -393,9 +403,9 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
         >
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
-              ${state.rank === 1 ? '<span class="text-2xl">🥇</span>' : ''}
-              ${state.rank === 2 ? '<span class="text-2xl">🥈</span>' : ''}
-              ${state.rank === 3 ? '<span class="text-2xl">🥉</span>' : ''}
+              ${state.rank === 1 ? icons.trophy : ''}
+              ${state.rank === 2 ? icons.medal : ''}
+              ${state.rank === 3 ? icons.award : ''}
               ${state.rank > 3 ? `<span class="font-mono text-lg font-bold text-navy-600">#${state.rank}</span>` : ''}
               <span class="font-serif text-lg font-bold text-navy-900">${state.state}</span>
             </div>

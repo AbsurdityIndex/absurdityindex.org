@@ -2,7 +2,7 @@
 import BillNumberBadge from './BillNumberBadge.astro';
 import BillTypeBadge from './BillTypeBadge.astro';
 import AbsurdityMeter from './AbsurdityMeter.astro';
-import CategoryBadge from '../ui/CategoryBadge.astro';
+import Icon from '../ui/Icon.astro';
 
 interface Props {
   bill: {
@@ -30,53 +30,94 @@ const { data } = bill;
 const isReal = data.billType === 'real';
 const detailHref = isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`;
 
+// Extract just the name portion from "Rep. Name (R-ST)" format
+const sponsorName = data.sponsor.replace(/\s*\([^)]+\)\s*$/, '').trim();
+const sponsorParty = data.sponsor.match(/\(([^)]+)\)/)?.[1] || '';
+
 const formattedDate = new Date(data.dateIntroduced).toLocaleDateString('en-US', {
   month: 'short',
-  day: 'numeric',
   year: 'numeric',
 });
+
+// Category slug for link
+const categorySlug = data.category.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
 ---
 
 <article
   class:list={[
-    'group relative bg-white border-l-4 rounded-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200',
-    data.featured ? 'border-l-gold-500 ring-1 ring-gold-300' : isReal ? 'border-l-navy-500' : 'border-l-gold-400',
+    'group relative bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden',
+    data.featured ? 'ring-2 ring-gold-400' : 'border border-gold-200 hover:border-gold-400',
   ]}
 >
+  {/* Top accent bar */}
+  <div class:list={[
+    'h-1',
+    data.featured ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400' : isReal ? 'bg-navy-600' : 'bg-green-600',
+  ]} />
+
   {data.featured && (
-    <div class="absolute inset-0 rounded-sm pointer-events-none bg-gradient-to-r from-gold-100/40 to-transparent" />
+    <div class="absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono">
+      FEATURED
+    </div>
   )}
 
-  <div class="relative p-5">
-    <div class="flex items-center justify-between mb-3">
+  <div class="p-5">
+    {/* Header row: badges */}
+    <div class="flex items-center justify-between gap-2 mb-3">
       <BillNumberBadge billNumber={data.billNumber} />
       <BillTypeBadge billType={data.billType} />
     </div>
 
-    <h3 class="font-serif text-lg font-bold text-navy-900 mb-2 leading-snug">
+    {/* Title */}
+    <h3 class="font-serif text-lg font-bold text-navy-900 mb-2 leading-snug group-hover:text-navy-700 transition-colors">
       <a
         href={detailHref}
-        class="hover:text-navy-600 transition-colors after:absolute after:inset-0"
+        class="after:absolute after:inset-0"
       >
         {data.title}
       </a>
     </h3>
 
-    <p class="text-sm text-navy-700 leading-relaxed line-clamp-2 mb-4">
+    {/* Summary */}
+    <p class="text-sm text-navy-600 leading-relaxed line-clamp-2 mb-4">
       {data.summary}
     </p>
 
+    {/* Absurdity meter for real bills */}
     {isReal && data.absurdityIndex && (
       <div class="mb-4">
         <AbsurdityMeter score={data.absurdityIndex} compact />
       </div>
     )}
 
-    <div class="flex items-center justify-between text-xs text-navy-600 pt-3 border-t border-cream-200">
-      <span class="font-sans font-medium">{data.sponsor}</span>
-      <div class="flex items-center gap-3">
-        <CategoryBadge category={data.category} linked={false} />
-        <time datetime={data.dateIntroduced.toISOString()}>{formattedDate}</time>
+    {/* Footer */}
+    <div class="pt-3 border-t border-cream-200 space-y-2">
+      {/* Sponsor row */}
+      <div class="flex items-center gap-2 text-sm">
+        <div class="w-5 h-5 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0">
+          <Icon name="user" size={12} class="text-navy-600" />
+        </div>
+        <span class="text-navy-700 font-medium truncate" title={data.sponsor}>
+          {sponsorName}
+        </span>
+        {sponsorParty && (
+          <span class="text-xs text-navy-500 font-mono flex-shrink-0">({sponsorParty})</span>
+        )}
+      </div>
+
+      {/* Category and date row */}
+      <div class="flex items-center justify-between gap-2">
+        <a
+          href={`/category/${categorySlug}`}
+          class="relative z-10 inline-flex items-center gap-1 text-xs font-medium text-navy-600 bg-cream-100 hover:bg-cream-200 px-2.5 py-1 rounded-full transition-colors"
+        >
+          <Icon name="tag" size={10} class="text-navy-400" />
+          {data.category}
+        </a>
+        <div class="flex items-center gap-1.5 text-xs text-navy-500">
+          <Icon name="calendar" size={12} class="text-navy-400" />
+          <time datetime={data.dateIntroduced.toISOString()}>{formattedDate}</time>
+        </div>
       </div>
     </div>
   </div>
