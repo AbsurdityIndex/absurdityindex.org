@@ -1,4 +1,14 @@
 ---
+/**
+ * Bill Timeline
+ *
+ * Displays the legislative progress of a bill using the shared ProgressTimeline component.
+ * Shows horizontal layout on desktop, vertical on mobile.
+ */
+import LegislativePathPopover from './LegislativePathPopover.astro';
+import ProgressTimeline from '../ui/ProgressTimeline.astro';
+import { getBillProgress } from '../../utils/billProgress';
+
 interface Props {
   status: string;
   dateIntroduced: Date;
@@ -7,67 +17,15 @@ interface Props {
 
 const { status, dateIntroduced, billNumber = '' } = Astro.props;
 
-// Detect if this is a simple resolution (doesn't go to President)
-const isSimpleResolution = /^(H\.?\s*Res\.?|S\.?\s*Res\.?)\s/i.test(billNumber);
+// Get progress state from shared utility
+const progress = getBillProgress(billNumber, status);
+const { stages, currentStageIndex, outcome } = progress;
 
-// Standard bill stages (goes to President)
-const billStages = [
-  { id: 'introduced', label: 'Introduced', keywords: ['introduced'] },
-  { id: 'committee', label: 'In Committee', keywords: ['referred', 'committee'] },
-  { id: 'reported', label: 'Reported', keywords: ['reported'] },
-  { id: 'floor', label: 'Floor Vote', keywords: ['passed house', 'passed senate', 'vote'] },
-  { id: 'enrolled', label: 'Enrolled', keywords: ['enrolled', 'passed both'] },
-  { id: 'final', label: 'Signed/Vetoed', keywords: ['signed', 'law', 'vetoed', 'died'] },
-];
-
-// Resolution stages (single chamber, no President)
-const resolutionStages = [
-  { id: 'introduced', label: 'Introduced', keywords: ['introduced'] },
-  { id: 'committee', label: 'In Committee', keywords: ['referred', 'committee'] },
-  { id: 'reported', label: 'Reported', keywords: ['reported'] },
-  { id: 'final', label: 'Agreed To', keywords: ['adopted', 'agreed', 'passed'] },
-];
-
-const stages = isSimpleResolution ? resolutionStages : billStages;
-
-function getCurrentStage(status: string, isResolution: boolean): number {
-  const s = status.toLowerCase();
-
-  if (isResolution) {
-    // Resolution track: Introduced → Committee → Reported → Agreed To
-    if (s.includes('adopted') || s.includes('agreed') || s.includes('passed')) return 3;
-    if (s.includes('reported')) return 2;
-    if (s.includes('committee') || s.includes('referred')) return 1;
-    return 0;
-  }
-
-  // Standard bill track
-  if (s.includes('signed') || s.includes('law') || s.includes('vetoed') || s.includes('died') || s.includes('enacted')) return 5;
-  if (s.includes('enrolled') || s.includes('passed both')) return 4;
-  if (s.includes('passed house') || s.includes('passed senate') || s.includes('passed/agreed')) return 3;
-  if (s.includes('reported')) return 2;
-  if (s.includes('committee') || s.includes('referred')) return 1;
-  return 0;
-}
-
-// Determine final outcome
-type Outcome = 'signed' | 'vetoed' | 'pending' | 'adopted';
-function getFinalOutcome(status: string, isResolution: boolean): Outcome {
-  const s = status.toLowerCase();
-  if (isResolution) {
-    // Resolutions don't get signed - they're adopted/agreed to
-    if (s.includes('adopted') || s.includes('agreed') || s.includes('passed')) return 'adopted';
-    if (s.includes('failed') || s.includes('rejected') || s.includes('died')) return 'vetoed';
-    return 'pending';
-  }
-  if (s.includes('signed') || s.includes('law') || s.includes('enacted')) return 'signed';
-  if (s.includes('vetoed') || s.includes('died') || s.includes('failed') || s.includes('pocket')) return 'vetoed';
-  return 'pending';
-}
-
-const currentStage = getCurrentStage(status, isSimpleResolution);
-const finalOutcome = getFinalOutcome(status, isSimpleResolution);
-const isFinalStage = currentStage === 5;
+// Convert stages to timeline format
+const timelineStages = stages.map(stage => ({
+  id: stage.id,
+  label: stage.label,
+}));
 
 // Format the introduction date
 const formattedDate = dateIntroduced instanceof Date
@@ -76,279 +34,55 @@ const formattedDate = dateIntroduced instanceof Date
 ---
 
 <div class="bill-timeline mb-8">
-  <div class="flex items-center justify-between mb-2">
-    <span class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-700">
+  <div class="flex items-center justify-between mb-3">
+    <span class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-700 flex items-center gap-1.5">
       Legislative Progress
+      <LegislativePathPopover billNumber={billNumber} status={status} />
     </span>
     <span class="text-xs font-sans text-navy-600">
       Introduced {formattedDate}
     </span>
   </div>
 
-  <!-- Desktop horizontal timeline -->
+  {/* Desktop: horizontal timeline */}
   <div class="hidden md:block">
-    <svg
-      class="w-full h-28"
-      viewBox="0 0 600 112"
-      preserveAspectRatio="xMidYMid meet"
-      aria-label={`Bill progress: currently at ${stages[currentStage].label}`}
-      role="img"
-    >
-      <!-- Connection lines -->
-      {stages.map((stage, i) => {
-        if (i === stages.length - 1) return null;
-        const x1 = 50 + i * 100;
-        const x2 = 50 + (i + 1) * 100;
-        const isCompleted = i < currentStage;
-        return (
-          <line
-            x1={x1 + 12}
-            y1="40"
-            x2={x2 - 12}
-            y2="40"
-            stroke={isCompleted ? '#228B4A' : '#E0D8C8'}
-            stroke-width="3"
-            stroke-linecap="round"
-          />
-        );
-      })}
-
-      <!-- Stage circles and labels -->
-      {stages.map((stage, i) => {
-        const cx = 50 + i * 100;
-        const isCompleted = i < currentStage;
-        const isCurrent = i === currentStage;
-        const isFuture = i > currentStage;
-        const isFinal = i === stages.length - 1;
-
-        let fillColor = '#E0D8C8'; // gray for future
-        let strokeColor = '#C5CDD8';
-        let textColor = '#667788';
-
-        if (isCompleted) {
-          fillColor = '#228B4A';
-          strokeColor = '#1A6B3A';
-          textColor = '#228B4A';
-        } else if (isCurrent) {
-          // Final stage with outcome
-          if (isFinal && (finalOutcome === 'signed' || finalOutcome === 'adopted')) {
-            fillColor = '#228B4A';
-            strokeColor = '#1A6B3A';
-            textColor = '#228B4A';
-          } else if (isFinal && finalOutcome === 'vetoed') {
-            fillColor = '#DC2626';
-            strokeColor = '#B91C1C';
-            textColor = '#DC2626';
-          } else {
-            fillColor = '#C5A572';
-            strokeColor = '#A88B4A';
-            textColor = '#A88B4A';
-          }
-        }
-
-        // Larger circle for final stage with outcome
-        const isFinalWithOutcome = isFinal && isCurrent && finalOutcome !== 'pending';
-        const circleRadius = isFinalWithOutcome ? 20 : (isCurrent ? 14 : 10);
-
-        return (
-          <g>
-            {/* Pulse animation for current stage (only if pending) */}
-            {isCurrent && !isFinalWithOutcome && (
-              <circle
-                cx={cx}
-                cy="40"
-                r="18"
-                fill={fillColor}
-                opacity="0.3"
-                class="animate-pulse-ring"
-              />
-            )}
-
-            {/* Glow effect for final outcome */}
-            {isFinalWithOutcome && (
-              <circle
-                cx={cx}
-                cy="40"
-                r="28"
-                fill={(finalOutcome === 'signed' || finalOutcome === 'adopted') ? '#228B4A' : '#DC2626'}
-                opacity="0.15"
-              />
-            )}
-
-            {/* Main circle */}
-            <circle
-              cx={cx}
-              cy="40"
-              r={circleRadius}
-              fill={fillColor}
-              stroke={strokeColor}
-              stroke-width={isFinalWithOutcome ? 3 : 2}
-            />
-
-            {/* Checkmark for completed stages OR final signed/adopted */}
-            {(isCompleted || (isFinalWithOutcome && (finalOutcome === 'signed' || finalOutcome === 'adopted'))) && (
-              <path
-                d={isFinalWithOutcome
-                  ? `M${cx - 8} 40 L${cx - 2} 46 L${cx + 10} 32`
-                  : `M${cx - 4} 40 L${cx - 1} 43 L${cx + 5} 37`}
-                stroke="white"
-                stroke-width={isFinalWithOutcome ? 3 : 2}
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            )}
-
-            {/* X mark for vetoed/failed */}
-            {isFinalWithOutcome && finalOutcome === 'vetoed' && (
-              <g>
-                <line x1={cx - 7} y1="33" x2={cx + 7} y2="47" stroke="white" stroke-width="3" stroke-linecap="round" />
-                <line x1={cx + 7} y1="33" x2={cx - 7} y2="47" stroke="white" stroke-width="3" stroke-linecap="round" />
-              </g>
-            )}
-
-            {/* Stage label */}
-            <text
-              x={cx}
-              y="76"
-              text-anchor="middle"
-              fill={textColor}
-              font-size="11"
-              font-family="var(--font-sans)"
-              font-weight={isCurrent ? '600' : '400'}
-            >
-              {isFinalWithOutcome
-                ? (finalOutcome === 'signed' ? 'Signed' : finalOutcome === 'adopted' ? 'Adopted' : 'Vetoed')
-                : stage.label}
-            </text>
-
-            {/* Stage number (only for non-completed, non-final-outcome stages) */}
-            {!isCompleted && !isFinalWithOutcome && (
-              <text
-                x={cx}
-                y={isCurrent ? 44 : 43}
-                text-anchor="middle"
-                fill={isCurrent ? '#0A1628' : '#8899AA'}
-                font-size={isCurrent ? '12' : '10'}
-                font-family="var(--font-mono)"
-                font-weight="600"
-              >
-                {i + 1}
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
+    <ProgressTimeline
+      stages={timelineStages}
+      currentIndex={currentStageIndex}
+      outcome={outcome}
+      variant="full"
+      class="bill-timeline-desktop"
+    />
   </div>
 
-  <!-- Mobile vertical timeline -->
+  {/* Mobile: vertical timeline */}
   <div class="md:hidden">
-    <div class="relative pl-10">
-      {stages.map((stage, i) => {
-        const isCompleted = i < currentStage;
-        const isCurrent = i === currentStage;
-        const isFuture = i > currentStage;
-        const isLast = i === stages.length - 1;
-        const isFinalWithOutcome = isLast && isCurrent && finalOutcome !== 'pending';
-
-        let bgColor = 'bg-cream-300';
-        let borderColor = 'border-cream-300';
-        let textColor = 'text-navy-500';
-
-        if (isCompleted) {
-          bgColor = 'bg-green-600';
-          borderColor = 'border-green-600';
-          textColor = 'text-green-700';
-        } else if (isCurrent) {
-          if (isFinalWithOutcome && (finalOutcome === 'signed' || finalOutcome === 'adopted')) {
-            bgColor = 'bg-green-600';
-            borderColor = 'border-green-600';
-            textColor = 'text-green-700';
-          } else if (isFinalWithOutcome && finalOutcome === 'vetoed') {
-            bgColor = 'bg-red-600';
-            borderColor = 'border-red-600';
-            textColor = 'text-red-700';
-          } else {
-            bgColor = 'bg-gold-500';
-            borderColor = 'border-gold-500';
-            textColor = 'text-gold-600';
-          }
-        }
-
-        return (
-          <div class="relative pb-6 last:pb-0">
-            {/* Vertical line */}
-            {!isLast && (
-              <div
-                class:list={[
-                  'absolute left-0 top-6 w-0.5 h-full -translate-x-1/2',
-                  isCompleted ? 'bg-green-600' : 'bg-cream-300',
-                ]}
-              />
-            )}
-
-            {/* Circle - larger for final outcome */}
-            <div
-              class:list={[
-                'absolute left-0 -translate-x-1/2 rounded-full border-2 flex items-center justify-center',
-                bgColor,
-                borderColor,
-                isFinalWithOutcome ? 'w-10 h-10' : isCurrent ? 'w-7 h-7 pulse-subtle' : 'w-5 h-5',
-              ]}
-            >
-              {(isCompleted || (isFinalWithOutcome && (finalOutcome === 'signed' || finalOutcome === 'adopted'))) && (
-                <svg class={isFinalWithOutcome ? 'w-5 h-5 text-white' : 'w-3 h-3 text-white'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-              {isFinalWithOutcome && finalOutcome === 'vetoed' && (
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-              {!isCompleted && !isFinalWithOutcome && (
-                <span class:list={['font-mono text-xs font-bold', isCurrent ? 'text-navy-900' : 'text-navy-500']}>
-                  {i + 1}
-                </span>
-              )}
-            </div>
-
-            {/* Label */}
-            <div class="ml-4">
-              <span
-                class:list={[
-                  'font-sans text-sm',
-                  isCurrent ? 'font-semibold' : 'font-normal',
-                  textColor,
-                ]}
-              >
-                {isFinalWithOutcome
-                  ? (finalOutcome === 'signed' ? 'Signed into Law' : finalOutcome === 'adopted' ? 'Adopted' : 'Vetoed')
-                  : stage.label}
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <ProgressTimeline
+      stages={timelineStages}
+      currentIndex={currentStageIndex}
+      outcome={outcome}
+      variant="vertical"
+      class="bill-timeline-mobile"
+    />
   </div>
 </div>
 
 <style>
-  @keyframes pulse-ring {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.3;
-    }
-    50% {
-      transform: scale(1.2);
-      opacity: 0.1;
-    }
+  /* Desktop timeline adjustments */
+  .bill-timeline-desktop {
+    --dot-size: 24px;
+    --dot-size-current: 32px;
+    --dot-size-final: 40px;
+    --line-height: 4px;
+    --gap: 12px;
+    --font-size-label: 12px;
+    --font-size-number: 11px;
   }
 
-  .animate-pulse-ring {
-    animation: pulse-ring 2s ease-in-out infinite;
-    transform-origin: center;
+  /* Mobile timeline adjustments */
+  .bill-timeline-mobile {
+    --dot-size: 24px;
+    --dot-size-current: 32px;
+    --dot-size-final: 40px;
   }
 </style>

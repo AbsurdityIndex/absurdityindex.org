@@ -1,0 +1,596 @@
+---
+/**
+ * Legislative Path Popover
+ *
+ * An elegant popover explaining which legislative track a bill is on,
+ * why it uses that track, and how other bill types differ.
+ * Now also shows actual bill progress to match the main timeline.
+ */
+import Icon from '../ui/Icon.astro';
+import ProgressTimeline from '../ui/ProgressTimeline.astro';
+import { parseBillType, getAllBillTypes } from '../../utils/billParser';
+import {
+  getBillProgress,
+  type LegislativePath,
+} from '../../utils/billProgress';
+
+interface Props {
+  billNumber: string;
+  status?: string;
+}
+
+const { billNumber, status = '' } = Astro.props;
+
+const billType = parseBillType(billNumber);
+const allTypes = getAllBillTypes();
+
+// Get progress from shared utility
+const progress = getBillProgress(billNumber, status);
+const { path: currentPath, currentStageIndex, outcome, isFinalWithOutcome } = progress;
+
+// Group bill types by their legislative path
+const pathGroups = {
+  unicameral: allTypes.filter(t => !t.needsBothChambers && !t.needsPresident),
+  bicameralNoPresident: allTypes.filter(t => t.needsBothChambers && !t.needsPresident),
+  fullPath: allTypes.filter(t => t.needsBothChambers && t.needsPresident),
+};
+
+// Path display configuration
+const pathDescriptions: Record<LegislativePath, {
+  name: string;
+  shortDesc: string;
+  stages: string[];
+  description: string;
+  note: string;
+  icon: string;
+  accentClass: string;
+}> = {
+  unicameral: {
+    name: 'Single Chamber',
+    shortDesc: 'One chamber',
+    stages: ['Introduced', 'Committee', 'Reported', 'Adopted'],
+    description: 'Only requires passage by one chamber.',
+    note: 'Does not go to the President',
+    icon: 'building',
+    accentClass: 'accent-emerald',
+  },
+  bicameralNoPresident: {
+    name: 'Concurrent',
+    shortDesc: 'Both chambers',
+    stages: ['Introduced', 'Committee', 'Reported', 'Floor Vote', 'Adopted'],
+    description: 'Must pass both chambers identically.',
+    note: 'No presidential signature required',
+    icon: 'git-branch',
+    accentClass: 'accent-blue',
+  },
+  fullPath: {
+    name: 'Standard',
+    shortDesc: 'Full process',
+    stages: ['Introduced', 'Committee', 'Reported', 'Floor Vote', 'Enrolled', 'Signed'],
+    description: 'Full legislative process to become law.',
+    note: 'Requires presidential signature',
+    icon: 'landmark',
+    accentClass: 'accent-gold',
+  },
+};
+
+const currentPathInfo = pathDescriptions[currentPath];
+
+// Convert stages to format expected by ProgressTimeline
+const timelineStages = currentPathInfo.stages.map((label, i) => ({
+  id: `stage-${i}`,
+  label,
+}));
+---
+
+<div class="leg-path-popover">
+  <button
+    type="button"
+    class="leg-trigger"
+    aria-label="Learn about this bill's legislative path"
+    aria-haspopup="dialog"
+    data-popover-trigger
+  >
+    <Icon name="info" size={13} />
+  </button>
+
+  <div class={`leg-panel ${currentPathInfo.accentClass}`} role="dialog" aria-label="Legislative Path Information" data-popover-panel>
+    {/* Header */}
+    <header class="leg-header">
+      <div class="leg-header-content">
+        <span class="leg-type-prefix">{billType?.prefix || billNumber}</span>
+        <span class="leg-type-name">{billType?.displayName || 'Bill'}</span>
+      </div>
+      <button type="button" class="leg-close" data-popover-close aria-label="Close">
+        <Icon name="x" size={14} />
+      </button>
+    </header>
+
+    {/* Active Path */}
+    <div class="leg-active-path">
+      <div class="leg-path-header">
+        <div class="leg-path-title">
+          <Icon name={currentPathInfo.icon} size={16} />
+          <span class="leg-path-name">{currentPathInfo.name} Path</span>
+        </div>
+        <span class="leg-active-tag">This Bill</span>
+      </div>
+
+      {/* Stage Flow - using shared component */}
+      <ProgressTimeline
+        stages={timelineStages}
+        currentIndex={currentStageIndex}
+        outcome={outcome}
+        variant="compact"
+        class="leg-timeline"
+      />
+
+      <div class="leg-path-info">
+        <p class="leg-path-desc">{currentPathInfo.description}</p>
+        <p class="leg-path-note">{currentPathInfo.note}</p>
+      </div>
+    </div>
+
+    {/* Comparison */}
+    <div class="leg-comparison">
+      <div class="leg-comparison-header">Compare Paths</div>
+      <div class="leg-comparison-grid">
+        {Object.entries(pathDescriptions).map(([key, path]) => (
+          <div class={`leg-comparison-item ${key === currentPath ? 'is-current' : ''}`}>
+            <div class="leg-comparison-title">
+              <Icon name={path.icon} size={12} />
+              <span>{path.name}</span>
+            </div>
+            <div class="leg-comparison-chips">
+              {pathGroups[key as keyof typeof pathGroups].slice(0, 3).map(t => (
+                <span class="leg-chip">{t.prefix}</span>
+              ))}
+              {pathGroups[key as keyof typeof pathGroups].length > 3 && (
+                <span class="leg-chip leg-chip-more">+{pathGroups[key as keyof typeof pathGroups].length - 3}</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Footer */}
+    <footer class="leg-footer">
+      <button type="button" class="leg-glossary-btn" data-open-glossary>
+        <Icon name="book-open" size={14} />
+        <span>Full Glossary</span>
+      </button>
+    </footer>
+  </div>
+</div>
+
+<style>
+  .leg-path-popover {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Trigger */
+  .leg-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: var(--color-cream-200);
+    border: 1px solid var(--color-gold-300);
+    border-radius: 50%;
+    color: var(--color-navy-500);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .leg-trigger:hover {
+    background: var(--color-gold-200);
+    border-color: var(--color-gold-400);
+    color: var(--color-navy-700);
+  }
+
+  /* Panel */
+  .leg-panel {
+    --accent: var(--color-gold-500);
+    --accent-bg: var(--color-gold-50);
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.96);
+    transform-origin: top center;
+    z-index: 100;
+    width: 440px;
+    background: white;
+    border: 1px solid var(--color-cream-300);
+    border-radius: 16px;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 10px 15px -3px rgba(0, 0, 0, 0.08),
+      0 20px 25px -5px rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+
+  .leg-panel.accent-emerald { --accent: #10b981; --accent-bg: #ecfdf5; }
+  .leg-panel.accent-blue { --accent: #3b82f6; --accent-bg: #eff6ff; }
+  .leg-panel.accent-gold { --accent: var(--color-gold-500); --accent-bg: var(--color-gold-50); }
+
+  .leg-panel.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) scale(1);
+  }
+
+  /* Header */
+  .leg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--color-navy-900);
+  }
+
+  .leg-header-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .leg-type-prefix {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 12px;
+    border-radius: 6px;
+  }
+
+  .leg-type-name {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: white;
+  }
+
+  .leg-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--color-cream-400);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .leg-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+
+  /* Active Path */
+  .leg-active-path {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, var(--accent-bg) 0%, white 100%);
+    border-bottom: 1px solid var(--color-cream-200);
+  }
+
+  .leg-path-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .leg-path-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--accent);
+  }
+
+  .leg-path-name {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-navy-800);
+  }
+
+  .leg-active-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid currentColor;
+  }
+
+  /* Timeline in popover context */
+  .leg-timeline {
+    margin-bottom: 20px;
+  }
+
+  .leg-path-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .leg-path-desc {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-navy-700);
+    margin: 0;
+  }
+
+  .leg-path-note {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--color-navy-400);
+    margin: 0;
+    font-style: italic;
+  }
+
+  /* Comparison section */
+  .leg-comparison {
+    padding: 16px 24px 20px;
+  }
+
+  .leg-comparison-header {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-navy-400);
+    margin-bottom: 12px;
+  }
+
+  .leg-comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .leg-comparison-item {
+    padding: 14px;
+    background: var(--color-cream-50);
+    border: 1px solid var(--color-cream-200);
+    border-radius: 10px;
+    transition: all 0.15s;
+  }
+
+  .leg-comparison-item.is-current {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+
+  .leg-comparison-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-navy-700);
+    margin-bottom: 10px;
+  }
+
+  .leg-comparison-item.is-current .leg-comparison-title {
+    color: var(--accent);
+  }
+
+  .leg-comparison-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .leg-chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--color-navy-500);
+    background: white;
+    padding: 3px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--color-cream-300);
+  }
+
+  .leg-chip-more {
+    color: var(--color-navy-400);
+    background: var(--color-cream-100);
+    border-color: var(--color-cream-200);
+  }
+
+  /* Footer */
+  .leg-footer {
+    padding: 14px 24px;
+    background: var(--color-cream-100);
+    border-top: 1px solid var(--color-cream-200);
+  }
+
+  .leg-glossary-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px;
+    background: white;
+    border: 1px solid var(--color-cream-300);
+    border-radius: 8px;
+    color: var(--color-navy-600);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .leg-glossary-btn:hover {
+    background: var(--color-navy-800);
+    border-color: var(--color-navy-800);
+    color: white;
+  }
+
+  /* Dark mode */
+  :global(html.dark) .leg-panel {
+    background: var(--color-navy-800);
+    border-color: var(--color-navy-600);
+  }
+
+  :global(html.dark) .leg-active-path {
+    background: linear-gradient(135deg, rgba(0,0,0,0.2) 0%, transparent 100%);
+    border-bottom-color: var(--color-navy-700);
+  }
+
+  :global(html.dark) .leg-path-name {
+    color: var(--color-cream-100);
+  }
+
+
+  :global(html.dark) .leg-path-desc {
+    color: var(--color-cream-200);
+  }
+
+  :global(html.dark) .leg-path-note {
+    color: var(--color-cream-500);
+  }
+
+  :global(html.dark) .leg-comparison-header {
+    color: var(--color-cream-500);
+  }
+
+  :global(html.dark) .leg-comparison-item {
+    background: var(--color-navy-700);
+    border-color: var(--color-navy-600);
+  }
+
+  :global(html.dark) .leg-comparison-item.is-current {
+    background: rgba(0,0,0,0.3);
+  }
+
+  :global(html.dark) .leg-comparison-title {
+    color: var(--color-cream-200);
+  }
+
+  :global(html.dark) .leg-chip {
+    background: var(--color-navy-600);
+    border-color: var(--color-navy-500);
+    color: var(--color-cream-300);
+  }
+
+  :global(html.dark) .leg-footer {
+    background: var(--color-navy-700);
+    border-top-color: var(--color-navy-600);
+  }
+
+  :global(html.dark) .leg-glossary-btn {
+    background: var(--color-navy-600);
+    border-color: var(--color-navy-500);
+    color: var(--color-cream-300);
+  }
+
+  :global(html.dark) .leg-glossary-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  /* Responsive */
+  @media (max-width: 520px) {
+    .leg-panel {
+      left: 0;
+      transform: translateX(-20px) scale(0.96);
+      width: calc(100vw - 32px);
+      max-width: 440px;
+    }
+
+    .leg-panel.open {
+      transform: translateX(-20px) scale(1);
+    }
+
+    .leg-active-path {
+      padding: 16px 20px;
+    }
+
+    .leg-comparison {
+      padding: 14px 20px 16px;
+    }
+
+    .leg-comparison-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .leg-comparison-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+    }
+
+    .leg-comparison-title {
+      margin-bottom: 0;
+    }
+
+    .leg-footer {
+      padding: 12px 20px;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.leg-path-popover').forEach((popover) => {
+    const trigger = popover.querySelector('[data-popover-trigger]');
+    const panel = popover.querySelector('[data-popover-panel]');
+    const closeBtn = popover.querySelector('[data-popover-close]');
+    const glossaryBtn = popover.querySelector('[data-open-glossary]');
+
+    if (!trigger || !panel) return;
+
+    const close = () => panel.classList.remove('open');
+    const toggle = () => panel.classList.toggle('open');
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggle();
+    });
+
+    closeBtn?.addEventListener('click', close);
+
+    glossaryBtn?.addEventListener('click', () => {
+      close();
+      document.dispatchEvent(new CustomEvent('open-legislative-glossary'));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!popover.contains(e.target as Node)) close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panel.classList.contains('open')) close();
+    });
+  });
+</script>

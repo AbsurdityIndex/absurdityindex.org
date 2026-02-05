@@ -1,0 +1,390 @@
+---
+/**
+ * Progress Timeline
+ *
+ * A reusable timeline visualization component for showing progress through stages.
+ * Used by BillTimeline, LegislativePathPopover, and anywhere else progress needs to be shown.
+ *
+ * Supports two variants:
+ * - "full" (default): Larger circles with labels below, suitable for main content area
+ * - "compact": Smaller dots with labels, suitable for popovers and sidebars
+ */
+
+import {
+  getProgressPercentage,
+  isStageCompleted,
+  isStageCurrent,
+  type BillOutcome,
+} from '../../utils/billProgress';
+
+export interface TimelineStage {
+  id: string;
+  label: string;
+}
+
+interface Props {
+  /** Array of stages to display */
+  stages: TimelineStage[];
+  /** Current stage index (0-based) */
+  currentIndex: number;
+  /** Final outcome if bill has concluded */
+  outcome?: BillOutcome;
+  /** Visual variant: full (larger), compact (smaller), vertical (mobile) */
+  variant?: 'full' | 'compact' | 'vertical';
+  /** Custom class for the container */
+  class?: string;
+}
+
+const {
+  stages,
+  currentIndex,
+  outcome = 'pending',
+  variant = 'full',
+  class: className = '',
+} = Astro.props;
+
+const progressPercent = getProgressPercentage(currentIndex, stages.length);
+const hasProgress = currentIndex > 0;
+
+// Helper to determine stage state
+function getStageState(index: number) {
+  const isCompleted = isStageCompleted(index, currentIndex);
+  const isCurrent = isStageCurrent(index, currentIndex);
+  const isFinal = index === stages.length - 1;
+  const isFinalWithOutcome = isFinal && isCurrent && outcome !== 'pending';
+  const isSuccess = outcome === 'signed' || outcome === 'adopted';
+  const isFailed = outcome === 'vetoed' || outcome === 'failed';
+
+  return { isCompleted, isCurrent, isFinal, isFinalWithOutcome, isSuccess, isFailed };
+}
+
+// Get display label for a stage
+function getStageLabel(stage: TimelineStage, index: number) {
+  const { isFinalWithOutcome, isSuccess, isFailed } = getStageState(index);
+
+  if (isFinalWithOutcome) {
+    if (isSuccess) return outcome === 'signed' ? 'Signed' : 'Adopted';
+    if (isFailed) return 'Vetoed';
+  }
+
+  return stage.label;
+}
+---
+
+<div class:list={['progress-timeline', `variant-${variant}`, className]} data-progress-timeline>
+  <div class="timeline-track">
+    {stages.map((stage, i) => {
+      const { isCompleted, isCurrent, isFinal, isFinalWithOutcome, isSuccess, isFailed } = getStageState(i);
+      const isLast = i === stages.length - 1;
+
+      return (
+        <div
+          class:list={[
+            'timeline-stage',
+            { 'is-completed': isCompleted },
+            { 'is-current': isCurrent },
+            { 'is-final': isFinalWithOutcome },
+            { 'is-success': isFinalWithOutcome && isSuccess },
+            { 'is-failed': isFinalWithOutcome && isFailed },
+            { 'is-last': isLast },
+          ]}
+        >
+          {/* Connector line for vertical variant */}
+          {variant === 'vertical' && !isLast && (
+            <div class:list={['timeline-connector', { 'is-completed': isCompleted }]} />
+          )}
+
+          <div class="timeline-dot">
+            {/* Checkmark for completed or successful final */}
+            {(isCompleted || (isFinalWithOutcome && isSuccess)) && (
+              <svg class="timeline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+            {/* X mark for failed/vetoed */}
+            {isFinalWithOutcome && isFailed && (
+              <svg class="timeline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            {/* Number for pending stages */}
+            {!isCompleted && !isFinalWithOutcome && (
+              <span class="timeline-number">{i + 1}</span>
+            )}
+          </div>
+          <span class="timeline-label">{getStageLabel(stage, i)}</span>
+        </div>
+      );
+    })}
+
+    {/* Progress line (horizontal variants only) */}
+    {variant !== 'vertical' && (
+      <div
+        class:list={['timeline-line', { 'has-progress': hasProgress }]}
+        style={`--progress: ${progressPercent}%`}
+      />
+    )}
+  </div>
+</div>
+
+<style>
+  .progress-timeline {
+    --dot-size: 20px;
+    --dot-size-current: 24px;
+    --dot-size-final: 28px;
+    --line-height: 3px;
+    --gap: 10px;
+    --font-size-label: 11px;
+    --font-size-number: 10px;
+
+    /* Colors */
+    --color-completed: #228B4A;
+    --color-completed-stroke: #1A6B3A;
+    --color-current: var(--color-gold-500, #C5A572);
+    --color-current-stroke: var(--color-gold-600, #A88B4A);
+    --color-pending: var(--color-cream-200, #E8E0D0);
+    --color-pending-stroke: var(--color-cream-400, #D0C8B8);
+    --color-failed: #DC2626;
+    --color-failed-stroke: #B91C1C;
+    --color-text-completed: #228B4A;
+    --color-text-current: var(--color-navy-800, #1A2B3C);
+    --color-text-pending: var(--color-navy-500, #5A6B7C);
+  }
+
+  /* Compact variant adjustments */
+  .variant-compact {
+    --dot-size: 16px;
+    --dot-size-current: 20px;
+    --dot-size-final: 24px;
+    --line-height: 2px;
+    --gap: 8px;
+    --font-size-label: 10px;
+    --font-size-number: 9px;
+  }
+
+  .timeline-track {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+    padding: 0 8px;
+  }
+
+  /* Progress line (background) */
+  .timeline-line {
+    position: absolute;
+    top: calc(var(--dot-size) / 2 - var(--line-height) / 2);
+    left: calc(var(--dot-size) / 2 + 8px);
+    right: calc(var(--dot-size) / 2 + 8px);
+    height: var(--line-height);
+    background: var(--color-pending);
+    border-radius: calc(var(--line-height) / 2);
+    z-index: 0;
+  }
+
+  /* Progress line (filled portion) */
+  .timeline-line.has-progress::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: var(--progress, 0%);
+    background: var(--color-completed);
+    border-radius: calc(var(--line-height) / 2);
+    transition: width 0.3s ease;
+  }
+
+  /* Stage container */
+  .timeline-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap);
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Dot */
+  .timeline-dot {
+    width: var(--dot-size);
+    height: var(--dot-size);
+    background: white;
+    border: 2.5px solid var(--color-pending-stroke);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 3px white;
+    transition: all 0.2s ease;
+  }
+
+  /* Completed dot */
+  .timeline-stage.is-completed .timeline-dot {
+    background: var(--color-completed);
+    border-color: var(--color-completed-stroke);
+  }
+
+  /* Current dot */
+  .timeline-stage.is-current .timeline-dot {
+    width: var(--dot-size-current);
+    height: var(--dot-size-current);
+    background: var(--color-current);
+    border-color: var(--color-current-stroke);
+    animation: pulse-timeline 2s ease-in-out infinite;
+  }
+
+  /* Final with success outcome */
+  .timeline-stage.is-final.is-success .timeline-dot {
+    width: var(--dot-size-final);
+    height: var(--dot-size-final);
+    background: var(--color-completed);
+    border-color: var(--color-completed-stroke);
+    animation: none;
+  }
+
+  /* Final with failed outcome */
+  .timeline-stage.is-final.is-failed .timeline-dot {
+    width: var(--dot-size-final);
+    height: var(--dot-size-final);
+    background: var(--color-failed);
+    border-color: var(--color-failed-stroke);
+    animation: none;
+  }
+
+  @keyframes pulse-timeline {
+    0%, 100% {
+      box-shadow: 0 0 0 3px white, 0 0 0 6px rgba(197, 165, 114, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 0 3px white, 0 0 0 10px rgba(197, 165, 114, 0.1);
+    }
+  }
+
+  /* Icons inside dots */
+  .timeline-icon {
+    width: 12px;
+    height: 12px;
+    color: white;
+  }
+
+  .timeline-stage.is-final .timeline-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Number inside pending dots */
+  .timeline-number {
+    font-family: var(--font-mono, monospace);
+    font-size: var(--font-size-number);
+    font-weight: 700;
+    color: var(--color-text-pending);
+  }
+
+  .timeline-stage.is-current .timeline-number {
+    color: var(--color-navy-900, #0A1628);
+  }
+
+  /* Labels */
+  .timeline-label {
+    font-family: var(--font-sans, system-ui);
+    font-size: var(--font-size-label);
+    font-weight: 500;
+    color: var(--color-text-pending);
+    text-align: center;
+    line-height: 1.3;
+    max-width: 100%;
+  }
+
+  .timeline-stage.is-completed .timeline-label {
+    color: var(--color-text-completed);
+    font-weight: 600;
+  }
+
+  .timeline-stage.is-current .timeline-label {
+    color: var(--color-text-current);
+    font-weight: 700;
+  }
+
+  .timeline-stage.is-final.is-success .timeline-label {
+    color: var(--color-completed);
+  }
+
+  .timeline-stage.is-final.is-failed .timeline-label {
+    color: var(--color-failed);
+  }
+
+  /* Vertical variant */
+  .variant-vertical {
+    --dot-size: 20px;
+    --dot-size-current: 28px;
+    --dot-size-final: 32px;
+  }
+
+  .variant-vertical .timeline-track {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0;
+    padding-left: calc(var(--dot-size-final) / 2);
+  }
+
+  .variant-vertical .timeline-stage {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 24px;
+    position: relative;
+  }
+
+  .variant-vertical .timeline-stage.is-last {
+    padding-bottom: 0;
+  }
+
+  .variant-vertical .timeline-connector {
+    position: absolute;
+    left: calc(var(--dot-size) / 2);
+    top: var(--dot-size);
+    width: 2px;
+    height: calc(100% - var(--dot-size) + 4px);
+    background: var(--color-pending);
+    z-index: 0;
+  }
+
+  .variant-vertical .timeline-connector.is-completed {
+    background: var(--color-completed);
+  }
+
+  .variant-vertical .timeline-stage.is-current .timeline-connector {
+    background: linear-gradient(to bottom, var(--color-completed) 0%, var(--color-pending) 100%);
+  }
+
+  .variant-vertical .timeline-dot {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  .variant-vertical .timeline-label {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  /* Dark mode */
+  :global(html.dark) .progress-timeline {
+    --color-pending: var(--color-navy-600, #3A4B5C);
+    --color-pending-stroke: var(--color-navy-500, #4A5B6C);
+    --color-text-pending: var(--color-cream-400, #C8C0B0);
+    --color-text-current: var(--color-cream-100, #F8F0E8);
+    --color-text-completed: #4ADE80;
+  }
+
+  :global(html.dark) .timeline-dot {
+    box-shadow: 0 0 0 3px var(--color-navy-800, #1A2B3C);
+  }
+
+  :global(html.dark) .timeline-line {
+    background: var(--color-navy-600, #3A4B5C);
+  }
+</style>
