@@ -26,19 +26,26 @@ committees:
     chamber: senate
 
 status: "Referred to Committee"
-dateIntroduced: 2023-03-07
-dateUpdated: 2024-04-24
+dateIntroduced: 2023-03-07T12:00:00
+dateUpdated: 2023-03-07T12:00:00
 
 actions:
-  - date: 2023-03-07
+  - date: 2023-03-07T12:00:00
     text: "Introduced in Senate."
     chamber: senate
-  - date: 2023-03-07
+  - date: 2023-03-07T12:00:00
     text: "Read twice and referred to the Committee on Commerce, Science, and Transportation."
     chamber: senate
-  - date: 2023-03-30
-    text: "Committee hearing held."
-    chamber: senate
+
+keyMilestones:
+  - type: "introduced"
+    date: 2023-03-07T12:00:00
+    text: "Introduced in Senate."
+    icon: "file-text"
+  - type: "committee"
+    date: 2023-03-07T12:00:00
+    text: "Referred to the Committee on Commerce, Science, and Transportation."
+    icon: "users"
 
 officialTitle: "To authorize the Secretary of Commerce to review and prohibit certain transactions between persons in the United States and foreign adversaries, and for other purposes."
 shortTitles:
@@ -150,7 +157,7 @@ billEvolution:
         sourceUrl: "https://www.congress.gov/bill/118th-congress/senate-bill/686"
 
   - stage: committee-markup
-    date: 2023-03-30
+    date: 2023-03-07T12:00:00
     paraphrasedText: "The bill was referred to the Senate Commerce Committee but never received a formal markup, despite attracting 22 bipartisan cosponsors including Sens. Thune, Rubio, and Baldwin. Civil liberties groups raised alarms about the VPN criminalization provisions. The tech industry lobbied against the broad executive authority."
     cumulativePork: 0
     porkAddedThisStage: 0
@@ -200,55 +207,6 @@ billEvolution:
         satiricalNote: "The law of unintended consequences: technology policy edition."
         sourceUrl: "https://www.congress.gov/bill/118th-congress/senate-bill/686"
 
-  - stage: final
-    date: 2024-04-24
-    paraphrasedText: "The RESTRICT Act never received a floor vote. Instead, the narrower House-passed TikTok ban (H.R. 7521) was attached to foreign aid and signed into law, leaving the broader RESTRICT framework on the shelf. The comprehensive approach lost to the surgical strike. The backronym lives on."
-    cumulativePork: 0
-    porkAddedThisStage: 0
-    keyChanges:
-      - "Bill remained in committee without floor action"
-      - "H.R. 7521 (TikTok-specific bill) superseded broader approach"
-      - "RESTRICT Act provisions may be revived in future legislation"
-      - "22 cosponsors but no floor vote"
-    porkItems:
-      - description: "No final appropriations - bill did not advance"
-        amount: 0
-        addedBy: "N/A - Bill stalled"
-        sponsor:
-          name: "Mark Warner"
-          party: D
-          state: VA
-          chamber: senate
-          bioguideId: "W000805"
-          congressUrl: "https://www.congress.gov/member/mark-warner/W000805"
-        cosponsors:
-          - name: "John Thune"
-            party: R
-            state: SD
-            chamber: senate
-            bioguideId: "T000250"
-            congressUrl: "https://www.congress.gov/member/john-thune/T000250"
-          - name: "Marco Rubio"
-            party: R
-            state: FL
-            chamber: senate
-            bioguideId: "R000595"
-            congressUrl: "https://www.congress.gov/member/marco-rubio/R000595"
-        category: hidden-cost
-        satiricalNote: "The Senate: where comprehensive bills go to die while simpler alternatives sneak through the House."
-        sourceUrl: "https://www.congress.gov/bill/118th-congress/senate-bill/686"
-      - description: "Opportunity cost of not establishing broader framework"
-        amount: 0
-        addedBy: "Policy gap"
-        category: hidden-cost
-        satiricalNote: "Congrats, we banned one app. The other foreign adversary tech is still here."
-        sourceUrl: "https://www.congress.gov/bill/118th-congress/senate-bill/686"
-      - description: "Future legislative effort to address remaining threats"
-        amount: 0
-        addedBy: "Anticipated future Congress"
-        category: hidden-cost
-        satiricalNote: "Coming soon to a future Congress: RESTRICT Act 2.0, now with an even better acronym."
-        sourceUrl: "https://www.congress.gov/bill/118th-congress/senate-bill/686"
 ---
 
 ## What This Bill Actually Does
