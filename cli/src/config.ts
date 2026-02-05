@@ -42,6 +42,13 @@ export interface Config {
   peakHoursStart: number;
   peakHoursEnd: number;
 
+  // Engagement scanner
+  maxEngagementsPerDay: number;
+  engageScanIntervalMinutes: number;
+  engageMinScore: number;
+  engageTrackThreshold: number;
+  engageAuthorCooldownHours: number;
+
   // Logging
   logLevel: string;
 
@@ -75,7 +82,7 @@ function loadEnvFile(): void {
 }
 
 function loadRcFile(): Record<string, unknown> {
-  const rcPath = path.resolve(CLI_ROOT, '.notcongressrc.json');
+  const rcPath = path.resolve(CLI_ROOT, '.absurdityindexrc.json');
   try {
     return JSON.parse(fs.readFileSync(rcPath, 'utf-8'));
   } catch {
@@ -99,12 +106,12 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     headless: (process.env.BROWSER_HEADLESS ?? 'true') !== 'false',
     anthropicApiKey: env('ANTHROPIC_API_KEY'),
     congressApiKey: env('CONGRESS_API_KEY'),
-    siteUrl: env('SITE_URL', 'https://not-congress.io'),
+    siteUrl: env('SITE_URL', 'https://absurdity-index.io'),
 
     billsDir: path.resolve(PROJECT_ROOT, 'src/data/bills'),
     sessionStatusPath: path.resolve(PROJECT_ROOT, 'src/data/session-status.json'),
     dataDir: path.resolve(CLI_ROOT, 'data'),
-    dbPath: path.resolve(CLI_ROOT, 'data/not-congress.db'),
+    dbPath: path.resolve(CLI_ROOT, 'data/absurdity-index.db'),
 
     safetyAutoPostThreshold: num('safetyAutoPostThreshold', 'SAFETY_AUTO_POST_THRESHOLD', 20),
     safetyReviewThreshold: num('safetyReviewThreshold', 'SAFETY_REVIEW_THRESHOLD', 40),
@@ -113,6 +120,12 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     minPostIntervalMinutes: num('minPostIntervalMinutes', 'MIN_POST_INTERVAL_MINUTES', 45),
     peakHoursStart: num('peakHoursStart', 'PEAK_HOURS_START', 9),
     peakHoursEnd: num('peakHoursEnd', 'PEAK_HOURS_END', 21),
+
+    maxEngagementsPerDay: num('maxEngagementsPerDay', 'ENGAGE_MAX_PER_DAY', 6),
+    engageScanIntervalMinutes: num('engageScanIntervalMinutes', 'ENGAGE_SCAN_INTERVAL', 10),
+    engageMinScore: num('engageMinScore', 'ENGAGE_MIN_SCORE', 70),
+    engageTrackThreshold: num('engageTrackThreshold', 'ENGAGE_TRACK_THRESHOLD', 30),
+    engageAuthorCooldownHours: num('engageAuthorCooldownHours', 'ENGAGE_AUTHOR_COOLDOWN_HOURS', 12),
 
     logLevel: env('LOG_LEVEL', 'info'),
     dryRun: overrides.dryRun ?? false,

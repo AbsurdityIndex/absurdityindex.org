@@ -13,7 +13,7 @@ import { registerLoginCommand } from './commands/login.js';
 const program = new Command();
 
 program
-  .name('not-congress')
+  .name('absurdity-index')
   .description('Auto-post satirical congressional content to X')
   .version('0.1.0');
 
@@ -34,7 +34,7 @@ export function run(): void {
 }
 
 // Direct execution (when run via tsx, not via bin entry point)
-const isBinEntry = process.argv[1]?.endsWith('not-congress.mjs');
+const isBinEntry = process.argv[1]?.endsWith('absurdity-index.mjs');
 if (!isBinEntry) {
   run();
 }

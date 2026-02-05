@@ -23,11 +23,11 @@ const { title, billNumber, billType, readingTimeContent } = Astro.props;
 // Determine the chamber text based on bill type
 const chamberText = billType === 'real'
   ? 'In the Congress of the United States'
-  : 'In the Not-Congress of the United States';
+  : 'In the Absurdity Index of the United States';
 
 const sessionText = billType === 'real'
   ? '119th Congress — 1st Session'
-  : '119th Not-Congress — 1st Session of Futility';
+  : '119th Absurdity Index — 1st Session of Futility';
 ---
 
 <header class="text-center max-w-3xl mx-auto py-10">

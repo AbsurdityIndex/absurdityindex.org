@@ -4,6 +4,8 @@ import { buildQuoteDunk } from './quote-dunk.js';
 import { buildCspanAfterDark } from './cspan-after-dark.js';
 import { buildPorkBarrelReport } from './pork-barrel-report.js';
 import { buildFloorSpeech } from './floor-speech.js';
+import { buildReplyDunk } from './reply-dunk.js';
+import { buildEngagementEvaluate } from './engagement-evaluate.js';
 
 export type PromptType =
   | 'bill-roast'
@@ -11,7 +13,9 @@ export type PromptType =
   | 'quote-dunk'
   | 'cspan-after-dark'
   | 'pork-barrel-report'
-  | 'floor-speech';
+  | 'floor-speech'
+  | 'reply-dunk'
+  | 'engagement-evaluate';
 
 export interface BillContext {
   billNumber: string;
@@ -46,6 +50,8 @@ const PROMPT_REGISTRY: Record<PromptType, PromptBuilder> = {
   'cspan-after-dark': buildCspanAfterDark,
   'pork-barrel-report': buildPorkBarrelReport,
   'floor-speech': buildFloorSpeech,
+  'reply-dunk': buildReplyDunk,
+  'engagement-evaluate': buildEngagementEvaluate,
 };
 
 export function getPrompt(type: PromptType, context: PromptContext): { system: string; user: string } {

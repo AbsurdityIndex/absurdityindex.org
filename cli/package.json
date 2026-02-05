@@ -1,10 +1,10 @@
 {
-  "name": "not-congress-cli",
+  "name": "absurdity-index-cli",
   "version": "0.1.0",
   "description": "Auto-post satirical congressional content to X",
   "type": "module",
   "bin": {
-    "not-congress": "./bin/not-congress.mjs"
+    "absurdity-index": "./bin/absurdity-index.mjs"
   },
   "scripts": {
     "build": "tsc",

@@ -19,7 +19,7 @@ export function registerLoginCommand(program: Command): void {
 
       try {
         await poster.interactiveLogin();
-        console.log(chalk.green('\nSession saved! You can now post with `not-congress post`.'));
+        console.log(chalk.green('\nSession saved! You can now post with `absurdity-index post`.'));
         console.log(chalk.dim(`State stored at: ${config.browserStatePath}\n`));
       } catch (err) {
         console.error(chalk.red('\nLogin failed:'), err);

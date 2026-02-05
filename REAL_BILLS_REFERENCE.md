@@ -1,6 +1,6 @@
 # Real Bills Reference Guide
 
-This document catalogs all 27 real congressional bills featured on Not-Congress.io.
+This document catalogs all 27 real congressional bills featured on Absurdity-Index.io.
 
 ---
 
@@ -878,7 +878,7 @@ A "minibus" combining Agriculture, Transportation-HUD, and Commerce-Justice-Scie
 
 ---
 
-*Generated from Not-Congress.io bill data*
+*Generated from Absurdity-Index.io bill data*
 
 ---
 

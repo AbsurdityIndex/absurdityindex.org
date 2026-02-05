@@ -17,7 +17,7 @@ export interface PostResult {
  * Posts to X via browser automation (Playwright).
  * Eliminates need for OAuth write credentials — uses saved browser session.
  *
- * First-time setup: run `not-congress login` to authenticate interactively.
+ * First-time setup: run `absurdity-index login` to authenticate interactively.
  */
 export class BrowserPoster {
   private context: BrowserContext | null = null;
@@ -42,7 +42,7 @@ export class BrowserPoster {
 
     if (!this.hasState()) {
       throw new Error(
-        'No browser session found. Run `not-congress login` first to authenticate with X.'
+        'No browser session found. Run `absurdity-index login` first to authenticate with X.'
       );
     }
 
@@ -94,7 +94,7 @@ export class BrowserPoster {
     // If redirected to login, session is expired
     const url = page.url();
     if (url.includes('/login') || url.includes('/i/flow/login')) {
-      this.log.warn('Session expired — re-run `not-congress login`');
+      this.log.warn('Session expired — re-run `absurdity-index login`');
       return false;
     }
 
@@ -232,6 +232,47 @@ export class BrowserPoster {
       return { success: true };
     } catch (err) {
       this.log.error({ err }, 'Failed to quote-tweet via browser');
+      return { success: false };
+    } finally {
+      await page.close();
+    }
+  }
+
+  async replyToTweet(text: string, tweetUrl: string): Promise<PostResult> {
+    if (this.config.dryRun) {
+      this.log.info({ text: text.slice(0, 80), tweetUrl }, '[DRY RUN] Would reply via browser');
+      return { success: true };
+    }
+
+    const context = await this.launch();
+    const page = await context.newPage();
+
+    try {
+      const loggedIn = await this.ensureLoggedIn(page);
+      if (!loggedIn) return { success: false };
+
+      // Navigate to the tweet to reply to
+      await page.goto(tweetUrl, { waitUntil: 'networkidle', timeout: 15000 });
+
+      // Click the reply button on the tweet
+      const replyButton = page.locator('[data-testid="reply"]');
+      await replyButton.first().click({ timeout: 5000 });
+      await page.waitForTimeout(1000);
+
+      // Type reply text in the compose box
+      const composeBox = page.locator(COMPOSE_SELECTOR);
+      await composeBox.click({ timeout: 5000 });
+      await page.keyboard.type(text, { delay: 15 });
+      await page.waitForTimeout(500);
+
+      // Post the reply
+      await page.click(REPLY_BUTTON_SELECTOR, { timeout: 5000 });
+      await page.waitForTimeout(3000);
+
+      this.log.info('Reply posted via browser');
+      return { success: true };
+    } catch (err) {
+      this.log.error({ err }, 'Failed to reply via browser');
       return { success: false };
     } finally {
       await page.close();

@@ -48,7 +48,7 @@ export async function GET() {
         _message: quips[Math.floor(Math.random() * quips.length)],
         _disclaimer: "Absurdity scores reflect editorial opinion, not legal analysis. We're comedians, not lawyers.",
         generated: new Date().toISOString(),
-        generatedBy: "The Not-Congressional Research Service",
+        generatedBy: "The Absurdity Index Research Service",
         count: data.length,
         breakdown: {
           real: realCount,

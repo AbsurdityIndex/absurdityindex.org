@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate the Not-Congress.io / Absurdity Index theme song
+ * Generate the Absurdity Index theme song
  * using ElevenLabs Eleven Music API (composition plan mode)
  */
 
@@ -79,10 +79,10 @@ const compositionPlan = {
       negative_local_styles: ["subdued", "monotone"],
       duration_ms: 18000,
       lines: [
-        "Welcome to Not Congress!",
+        "Welcome to the Absurdity Index!",
         "Where the bills make sense and the laws don't",
         "Real bills, real absurdity",
-        "Welcome to Not Congress dot I O",
+        "Welcome to Absurdity Index dot I O",
       ],
     },
     {
@@ -112,11 +112,11 @@ const compositionPlan = {
       negative_local_styles: ["fade out", "quiet ending"],
       duration_ms: 20000,
       lines: [
-        "Welcome to Not Congress!",
+        "Welcome to the Absurdity Index!",
         "Where the bills make sense and the laws don't",
         "Real bills, real absurdity",
         "The gavel falls on empty chairs",
-        "Welcome to Not Congress dot I O!",
+        "Welcome to Absurdity Index dot I O!",
       ],
     },
   ],
@@ -125,7 +125,7 @@ const compositionPlan = {
 // ─── Generate ────────────────────────────────────────────────────
 
 async function generate() {
-  console.log("🎵 Generating Not-Congress.io theme song...");
+  console.log("🎵 Generating Absurdity Index theme song...");
   console.log("   Style:", compositionPlan.positive_global_styles.join(", "));
   console.log(
     "   Sections:",

@@ -9,10 +9,12 @@ import { BrowserPoster } from '../modules/x-api/browser-poster.js';
 import { cleanContent } from '../utils/format.js';
 import { getDb } from '../modules/state/db.js';
 import { createPostModel } from '../modules/state/models/posts.js';
+import { createOpportunityModel } from '../modules/state/models/opportunities.js';
 import { runHotPotDetector } from '../modules/safety/hot-pot-detector.js';
+import { startWatchDaemon } from '../modules/engage/watch-daemon.js';
 
 export function registerEngageCommand(program: Command): void {
-  const engage = program.command('engage').description('Engagement tools (quote-tweet, reply)');
+  const engage = program.command('engage').description('Engagement tools (quote-tweet, reply, watch)');
 
   engage
     .command('scan')
@@ -128,5 +130,123 @@ export function registerEngageCommand(program: Command): void {
       } else {
         console.log(chalk.yellow('[DRY RUN]'));
       }
+    });
+
+  engage
+    .command('watch')
+    .description('Continuous engagement scanner daemon')
+    .option('--interval <min>', 'Scan interval in minutes', '10')
+    .option('--max-engagements-per-day <n>', 'Daily engagement cap', '6')
+    .option('--min-opportunity-score <n>', 'Auto-engage threshold', '70')
+    .option('--track-threshold <n>', 'Track threshold', '30')
+    .option('--dry-run', 'Scan/evaluate but never post')
+    .action(async (opts) => {
+      const config = loadConfig({ dryRun: opts.dryRun });
+      createLogger(config.logLevel);
+
+      const interval = parseInt(opts.interval, 10) || config.engageScanIntervalMinutes;
+      const maxEngagementsPerDay = parseInt(opts.maxEngagementsPerDay, 10) || config.maxEngagementsPerDay;
+      const minOpportunityScore = parseInt(opts.minOpportunityScore, 10) || config.engageMinScore;
+      const trackThreshold = parseInt(opts.trackThreshold, 10) || config.engageTrackThreshold;
+
+      const db = getDb(config.dbPath);
+      const xClient = new XReadClient(config);
+      const claude = new ClaudeClient(config);
+      const poster = new BrowserPoster(config);
+
+      console.log(chalk.bold('\n  Absurdity Index Engagement Scanner'));
+      console.log(chalk.dim('  ─'.repeat(25)));
+      console.log(`  Interval:      ${chalk.cyan(`${interval} min`)}`);
+      console.log(`  Max/day:       ${chalk.cyan(String(maxEngagementsPerDay))}`);
+      console.log(`  Engage score:  ${chalk.green(`>= ${minOpportunityScore}`)}`);
+      console.log(`  Track score:   ${chalk.yellow(`>= ${trackThreshold}`)}`);
+      console.log(`  Mode:          ${opts.dryRun ? chalk.yellow('DRY RUN') : chalk.green('LIVE')}`);
+      console.log(chalk.dim('  ─'.repeat(25)));
+      console.log(chalk.dim('  Press Ctrl+C to stop\n'));
+
+      const daemon = startWatchDaemon(
+        { db, xClient, claude, poster, config },
+        {
+          interval,
+          maxEngagementsPerDay,
+          minOpportunityScore,
+          trackThreshold,
+          dryRun: opts.dryRun ?? false,
+        },
+      );
+
+      // Clean shutdown on Ctrl+C
+      process.on('SIGINT', async () => {
+        console.log(chalk.dim('\n  Shutting down...'));
+        daemon.stop();
+        await poster.close();
+        process.exit(0);
+      });
+
+      // Keep process alive
+      await new Promise(() => {});
+    });
+
+  engage
+    .command('status')
+    .description('Show tracked opportunities and engagement stats')
+    .action(async () => {
+      const config = loadConfig();
+      createLogger(config.logLevel);
+      const db = getDb(config.dbPath);
+      const opportunities = createOpportunityModel(db);
+      const posts = createPostModel(db);
+
+      const stats = opportunities.getStats();
+      const tracked = opportunities.getTracked(10);
+      const recentEngaged = opportunities.getRecentEngaged(5);
+      const postsToday = posts.countToday();
+
+      console.log(chalk.bold('\n  Engagement Dashboard'));
+      console.log(chalk.dim('  ─'.repeat(25)));
+
+      // Stats overview
+      console.log(`  Tracked:       ${chalk.yellow(String(stats.tracked))}`);
+      console.log(`  Engaged today: ${chalk.green(String(stats.engaged_today))} / ${config.maxEngagementsPerDay}`);
+      console.log(`  Posts today:   ${chalk.cyan(String(postsToday))} / ${config.maxPostsPerDay}`);
+      console.log(`  Expired:       ${chalk.dim(String(stats.expired))}`);
+      console.log(`  Skipped:       ${chalk.dim(String(stats.skipped))}`);
+
+      // Top tracked opportunities
+      if (tracked.length > 0) {
+        console.log(chalk.bold('\n  Top Tracked Opportunities'));
+        console.log(chalk.dim('  ─'.repeat(25)));
+
+        for (const opp of tracked) {
+          const scoreColor = opp.score >= 70 ? chalk.green : opp.score >= 40 ? chalk.yellow : chalk.dim;
+          console.log(
+            `  ${scoreColor(`[${opp.score}]`)} ` +
+            `${chalk.cyan(`@${opp.author_username ?? opp.author_id}`)} ` +
+            `${chalk.dim(`(${opp.recommended_action})`)}`
+          );
+          console.log(`    ${opp.text.slice(0, 100)}${opp.text.length > 100 ? '...' : ''}`);
+          console.log(
+            chalk.dim(`    ❤ ${opp.likes}  🔁 ${opp.retweets}  💬 ${opp.replies}`) +
+            (opp.matched_bill_slug ? chalk.magenta(`  📋 ${opp.matched_bill_slug}`) : '')
+          );
+        }
+      }
+
+      // Recent engagements
+      if (recentEngaged.length > 0) {
+        console.log(chalk.bold('\n  Recent Engagements'));
+        console.log(chalk.dim('  ─'.repeat(25)));
+
+        for (const opp of recentEngaged) {
+          console.log(
+            `  ${chalk.green('[engaged]')} ` +
+            `${chalk.cyan(`@${opp.author_username ?? opp.author_id}`)} ` +
+            `${chalk.dim(`(score: ${opp.score})`)}`
+          );
+          console.log(`    ${opp.text.slice(0, 80)}...`);
+        }
+      }
+
+      console.log('');
     });
 }

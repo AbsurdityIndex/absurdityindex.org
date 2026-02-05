@@ -417,8 +417,8 @@ Respond in this exact JSON format (no markdown, just JSON):
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://not-congress.io',
-          'X-Title': 'Not-Congress Bill Fetcher',
+          'HTTP-Referer': 'https://absurdity-index.io',
+          'X-Title': 'Absurdity Index Bill Fetcher',
         },
         body: JSON.stringify({
           model: 'anthropic/claude-3.5-haiku',

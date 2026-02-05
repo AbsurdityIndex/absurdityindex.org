@@ -67,6 +67,45 @@ const MIGRATIONS = [
   CREATE INDEX IF NOT EXISTS idx_trends_topic ON trends(topic);
   CREATE INDEX IF NOT EXISTS idx_cooldowns_last_used ON cooldowns(last_used);
   `,
+  // Migration 002: Engagement scanner tables
+  `
+  CREATE TABLE IF NOT EXISTS opportunities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tweet_id TEXT UNIQUE NOT NULL,
+    author_id TEXT NOT NULL,
+    author_username TEXT,
+    text TEXT NOT NULL,
+    conversation_id TEXT,
+    likes INTEGER DEFAULT 0,
+    retweets INTEGER DEFAULT 0,
+    replies INTEGER DEFAULT 0,
+    impressions INTEGER DEFAULT 0,
+    score INTEGER DEFAULT 0,
+    viral_score INTEGER DEFAULT 0,
+    relevance_score INTEGER DEFAULT 0,
+    timing_score INTEGER DEFAULT 0,
+    engageability_score INTEGER DEFAULT 0,
+    recommended_action TEXT DEFAULT 'skip',
+    matched_bill_slug TEXT,
+    matched_keywords TEXT,
+    status TEXT NOT NULL DEFAULT 'tracked',
+    engaged_post_id INTEGER REFERENCES posts(id),
+    first_seen TEXT NOT NULL DEFAULT (datetime('now')),
+    last_evaluated TEXT NOT NULL DEFAULT (datetime('now')),
+    tweet_created_at TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS engagement_cooldowns (
+    author_id TEXT PRIMARY KEY,
+    last_engaged TEXT NOT NULL DEFAULT (datetime('now')),
+    engage_count INTEGER DEFAULT 1
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_opportunities_status ON opportunities(status);
+  CREATE INDEX IF NOT EXISTS idx_opportunities_score ON opportunities(score DESC);
+  CREATE INDEX IF NOT EXISTS idx_opportunities_tweet_id ON opportunities(tweet_id);
+  CREATE INDEX IF NOT EXISTS idx_engagement_cooldowns_last ON engagement_cooldowns(last_engaged);
+  `,
 ];
 
 export function getDb(dbPath: string): Database.Database {

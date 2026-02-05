@@ -1,0 +1,145 @@
+---
+import Icon from './Icon.astro';
+import OfficialSeal from './OfficialSeal.astro';
+
+/**
+ * A satirical "bill" that serves as the site's donation CTA.
+ * Styled to match the congressional document aesthetic.
+ *
+ * Replace the DONATE_URL with your actual GoFundMe campaign link.
+ */
+const DONATE_URL = 'https://gofundme.com/f/absurdity-index';
+---
+
+<section class="max-w-3xl mx-auto px-4 py-12">
+  <div class="relative bg-parchment border-2 border-gold-400 rounded-lg shadow-lg overflow-hidden">
+    {/* Top accent — gold gradient like a featured bill */}
+    <div class="h-1.5 bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400" />
+
+    {/* "FILED" stamp watermark */}
+    <div
+      class="absolute top-16 right-6 rotate-[-18deg] opacity-[0.06] pointer-events-none select-none"
+      aria-hidden="true"
+    >
+      <span class="font-serif text-7xl font-black text-navy-900 tracking-widest">UNFUNDED</span>
+    </div>
+
+    <div class="relative p-6 md:p-10">
+      {/* Header — bill styling */}
+      <div class="text-center mb-6">
+        <div class="flex justify-center mb-4">
+          <OfficialSeal size="64" />
+        </div>
+        <p class="font-mono text-xs uppercase tracking-[0.2em] text-navy-500 mb-1">
+          119th Absurdity Index &mdash; Appropriations Committee
+        </p>
+        <p class="font-mono text-sm font-bold text-gold-600 mb-3">
+          H.Res. 000
+        </p>
+        <h2 class="font-serif text-2xl md:text-3xl font-bold text-navy-900 leading-snug">
+          The Keep The Lights On<br class="hidden sm:block" />
+          Without Selling Our Souls Act
+        </h2>
+      </div>
+
+      <div class="gold-rule mb-6" />
+
+      {/* WHEREAS clauses */}
+      <div class="space-y-3 font-serif text-sm md:text-base text-navy-800 leading-relaxed mb-8">
+        <p>
+          <span class="font-bold text-navy-900">WHEREAS</span> the operators of the Absurdity Index
+          receive exactly <span class="font-mono font-bold text-red-700">$0.00</span> in lobbyist money,
+          dark money, PAC contributions, or suspiciously timed &ldquo;charitable donations&rdquo;;
+        </p>
+        <p>
+          <span class="font-bold text-navy-900">WHEREAS</span> unlike actual members of Congress, we do not earn
+          <span class="font-mono font-bold">$174,000/year</span> to not read the bills we write about;
+        </p>
+        <p>
+          <span class="font-bold text-navy-900">WHEREAS</span> our operating budget is funded entirely by
+          caffeine, spite, and the faint hope that someone will notice;
+        </p>
+        <p>
+          <span class="font-bold text-navy-900">NOW, THEREFORE, BE IT RESOLVED</span> that the general
+          public may fund this operation through small-dollar donations, thereby proving that civic
+          engagement doesn&rsquo;t require a K&nbsp;Street address.
+        </p>
+      </div>
+
+      {/* Salary comparison card */}
+      <div class="bg-cream-100 border border-gold-300 rounded-lg p-4 md:p-5 mb-8">
+        <h3 class="font-mono text-xs uppercase tracking-widest text-navy-500 mb-3 flex items-center gap-2">
+          <Icon name="bar-chart" size={14} class="text-gold-500" />
+          Official Pay Comparison
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="text-center p-3 bg-white rounded border border-gold-200">
+            <p class="font-mono text-xs text-navy-500 mb-1">Member of Congress</p>
+            <p class="font-serif text-xl md:text-2xl font-bold text-navy-900">$174,000</p>
+            <p class="font-sans text-xs text-navy-400 mt-1">per year (147 work days)</p>
+          </div>
+          <div class="text-center p-3 bg-white rounded border border-gold-200">
+            <p class="font-mono text-xs text-navy-500 mb-1">Us, Running This Site</p>
+            <p class="font-serif text-xl md:text-2xl font-bold text-red-700">$0</p>
+            <p class="font-sans text-xs text-navy-400 mt-1">per year (365 work days)</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Donation tiers — styled as vote buttons */}
+      <div class="mb-6">
+        <h3 class="font-mono text-xs uppercase tracking-widest text-navy-500 mb-4 flex items-center gap-2">
+          <Icon name="vote" size={14} class="text-gold-500" />
+          Cast Your Vote
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <a
+            href={DONATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group/btn flex flex-col items-center gap-1 p-4 bg-white border-2 border-gold-300 rounded-lg hover:border-gold-500 hover:shadow-md transition-all text-center"
+          >
+            <Icon name="coffee" size={20} class="text-gold-500 group-hover/btn:text-gold-600 transition-colors" />
+            <span class="font-serif text-lg font-bold text-navy-900">Yea</span>
+            <span class="font-mono text-sm text-gold-600 font-semibold">$5</span>
+            <span class="font-sans text-xs text-navy-500">Buy us a coffee</span>
+          </a>
+          <a
+            href={DONATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group/btn relative flex flex-col items-center gap-1 p-4 bg-white border-2 border-gold-400 rounded-lg hover:border-gold-500 hover:shadow-md transition-all text-center ring-2 ring-gold-400/50"
+          >
+            <span class="absolute -top-2.5 bg-gold-500 text-navy-900 text-[10px] font-bold font-mono px-2 py-0.5 rounded-full uppercase tracking-wider">Popular</span>
+            <Icon name="award" size={20} class="text-gold-500 group-hover/btn:text-gold-600 transition-colors" />
+            <span class="font-serif text-lg font-bold text-navy-900">Yea with Feeling</span>
+            <span class="font-mono text-sm text-gold-600 font-semibold">$25</span>
+            <span class="font-sans text-xs text-navy-500">Fund a whole session</span>
+          </a>
+          <a
+            href={DONATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group/btn flex flex-col items-center gap-1 p-4 bg-white border-2 border-gold-300 rounded-lg hover:border-gold-500 hover:shadow-md transition-all text-center"
+          >
+            <Icon name="trophy" size={20} class="text-gold-500 group-hover/btn:text-gold-600 transition-colors" />
+            <span class="font-serif text-lg font-bold text-navy-900">Unanimous Consent</span>
+            <span class="font-mono text-sm text-gold-600 font-semibold">$100</span>
+            <span class="font-sans text-xs text-navy-500">Earmark our survival</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Fine print */}
+      <div class="text-center">
+        <p class="font-sans text-xs text-navy-400 italic leading-relaxed">
+          100% of donations go to hosting, coffee, and reading bills so you don&rsquo;t have to.
+          <br />
+          No PACs were formed. No votes were bought. No lobbyists were consulted.
+          <br />
+          Any resemblance to a functioning fundraising operation is purely aspirational.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

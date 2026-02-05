@@ -23,7 +23,7 @@ export function registerAnalyticsCommand(program: Command): void {
       const posts = createPostModel(db);
       const safetyLog = createSafetyLogModel(db);
 
-      console.log(chalk.bold('\n📊 Not-Congress Analytics\n'));
+      console.log(chalk.bold('\n📊 Absurdity Index Analytics\n'));
 
       // Summary stats
       const summary = analyticsModel.getSummary();

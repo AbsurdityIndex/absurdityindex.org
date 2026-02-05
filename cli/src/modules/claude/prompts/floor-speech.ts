@@ -18,7 +18,7 @@ Style:
 - Build from reasonable-sounding to absurd
 - Use the cadence and rhetoric of real floor speeches
 - The humor comes from applying grand oratory to trivial or absurd legislative content
-- End with a callback to not-congress.io
+- End with a callback to absurdity-index.io
 
 Respond with each tweet on its own line, separated by "---". Number them 1/N format.`,
   };

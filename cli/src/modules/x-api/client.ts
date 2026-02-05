@@ -48,6 +48,38 @@ export class XReadClient {
     }
   }
 
+  /**
+   * Search tweets with expanded author info and conversation context.
+   * Returns tweets plus a lookup map of author_id → username.
+   */
+  async searchTweetsExpanded(query: string, maxResults = 10): Promise<{
+    tweets: TweetV2[];
+    authors: Map<string, string>;
+  }> {
+    await readLimiter.acquire();
+    try {
+      const result = await this.client.v2.search(query, {
+        max_results: maxResults,
+        'tweet.fields': ['public_metrics', 'created_at', 'author_id', 'conversation_id'],
+        expansions: ['author_id'],
+        'user.fields': ['username'],
+      });
+
+      const authors = new Map<string, string>();
+      for (const user of result.includes?.users ?? []) {
+        authors.set(user.id, user.username);
+      }
+
+      return {
+        tweets: result.data?.data ?? [],
+        authors,
+      };
+    } catch (err) {
+      this.log.warn({ err }, 'Failed to search tweets (expanded)');
+      return { tweets: [], authors: new Map() };
+    }
+  }
+
   async getTweetMetrics(tweetId: string): Promise<{ likes: number; retweets: number; replies: number; impressions: number } | null> {
     await readLimiter.acquire();
     try {

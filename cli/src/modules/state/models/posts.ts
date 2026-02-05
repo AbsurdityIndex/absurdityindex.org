@@ -2,7 +2,7 @@ import type Database from 'better-sqlite3';
 
 export type PostStatus = 'draft' | 'queued' | 'review' | 'posted' | 'rejected' | 'failed';
 export type SafetyVerdict = 'SAFE' | 'REVIEW' | 'REJECT';
-export type PromptType = 'bill-roast' | 'trend-jack' | 'quote-dunk' | 'cspan-after-dark' | 'pork-barrel-report' | 'floor-speech';
+export type PromptType = 'bill-roast' | 'trend-jack' | 'quote-dunk' | 'cspan-after-dark' | 'pork-barrel-report' | 'floor-speech' | 'reply-dunk' | 'engagement-evaluate';
 
 export interface Post {
   id: number;
