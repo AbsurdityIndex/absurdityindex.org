@@ -29,6 +29,17 @@ const rulesByCongress = congressNumbers.map(num => ({
   title="Congressional Rules"
   description="Explore the rules packages adopted by each Congress — the procedural frameworks that determine how (or whether) anything gets done."
 >
+  <style slot="head">
+    /* Hide scrollbar but keep functionality */
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+
   <main class="bg-parchment min-h-screen">
     <!-- Hero Section -->
     <section class="bg-navy-900 py-16">
@@ -201,14 +212,3 @@ const rulesByCongress = congressNumbers.map(num => ({
     </div>
   </main>
 </BaseLayout>
-
-<style>
-  /* Hide scrollbar but keep functionality */
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-</style>

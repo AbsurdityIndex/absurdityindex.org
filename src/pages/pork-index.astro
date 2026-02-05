@@ -71,6 +71,50 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
   title="Rep Pork Index — Track Congressional Spending"
   description="See which representatives have added the most pork to legislation over time. Track their spending contributions alongside their personal wealth."
 >
+  <style slot="head">
+    .rep-card {
+      transition: all 0.2s ease;
+    }
+
+    .rep-card:hover {
+      border-color: var(--color-gold-300);
+    }
+
+    details[open] summary {
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-gold-500);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-gold-500);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    :global(html.dark) .rep-card {
+      background: rgba(15, 26, 46, 0.6);
+      border-color: rgba(197, 165, 114, 0.2);
+    }
+
+    :global(html.dark) .rep-card:hover {
+      border-color: var(--color-gold-500);
+    }
+  </style>
+
   <div class="max-w-6xl mx-auto px-4 py-8 md:py-12">
     <!-- Header -->
     <div class="text-center mb-10">
@@ -313,114 +357,70 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
       </p>
     </div>
   </div>
-</BaseLayout>
 
-<script define:vars={{ repsData, minDate: minDate.getTime(), maxDate: maxDate.getTime() }}>
-  const startSlider = document.getElementById('date-slider-start');
-  const endSlider = document.getElementById('date-slider-end');
-  const startLabel = document.getElementById('start-date-label');
-  const endLabel = document.getElementById('end-date-label');
-  const resetBtn = document.getElementById('reset-filter');
-  const totalPorkEl = document.getElementById('total-pork');
-  const avgPorkEl = document.getElementById('avg-pork');
-  const itemCountEl = document.getElementById('item-count');
+  <script define:vars={{ repsData, minDate: minDate.getTime(), maxDate: maxDate.getTime() }}>
+    const startSlider = document.getElementById('date-slider-start');
+    const endSlider = document.getElementById('date-slider-end');
+    const startLabel = document.getElementById('start-date-label');
+    const endLabel = document.getElementById('end-date-label');
+    const resetBtn = document.getElementById('reset-filter');
+    const totalPorkEl = document.getElementById('total-pork');
+    const avgPorkEl = document.getElementById('avg-pork');
+    const itemCountEl = document.getElementById('item-count');
 
-  function formatAmount(amt) {
-    if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(1)}T`;
-    if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(1)}B`;
-    if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
-    if (amt >= 1_000) return `$${(amt / 1_000).toFixed(0)}K`;
-    return `$${amt.toLocaleString()}`;
-  }
+    function formatAmount(amt) {
+      if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(1)}T`;
+      if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(1)}B`;
+      if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+      if (amt >= 1_000) return `$${(amt / 1_000).toFixed(0)}K`;
+      return `$${amt.toLocaleString()}`;
+    }
 
-  function updateDisplay() {
-    const startTime = parseInt(startSlider.value);
-    const endTime = parseInt(endSlider.value);
-    const startDate = new Date(startTime);
-    const endDate = new Date(endTime);
+    function updateDisplay() {
+      const startTime = parseInt(startSlider.value);
+      const endTime = parseInt(endSlider.value);
+      const startDate = new Date(startTime);
+      const endDate = new Date(endTime);
 
-    startLabel.textContent = startDate.getFullYear();
-    endLabel.textContent = endDate.getFullYear();
+      startLabel.textContent = startDate.getFullYear();
+      endLabel.textContent = endDate.getFullYear();
 
-    // Calculate filtered totals
-    let totalPork = 0;
-    let totalItems = 0;
+      // Calculate filtered totals
+      let totalPork = 0;
+      let totalItems = 0;
 
-    repsData.forEach(rep => {
-      const filteredPork = rep.porkContributions.filter(p => {
-        const porkTime = new Date(p.date).getTime();
-        return porkTime >= startTime && porkTime <= endTime;
+      repsData.forEach(rep => {
+        const filteredPork = rep.porkContributions.filter(p => {
+          const porkTime = new Date(p.date).getTime();
+          return porkTime >= startTime && porkTime <= endTime;
+        });
+
+        const repPork = filteredPork.reduce((sum, p) => sum + p.amount, 0);
+        totalPork += repPork;
+        totalItems += filteredPork.length;
+
+        // Update individual card
+        const card = document.querySelector(`[data-rep-id="${rep.id}"]`);
+        if (card) {
+          const porkTotal = card.querySelector('.rep-pork-total');
+          if (porkTotal) {
+            porkTotal.textContent = formatAmount(repPork);
+          }
+        }
       });
 
-      const repPork = filteredPork.reduce((sum, p) => sum + p.amount, 0);
-      totalPork += repPork;
-      totalItems += filteredPork.length;
+      totalPorkEl.textContent = formatAmount(totalPork);
+      avgPorkEl.textContent = formatAmount(totalPork / repsData.length);
+      itemCountEl.textContent = totalItems.toString();
+    }
 
-      // Update individual card
-      const card = document.querySelector(`[data-rep-id="${rep.id}"]`);
-      if (card) {
-        const porkTotal = card.querySelector('.rep-pork-total');
-        if (porkTotal) {
-          porkTotal.textContent = formatAmount(repPork);
-        }
-      }
+    startSlider?.addEventListener('input', updateDisplay);
+    endSlider?.addEventListener('input', updateDisplay);
+
+    resetBtn?.addEventListener('click', () => {
+      startSlider.value = minDate;
+      endSlider.value = maxDate;
+      updateDisplay();
     });
-
-    totalPorkEl.textContent = formatAmount(totalPork);
-    avgPorkEl.textContent = formatAmount(totalPork / repsData.length);
-    itemCountEl.textContent = totalItems.toString();
-  }
-
-  startSlider?.addEventListener('input', updateDisplay);
-  endSlider?.addEventListener('input', updateDisplay);
-
-  resetBtn?.addEventListener('click', () => {
-    startSlider.value = minDate;
-    endSlider.value = maxDate;
-    updateDisplay();
-  });
-</script>
-
-<style>
-  .rep-card {
-    transition: all 0.2s ease;
-  }
-
-  .rep-card:hover {
-    border-color: var(--color-gold-300);
-  }
-
-  details[open] summary {
-    margin-bottom: 0.5rem;
-  }
-
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--color-gold-500);
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--color-gold-500);
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  :global(html.dark) .rep-card {
-    background: rgba(15, 26, 46, 0.6);
-    border-color: rgba(197, 165, 114, 0.2);
-  }
-
-  :global(html.dark) .rep-card:hover {
-    border-color: var(--color-gold-500);
-  }
-</style>
+  </script>
+</BaseLayout>

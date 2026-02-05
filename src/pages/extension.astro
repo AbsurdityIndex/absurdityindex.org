@@ -5,6 +5,76 @@ import Divider from '../components/ui/Divider.astro';
 ---
 
 <BaseLayout title="Browser Extension" description="Install the Absurdity Index browser extension to see absurdity scores while browsing Congress.gov.">
+  <style slot="head">
+    .extension-badge-mockup {
+      font-family: Georgia, serif;
+      background: linear-gradient(135deg, #0A1628 0%, #1a2d4d 100%);
+      border: 2px solid #C5A572;
+      border-radius: 8px;
+      padding: 16px;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .mockup-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .mockup-icon {
+      width: 24px;
+      height: 24px;
+      background: #C5A572;
+      color: #0A1628;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      font-family: monospace;
+    }
+
+    .mockup-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #C5A572;
+    }
+
+    .mockup-score {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .mockup-number {
+      font-size: 48px;
+      font-weight: bold;
+      color: #C5A572;
+    }
+
+    .mockup-max {
+      font-size: 24px;
+      color: #8899aa;
+    }
+
+    .mockup-label {
+      text-align: center;
+      font-size: 14px;
+      color: #F5F0E8;
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+
+    .mockup-link {
+      text-align: center;
+      color: #C5A572;
+      font-size: 12px;
+    }
+  </style>
+
   <div class="max-w-4xl mx-auto px-4 py-12">
     <div class="text-center mb-10">
       <OfficialSeal size="160" />
@@ -104,73 +174,3 @@ import Divider from '../components/ui/Divider.astro';
     </div>
   </div>
 </BaseLayout>
-
-<style>
-  .extension-badge-mockup {
-    font-family: Georgia, serif;
-    background: linear-gradient(135deg, #0A1628 0%, #1a2d4d 100%);
-    border: 2px solid #C5A572;
-    border-radius: 8px;
-    padding: 16px;
-    max-width: 300px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-
-  .mockup-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .mockup-icon {
-    width: 24px;
-    height: 24px;
-    background: #C5A572;
-    color: #0A1628;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: bold;
-    font-family: monospace;
-  }
-
-  .mockup-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #C5A572;
-  }
-
-  .mockup-score {
-    text-align: center;
-    margin-bottom: 4px;
-  }
-
-  .mockup-number {
-    font-size: 48px;
-    font-weight: bold;
-    color: #C5A572;
-  }
-
-  .mockup-max {
-    font-size: 24px;
-    color: #8899aa;
-  }
-
-  .mockup-label {
-    text-align: center;
-    font-size: 14px;
-    color: #F5F0E8;
-    font-style: italic;
-    margin-bottom: 12px;
-  }
-
-  .mockup-link {
-    text-align: center;
-    color: #C5A572;
-    font-size: 12px;
-  }
-</style>

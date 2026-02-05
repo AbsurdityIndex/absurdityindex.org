@@ -91,21 +91,30 @@ const toolsDropdown = [
         </li>
       ))}
       <!-- Tools dropdown -->
-      <li class="relative group">
+      <li id="tools-menu-container" class="relative">
         <button
+          id="tools-menu-button"
           class="text-gold-400 hover:text-gold-300 font-sans text-sm tracking-wide uppercase transition-colors flex items-center gap-1"
           aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="tools-menu"
         >
           Tools
-          <svg class="w-3 h-3 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg id="tools-menu-chevron" class="w-3 h-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <ul class="absolute top-full right-0 mt-2 w-48 bg-navy-800 border border-navy-600 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-50">
+        <ul
+          id="tools-menu"
+          class="absolute top-full right-0 mt-2 w-48 bg-navy-800 border border-navy-600 rounded-lg shadow-xl hidden py-2 z-50"
+          role="menu"
+          aria-labelledby="tools-menu-button"
+        >
           {toolsDropdown.map(({ href, label }) => (
             <li>
               <a
                 href={href}
+                role="menuitem"
                 class="block px-4 py-2 text-sm text-gold-300 hover:bg-navy-700 hover:text-gold-200 transition-colors"
               >
                 {label}
@@ -186,6 +195,110 @@ const toolsDropdown = [
 <MobileMenu navLinks={[...navLinks, { href: '#tools', label: 'Tools ▾', isHeader: true }, ...toolsDropdown]} />
 
 <script>
+  const toolsMenuContainer = document.getElementById('tools-menu-container');
+  const toolsMenuButton = document.getElementById('tools-menu-button');
+  const toolsMenu = document.getElementById('tools-menu');
+  const toolsMenuChevron = document.getElementById('tools-menu-chevron');
+  const toolsMenuItems = toolsMenu
+    ? Array.from(toolsMenu.querySelectorAll('a[role=\"menuitem\"]'))
+    : [];
+
+  function isToolsMenuOpen() {
+    return !!toolsMenu && !toolsMenu.classList.contains('hidden');
+  }
+
+  function openToolsMenu(focusFirstItem = false) {
+    if (!toolsMenu || !toolsMenuButton) return;
+    toolsMenu.classList.remove('hidden');
+    toolsMenuButton.setAttribute('aria-expanded', 'true');
+    toolsMenuChevron?.classList.add('rotate-180');
+    if (focusFirstItem && toolsMenuItems.length > 0) {
+      toolsMenuItems[0].focus();
+    }
+  }
+
+  function closeToolsMenu(focusButton = false) {
+    if (!toolsMenu || !toolsMenuButton) return;
+    toolsMenu.classList.add('hidden');
+    toolsMenuButton.setAttribute('aria-expanded', 'false');
+    toolsMenuChevron?.classList.remove('rotate-180');
+    if (focusButton) {
+      toolsMenuButton.focus();
+    }
+  }
+
+  function toggleToolsMenu() {
+    if (isToolsMenuOpen()) {
+      closeToolsMenu();
+    } else {
+      openToolsMenu();
+    }
+  }
+
+  toolsMenuButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    toggleToolsMenu();
+  });
+
+  toolsMenuButton?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openToolsMenu(true);
+    }
+    if (event.key === 'Escape') {
+      closeToolsMenu();
+    }
+  });
+
+  toolsMenu?.addEventListener('keydown', (event) => {
+    if (toolsMenuItems.length === 0) return;
+
+    const currentIndex = toolsMenuItems.findIndex((item) => item === document.activeElement);
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeToolsMenu(true);
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % toolsMenuItems.length;
+      toolsMenuItems[nextIndex].focus();
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      const prevIndex = currentIndex <= 0 ? toolsMenuItems.length - 1 : currentIndex - 1;
+      toolsMenuItems[prevIndex].focus();
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault();
+      toolsMenuItems[0].focus();
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault();
+      toolsMenuItems[toolsMenuItems.length - 1].focus();
+    }
+  });
+
+  toolsMenuItems.forEach((item) => {
+    item.addEventListener('click', () => closeToolsMenu());
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!toolsMenuContainer) return;
+    if (!toolsMenuContainer.contains(event.target)) {
+      closeToolsMenu();
+    }
+  });
+
+  if (window.matchMedia('(hover: hover)').matches) {
+    toolsMenuContainer?.addEventListener('mouseenter', () => openToolsMenu());
+    toolsMenuContainer?.addEventListener('mouseleave', () => closeToolsMenu());
+  }
+
   const toggle = document.getElementById('mobile-menu-toggle');
   const menu = document.getElementById('mobile-menu');
   const close = document.getElementById('mobile-menu-close');

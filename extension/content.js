@@ -3,20 +3,38 @@
 const urlMatch = window.location.pathname.match(/\/bill\/(\d+)th-congress\/(house-bill|senate-bill)\/(\d+)/);
 
 if (urlMatch) {
-  const [, congress, type, number] = urlMatch;
+  const [, , type, number] = urlMatch;
   const billType = type === 'house-bill' ? 'hr' : 's';
   const billId = `real-${billType}-${number}`;
+  const billEndpoint = `https://absurdityindex.org/api/bills/${billId}.json`;
+  const legacyEndpoint = 'https://absurdityindex.org/api/bills.json';
 
-  // Fetch from Absurdity Index API
-  fetch('https://absurdityindex.org/api/bills.json')
-    .then(r => r.json())
-    .then(data => {
-      const bill = data.bills.find(b => b.id === billId);
+  // Preferred: targeted bill endpoint (small payload, scales to large datasets)
+  fetch(billEndpoint)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Bill endpoint request failed: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const bill = data.bill;
       if (bill && bill.absurdityIndex) {
         injectBadge(bill);
       }
     })
-    .catch(console.error);
+    .catch(() => {
+      // Fallback for older deployments without per-bill endpoint
+      fetch(legacyEndpoint)
+        .then((response) => response.json())
+        .then((data) => {
+          const bill = data.bills.find((entry) => entry.id === billId);
+          if (bill && bill.absurdityIndex) {
+            injectBadge(bill);
+          }
+        })
+        .catch(console.error);
+    });
 }
 
 function injectBadge(bill) {

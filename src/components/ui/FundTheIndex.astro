@@ -3,143 +3,800 @@ import Icon from './Icon.astro';
 import OfficialSeal from './OfficialSeal.astro';
 
 /**
- * A satirical "bill" that serves as the site's donation CTA.
- * Styled to match the congressional document aesthetic.
+ * FundTheIndex — Left-slide drawer + 3 fixed tab triggers
  *
- * Replace the DONATE_URL with your actual GoFundMe campaign link.
+ * A satirical "bill" styled as a congressional document, used as the
+ * site's donation CTA. Opens from the LEFT edge (opposite to content
+ * drawers) via a custom event: `open-fund-the-index`.
+ *
+ * Fixed tab trigger on left viewport edge with vertical text + piggy bank icon.
  */
-const DONATE_URL = 'https://gofundme.com/f/absurdity-index';
+const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not-millionaires';
 ---
 
-<section class="max-w-3xl mx-auto px-4 py-12">
-  <div class="relative bg-parchment border-2 border-gold-400 rounded-lg shadow-lg overflow-hidden">
-    {/* Top accent — gold gradient like a featured bill */}
-    <div class="h-1.5 bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400" />
+<!-- ===================== FIXED TAB TRIGGER ===================== -->
+<button
+  id="fund-tab"
+  class="fund-tab"
+  aria-label="Fund the Absurdity Index"
+  title="Fund the Index"
+>
+  <span class="fund-tab-icon" aria-hidden="true">
+    <Icon name="piggy-bank" size={16} />
+  </span>
+  <span class="fund-tab-text">Fund the Index</span>
+</button>
 
-    {/* "FILED" stamp watermark */}
-    <div
-      class="absolute top-16 right-6 rotate-[-18deg] opacity-[0.06] pointer-events-none select-none"
-      aria-hidden="true"
-    >
-      <span class="font-serif text-7xl font-black text-navy-900 tracking-widest">UNFUNDED</span>
+<!-- ===================== BACKDROP ===================== -->
+<div id="fund-backdrop" class="fund-backdrop" aria-hidden="true"></div>
+
+<!-- ===================== DRAWER ===================== -->
+<aside
+  id="fund-drawer"
+  class="fund-drawer"
+  aria-label="Fund the Absurdity Index"
+  aria-hidden="true"
+>
+  <!-- Drawer header -->
+  <header class="fund-drawer-header">
+    <div class="fund-header-title">
+      <Icon name="landmark" size={20} />
+      <h2>Fund the Index</h2>
     </div>
+    <button
+      id="fund-drawer-close"
+      class="fund-drawer-close"
+      aria-label="Close drawer"
+    >
+      <Icon name="x" size={20} />
+    </button>
+  </header>
 
-    <div class="relative p-6 md:p-10">
-      {/* Header — bill styling */}
-      <div class="text-center mb-6">
-        <div class="flex justify-center mb-4">
-          <OfficialSeal size="64" />
-        </div>
-        <p class="font-mono text-xs uppercase tracking-[0.2em] text-navy-500 mb-1">
-          119th Absurdity Index &mdash; Appropriations Committee
-        </p>
-        <p class="font-mono text-sm font-bold text-gold-600 mb-3">
-          H.Res. 000
-        </p>
-        <h2 class="font-serif text-2xl md:text-3xl font-bold text-navy-900 leading-snug">
-          The Keep The Lights On<br class="hidden sm:block" />
-          Without Selling Our Souls Act
-        </h2>
+  <!-- Drawer content -->
+  <div class="fund-drawer-content">
+    <div class="fund-bill">
+      {/* "UNFUNDED" stamp watermark */}
+      <div
+        class="fund-watermark"
+        aria-hidden="true"
+      >
+        <span>UNFUNDED</span>
       </div>
 
-      <div class="gold-rule mb-6" />
-
-      {/* WHEREAS clauses */}
-      <div class="space-y-3 font-serif text-sm md:text-base text-navy-800 leading-relaxed mb-8">
-        <p>
-          <span class="font-bold text-navy-900">WHEREAS</span> the operators of the Absurdity Index
-          receive exactly <span class="font-mono font-bold text-red-700">$0.00</span> in lobbyist money,
-          dark money, PAC contributions, or suspiciously timed &ldquo;charitable donations&rdquo;;
-        </p>
-        <p>
-          <span class="font-bold text-navy-900">WHEREAS</span> unlike actual members of Congress, we do not earn
-          <span class="font-mono font-bold">$174,000/year</span> to not read the bills we write about;
-        </p>
-        <p>
-          <span class="font-bold text-navy-900">WHEREAS</span> our operating budget is funded entirely by
-          caffeine, spite, and the faint hope that someone will notice;
-        </p>
-        <p>
-          <span class="font-bold text-navy-900">NOW, THEREFORE, BE IT RESOLVED</span> that the general
-          public may fund this operation through small-dollar donations, thereby proving that civic
-          engagement doesn&rsquo;t require a K&nbsp;Street address.
-        </p>
-      </div>
-
-      {/* Salary comparison card */}
-      <div class="bg-cream-100 border border-gold-300 rounded-lg p-4 md:p-5 mb-8">
-        <h3 class="font-mono text-xs uppercase tracking-widest text-navy-500 mb-3 flex items-center gap-2">
-          <Icon name="bar-chart" size={14} class="text-gold-500" />
-          Official Pay Comparison
-        </h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="text-center p-3 bg-white rounded border border-gold-200">
-            <p class="font-mono text-xs text-navy-500 mb-1">Member of Congress</p>
-            <p class="font-serif text-xl md:text-2xl font-bold text-navy-900">$174,000</p>
-            <p class="font-sans text-xs text-navy-400 mt-1">per year (147 work days)</p>
+      <div class="fund-bill-inner">
+        {/* Header — bill styling */}
+        <div class="fund-bill-header">
+          <div class="fund-seal">
+            <OfficialSeal size="64" />
           </div>
-          <div class="text-center p-3 bg-white rounded border border-gold-200">
-            <p class="font-mono text-xs text-navy-500 mb-1">Us, Running This Site</p>
-            <p class="font-serif text-xl md:text-2xl font-bold text-red-700">$0</p>
-            <p class="font-sans text-xs text-navy-400 mt-1">per year (365 work days)</p>
+          <p class="fund-committee">
+            119th Absurdity Index &mdash; Appropriations Committee
+          </p>
+          <p class="fund-resolution">
+            H.Res. 000
+          </p>
+          <h3 class="fund-title">
+            The Keep The Lights On<br class="hidden sm:block" />
+            Without Selling Our Souls Act
+          </h3>
+        </div>
+
+        <div class="gold-rule fund-rule" />
+
+        {/* WHEREAS clauses */}
+        <div class="fund-clauses">
+          <p>
+            <span class="fund-clause-label">WHEREAS</span> the operators of the Absurdity Index
+            receive exactly <span class="fund-amount-zero">$0.00</span> in lobbyist money,
+            dark money, PAC contributions, or suspiciously timed &ldquo;charitable donations&rdquo;;
+          </p>
+          <p>
+            <span class="fund-clause-label">WHEREAS</span> unlike actual members of Congress, we do not earn
+            <span class="fund-amount">$174,000/year</span> to not read the bills we write about;
+          </p>
+          <p>
+            <span class="fund-clause-label">WHEREAS</span> our operating budget is funded entirely by
+            caffeine, spite, and the faint hope that someone will notice;
+          </p>
+          <p>
+            <span class="fund-clause-label">NOW, THEREFORE, BE IT RESOLVED</span> that the general
+            public may fund this operation through small-dollar donations, thereby proving that civic
+            engagement doesn&rsquo;t require a K&nbsp;Street address.
+          </p>
+        </div>
+
+        {/* Salary comparison card */}
+        <div class="fund-comparison">
+          <h4 class="fund-comparison-title">
+            <Icon name="bar-chart" size={14} class="text-gold-500" />
+            Official Pay Comparison
+          </h4>
+          <div class="fund-comparison-grid">
+            <div class="fund-comparison-card">
+              <p class="fund-comparison-label">Member of Congress</p>
+              <p class="fund-comparison-value">$174,000</p>
+              <p class="fund-comparison-note">per year (147 work days)</p>
+            </div>
+            <div class="fund-comparison-card">
+              <p class="fund-comparison-label">Us, Running This Site</p>
+              <p class="fund-comparison-value fund-comparison-zero">$0</p>
+              <p class="fund-comparison-note">per year (365 work days)</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Donation tiers — styled as vote buttons */}
-      <div class="mb-6">
-        <h3 class="font-mono text-xs uppercase tracking-widest text-navy-500 mb-4 flex items-center gap-2">
-          <Icon name="vote" size={14} class="text-gold-500" />
-          Cast Your Vote
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <a
-            href={DONATE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="group/btn flex flex-col items-center gap-1 p-4 bg-white border-2 border-gold-300 rounded-lg hover:border-gold-500 hover:shadow-md transition-all text-center"
-          >
-            <Icon name="coffee" size={20} class="text-gold-500 group-hover/btn:text-gold-600 transition-colors" />
-            <span class="font-serif text-lg font-bold text-navy-900">Yea</span>
-            <span class="font-mono text-sm text-gold-600 font-semibold">$5</span>
-            <span class="font-sans text-xs text-navy-500">Buy us a coffee</span>
-          </a>
-          <a
-            href={DONATE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="group/btn relative flex flex-col items-center gap-1 p-4 bg-white border-2 border-gold-400 rounded-lg hover:border-gold-500 hover:shadow-md transition-all text-center ring-2 ring-gold-400/50"
-          >
-            <span class="absolute -top-2.5 bg-gold-500 text-navy-900 text-[10px] font-bold font-mono px-2 py-0.5 rounded-full uppercase tracking-wider">Popular</span>
-            <Icon name="award" size={20} class="text-gold-500 group-hover/btn:text-gold-600 transition-colors" />
-            <span class="font-serif text-lg font-bold text-navy-900">Yea with Feeling</span>
-            <span class="font-mono text-sm text-gold-600 font-semibold">$25</span>
-            <span class="font-sans text-xs text-navy-500">Fund a whole session</span>
-          </a>
-          <a
-            href={DONATE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="group/btn flex flex-col items-center gap-1 p-4 bg-white border-2 border-gold-300 rounded-lg hover:border-gold-500 hover:shadow-md transition-all text-center"
-          >
-            <Icon name="trophy" size={20} class="text-gold-500 group-hover/btn:text-gold-600 transition-colors" />
-            <span class="font-serif text-lg font-bold text-navy-900">Unanimous Consent</span>
-            <span class="font-mono text-sm text-gold-600 font-semibold">$100</span>
-            <span class="font-sans text-xs text-navy-500">Earmark our survival</span>
-          </a>
+        {/* Donation tiers — styled as vote buttons */}
+        <div class="fund-tiers">
+          <h4 class="fund-tiers-title">
+            <Icon name="vote" size={14} class="text-gold-500" />
+            Cast Your Vote
+          </h4>
+          <div class="fund-tiers-grid">
+            <a
+              href={DONATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="fund-tier"
+            >
+              <Icon name="coffee" size={20} class="fund-tier-icon" />
+              <span class="fund-tier-name">Yea</span>
+              <span class="fund-tier-amount">$5</span>
+              <span class="fund-tier-desc">Buy us a coffee</span>
+            </a>
+            <a
+              href={DONATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="fund-tier fund-tier-popular"
+            >
+              <span class="fund-tier-badge">Popular</span>
+              <Icon name="award" size={20} class="fund-tier-icon" />
+              <span class="fund-tier-name">Yea with Feeling</span>
+              <span class="fund-tier-amount">$25</span>
+              <span class="fund-tier-desc">Fund a whole session</span>
+            </a>
+            <a
+              href={DONATE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="fund-tier"
+            >
+              <Icon name="trophy" size={20} class="fund-tier-icon" />
+              <span class="fund-tier-name">Unanimous Consent</span>
+              <span class="fund-tier-amount">$100</span>
+              <span class="fund-tier-desc">Earmark our survival</span>
+            </a>
+          </div>
         </div>
-      </div>
 
-      {/* Fine print */}
-      <div class="text-center">
-        <p class="font-sans text-xs text-navy-400 italic leading-relaxed">
-          100% of donations go to hosting, coffee, and reading bills so you don&rsquo;t have to.
-          <br />
-          No PACs were formed. No votes were bought. No lobbyists were consulted.
-          <br />
-          Any resemblance to a functioning fundraising operation is purely aspirational.
-        </p>
+        {/* Fine print */}
+        <div class="fund-fine-print">
+          <p>
+            100% of donations go to hosting, coffee, and reading bills so you don&rsquo;t have to.
+            <br />
+            No PACs were formed. No votes were bought. No lobbyists were consulted.
+            <br />
+            Any resemblance to a functioning fundraising operation is purely aspirational.
+          </p>
+        </div>
       </div>
     </div>
   </div>
-</section>
+
+  <!-- Drawer footer -->
+  <footer class="fund-drawer-footer">
+    <a
+      href={DONATE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="fund-footer-link"
+    >
+      <span>Donate on GoFundMe</span>
+      <Icon name="external-link" size={12} />
+    </a>
+  </footer>
+</aside>
+
+<style>
+  /* ========================
+     FIXED TAB TRIGGER
+     ======================== */
+  .fund-tab {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--color-navy-900);
+    color: var(--color-gold-400);
+    padding: 10px 7px;
+    border-radius: 0 8px 8px 0;
+    border: 2px solid var(--color-gold-500);
+    border-left: none;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25);
+    writing-mode: vertical-rl;
+    transition: all 0.25s ease;
+  }
+
+  .fund-tab:hover {
+    background: var(--color-navy-800);
+    padding-right: 10px;
+    box-shadow: 4px 2px 14px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Hide tab when drawer is open */
+  :global(.fund-tabs-hidden) .fund-tab {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .fund-tab-icon {
+    writing-mode: horizontal-tb;
+    display: flex;
+    color: var(--color-gold-500);
+    transition: color 0.2s ease;
+  }
+
+  .fund-tab:hover .fund-tab-icon {
+    color: var(--color-gold-300);
+  }
+
+  .fund-tab-text {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ========================
+     BACKDROP
+     ======================== */
+  .fund-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(10, 22, 40, 0.6);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .fund-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* ========================
+     DRAWER PANEL
+     ======================== */
+  .fund-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-parchment);
+    border-right: 4px solid var(--color-gold-500);
+    box-shadow:
+      12px 0 40px rgba(0, 0, 0, 0.35),
+      inset -2px 0 8px rgba(0, 0, 0, 0.05);
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fund-drawer.open {
+    transform: translateX(0);
+  }
+
+  /* ========================
+     DRAWER HEADER
+     ======================== */
+  .fund-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(180deg, var(--color-navy-900) 0%, var(--color-navy-800) 100%);
+    border-bottom: 3px solid var(--color-gold-500);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .fund-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-gold-400);
+  }
+
+  .fund-header-title h2 {
+    font-family: 'Pinyon Script', cursive;
+    font-size: 1.625rem;
+    font-weight: 400;
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+
+  .fund-drawer-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: transparent;
+    border: 1px solid rgba(197, 165, 114, 0.3);
+    border-radius: 0.25rem;
+    color: var(--color-gold-400);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .fund-drawer-close:hover {
+    background: rgba(197, 165, 114, 0.1);
+    border-color: var(--color-gold-500);
+    color: var(--color-gold-300);
+  }
+
+  /* ========================
+     DRAWER CONTENT
+     ======================== */
+  .fund-drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(139, 119, 85, 0.08) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 70%, rgba(139, 119, 85, 0.06) 0%, transparent 35%),
+      linear-gradient(90deg, rgba(120, 100, 70, 0.12) 0%, transparent 8%, transparent 92%, rgba(120, 100, 70, 0.12) 100%),
+      linear-gradient(180deg, #f5ead4 0%, #efe4cc 30%, #e8dcc2 70%, #ddd0b5 100%);
+  }
+
+  .fund-bill {
+    position: relative;
+    padding: 2rem 2rem 1.5rem;
+  }
+
+  .fund-watermark {
+    position: absolute;
+    top: 3rem;
+    right: 1.5rem;
+    transform: rotate(-18deg);
+    opacity: 0.06;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .fund-watermark span {
+    font-family: var(--font-serif);
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--color-navy-900);
+    letter-spacing: 0.1em;
+  }
+
+  .fund-bill-inner {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Bill header ── */
+  .fund-bill-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .fund-seal {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .fund-committee {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--color-navy-500);
+    margin-bottom: 0.25rem;
+  }
+
+  .fund-resolution {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-gold-600);
+    margin-bottom: 0.75rem;
+  }
+
+  .fund-title {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-navy-900);
+    line-height: 1.3;
+  }
+
+  .fund-rule {
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── WHEREAS clauses ── */
+  .fund-clauses {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .fund-clauses p {
+    font-family: var(--font-serif);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--color-navy-800);
+  }
+
+  .fund-clause-label {
+    font-weight: 700;
+    color: var(--color-navy-900);
+  }
+
+  .fund-amount-zero {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--color-red-700);
+  }
+
+  .fund-amount {
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+
+  /* ── Salary comparison card ── */
+  .fund-comparison {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--color-gold-300);
+    border-radius: 0.5rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .fund-comparison-title {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-navy-500);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fund-comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .fund-comparison-card {
+    text-align: center;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-gold-200);
+  }
+
+  .fund-comparison-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--color-navy-500);
+    margin-bottom: 0.25rem;
+  }
+
+  .fund-comparison-value {
+    font-family: var(--font-serif);
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--color-navy-900);
+  }
+
+  .fund-comparison-zero {
+    color: var(--color-red-700);
+  }
+
+  .fund-comparison-note {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    color: var(--color-navy-400);
+    margin-top: 0.25rem;
+  }
+
+  /* ── Donation tiers ── */
+  .fund-tiers {
+    margin-bottom: 1.5rem;
+  }
+
+  .fund-tiers-title {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-navy-500);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fund-tiers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .fund-tier {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1rem 0.5rem;
+    background: white;
+    border: 2px solid var(--color-gold-300);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  .fund-tier:hover {
+    border-color: var(--color-gold-500);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .fund-tier-popular {
+    border-color: var(--color-gold-400);
+    ring: 2px;
+    box-shadow: 0 0 0 2px rgba(197, 165, 114, 0.3);
+  }
+
+  .fund-tier-badge {
+    position: absolute;
+    top: -0.625rem;
+    background: var(--color-gold-500);
+    color: var(--color-navy-900);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .fund-tier-icon {
+    color: var(--color-gold-500);
+    transition: color 0.2s ease;
+  }
+
+  .fund-tier:hover .fund-tier-icon {
+    color: var(--color-gold-600);
+  }
+
+  .fund-tier-name {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-navy-900);
+  }
+
+  .fund-tier-amount {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-gold-600);
+  }
+
+  .fund-tier-desc {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    color: var(--color-navy-500);
+  }
+
+  /* ── Fine print ── */
+  .fund-fine-print {
+    text-align: center;
+  }
+
+  .fund-fine-print p {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    color: var(--color-navy-400);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  /* ========================
+     DRAWER FOOTER
+     ======================== */
+  .fund-drawer-footer {
+    padding: 0.75rem 1.25rem;
+    background: var(--color-navy-900);
+    border-top: 1px solid var(--color-gold-600);
+    text-align: center;
+  }
+
+  .fund-footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--color-gold-400);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    font-family: var(--font-serif);
+    letter-spacing: 0.03em;
+  }
+
+  .fund-footer-link:hover {
+    color: var(--color-gold-300);
+  }
+
+  /* ========================
+     DARK MODE
+     ======================== */
+  :global(html.dark) .fund-drawer {
+    background: #1a2535;
+    border-right-color: var(--color-gold-600);
+  }
+
+  :global(html.dark) .fund-drawer-content {
+    background: #1a2535;
+  }
+
+  :global(html.dark) .fund-clauses p {
+    color: var(--color-cream-200);
+  }
+
+  :global(html.dark) .fund-clause-label {
+    color: var(--color-cream-100);
+  }
+
+  :global(html.dark) .fund-title {
+    color: var(--color-cream-100);
+  }
+
+  :global(html.dark) .fund-comparison {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: var(--color-gold-600);
+  }
+
+  :global(html.dark) .fund-comparison-card {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: var(--color-gold-700);
+  }
+
+  :global(html.dark) .fund-comparison-value {
+    color: var(--color-cream-100);
+  }
+
+  :global(html.dark) .fund-tier {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: var(--color-gold-600);
+  }
+
+  :global(html.dark) .fund-tier-name {
+    color: var(--color-cream-100);
+  }
+
+  :global(html.dark) .fund-watermark span {
+    color: var(--color-cream-100);
+  }
+
+  /* ========================
+     RESPONSIVE
+     ======================== */
+  @media (max-width: 640px) {
+    .fund-drawer {
+      max-width: 100%;
+    }
+
+    .fund-bill {
+      padding: 1.25rem 1rem 1rem;
+    }
+
+    .fund-title {
+      font-size: 1.25rem;
+    }
+
+    .fund-watermark span {
+      font-size: 2.5rem;
+    }
+
+    .fund-tiers-grid {
+      grid-template-columns: 1fr;
+      gap: 0.625rem;
+    }
+
+    .fund-comparison-grid {
+      grid-template-columns: 1fr;
+    }
+
+    /* Tab: tighter on mobile */
+    .fund-tab {
+      padding: 8px 5px;
+      gap: 8px;
+    }
+
+    .fund-tab-text {
+      font-size: 0.5625rem;
+    }
+
+    .fund-tab-icon {
+      transform: scale(0.85);
+    }
+  }
+
+  /* ========================
+     PRINT: hide everything
+     ======================== */
+  @media print {
+    .fund-tab,
+    .fund-backdrop,
+    .fund-drawer {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  const drawer = document.getElementById('fund-drawer');
+  const backdrop = document.getElementById('fund-backdrop');
+  const closeBtn = document.getElementById('fund-drawer-close');
+  const tab = document.getElementById('fund-tab');
+
+  function openFundDrawer() {
+    drawer?.classList.add('open');
+    drawer?.setAttribute('aria-hidden', 'false');
+    backdrop?.classList.add('open');
+    backdrop?.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('fund-tabs-hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFundDrawer() {
+    drawer?.classList.remove('open');
+    drawer?.setAttribute('aria-hidden', 'true');
+    backdrop?.classList.remove('open');
+    backdrop?.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('fund-tabs-hidden');
+    document.body.style.overflow = '';
+  }
+
+  // Tab trigger opens the drawer
+  tab?.addEventListener('click', openFundDrawer);
+
+  // Custom event (matching other drawer conventions)
+  document.addEventListener('open-fund-the-index', openFundDrawer);
+
+  // Close triggers
+  closeBtn?.addEventListener('click', closeFundDrawer);
+  backdrop?.addEventListener('click', closeFundDrawer);
+
+  // Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer?.classList.contains('open')) {
+      closeFundDrawer();
+    }
+  });
+</script>

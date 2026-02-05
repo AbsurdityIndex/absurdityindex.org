@@ -43,6 +43,26 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 ---
 
 <BaseLayout title={`${d.billNumber} — ${d.title}`} description={d.summary} ogType="article" article={{ publishedTime: d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced), section: d.category, tags: d.tags }}>
+  <style slot="head">
+    .bill-content :global(h2) {
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .bill-content :global(blockquote) {
+      border-left: 3px solid #228B4A;
+      background: #F0FDF4;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+
+    .bill-content :global(blockquote p) {
+      margin: 0;
+    }
+  </style>
+
   <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
 
   <div class="max-w-4xl mx-auto px-4 py-12">
@@ -245,35 +265,15 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </a>
     </div>
   </div>
+
+  <script>
+    const btn = document.getElementById('copy-link-btn');
+    const feedback = document.getElementById('copy-feedback');
+    btn?.addEventListener('click', async () => {
+      const url = btn.getAttribute('data-url') || window.location.href;
+      await navigator.clipboard.writeText(url);
+      feedback?.classList.remove('hidden');
+      setTimeout(() => feedback?.classList.add('hidden'), 2000);
+    });
+  </script>
 </BaseLayout>
-
-<script>
-  const btn = document.getElementById('copy-link-btn');
-  const feedback = document.getElementById('copy-feedback');
-  btn?.addEventListener('click', async () => {
-    const url = btn.getAttribute('data-url') || window.location.href;
-    await navigator.clipboard.writeText(url);
-    feedback?.classList.remove('hidden');
-    setTimeout(() => feedback?.classList.add('hidden'), 2000);
-  });
-</script>
-
-<style>
-  .bill-content :global(h2) {
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-  }
-
-  .bill-content :global(blockquote) {
-    border-left: 3px solid #228B4A;
-    background: #F0FDF4;
-    padding: 1rem 1.5rem;
-    margin: 1.5rem 0;
-    font-style: italic;
-    border-radius: 0 0.5rem 0.5rem 0;
-  }
-
-  .bill-content :global(blockquote p) {
-    margin: 0;
-  }
-</style>

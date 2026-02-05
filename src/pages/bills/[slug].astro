@@ -435,15 +435,15 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </a>
     </div>
   </div>
-</BaseLayout>
 
-<script>
-  const btn = document.getElementById('copy-link-btn');
-  const feedback = document.getElementById('copy-feedback');
-  btn?.addEventListener('click', async () => {
-    const url = btn.getAttribute('data-url') || window.location.href;
-    await navigator.clipboard.writeText(url);
-    feedback?.classList.remove('hidden');
-    setTimeout(() => feedback?.classList.add('hidden'), 2000);
-  });
-</script>
+  <script>
+    const btn = document.getElementById('copy-link-btn');
+    const feedback = document.getElementById('copy-feedback');
+    btn?.addEventListener('click', async () => {
+      const url = btn.getAttribute('data-url') || window.location.href;
+      await navigator.clipboard.writeText(url);
+      feedback?.classList.remove('hidden');
+      setTimeout(() => feedback?.classList.add('hidden'), 2000);
+    });
+  </script>
+</BaseLayout>

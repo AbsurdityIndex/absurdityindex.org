@@ -2,12 +2,17 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BillCard from '../../components/bills/BillCard.astro';
 import SearchBar from '../../components/ui/SearchBar.astro';
-import FilterPanel from '../../components/ui/FilterPanel.astro';
 import { getCollection } from 'astro:content';
 
 const allBills = await getCollection('bills');
 const realBills = allBills.filter((b) => b.data.billType === 'real');
 const categories = [...new Set(realBills.map((b) => b.data.category))].sort();
+const primaryCategories = categories.slice(0, 8);
+const overflowCategories = categories.slice(8);
+
+function toCategorySlug(value: string) {
+  return value.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+}
 
 // Default sort: absurdity index descending, then date
 const bills = realBills.sort((a, b) => {
@@ -20,23 +25,120 @@ const bills = realBills.sort((a, b) => {
 
 <BaseLayout title="Real Bills" description="Real federal bills from Congress, scored on our Absurdity Index. You can't make this stuff up.">
   <div class="max-w-6xl mx-auto px-4 py-12">
-    <div class="text-center mb-8">
+    <div class="text-center mb-10">
       <p class="text-sm text-navy-500 font-mono uppercase tracking-widest mb-2">From the Actual U.S. Congress</p>
       <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Real Bills</h1>
-      <p class="text-navy-600 font-serif italic mt-2">Real legislation, ranked by absurdity — because reality is stranger than satire</p>
+      <p class="text-navy-600 font-serif italic mt-3">Real legislation, ranked by absurdity — because reality is stranger than satire</p>
     </div>
     <div class="gold-rule"></div>
 
-    <div class="mt-8 mb-6">
-      <SearchBar />
-    </div>
+    <section class="mt-8 space-y-5 rounded-xl border border-gold-200 bg-white/70 p-4 md:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <nav class="inline-flex items-center rounded-full border border-navy-700 bg-cream-100 p-1" aria-label="Bill type views">
+          <a
+            href="/bills"
+            aria-current="page"
+            class="rounded-full bg-navy-800 px-4 py-1.5 text-sm font-sans font-semibold text-white"
+          >
+            Real Bills
+          </a>
+          <a
+            href="/not-bills"
+            class="rounded-full px-4 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:bg-cream-200"
+          >
+            Not Bills
+          </a>
+        </nav>
 
-    <FilterPanel categories={categories} currentType="real" />
+        <div class="flex items-center gap-2">
+          <label for="bill-sort" class="text-sm font-sans font-medium text-navy-700">Sort</label>
+          <select
+            id="bill-sort"
+            class="rounded-md border border-gold-300 bg-cream-100 px-3 py-1.5 text-sm text-navy-800 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-300"
+          >
+            <option value="absurdity">Highest Absurdity</option>
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="title">Title A-Z</option>
+          </select>
+        </div>
+      </div>
 
-    <div id="bills-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      <SearchBar label="Search real bills" placeholder="Search titles, sponsors, committees, or tags..." />
+
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            data-category-filter="all"
+            class="category-filter-chip inline-flex items-center rounded-full border bg-navy-800 px-3 py-1.5 text-sm font-sans font-semibold text-white border-navy-800 transition-colors"
+          >
+            All categories
+          </button>
+          {primaryCategories.map((category) => (
+            <button
+              type="button"
+              data-category-filter={toCategorySlug(category)}
+              class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white"
+            >
+              {category}
+            </button>
+          ))}
+          {overflowCategories.length > 0 && (
+            <button
+              id="more-filters-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="extra-category-filters"
+              class="inline-flex items-center rounded-full border border-gold-300 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:bg-cream-200"
+            >
+              More filters
+            </button>
+          )}
+          <button
+            id="clear-filters"
+            type="button"
+            class="inline-flex items-center rounded-full border border-cream-300 px-3 py-1.5 text-sm font-sans font-semibold text-navy-600 transition-colors hover:bg-cream-200"
+          >
+            Reset
+          </button>
+        </div>
+
+        {overflowCategories.length > 0 && (
+          <div id="extra-category-filters" class="hidden flex-wrap items-center gap-2">
+            {overflowCategories.map((category) => (
+              <button
+                type="button"
+                data-category-filter={toCategorySlug(category)}
+                class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white"
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 border-t border-gold-200 pt-3 text-sm text-navy-600">
+        <p id="results-summary" class="font-sans font-medium">Showing {bills.length} bills</p>
+        <p id="sort-summary" class="font-sans">Sorted by highest absurdity</p>
+      </div>
+    </section>
+
+    <div id="bills-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
       {bills.map((bill) => (
-        <div class="bill-item" data-title={bill.data.title.toLowerCase()} data-category={bill.data.category.toLowerCase()} data-type={bill.data.billType} data-sponsor={bill.data.sponsor.toLowerCase()} data-tags={bill.data.tags.join(',').toLowerCase()}>
-          <BillCard bill={bill} />
+        <div
+          class="bill-item"
+          data-title={bill.data.title.toLowerCase()}
+          data-category={bill.data.category.toLowerCase()}
+          data-category-slug={toCategorySlug(bill.data.category)}
+          data-type={bill.data.billType}
+          data-sponsor={bill.data.sponsor.toLowerCase()}
+          data-tags={bill.data.tags.join(',').toLowerCase()}
+          data-score={bill.data.absurdityIndex ?? 0}
+          data-date={bill.data.dateIntroduced.getTime()}
+        >
+          <BillCard bill={bill} variant="real-grid" />
         </div>
       ))}
     </div>
@@ -56,31 +158,128 @@ const bills = realBills.sort((a, b) => {
 
   <script>
     const searchInput = document.getElementById('bill-search') as HTMLInputElement;
-    const billItems = document.querySelectorAll('.bill-item');
+    const billSort = document.getElementById('bill-sort') as HTMLSelectElement;
+    const billItems = Array.from(document.querySelectorAll('.bill-item')) as HTMLElement[];
+    const categoryButtons = Array.from(document.querySelectorAll('[data-category-filter]')) as HTMLButtonElement[];
+    const clearFiltersButton = document.getElementById('clear-filters') as HTMLButtonElement;
+    const resultsSummary = document.getElementById('results-summary');
+    const sortSummary = document.getElementById('sort-summary');
+    const moreFiltersToggle = document.getElementById('more-filters-toggle') as HTMLButtonElement | null;
+    const extraFilters = document.getElementById('extra-category-filters');
     const noResults = document.getElementById('no-results');
     const billsGrid = document.getElementById('bills-grid');
 
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        const query = searchInput.value.toLowerCase().trim();
-        let visibleCount = 0;
+    let activeCategory = 'all';
 
-        billItems.forEach((item) => {
-          const el = item as HTMLElement;
-          const title = el.dataset.title || '';
-          const category = el.dataset.category || '';
-          const sponsor = el.dataset.sponsor || '';
-          const tags = el.dataset.tags || '';
-          const matches = !query || title.includes(query) || category.includes(query) || sponsor.includes(query) || tags.includes(query);
-          el.style.display = matches ? '' : 'none';
-          if (matches) visibleCount++;
-        });
+    function setCategoryButtonState(button: HTMLButtonElement, isActive: boolean) {
+      button.classList.toggle('bg-navy-800', isActive);
+      button.classList.toggle('text-white', isActive);
+      button.classList.toggle('border-navy-800', isActive);
+      button.classList.toggle('border-navy-700', !isActive);
+      button.classList.toggle('text-navy-700', !isActive);
+    }
 
-        if (noResults && billsGrid) {
-          noResults.classList.toggle('hidden', visibleCount > 0);
-          billsGrid.classList.toggle('hidden', visibleCount === 0);
-        }
+    function updateCategoryButtonStates() {
+      categoryButtons.forEach((button) => {
+        setCategoryButtonState(button, button.dataset.categoryFilter === activeCategory);
       });
     }
+
+    function toNumber(value: string | undefined): number {
+      const parsed = Number.parseFloat(value ?? '');
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+
+    function compareItems(a: HTMLElement, b: HTMLElement, sortValue: string): number {
+      if (sortValue === 'newest') {
+        return toNumber(b.dataset.date) - toNumber(a.dataset.date);
+      }
+      if (sortValue === 'oldest') {
+        return toNumber(a.dataset.date) - toNumber(b.dataset.date);
+      }
+      if (sortValue === 'title') {
+        return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+      }
+      return toNumber(b.dataset.score) - toNumber(a.dataset.score);
+    }
+
+    function sortLabel(value: string): string {
+      if (value === 'newest') return 'Sorted by newest first';
+      if (value === 'oldest') return 'Sorted by oldest first';
+      if (value === 'title') return 'Sorted by title A-Z';
+      return 'Sorted by highest absurdity';
+    }
+
+    function applyControls() {
+      if (!billsGrid) return;
+
+      const query = searchInput?.value.toLowerCase().trim() || '';
+      const sortValue = billSort?.value || 'absurdity';
+
+      const visibleItems = billItems.filter((item) => {
+        const title = item.dataset.title || '';
+        const category = item.dataset.category || '';
+        const sponsor = item.dataset.sponsor || '';
+        const tags = item.dataset.tags || '';
+        const matchesQuery = !query || title.includes(query) || category.includes(query) || sponsor.includes(query) || tags.includes(query);
+        const matchesCategory = activeCategory === 'all' || item.dataset.categorySlug === activeCategory;
+        return matchesQuery && matchesCategory;
+      });
+
+      visibleItems.sort((a, b) => compareItems(a, b, sortValue));
+
+      billItems.forEach((item) => {
+        item.style.display = 'none';
+      });
+
+      visibleItems.forEach((item) => {
+        item.style.display = '';
+        billsGrid.appendChild(item);
+      });
+
+      const visibleCount = visibleItems.length;
+      if (resultsSummary) {
+        resultsSummary.textContent = `Showing ${visibleCount} ${visibleCount === 1 ? 'bill' : 'bills'}`;
+      }
+      if (sortSummary) {
+        sortSummary.textContent = sortLabel(sortValue);
+      }
+
+      if (noResults) {
+        noResults.classList.toggle('hidden', visibleCount > 0);
+      }
+      billsGrid.classList.toggle('hidden', visibleCount === 0);
+    }
+
+    categoryButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        activeCategory = button.dataset.categoryFilter || 'all';
+        updateCategoryButtonStates();
+        applyControls();
+      });
+    });
+
+    clearFiltersButton?.addEventListener('click', () => {
+      activeCategory = 'all';
+      if (searchInput) searchInput.value = '';
+      if (billSort) billSort.value = 'absurdity';
+      updateCategoryButtonStates();
+      applyControls();
+    });
+
+    searchInput?.addEventListener('input', applyControls);
+    billSort?.addEventListener('change', applyControls);
+
+    moreFiltersToggle?.addEventListener('click', () => {
+      if (!extraFilters) return;
+      const isHidden = extraFilters.classList.contains('hidden');
+      extraFilters.classList.toggle('hidden', !isHidden);
+      extraFilters.classList.toggle('flex', isHidden);
+      moreFiltersToggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+      moreFiltersToggle.textContent = isHidden ? 'Fewer filters' : 'More filters';
+    });
+
+    updateCategoryButtonStates();
+    applyControls();
   </script>
 </BaseLayout>

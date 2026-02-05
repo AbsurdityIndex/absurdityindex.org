@@ -96,22 +96,54 @@ const RECOMMENDED_SATIRICAL = {
  * Valid bill evolution stage names
  */
 const VALID_STAGES = [
+  // Core lifecycle
   'introduced',
   'origin-committee',
+  'origin-reported',
+  'origin-floor',
   'origin-passed',
+  'receiving-received',
+  'receiving-committee',
+  'receiving-reported',
+  'receiving-floor',
   'cross-chamber-committee',
   'cross-chamber-passed',
-  'receiving-amended',      // When receiving chamber amends bill
-  'receiving-passed',       // When receiving chamber passes bill
+  'receiving-amended',
+  'receiving-passed',
+
+  // Ping-pong / reconsideration
+  'origin-considers-amendments',
+  'origin-concurs',
+  'origin-disagrees',
+
+  // Conference
   'conference',
-  'conference-report-filed', // When conference committee files report
+  'conference-requested',
+  'conference-appointed',
+  'conference-report-filed',
+  'conference-house-adopts',
+  'conference-senate-adopts',
+  'enrolled',
+
+  // Presidential action
+  'presented-to-president',
   'final-passage',
   'signed',
+  'pocket-vetoed',
   'became-law',
   'vetoed',
   'veto-override',
-  'expired',                 // Bill expired without action
-  'stalled'                  // Bill stalled in committee/chamber
+  'override-house-vote',
+  'override-senate-vote',
+  'override-successful',
+  'veto-sustained',
+
+  // Terminal states
+  'died-in-committee',
+  'died-on-floor',
+  'died-in-conference',
+  'expired',
+  'stalled'
 ];
 
 /**

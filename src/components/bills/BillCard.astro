@@ -23,12 +23,14 @@ interface Props {
       pairedBillId?: string;
     };
   };
+  variant?: 'default' | 'real-grid';
 }
 
-const { bill } = Astro.props;
+const { bill, variant = 'default' } = Astro.props;
 const { data } = bill;
 
 const isReal = data.billType === 'real';
+const isRealGridCard = variant === 'real-grid' && isReal;
 const detailHref = isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`;
 
 // Extract just the name portion from "Rep. Name (R-ST)" format
@@ -42,12 +44,24 @@ const formattedDate = new Date(data.dateIntroduced).toLocaleDateString('en-US', 
 
 // Category slug for link
 const categorySlug = data.category.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+
+function getAbsurdityScoreClasses(score: number): string {
+  if (score <= 3) return 'bg-green-100 text-green-800 border-green-200';
+  if (score <= 6) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  if (score <= 8) return 'bg-orange-100 text-orange-800 border-orange-200';
+  return 'bg-red-100 text-red-800 border-red-200';
+}
 ---
 
 <article
   class:list={[
-    'group relative bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden',
-    data.featured ? 'ring-2 ring-gold-400' : 'border border-gold-200 hover:border-gold-400',
+    'group relative bg-white shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden',
+    isRealGridCard ? 'rounded-xl hover:-translate-y-0.5' : 'rounded-lg',
+    data.featured
+      ? 'ring-2 ring-gold-400 border border-gold-400'
+      : isRealGridCard
+        ? 'border border-gold-300 hover:border-gold-500'
+        : 'border border-gold-200 hover:border-gold-400',
   ]}
 >
   {/* Top accent bar */}
@@ -62,11 +76,21 @@ const categorySlug = data.category.toLowerCase().replace(/\s+&\s+/g, '-').replac
     </div>
   )}
 
-  <div class="p-5">
+  <div class:list={['p-5', isRealGridCard && 'space-y-0.5']}>
     {/* Header row: badges */}
     <div class="flex items-center justify-between gap-2 mb-2">
       <BillNumberBadge billNumber={data.billNumber} />
-      <BillTypeBadge billType={data.billType} />
+      {isRealGridCard && data.absurdityIndex ? (
+        <span class:list={[
+          'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-mono font-bold',
+          getAbsurdityScoreClasses(data.absurdityIndex),
+        ]}>
+          <Icon name="zap" size={11} />
+          {data.absurdityIndex}/10
+        </span>
+      ) : (
+        <BillTypeBadge billType={data.billType} />
+      )}
     </div>
 
     {/* Status badge */}
@@ -77,7 +101,10 @@ const categorySlug = data.category.toLowerCase().replace(/\s+&\s+/g, '-').replac
     )}
 
     {/* Title */}
-    <h3 class="font-serif text-lg font-bold text-navy-900 mb-2 leading-snug group-hover:text-navy-700 transition-colors">
+    <h3 class:list={[
+      'font-serif font-bold text-navy-900 mb-2 leading-snug group-hover:text-navy-700 transition-colors',
+      isRealGridCard ? 'text-xl' : 'text-lg',
+    ]}>
       <a
         href={detailHref}
         class="after:absolute after:inset-0"
@@ -87,7 +114,10 @@ const categorySlug = data.category.toLowerCase().replace(/\s+&\s+/g, '-').replac
     </h3>
 
     {/* Summary */}
-    <p class="text-sm text-navy-600 leading-relaxed line-clamp-2 mb-4">
+    <p class:list={[
+      'text-sm text-navy-600 leading-relaxed mb-4',
+      isRealGridCard ? 'line-clamp-3' : 'line-clamp-2',
+    ]}>
       {data.summary}
     </p>
 
@@ -105,7 +135,7 @@ const categorySlug = data.category.toLowerCase().replace(/\s+&\s+/g, '-').replac
         <div class="w-5 h-5 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0">
           <Icon name="user" size={12} class="text-navy-600" />
         </div>
-        <span class="text-navy-700 font-medium truncate" title={data.sponsor}>
+        <span class="text-navy-700 text-sm font-medium truncate" title={data.sponsor}>
           {sponsorName}
         </span>
         {sponsorParty && (

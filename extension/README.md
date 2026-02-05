@@ -62,7 +62,8 @@ The extension consists of:
 
 The extension fetches data from:
 
-- `https://absurdityindex.org/api/bills.json` - Bill data
+- `https://absurdityindex.org/api/bills/{bill-id}.json` - Single-bill data (primary)
+- `https://absurdityindex.org/api/bills.json` - Full bill list (fallback for older deployments)
 - `https://absurdityindex.org/api/stats.json` - Overall statistics
 
 ## Firefox Compatibility

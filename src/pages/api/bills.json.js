@@ -1,9 +1,20 @@
 import { getCollection } from 'astro:content';
 
-export async function GET() {
-  const bills = await getCollection('bills');
+function parseOffset(rawValue) {
+  if (rawValue === null) return 0;
+  const parsed = Number.parseInt(rawValue, 10);
+  return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+}
 
-  const data = bills.map((bill) => ({
+function parseLimit(rawValue, fallback, max = 500) {
+  if (rawValue === null) return fallback;
+  const parsed = Number.parseInt(rawValue, 10);
+  if (Number.isNaN(parsed) || parsed < 1) return fallback;
+  return Math.min(parsed, max);
+}
+
+function toApiBill(bill) {
+  return {
     id: bill.id,
     title: bill.data.title,
     billNumber: bill.data.billNumber,
@@ -25,10 +36,30 @@ export async function GET() {
       bill.data.billType === 'real'
         ? `https://absurdityindex.org/bills/${bill.id}/`
         : `https://absurdityindex.org/not-bills/${bill.id}/`,
-  }));
+  };
+}
+
+export async function GET({ request }) {
+  const bills = await getCollection('bills');
+  const requestUrl = new URL(request.url);
+  const filterId = requestUrl.searchParams.get('id');
+  const requestedOffset = parseOffset(requestUrl.searchParams.get('offset'));
+
+  let data = bills.map(toApiBill);
 
   // Sort by date introduced, newest first
   data.sort((a, b) => new Date(b.dateIntroduced) - new Date(a.dateIntroduced));
+
+  if (filterId) {
+    data = data.filter((bill) => bill.id === filterId);
+  }
+
+  const total = data.length;
+  const requestedLimit = parseLimit(requestUrl.searchParams.get('limit'), total);
+  const safeOffset = Math.min(requestedOffset, total);
+  const safeLimit = Math.min(requestedLimit, Math.max(total - safeOffset, 0));
+  const paginatedData = data.slice(safeOffset, safeOffset + safeLimit);
+  const hasMore = safeOffset + paginatedData.length < total;
 
   // Calculate some fun stats
   const realCount = data.filter(b => b.billType === 'real').length;
@@ -49,14 +80,24 @@ export async function GET() {
         _disclaimer: "Absurdity scores reflect editorial opinion, not legal analysis. We're comedians, not lawyers.",
         generated: new Date().toISOString(),
         generatedBy: "The Absurdity Index Research Service",
-        count: data.length,
+        count: paginatedData.length,
+        total,
+        offset: safeOffset,
+        limit: requestedLimit,
+        hasMore,
+        nextOffset: hasMore ? safeOffset + paginatedData.length : null,
+        pagination: {
+          staticPageSize: 100,
+          firstPageUrl: 'https://absurdityindex.org/api/bills/page/1.json',
+          _note: 'For large syncs, use /api/bills/page/{n}.json to avoid full payload downloads.',
+        },
         breakdown: {
           real: realCount,
-          satirical: data.length - realCount,
+          satirical: total - realCount,
           averageAbsurdity: Math.round(avgAbsurdity * 10) / 10,
           _verdict: avgAbsurdity >= 6 ? "Congress is Congressing hard today." : "Surprisingly mild. Give it time.",
         },
-        bills: data,
+        bills: paginatedData,
         _footer: {
           rateLimit: "Please don't DDOS us. We're a satire site, not the actual government.",
           contact: "Questions? File a Freedom of Information Request (just kidding, email us).",

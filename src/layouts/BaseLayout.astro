@@ -6,6 +6,7 @@ import ConstructionBanner from '../components/ui/ConstructionBanner.astro';
 import FoundingDocsDrawer from '../components/ui/FoundingDocsDrawer.astro';
 import AbsurdityIndexDrawer from '../components/ui/AbsurdityIndexDrawer.astro';
 import LegislativeGlossaryDrawer from '../components/ui/LegislativeGlossaryDrawer.astro';
+import FundTheIndex from '../components/ui/FundTheIndex.astro';
 
 interface Props {
   title: string;
@@ -114,6 +115,7 @@ const jsonLd = {
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <slot name="head" />
   </head>
   <body class="bg-cream-100 text-navy-900 font-sans min-h-screen flex flex-col">
     <ConstructionBanner />
@@ -125,5 +127,6 @@ const jsonLd = {
     <FoundingDocsDrawer />
     <AbsurdityIndexDrawer />
     <LegislativeGlossaryDrawer />
+    <FundTheIndex />
   </body>
 </html>
