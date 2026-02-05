@@ -13,15 +13,16 @@ const allMessages = messages.join(separator) + separator;
 
 <div class="bg-navy-900 border-y border-navy-700 overflow-hidden">
   <div class="flex items-center">
-    <div class="shrink-0 bg-red-700 text-white font-mono text-xs font-bold px-3 py-2 tracking-wider z-10">
-      THE GAVEL CHANNEL
+    <div class="shrink-0 bg-red-700 text-white font-mono text-[10px] font-bold px-2 py-2 tracking-wider z-10 min-[430px]:px-3 min-[430px]:text-xs">
+      <span class="min-[430px]:hidden">GAVEL</span>
+      <span class="hidden min-[430px]:inline">THE GAVEL CHANNEL</span>
     </div>
     <div class="overflow-hidden flex-1">
       <div class="ticker-animate whitespace-nowrap inline-block">
-        <span class="text-gold-400 font-sans text-sm py-2 inline-block">
+        <span class="text-gold-400 font-sans text-xs py-2 inline-block min-[430px]:text-sm">
           {allMessages}
         </span>
-        <span class="text-gold-400 font-sans text-sm py-2 inline-block" aria-hidden="true">
+        <span class="text-gold-400 font-sans text-xs py-2 inline-block min-[430px]:text-sm" aria-hidden="true">
           {allMessages}
         </span>
       </div>

@@ -32,8 +32,8 @@ const toolLinks = [
 <footer class="bg-navy-900 text-gold-300 mt-auto">
   <hr class="gold-rule !mb-0" />
 
-  <div class="max-w-7xl mx-auto px-4 py-10 sm:py-14">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+  <div class="max-w-7xl mx-auto px-3 py-10 min-[375px]:px-4 sm:py-14">
+    <div class="grid grid-cols-1 gap-10 min-[520px]:grid-cols-2 lg:grid-cols-4">
       <!-- Column 1: Brand -->
       <div>
         <p class="font-serif font-bold text-xl text-gold-400">ABSURDITY INDEX™</p>
@@ -88,17 +88,17 @@ const toolLinks = [
         <p class="text-sm text-gold-300/80 mb-3">
           Get the latest bills delivered to your inbox. Unsubscribe any time &mdash; unlike real legislation.
         </p>
-        <form id="footer-newsletter-form" class="flex gap-2">
+        <form id="footer-newsletter-form" class="flex flex-col gap-2 min-[430px]:flex-row">
           <label for="footer-email" class="sr-only">Email address</label>
           <input
             id="footer-email"
             type="email"
             placeholder="senator@example.gov"
-            class="flex-1 min-w-0 bg-navy-800 border border-navy-600 rounded px-3 py-2 text-sm text-gold-200 placeholder:text-navy-500 focus:outline-none focus:border-gold-500 transition-colors"
+            class="w-full flex-1 min-w-0 bg-navy-800 border border-navy-600 rounded px-3 py-2 text-sm text-gold-200 placeholder:text-navy-500 focus:outline-none focus:border-gold-500 transition-colors"
           />
           <button
             type="submit"
-            class="bg-gold-500 hover:bg-gold-400 text-navy-900 font-sans font-semibold text-sm px-4 py-2 rounded transition-colors shrink-0"
+            class="bg-gold-500 hover:bg-gold-400 text-navy-900 font-sans font-semibold text-sm px-4 py-2 rounded transition-colors shrink-0 w-full min-[430px]:w-auto"
           >
             Subscribe
           </button>

@@ -1,0 +1,598 @@
+---
+/**
+ * SettingsDial — Fixed gear FAB (bottom-right) that opens a panel
+ * for switching between 4 color themes and 6 font pairings.
+ *
+ * Replaces the old dark/light toggle in Header.astro.
+ * Uses data-theme attribute on <html> + html.dark class for backward compat.
+ */
+---
+
+<!-- ============ FAB trigger ============ -->
+<button
+  id="settings-dial-trigger"
+  data-settings-dial
+  class="settings-dial-fab"
+  aria-label="Appearance settings"
+  aria-expanded="false"
+  aria-controls="settings-dial-panel"
+  title="Theme & Font"
+>
+  <svg class="settings-dial-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+</button>
+
+<!-- ============ Settings panel ============ -->
+<div
+  id="settings-dial-panel"
+  data-settings-dial
+  class="settings-dial-panel"
+  role="dialog"
+  aria-label="Appearance settings"
+  aria-hidden="true"
+>
+  <!-- Theme section -->
+  <div class="settings-section">
+    <h3 class="settings-section-title">Theme</h3>
+    <div class="settings-theme-grid" role="radiogroup" aria-label="Color theme">
+      <button
+        class="settings-theme-option"
+        role="radio"
+        aria-checked="false"
+        data-theme-value="light"
+        title="Light"
+      >
+        <span class="settings-swatch settings-swatch-light" aria-hidden="true"></span>
+        <span class="settings-option-label">Light</span>
+      </button>
+      <button
+        class="settings-theme-option"
+        role="radio"
+        aria-checked="false"
+        data-theme-value="dark"
+        title="Dark"
+      >
+        <span class="settings-swatch settings-swatch-dark" aria-hidden="true"></span>
+        <span class="settings-option-label">Dark</span>
+      </button>
+      <button
+        class="settings-theme-option"
+        role="radio"
+        aria-checked="false"
+        data-theme-value="solarized-dark"
+        title="Solarized Dark"
+      >
+        <span class="settings-swatch settings-swatch-sol-dark" aria-hidden="true"></span>
+        <span class="settings-option-label">Sol. Dark</span>
+      </button>
+      <button
+        class="settings-theme-option"
+        role="radio"
+        aria-checked="false"
+        data-theme-value="solarized-light"
+        title="Solarized Light"
+      >
+        <span class="settings-swatch settings-swatch-sol-light" aria-hidden="true"></span>
+        <span class="settings-option-label">Sol. Light</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Font section -->
+  <div class="settings-section">
+    <h3 class="settings-section-title">Font</h3>
+    <div class="settings-font-grid" role="radiogroup" aria-label="Font pairing">
+      <button class="settings-font-option" role="radio" aria-checked="false" data-font-value="classic" title="Classic">
+        <span class="settings-font-preview" style="font-family: 'Libre Caslon Text', Georgia, serif;" aria-hidden="true">Aa</span>
+        <span class="settings-option-label">Classic</span>
+      </button>
+      <button class="settings-font-option" role="radio" aria-checked="false" data-font-value="modern" title="Modern">
+        <span class="settings-font-preview" style="font-family: 'Space Grotesk', system-ui, sans-serif;" aria-hidden="true">Aa</span>
+        <span class="settings-option-label">Modern</span>
+      </button>
+      <button class="settings-font-option" role="radio" aria-checked="false" data-font-value="elegant" title="Elegant">
+        <span class="settings-font-preview" style="font-family: 'Playfair Display', Georgia, serif;" aria-hidden="true">Aa</span>
+        <span class="settings-option-label">Elegant</span>
+      </button>
+      <button class="settings-font-option" role="radio" aria-checked="false" data-font-value="traditional" title="Traditional">
+        <span class="settings-font-preview" style="font-family: 'IM Fell English', Georgia, serif;" aria-hidden="true">Aa</span>
+        <span class="settings-option-label">Traditional</span>
+      </button>
+      <button class="settings-font-option" role="radio" aria-checked="false" data-font-value="clean" title="Clean">
+        <span class="settings-font-preview" style="font-family: 'Merriweather', Georgia, serif;" aria-hidden="true">Aa</span>
+        <span class="settings-option-label">Clean</span>
+      </button>
+      <button class="settings-font-option" role="radio" aria-checked="false" data-font-value="accessible" title="Accessible">
+        <span class="settings-font-preview" style="font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;" aria-hidden="true">Aa</span>
+        <span class="settings-option-label">Accessible</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ========================
+     FAB TRIGGER
+     ======================== */
+  .settings-dial-fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 60;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-navy-900);
+    color: var(--color-gold-400);
+    border: 2px solid var(--color-gold-500);
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .settings-dial-fab:hover {
+    background: var(--color-navy-800);
+    color: var(--color-gold-300);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    transform: rotate(30deg);
+  }
+
+  .settings-dial-fab:focus-visible {
+    outline: 2px solid var(--color-gold-400);
+    outline-offset: 2px;
+  }
+
+  .settings-dial-fab[aria-expanded="true"] {
+    transform: rotate(90deg);
+  }
+
+  .settings-dial-fab[aria-expanded="true"]:hover {
+    transform: rotate(120deg);
+  }
+
+  .settings-dial-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* ========================
+     PANEL
+     ======================== */
+  .settings-dial-panel {
+    position: fixed;
+    bottom: 5rem;
+    right: 1.5rem;
+    z-index: 60;
+    width: 280px;
+    background: var(--color-navy-900);
+    border: 2px solid var(--color-gold-500);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    padding: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.96);
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+
+  .settings-dial-panel.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  /* ========================
+     SECTIONS
+     ======================== */
+  .settings-section + .settings-section {
+    margin-top: 0.875rem;
+    padding-top: 0.875rem;
+    border-top: 1px solid rgba(197, 165, 114, 0.2);
+  }
+
+  .settings-section-title {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-gold-500);
+    margin-bottom: 0.625rem;
+  }
+
+  /* ========================
+     THEME GRID (4 cols)
+     ======================== */
+  .settings-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .settings-theme-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.25rem;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: var(--color-gold-300);
+  }
+
+  .settings-theme-option:hover {
+    background: rgba(197, 165, 114, 0.08);
+    border-color: rgba(197, 165, 114, 0.2);
+  }
+
+  .settings-theme-option[aria-checked="true"] {
+    border-color: var(--color-gold-500);
+    background: rgba(197, 165, 114, 0.12);
+  }
+
+  .settings-theme-option:focus-visible {
+    outline: 2px solid var(--color-gold-400);
+    outline-offset: 1px;
+  }
+
+  /* Swatches */
+  .settings-swatch {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .settings-swatch-light {
+    background: linear-gradient(135deg, #FAF7F0 50%, #C5A572 50%);
+  }
+
+  .settings-swatch-dark {
+    background: linear-gradient(135deg, #0A1628 50%, #E8B85A 50%);
+  }
+
+  .settings-swatch-sol-dark {
+    background: linear-gradient(135deg, #002B36 50%, #B58900 50%);
+  }
+
+  .settings-swatch-sol-light {
+    background: linear-gradient(135deg, #FDF6E3 50%, #B58900 50%);
+  }
+
+  /* ========================
+     FONT GRID (3 cols)
+     ======================== */
+  .settings-font-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .settings-font-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.25rem;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: var(--color-gold-300);
+  }
+
+  .settings-font-option:hover {
+    background: rgba(197, 165, 114, 0.08);
+    border-color: rgba(197, 165, 114, 0.2);
+  }
+
+  .settings-font-option[aria-checked="true"] {
+    border-color: var(--color-gold-500);
+    background: rgba(197, 165, 114, 0.12);
+  }
+
+  .settings-font-option:focus-visible {
+    outline: 2px solid var(--color-gold-400);
+    outline-offset: 1px;
+  }
+
+  .settings-font-preview {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-gold-200);
+    line-height: 1;
+  }
+
+  /* ========================
+     SHARED LABEL
+     ======================== */
+  .settings-option-label {
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  /* ========================
+     RESPONSIVE (≤ 480px)
+     ======================== */
+  @media (max-width: 480px) {
+    .settings-dial-panel {
+      width: calc(100vw - 2rem);
+      right: 1rem;
+      bottom: 4.5rem;
+    }
+
+    .settings-dial-fab {
+      bottom: 1rem;
+      right: 1rem;
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+
+    .settings-theme-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .settings-font-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 359px) {
+    .settings-dial-panel {
+      width: calc(100vw - 1rem);
+      right: 0.5rem;
+    }
+
+    .settings-dial-fab {
+      bottom: 0.75rem;
+      right: 0.75rem;
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    .settings-dial-icon {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+  }
+
+  @media (max-width: 540px) {
+    .settings-dial-fab {
+      bottom: 0.9rem;
+      right: 0.9rem;
+      width: 2.6rem;
+      height: 2.6rem;
+    }
+  }
+
+  /* ========================
+     PRINT: hide everything
+     ======================== */
+  @media print {
+    .settings-dial-fab,
+    .settings-dial-panel {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  // ── Font pairing definitions ──
+  const FONT_PAIRINGS = {
+    classic: {
+      serif: "'Libre Caslon Text', 'Georgia', 'Times New Roman', serif",
+      sans: "'Inter', 'system-ui', '-apple-system', sans-serif",
+      mono: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+      url: null, // already loaded in BaseLayout
+    },
+    modern: {
+      serif: "'Space Grotesk', 'system-ui', sans-serif",
+      sans: "'DM Sans', 'system-ui', '-apple-system', sans-serif",
+      mono: "'Fira Code', 'Consolas', monospace",
+      url: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Fira+Code:wght@400;700&display=swap",
+    },
+    elegant: {
+      serif: "'Playfair Display', 'Georgia', serif",
+      sans: "'Outfit', 'system-ui', '-apple-system', sans-serif",
+      mono: "'Fira Code', 'Consolas', monospace",
+      url: "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@400;500;600;700&family=Fira+Code:wght@400;700&display=swap",
+    },
+    traditional: {
+      serif: "'IM Fell English', 'Georgia', serif",
+      sans: "'Manrope', 'system-ui', '-apple-system', sans-serif",
+      mono: "'IBM Plex Mono', 'Consolas', monospace",
+      url: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400&display=swap",
+    },
+    clean: {
+      serif: "'Merriweather', 'Georgia', serif",
+      sans: "'Plus Jakarta Sans', 'system-ui', '-apple-system', sans-serif",
+      mono: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+      url: "https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap",
+    },
+    accessible: {
+      serif: "'Atkinson Hyperlegible', 'system-ui', sans-serif",
+      sans: "'Atkinson Hyperlegible', 'system-ui', '-apple-system', sans-serif",
+      mono: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+      url: "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap",
+    },
+  };
+
+  const DARK_THEMES = new Set(['dark', 'solarized-dark']);
+
+  // ── DOM refs ──
+  const trigger = document.getElementById('settings-dial-trigger');
+  const panel = document.getElementById('settings-dial-panel');
+  const themeButtons = Array.from(document.querySelectorAll('[data-theme-value]'));
+  const fontButtons = Array.from(document.querySelectorAll('[data-font-value]'));
+
+  // ── State ──
+  let isOpen = false;
+
+  // ── Panel open/close ──
+  function openPanel() {
+    isOpen = true;
+    panel?.classList.add('open');
+    panel?.setAttribute('aria-hidden', 'false');
+    trigger?.setAttribute('aria-expanded', 'true');
+  }
+
+  function closePanel() {
+    isOpen = false;
+    panel?.classList.remove('open');
+    panel?.setAttribute('aria-hidden', 'true');
+    trigger?.setAttribute('aria-expanded', 'false');
+  }
+
+  function togglePanel() {
+    isOpen ? closePanel() : openPanel();
+  }
+
+  // ── Theme application ──
+  function applyTheme(theme) {
+    const html = document.documentElement;
+    html.setAttribute('data-theme', theme);
+
+    if (DARK_THEMES.has(theme)) {
+      html.classList.add('dark');
+    } else {
+      html.classList.remove('dark');
+    }
+
+    localStorage.setItem('theme', theme);
+
+    // Update radio state
+    themeButtons.forEach((btn) => {
+      btn.setAttribute('aria-checked', btn.dataset.themeValue === theme ? 'true' : 'false');
+    });
+  }
+
+  // ── Font application ──
+  function applyFont(id) {
+    const pairing = FONT_PAIRINGS[id];
+    if (!pairing) return;
+
+    const html = document.documentElement;
+    html.style.setProperty('--font-serif', pairing.serif);
+    html.style.setProperty('--font-sans', pairing.sans);
+    html.style.setProperty('--font-mono', pairing.mono);
+
+    // Load Google Font stylesheet if needed
+    if (pairing.url) {
+      const existingLink = document.querySelector(`link[data-font-pairing="${id}"]`);
+      if (!existingLink) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = pairing.url;
+        link.setAttribute('data-font-pairing', id);
+        document.head.appendChild(link);
+      }
+    }
+
+    localStorage.setItem('font-pairing', id);
+
+    // Update radio state
+    fontButtons.forEach((btn) => {
+      btn.setAttribute('aria-checked', btn.dataset.fontValue === id ? 'true' : 'false');
+    });
+  }
+
+  // ── Initialize from localStorage ──
+  function init() {
+    const storedTheme = localStorage.getItem('theme') || (
+      window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    );
+    applyTheme(storedTheme);
+
+    const storedFont = localStorage.getItem('font-pairing') || 'classic';
+    applyFont(storedFont);
+  }
+
+  init();
+
+  // ── Event listeners ──
+  trigger?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePanel();
+  });
+
+  themeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const theme = btn.dataset.themeValue;
+      if (theme) applyTheme(theme);
+    });
+  });
+
+  fontButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const font = btn.dataset.fontValue;
+      if (font) applyFont(font);
+    });
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isOpen) {
+      closePanel();
+      trigger?.focus();
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!isOpen) return;
+    const target = e.target;
+    if (target instanceof Node && !panel?.contains(target) && !trigger?.contains(target)) {
+      closePanel();
+    }
+  });
+
+  // Keyboard navigation within radiogroups
+  function handleRadiogroupKeydown(e, buttons, applyFn, dataAttr) {
+    const current = buttons.findIndex((btn) => btn === document.activeElement);
+    if (current < 0) return;
+
+    let next = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      next = (current + 1) % buttons.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      next = (current - 1 + buttons.length) % buttons.length;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      next = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      next = buttons.length - 1;
+    }
+
+    if (next >= 0) {
+      buttons[next].focus();
+      const value = buttons[next].dataset[dataAttr];
+      if (value) applyFn(value);
+    }
+  }
+
+  const themeGroup = document.querySelector('.settings-theme-grid');
+  const fontGroup = document.querySelector('.settings-font-grid');
+
+  themeGroup?.addEventListener('keydown', (e) => {
+    handleRadiogroupKeydown(e, themeButtons, applyTheme, 'themeValue');
+  });
+
+  fontGroup?.addEventListener('keydown', (e) => {
+    handleRadiogroupKeydown(e, fontButtons, applyFont, 'fontValue');
+  });
+</script>

@@ -2,7 +2,7 @@
 import OfficialSeal from './OfficialSeal.astro';
 ---
 
-<section class="relative bg-navy-900 overflow-hidden">
+<section class="relative overflow-hidden bg-navy-900">
   <!-- Parchment texture overlay via CSS gradient -->
   <div
     class="absolute inset-0 opacity-[0.04]"
@@ -10,35 +10,35 @@ import OfficialSeal from './OfficialSeal.astro';
     aria-hidden="true"
   />
 
-  <div class="relative max-w-3xl mx-auto px-6 py-20 text-center">
-    <div class="flex justify-center mb-6">
+  <div class="relative mx-auto max-w-3xl px-3 py-14 text-center min-[375px]:px-4 min-[430px]:py-16 md:px-6 md:py-20">
+    <div class="mb-5 flex justify-center min-[430px]:mb-6">
       <OfficialSeal size="140" />
     </div>
 
-    <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-gold-400 tracking-tight mb-4">
+    <h1 class="mb-3 font-serif text-3xl font-bold tracking-tight text-gold-400 min-[375px]:text-4xl md:mb-4 md:text-5xl lg:text-6xl">
       THE ABSURDITY INDEX™
     </h1>
 
-    <p class="font-serif text-lg md:text-xl text-cream-200 italic mb-6">
+    <p class="mb-5 font-serif text-base italic text-cream-200 min-[375px]:text-lg md:mb-6 md:text-xl">
       Real bills. Real absurdity. Satirical common sense.
     </p>
 
-    <div class="inline-block pulse-subtle mb-8">
-      <span class="font-sans text-xs uppercase tracking-[0.15em] text-gold-300 border border-gold-500/40 rounded-full px-4 py-1.5">
+    <div class="mb-6 inline-block pulse-subtle min-[430px]:mb-8">
+      <span class="rounded-full border border-gold-500/40 px-3 py-1.5 font-sans text-[10px] uppercase tracking-[0.15em] text-gold-300 min-[375px]:px-4 min-[375px]:text-xs">
         119th Absurdity Index, 1st Session of Futility
       </span>
     </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-4">
+    <div class="flex flex-wrap items-center justify-center gap-3 min-[430px]:gap-4">
       <a
         href="/bills"
-        class="inline-block font-sans font-semibold text-sm bg-gold-500 text-navy-900 px-6 py-2.5 rounded hover:bg-gold-400 transition-colors"
+        class="inline-block rounded bg-gold-500 px-5 py-2.5 font-sans text-sm font-semibold text-navy-900 transition-colors hover:bg-gold-400 min-[430px]:px-6"
       >
         Browse Bills
       </a>
       <a
         href="/submit"
-        class="inline-block font-sans font-semibold text-sm border-2 border-gold-500 text-gold-400 px-6 py-2.5 rounded hover:bg-gold-500/10 transition-colors"
+        class="inline-block rounded border-2 border-gold-500 px-5 py-2.5 font-sans text-sm font-semibold text-gold-400 transition-colors hover:bg-gold-500/10 min-[430px]:px-6"
       >
         Submit a Bill
       </a>

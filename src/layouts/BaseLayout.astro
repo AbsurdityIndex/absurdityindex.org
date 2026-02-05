@@ -7,6 +7,7 @@ import FoundingDocsDrawer from '../components/ui/FoundingDocsDrawer.astro';
 import AbsurdityIndexDrawer from '../components/ui/AbsurdityIndexDrawer.astro';
 import LegislativeGlossaryDrawer from '../components/ui/LegislativeGlossaryDrawer.astro';
 import FundTheIndex from '../components/ui/FundTheIndex.astro';
+import SettingsDial from '../components/ui/SettingsDial.astro';
 
 interface Props {
   title: string;
@@ -57,9 +58,40 @@ const jsonLd = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
       (function() {
-        const stored = localStorage.getItem('theme');
-        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
+        var h = document.documentElement;
+
+        // ── Theme ──
+        var t = localStorage.getItem('theme');
+        if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        h.setAttribute('data-theme', t);
+        if (t === 'dark' || t === 'solarized-dark') h.classList.add('dark');
+
+        // ── Font pairing ──
+        var f = localStorage.getItem('font-pairing');
+        if (f && f !== 'classic') {
+          var pairings = {
+            modern:      { s:"'Space Grotesk','system-ui',sans-serif",   a:"'DM Sans','system-ui','-apple-system',sans-serif",    m:"'Fira Code','Consolas',monospace",
+                           u:"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Fira+Code:wght@400;700&display=swap" },
+            elegant:     { s:"'Playfair Display','Georgia',serif",       a:"'Outfit','system-ui','-apple-system',sans-serif",      m:"'Fira Code','Consolas',monospace",
+                           u:"https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Outfit:wght@400;500;600;700&family=Fira+Code:wght@400;700&display=swap" },
+            traditional: { s:"'IM Fell English','Georgia',serif",        a:"'Manrope','system-ui','-apple-system',sans-serif",     m:"'IBM Plex Mono','Consolas',monospace",
+                           u:"https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400&display=swap" },
+            clean:       { s:"'Merriweather','Georgia',serif",           a:"'Plus Jakarta Sans','system-ui','-apple-system',sans-serif", m:"'JetBrains Mono','Fira Code','Consolas',monospace",
+                           u:"https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" },
+            accessible:  { s:"'Atkinson Hyperlegible','system-ui',sans-serif", a:"'Atkinson Hyperlegible','system-ui','-apple-system',sans-serif", m:"'JetBrains Mono','Fira Code','Consolas',monospace",
+                           u:"https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" }
+          };
+          var p = pairings[f];
+          if (p) {
+            h.style.setProperty('--font-serif', p.s);
+            h.style.setProperty('--font-sans', p.a);
+            h.style.setProperty('--font-mono', p.m);
+            var l = document.createElement('link');
+            l.rel = 'stylesheet';
+            l.href = p.u;
+            l.setAttribute('data-font-pairing', f);
+            document.head.appendChild(l);
+          }
         }
       })();
     </script>
@@ -128,5 +160,6 @@ const jsonLd = {
     <AbsurdityIndexDrawer />
     <LegislativeGlossaryDrawer />
     <FundTheIndex />
+    <SettingsDial />
   </body>
 </html>

@@ -747,6 +747,29 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
     }
   }
 
+  /* Very narrow devices: avoid covering content and controls */
+  @media (max-width: 430px) {
+    .fund-tab {
+      top: auto;
+      bottom: 5.75rem;
+      transform: none;
+      writing-mode: horizontal-tb;
+      border-radius: 0 8px 8px 0;
+      padding: 6px 8px;
+      gap: 6px;
+      max-width: 108px;
+    }
+
+    .fund-tab:hover {
+      padding-right: 10px;
+    }
+
+    .fund-tab-text {
+      font-size: 0.5rem;
+      letter-spacing: 0.08em;
+    }
+  }
+
   /* ========================
      PRINT: hide everything
      ======================== */

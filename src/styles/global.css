@@ -282,6 +282,120 @@ html.dark tr:hover {
   background-color: #0F1A2E;
 }
 
+/* ==============================
+   SOLARIZED DARK THEME
+   Solarized base03/base02 palette mapped to existing variable names.
+   html.dark class is also set, so existing :global(html.dark) rules
+   in components still fire — these overrides layer on top.
+   ============================== */
+html[data-theme="solarized-dark"] {
+  /* Backgrounds — Solarized base03, base02, base01 */
+  --color-cream-100: #002B36;
+  --color-cream-200: #073642;
+  --color-cream-300: #0A3D49;
+  --color-parchment: #073642;
+
+  /* Text — Solarized base0, base1, base2 */
+  --color-navy-900: #EEE8D5;
+  --color-navy-800: #E0DAC8;
+  --color-navy-700: #93A1A1;
+  --color-navy-600: #839496;
+  --color-navy-500: #657B83;
+  --color-navy-400: #586E75;
+
+  /* Gold → Solarized yellow accent */
+  --color-gold-600: #B58900;
+  --color-gold-500: #CB9B00;
+  --color-gold-400: #DBA800;
+  --color-gold-300: #E8BD30;
+  --color-gold-200: #F0D060;
+  --color-gold-100: #FFF8E0;
+
+  /* Semantic colors — Solarized red/green */
+  --color-red-700: #DC322F;
+  --color-red-600: #F05050;
+  --color-green-700: #2AA198;
+  --color-green-600: #40BFAA;
+}
+
+html[data-theme="solarized-dark"] body {
+  background-color: #002B36;
+  color: #EEE8D5;
+}
+
+html[data-theme="solarized-dark"] .bg-white {
+  background-color: #073642;
+}
+
+html[data-theme="solarized-dark"] .bg-parchment {
+  background-color: #073642;
+}
+
+html[data-theme="solarized-dark"] code {
+  background-color: #0A3D49;
+  color: #CB9B00;
+}
+
+html[data-theme="solarized-dark"] input,
+html[data-theme="solarized-dark"] textarea,
+html[data-theme="solarized-dark"] select {
+  background-color: #073642;
+  border-color: #586E75;
+  color: #EEE8D5;
+}
+
+html[data-theme="solarized-dark"] table {
+  border-color: #586E75;
+}
+
+html[data-theme="solarized-dark"] th {
+  background-color: #073642;
+  color: #EEE8D5;
+}
+
+html[data-theme="solarized-dark"] td {
+  border-color: #586E75;
+}
+
+html[data-theme="solarized-dark"] tr:hover {
+  background-color: #073642;
+}
+
+/* ==============================
+   SOLARIZED LIGHT THEME
+   Solarized base3/base2 palette with warm cream tones.
+   No html.dark class — light theme variant.
+   ============================== */
+html[data-theme="solarized-light"] {
+  /* Backgrounds — Solarized base3, base2 */
+  --color-cream-100: #FDF6E3;
+  --color-cream-200: #EEE8D5;
+  --color-cream-300: #DDD6C3;
+  --color-parchment: #EEE8D5;
+
+  /* Text — Solarized base00, base01, base02, base03 */
+  --color-navy-900: #002B36;
+  --color-navy-800: #073642;
+  --color-navy-700: #586E75;
+  --color-navy-600: #657B83;
+  --color-navy-500: #839496;
+  --color-navy-400: #93A1A1;
+
+  /* Gold → Solarized yellow accent */
+  --color-gold-600: #9A7800;
+  --color-gold-500: #B58900;
+  --color-gold-400: #C49500;
+  --color-gold-300: #D4A820;
+  --color-gold-200: #E0C060;
+  --color-gold-100: #F5EAC8;
+
+  /* Semantic colors */
+  --color-red-700: #CB4B16;
+  --color-red-600: #DC322F;
+  --color-green-700: #2AA198;
+  --color-green-600: #40BFAA;
+}
+
 /* Hide scrollbars while preserving swipe scroll on mobile chip rows */
 .hide-scrollbar {
   -ms-overflow-style: none;
@@ -312,7 +426,8 @@ html.dark tr:hover {
   .share-buttons,
   [data-mobile-menu],
   .mobile-menu,
-  .mobile-nav {
+  .mobile-nav,
+  [data-settings-dial] {
     display: none !important;
   }
 
