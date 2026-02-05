@@ -7,9 +7,16 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/ui/Icon.astro';
+import BillStageBadge from '../components/bills/BillStageBadge.astro';
 import { getCollection } from 'astro:content';
 
 const representatives = await getCollection('representatives');
+const allBills = await getCollection('bills');
+
+// Create a map of bill IDs to their status for quick lookup
+const billStatusMap = new Map(
+  allBills.map(b => [b.id, { status: b.data.status, title: b.data.title }])
+);
 
 // Sort by total pork amount (descending)
 const sortedReps = [...representatives].sort(
@@ -200,11 +207,15 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
 
                 {/* Pork Contributions Preview */}
                 <div class="flex flex-wrap gap-2">
-                  {rep.data.porkContributions.slice(0, 3).map(p => (
-                    <span class="text-xs bg-cream-100 text-navy-600 px-2 py-1 rounded">
-                      {formatAmount(p.amount)} — {p.description.slice(0, 30)}...
-                    </span>
-                  ))}
+                  {rep.data.porkContributions.slice(0, 3).map(p => {
+                    const billInfo = billStatusMap.get(p.billId);
+                    return (
+                      <span class="inline-flex items-center gap-1.5 text-xs bg-cream-100 text-navy-600 px-2 py-1 rounded">
+                        {billInfo && <BillStageBadge status={billInfo.status} size="xs" />}
+                        {formatAmount(p.amount)} — {p.description.slice(0, 25)}...
+                      </span>
+                    );
+                  })}
                   {rep.data.porkContributions.length > 3 && (
                     <span class="text-xs text-navy-400">
                       +{rep.data.porkContributions.length - 3} more
@@ -244,18 +255,24 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
                     Pork Contributions
                   </h4>
                   <div class="space-y-2 max-h-64 overflow-y-auto">
-                    {rep.data.porkContributions.map(p => (
-                      <div class="p-2 bg-cream-50 rounded text-sm">
-                        <div class="flex justify-between items-start gap-2">
-                          <span class="font-medium text-navy-800">{p.description}</span>
-                          <span class="font-mono text-red-600 flex-shrink-0">{formatAmount(p.amount)}</span>
+                    {rep.data.porkContributions.map(p => {
+                      const billInfo = billStatusMap.get(p.billId);
+                      return (
+                        <div class="p-2 bg-cream-50 rounded text-sm">
+                          <div class="flex justify-between items-start gap-2">
+                            <span class="font-medium text-navy-800">{p.description}</span>
+                            <span class="font-mono text-red-600 flex-shrink-0">{formatAmount(p.amount)}</span>
+                          </div>
+                          <div class="flex justify-between items-center mt-1 text-xs text-navy-500">
+                            <div class="flex items-center gap-2">
+                              <span>{p.billNumber}</span>
+                              {billInfo && <BillStageBadge status={billInfo.status} size="xs" />}
+                            </div>
+                            <span>{p.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>
+                          </div>
                         </div>
-                        <div class="flex justify-between items-center mt-1 text-xs text-navy-500">
-                          <span>{p.billNumber}</span>
-                          <span>{p.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 

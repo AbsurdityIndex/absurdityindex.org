@@ -1,6 +1,7 @@
 ---
 import BillNumberBadge from './BillNumberBadge.astro';
 import BillTypeBadge from './BillTypeBadge.astro';
+import BillStageBadge from './BillStageBadge.astro';
 import AbsurdityMeter from './AbsurdityMeter.astro';
 import Icon from '../ui/Icon.astro';
 
@@ -63,10 +64,17 @@ const categorySlug = data.category.toLowerCase().replace(/\s+&\s+/g, '-').replac
 
   <div class="p-5">
     {/* Header row: badges */}
-    <div class="flex items-center justify-between gap-2 mb-3">
+    <div class="flex items-center justify-between gap-2 mb-2">
       <BillNumberBadge billNumber={data.billNumber} />
       <BillTypeBadge billType={data.billType} />
     </div>
+
+    {/* Status badge */}
+    {isReal && (
+      <div class="mb-3">
+        <BillStageBadge status={data.status} size="sm" />
+      </div>
+    )}
 
     {/* Title */}
     <h3 class="font-serif text-lg font-bold text-navy-900 mb-2 leading-snug group-hover:text-navy-700 transition-colors">
