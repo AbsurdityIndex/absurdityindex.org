@@ -1,27 +1,49 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import BillCard from '../../components/bills/BillCard.astro';
-import BillDirectoryControls from '../../components/ui/BillDirectoryControls.astro';
-import Pagination from '../../components/ui/Pagination.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BillCard from '../../../components/bills/BillCard.astro';
+import BillDirectoryControls from '../../../components/ui/BillDirectoryControls.astro';
+import Pagination from '../../../components/ui/Pagination.astro';
 import { getCollection } from 'astro:content';
 import {
   DIRECTORY_PAGE_SIZE,
   sortByDateDesc,
   toCategorySlug,
-} from '../../utils/directory.js';
+} from '../../../utils/directory.js';
 
-const allBills = await getCollection('bills');
-const notBills = allBills.filter((b) => b.data.billType === 'sensible' || b.data.billType === 'absurd');
-const categories = [...new Set(notBills.map((b) => b.data.category))].sort();
-const sortedBills = [...notBills].sort(sortByDateDesc);
+export async function getStaticPaths() {
+  const allBills = await getCollection('bills');
+  const notBills = allBills.filter((b) => b.data.billType === 'sensible' || b.data.billType === 'absurd');
+  const categories = [...new Set(notBills.map((b) => b.data.category))].sort();
+  const sortedBills = [...notBills].sort(sortByDateDesc);
 
-const totalCount = sortedBills.length;
-const totalPages = Math.max(1, Math.ceil(totalCount / DIRECTORY_PAGE_SIZE));
-const currentPage = 1;
-const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
+  const totalCount = sortedBills.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / DIRECTORY_PAGE_SIZE));
+
+  if (totalPages <= 1) {
+    return [];
+  }
+
+  return Array.from({ length: totalPages - 1 }, (_, index) => {
+    const page = index + 2;
+    const start = (page - 1) * DIRECTORY_PAGE_SIZE;
+
+    return {
+      params: { page: String(page) },
+      props: {
+        bills: sortedBills.slice(start, start + DIRECTORY_PAGE_SIZE),
+        categories,
+        currentPage: page,
+        totalPages,
+        totalCount,
+      },
+    };
+  });
+}
+
+const { bills, categories, currentPage, totalPages, totalCount } = Astro.props;
 ---
 
-<BaseLayout title="Not Bills" description="Satirical parody bills that actually make sense - proposed by the Absurdity Index, where common sense isn't an oxymoron.">
+<BaseLayout title={`Not Bills - Page ${currentPage}`} description="Satirical parody bills that actually make sense - proposed by the Absurdity Index, where common sense isn't an oxymoron.">
   <div class="mx-auto max-w-6xl px-4 py-12">
     <div class="mb-10 text-center">
       <p class="mb-2 font-mono text-sm uppercase tracking-widest text-green-700">From the Absurdity Index</p>

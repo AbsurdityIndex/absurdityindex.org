@@ -1,20 +1,20 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import BillCard from '../../components/bills/BillCard.astro';
-import BillDirectoryControls from '../../components/ui/BillDirectoryControls.astro';
-import Pagination from '../../components/ui/Pagination.astro';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import BillCard from '../../../../components/bills/BillCard.astro';
+import BillDirectoryControls from '../../../../components/ui/BillDirectoryControls.astro';
+import Pagination from '../../../../components/ui/Pagination.astro';
 import { getCollection } from 'astro:content';
 import {
   DIRECTORY_PAGE_SIZE,
   sortByDateDesc,
   toCategorySlug,
-} from '../../utils/directory.js';
+} from '../../../../utils/directory.js';
 
 export async function getStaticPaths() {
   const allBills = await getCollection('bills');
   const categories = [...new Set(allBills.map((b) => b.data.category))];
 
-  return categories.map((categoryName) => {
+  return categories.flatMap((categoryName) => {
     const categorySlug = toCategorySlug(categoryName);
     const categoryBills = allBills
       .filter((bill) => toCategorySlug(bill.data.category) === categorySlug)
@@ -23,24 +23,36 @@ export async function getStaticPaths() {
     const totalCount = categoryBills.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / DIRECTORY_PAGE_SIZE));
 
-    return {
-      params: { category: categorySlug },
-      props: {
-        category: categoryName,
-        categorySlug,
-        bills: categoryBills.slice(0, DIRECTORY_PAGE_SIZE),
-        totalCount,
-        totalPages,
-        currentPage: 1,
-      },
-    };
+    if (totalPages <= 1) {
+      return [];
+    }
+
+    return Array.from({ length: totalPages - 1 }, (_, index) => {
+      const page = index + 2;
+      const start = (page - 1) * DIRECTORY_PAGE_SIZE;
+
+      return {
+        params: {
+          category: categorySlug,
+          page: String(page),
+        },
+        props: {
+          category: categoryName,
+          categorySlug,
+          bills: categoryBills.slice(start, start + DIRECTORY_PAGE_SIZE),
+          totalCount,
+          totalPages,
+          currentPage: page,
+        },
+      };
+    });
   });
 }
 
 const { category, categorySlug, bills, totalCount, totalPages, currentPage } = Astro.props;
 ---
 
-<BaseLayout title={`${category} Bills`} description={`All Absurdity Index bills in the ${category} category.`}>
+<BaseLayout title={`${category} Bills - Page ${currentPage}`} description={`All Absurdity Index bills in the ${category} category.`}>
   <div class="mx-auto max-w-6xl px-4 py-12">
     <div class="mb-10 text-center">
       <p class="mb-2 font-mono text-sm uppercase tracking-widest text-gold-600">Category</p>
@@ -99,13 +111,6 @@ const { category, categorySlug, bills, totalCount, totalPages, currentPage } = A
         </div>
       ))}
     </div>
-
-    {totalCount === 0 && (
-      <div class="py-16 text-center">
-        <p class="mb-2 font-serif text-2xl text-navy-600">No bills in this category.</p>
-        <p class="italic text-navy-400">The committee hasn't gotten around to it yet.</p>
-      </div>
-    )}
 
     <div id="no-results" class="hidden py-16 text-center">
       <p class="mb-2 font-serif text-2xl text-navy-600">No bills found.</p>

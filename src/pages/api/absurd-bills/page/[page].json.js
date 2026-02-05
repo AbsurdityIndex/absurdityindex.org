@@ -12,7 +12,7 @@ function sortByIntroducedDateDesc(a, b) {
 export async function getStaticPaths() {
   const allBills = await getCollection('bills');
   const data = allBills
-    .filter((bill) => bill.data.billType !== 'real')
+    .filter((bill) => bill.data.billType === 'absurd')
     .map(toApiBill)
     .sort(sortByIntroducedDateDesc);
 
@@ -42,7 +42,7 @@ export async function GET({ props }) {
     total: props.total,
     totalPages: props.totalPages,
     bills: props.bills,
-    endpointPath: '/api/not-bills/page',
+    endpointPath: '/api/absurd-bills/page',
   });
 
   return new Response(JSON.stringify(payload, null, 2), {

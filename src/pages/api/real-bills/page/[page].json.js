@@ -1,36 +1,12 @@
 import { getCollection } from 'astro:content';
-
-const PAGE_SIZE = 100;
-
-function toApiBill(bill) {
-  return {
-    id: bill.id,
-    title: bill.data.title,
-    billNumber: bill.data.billNumber,
-    billType: bill.data.billType,
-    category: bill.data.category,
-    tags: bill.data.tags,
-    sponsor: bill.data.sponsor,
-    cosponsors: bill.data.cosponsors,
-    committee: bill.data.committee,
-    status: bill.data.status,
-    dateIntroduced: bill.data.dateIntroduced.toISOString(),
-    dateUpdated: bill.data.dateUpdated?.toISOString() || null,
-    summary: bill.data.summary,
-    featured: bill.data.featured,
-    absurdityIndex: bill.data.absurdityIndex || null,
-    congressDotGovUrl: bill.data.congressDotGovUrl || null,
-    congressNumber: bill.data.congressNumber || null,
-    url: `https://absurdityindex.org/bills/${bill.id}/`,
-  };
-}
+import {
+  DIRECTORY_PAGE_SIZE,
+  buildPaginatedApiPayload,
+  toApiBill,
+} from '../../../../utils/directory.js';
 
 function sortByIntroducedDateDesc(a, b) {
-  return new Date(b.dateIntroduced) - new Date(a.dateIntroduced);
-}
-
-function getPageUrl(page) {
-  return `https://absurdityindex.org/api/real-bills/page/${page}.json`;
+  return b.dateIntroducedTs - a.dateIntroducedTs;
 }
 
 export async function getStaticPaths() {
@@ -41,12 +17,12 @@ export async function getStaticPaths() {
     .sort(sortByIntroducedDateDesc);
 
   const total = data.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / DIRECTORY_PAGE_SIZE));
 
   return Array.from({ length: totalPages }, (_, index) => {
     const page = index + 1;
-    const start = index * PAGE_SIZE;
-    const pageBills = data.slice(start, start + PAGE_SIZE);
+    const start = index * DIRECTORY_PAGE_SIZE;
+    const pageBills = data.slice(start, start + DIRECTORY_PAGE_SIZE);
 
     return {
       params: { page: String(page) },
@@ -61,33 +37,18 @@ export async function getStaticPaths() {
 }
 
 export async function GET({ props }) {
-  const { page, total, totalPages, bills } = props;
-  const hasMore = page < totalPages;
+  const payload = buildPaginatedApiPayload({
+    page: props.page,
+    total: props.total,
+    totalPages: props.totalPages,
+    bills: props.bills,
+    endpointPath: '/api/real-bills/page',
+  });
 
-  return new Response(
-    JSON.stringify(
-      {
-        generated: new Date().toISOString(),
-        page,
-        pageSize: PAGE_SIZE,
-        count: bills.length,
-        total,
-        totalPages,
-        hasMore,
-        nextPage: hasMore ? page + 1 : null,
-        nextPageUrl: hasMore ? getPageUrl(page + 1) : null,
-        prevPage: page > 1 ? page - 1 : null,
-        prevPageUrl: page > 1 ? getPageUrl(page - 1) : null,
-        bills,
-      },
-      null,
-      2
-    ),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    }
-  );
+  return new Response(JSON.stringify(payload, null, 2), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 }

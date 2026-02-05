@@ -1,4 +1,5 @@
 import { getCollection } from 'astro:content';
+import { DIRECTORY_PAGE_SIZE } from '../../utils/directory.js';
 
 function parseOffset(rawValue) {
   if (rawValue === null) return 0;
@@ -87,7 +88,7 @@ export async function GET({ request }) {
         hasMore,
         nextOffset: hasMore ? safeOffset + paginatedData.length : null,
         pagination: {
-          staticPageSize: 100,
+          staticPageSize: DIRECTORY_PAGE_SIZE,
           firstPageUrl: 'https://absurdityindex.org/api/bills/page/1.json',
           _note: 'For large syncs, use /api/bills/page/{n}.json to avoid full payload downloads.',
         },

@@ -2,60 +2,105 @@
 interface Props {
   currentPage: number;
   totalPages: number;
-  baseUrl: string;
+  basePath: string;
+  pagePathPrefix?: string;
+  maxNeighborPages?: number;
 }
 
-const { currentPage, totalPages, baseUrl } = Astro.props;
+const {
+  currentPage,
+  totalPages,
+  basePath,
+  pagePathPrefix = `${basePath}/page`,
+  maxNeighborPages = 2,
+} = Astro.props;
 
 function pageUrl(page: number) {
-  if (page === 1) return baseUrl;
-  return `${baseUrl}/${page}`;
+  if (page <= 1) return basePath;
+  return `${pagePathPrefix}/${page}`;
 }
 
-const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+function buildPageSequence() {
+  const pageNumbers = new Set<number>([1, totalPages]);
+
+  for (
+    let page = currentPage - maxNeighborPages;
+    page <= currentPage + maxNeighborPages;
+    page += 1
+  ) {
+    if (page >= 1 && page <= totalPages) {
+      pageNumbers.add(page);
+    }
+  }
+
+  const sortedPages = Array.from(pageNumbers).sort((a, b) => a - b);
+  const sequence: Array<number | 'ellipsis'> = [];
+
+  sortedPages.forEach((page, index) => {
+    if (index > 0) {
+      const prev = sortedPages[index - 1];
+      if (page - prev > 1) {
+        sequence.push('ellipsis');
+      }
+    }
+    sequence.push(page);
+  });
+
+  return sequence;
+}
+
+const pageSequence = buildPageSequence();
 const hasPrev = currentPage > 1;
 const hasNext = currentPage < totalPages;
 ---
 
-<nav class="flex items-center justify-center gap-1" aria-label="Pagination">
-  <a
-    href={hasPrev ? pageUrl(currentPage - 1) : undefined}
-    class:list={[
-      'inline-flex items-center px-3 py-1.5 text-sm font-sans rounded transition-colors',
-      hasPrev
-        ? 'text-navy-700 hover:bg-cream-200'
-        : 'text-cream-300 pointer-events-none',
-    ]}
-    aria-disabled={!hasPrev}
-  >
-    &larr; Previous
-  </a>
-
-  {pages.map((page) => (
+{totalPages > 1 && (
+  <nav class="flex flex-wrap items-center justify-center gap-1.5" aria-label="Pagination">
     <a
-      href={pageUrl(page)}
+      href={hasPrev ? pageUrl(currentPage - 1) : undefined}
       class:list={[
-        'inline-flex items-center justify-center w-8 h-8 text-sm font-sans rounded transition-colors',
-        page === currentPage
-          ? 'bg-gold-500 text-white font-bold'
-          : 'text-navy-700 hover:bg-cream-200',
+        'inline-flex items-center rounded-md border px-3 py-2 text-sm font-sans transition-colors',
+        hasPrev
+          ? 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100'
+          : 'border-cream-300 bg-cream-100 text-navy-300 pointer-events-none',
       ]}
-      aria-current={page === currentPage ? 'page' : undefined}
+      aria-disabled={!hasPrev}
     >
-      {page}
+      Previous
     </a>
-  ))}
 
-  <a
-    href={hasNext ? pageUrl(currentPage + 1) : undefined}
-    class:list={[
-      'inline-flex items-center px-3 py-1.5 text-sm font-sans rounded transition-colors',
-      hasNext
-        ? 'text-navy-700 hover:bg-cream-200'
-        : 'text-cream-300 pointer-events-none',
-    ]}
-    aria-disabled={!hasNext}
-  >
-    Next &rarr;
-  </a>
-</nav>
+    {pageSequence.map((page, index) =>
+      page === 'ellipsis' ? (
+        <span class="inline-flex min-w-9 items-center justify-center px-1 text-sm text-navy-400" aria-hidden="true">
+          ...
+        </span>
+      ) : (
+        <a
+          href={pageUrl(page)}
+          class:list={[
+            'inline-flex min-w-9 items-center justify-center rounded-md border px-3 py-2 text-sm font-sans transition-colors',
+            page === currentPage
+              ? 'border-navy-800 bg-navy-800 font-semibold text-white'
+              : 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100',
+          ]}
+          aria-current={page === currentPage ? 'page' : undefined}
+        >
+          {page}
+        </a>
+      )
+    )}
+
+    <a
+      href={hasNext ? pageUrl(currentPage + 1) : undefined}
+      class:list={[
+        'inline-flex items-center rounded-md border px-3 py-2 text-sm font-sans transition-colors',
+        hasNext
+          ? 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100'
+          : 'border-cream-300 bg-cream-100 text-navy-300 pointer-events-none',
+      ]}
+      aria-disabled={!hasNext}
+    >
+      Next
+    </a>
+  </nav>
+)}

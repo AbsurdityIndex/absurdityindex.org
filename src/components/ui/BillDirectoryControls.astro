@@ -1,0 +1,1078 @@
+---
+import SearchBar from './SearchBar.astro';
+
+interface Tab {
+  href: string;
+  label: string;
+  active?: boolean;
+}
+
+interface SortOption {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  tabs?: Tab[];
+  sortOptions: SortOption[];
+  defaultSortValue?: string;
+  initialCount: number;
+  totalAvailableCount?: number;
+  categories?: string[];
+  showCategoryFilters?: boolean;
+  showSearch?: boolean;
+  showReset?: boolean;
+  searchDebounceMs?: number;
+  searchLabel?: string;
+  searchPlaceholder?: string;
+  initialSortSummary?: string;
+  apiPagePath?: string;
+  currentPage?: number;
+  totalPages?: number;
+  cardVariant?: 'default' | 'real-grid';
+  directoryLabel?: string;
+}
+
+const {
+  tabs = [],
+  sortOptions,
+  defaultSortValue = sortOptions[0]?.value ?? 'newest',
+  initialCount,
+  totalAvailableCount = initialCount,
+  categories = [],
+  showCategoryFilters = true,
+  showSearch = true,
+  showReset = true,
+  searchDebounceMs = 140,
+  searchLabel = 'Search bills',
+  searchPlaceholder = 'Search titles, sponsors, categories, or tags...',
+  initialSortSummary,
+  apiPagePath,
+  currentPage = 1,
+  totalPages = 1,
+  cardVariant = 'default',
+  directoryLabel = 'bills',
+} = Astro.props;
+
+const primaryCategories = categories.slice(0, 8);
+const overflowCategories = categories.slice(8);
+const resolvedInitialSortSummary =
+  initialSortSummary ??
+  `Sorted by ${sortOptions.find((option) => option.value === defaultSortValue)?.label ?? sortOptions[0]?.label ?? 'default order'}`;
+
+const safeCurrentPage = Math.max(1, currentPage);
+const safeTotalPages = Math.max(1, totalPages);
+const hasApiPaging = Boolean(apiPagePath) && safeTotalPages > 1;
+
+function toCategorySlug(value: string) {
+  return value.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+}
+---
+
+<section
+  id="bill-directory-controls"
+  class="mt-8 space-y-5 rounded-xl border border-gold-200 bg-white/75 p-4 backdrop-blur-sm md:p-5"
+  data-default-sort={defaultSortValue}
+  data-search-debounce-ms={searchDebounceMs}
+  data-api-page-path={apiPagePath}
+  data-current-page={safeCurrentPage}
+  data-total-pages={safeTotalPages}
+  data-total-available-count={totalAvailableCount}
+  data-card-variant={cardVariant}
+  data-directory-label={directoryLabel}
+>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    {tabs.length > 0 && (
+      <nav class="inline-flex flex-wrap items-center rounded-full border border-navy-700 bg-cream-100 p-1" aria-label="Directory views">
+        {tabs.map((tab) => (
+          <a
+            href={tab.href}
+            aria-current={tab.active ? 'page' : undefined}
+            class:list={[
+              'rounded-full px-4 py-1.5 text-sm font-sans font-semibold transition-colors',
+              tab.active ? 'bg-navy-800 text-white' : 'text-navy-700 hover:bg-cream-200',
+            ]}
+          >
+            {tab.label}
+          </a>
+        ))}
+      </nav>
+    )}
+
+    <div class="flex items-center gap-2">
+      <label for="bill-sort" class="text-sm font-sans font-medium text-navy-700">Sort</label>
+      <select
+        id="bill-sort"
+        class="rounded-md border border-gold-300 bg-cream-100 px-3 py-1.5 text-sm text-navy-800 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-300"
+      >
+        {sortOptions.map((option) => (
+          <option value={option.value} selected={option.value === defaultSortValue}>{option.label}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  {showSearch && (
+    <SearchBar label={searchLabel} placeholder={searchPlaceholder} />
+  )}
+
+  {showCategoryFilters && (
+    <div class="space-y-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          data-category-filter="all"
+          aria-pressed="true"
+          class="category-filter-chip inline-flex items-center rounded-full border bg-navy-800 px-3 py-1.5 text-sm font-sans font-semibold text-white border-navy-800 transition-colors"
+        >
+          All categories
+        </button>
+        {primaryCategories.map((category) => (
+          <button
+            type="button"
+            data-category-filter={toCategorySlug(category)}
+            aria-pressed="false"
+            class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white"
+          >
+            {category}
+          </button>
+        ))}
+        {overflowCategories.length > 0 && (
+          <button
+            id="more-filters-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="extra-category-filters"
+            class="inline-flex items-center rounded-full border border-gold-300 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:bg-cream-200"
+          >
+            More filters
+          </button>
+        )}
+        {showReset && (
+          <button
+            id="clear-filters"
+            type="button"
+            class="inline-flex items-center rounded-full border border-cream-300 px-3 py-1.5 text-sm font-sans font-semibold text-navy-600 transition-colors hover:bg-cream-200"
+          >
+            Reset
+          </button>
+        )}
+      </div>
+
+      {overflowCategories.length > 0 && (
+        <div id="extra-category-filters" class="hidden flex-wrap items-center gap-2">
+          {overflowCategories.map((category) => (
+            <button
+              type="button"
+              data-category-filter={toCategorySlug(category)}
+              aria-pressed="false"
+              class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-sm font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white"
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+
+  <div class="flex flex-wrap items-center justify-between gap-2 border-t border-gold-200 pt-3 text-sm text-navy-600">
+    <p id="results-summary" class="font-sans font-medium" aria-live="polite" aria-atomic="true">
+      Showing {initialCount} {initialCount === 1 ? 'bill' : 'bills'}
+    </p>
+    <p id="sort-summary" class="font-sans">{resolvedInitialSortSummary}</p>
+  </div>
+
+  {hasApiPaging && (
+    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-gold-200 pt-3">
+      <button
+        id="load-more-bills"
+        type="button"
+        class="inline-flex items-center rounded-md border border-navy-700 bg-navy-800 px-4 py-2 text-sm font-sans font-semibold text-white transition-colors hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Load More
+      </button>
+      <p id="load-more-status" class="text-xs font-sans text-navy-500">
+        Loaded page {safeCurrentPage} of {safeTotalPages}
+      </p>
+    </div>
+  )}
+</section>
+
+<script>
+  const controlsContainer = document.getElementById('bill-directory-controls');
+  const searchInput = document.getElementById('bill-search') as HTMLInputElement | null;
+  const billSort = document.getElementById('bill-sort') as HTMLSelectElement | null;
+  const categoryButtons = Array.from(document.querySelectorAll('[data-category-filter]')) as HTMLButtonElement[];
+  const clearFiltersButton = document.getElementById('clear-filters') as HTMLButtonElement | null;
+  const resultsSummary = document.getElementById('results-summary');
+  const sortSummary = document.getElementById('sort-summary');
+  const moreFiltersToggle = document.getElementById('more-filters-toggle') as HTMLButtonElement | null;
+  const extraFilters = document.getElementById('extra-category-filters');
+  const noResults = document.getElementById('no-results');
+  const billsGrid = document.getElementById('bills-grid');
+  const loadMoreButton = document.getElementById('load-more-bills') as HTMLButtonElement | null;
+  const loadMoreStatus = document.getElementById('load-more-status');
+
+  if (!billsGrid || !controlsContainer) {
+    // No directory controls found on this page.
+  } else {
+    let billItems = Array.from(document.querySelectorAll('.bill-item')) as HTMLElement[];
+    let activeCategory = 'all';
+    const defaultSortValue = controlsContainer.getAttribute('data-default-sort') || 'newest';
+    const searchDebounceMs = Number.parseInt(
+      controlsContainer.getAttribute('data-search-debounce-ms') || '140',
+      10
+    );
+    const apiPagePath = controlsContainer.getAttribute('data-api-page-path') || '';
+    const initialPage = Number.parseInt(controlsContainer.getAttribute('data-current-page') || '1', 10);
+    let totalPages = Number.parseInt(controlsContainer.getAttribute('data-total-pages') || '1', 10);
+    let totalAvailableCount = Number.parseInt(
+      controlsContainer.getAttribute('data-total-available-count') || String(billItems.length),
+      10
+    );
+    const cardVariant = controlsContainer.getAttribute('data-card-variant') || 'default';
+    const directoryLabel = controlsContainer.getAttribute('data-directory-label') || 'bills';
+
+    if (Number.isNaN(totalPages) || totalPages < 1) totalPages = 1;
+    const safeInitialPage = Number.isNaN(initialPage) || initialPage < 1
+      ? 1
+      : Math.min(initialPage, totalPages);
+    if (Number.isNaN(totalAvailableCount) || totalAvailableCount < billItems.length) {
+      totalAvailableCount = billItems.length;
+    }
+
+    const loadedPages = new Set<number>([safeInitialPage]);
+    let nextPageCursor = safeInitialPage + 1;
+    let searchTimer: number | undefined;
+    let isLoadingMore = false;
+    let autoLoadInFlight = false;
+
+    const currentUrl = new URL(window.location.href);
+    const urlParams = currentUrl.searchParams;
+    const perfLoggingEnabled =
+      currentUrl.searchParams.get('perf') === '1' ||
+      window.localStorage.getItem('absurdity.perf') === '1';
+    const perfSessionId = `dir-${Math.random().toString(36).slice(2, 9)}-${Date.now().toString(36)}`;
+
+    type DirectoryPerfEvent = {
+      event: 'directory_interaction';
+      action: string;
+      outcome: 'success' | 'error';
+      directory_label: string;
+      route_path: string;
+      session_id: string;
+      timestamp: string;
+      [key: string]: unknown;
+    };
+
+    type DirectoryPerfSession = {
+      session_id: string;
+      directory_label: string;
+      route_path: string;
+      started_at: string;
+      apply_count: number;
+      apply_total_ms: number;
+      apply_max_ms: number;
+      fetch_count: number;
+      fetch_total_ms: number;
+      fetch_max_ms: number;
+      fetch_error_count: number;
+      total_fetched_bills: number;
+      auto_hydrate_runs: number;
+      auto_hydrate_pages: number;
+      interactions: {
+        search: number;
+        sort: number;
+        category: number;
+        reset: number;
+        load_more: number;
+      };
+      last_visible_count: number;
+      loaded_pages: number;
+      total_pages: number;
+      loaded_items: number;
+      total_available_count: number;
+    };
+
+    type DirectoryPerfStore = {
+      version: number;
+      sessions: Record<string, DirectoryPerfSession>;
+      events: DirectoryPerfEvent[];
+    };
+
+    function getPerfStore(): DirectoryPerfStore {
+      const perfWindow = window as typeof window & {
+        __absurdityDirectoryPerf?: DirectoryPerfStore;
+      };
+
+      if (!perfWindow.__absurdityDirectoryPerf) {
+        perfWindow.__absurdityDirectoryPerf = {
+          version: 1,
+          sessions: {},
+          events: [],
+        };
+      }
+
+      return perfWindow.__absurdityDirectoryPerf;
+    }
+
+    function roundMs(value: number): number {
+      return Math.round(value * 100) / 100;
+    }
+
+    const perfStore = getPerfStore();
+    const perfSession: DirectoryPerfSession = {
+      session_id: perfSessionId,
+      directory_label: directoryLabel,
+      route_path: window.location.pathname,
+      started_at: new Date().toISOString(),
+      apply_count: 0,
+      apply_total_ms: 0,
+      apply_max_ms: 0,
+      fetch_count: 0,
+      fetch_total_ms: 0,
+      fetch_max_ms: 0,
+      fetch_error_count: 0,
+      total_fetched_bills: 0,
+      auto_hydrate_runs: 0,
+      auto_hydrate_pages: 0,
+      interactions: {
+        search: 0,
+        sort: 0,
+        category: 0,
+        reset: 0,
+        load_more: 0,
+      },
+      last_visible_count: billItems.length,
+      loaded_pages: loadedPages.size,
+      total_pages: totalPages,
+      loaded_items: billItems.length,
+      total_available_count: totalAvailableCount,
+    };
+    perfStore.sessions[perfSessionId] = perfSession;
+    let hasEmittedSessionSummary = false;
+
+    function updatePerfSessionSnapshot() {
+      perfSession.loaded_pages = loadedPages.size;
+      perfSession.total_pages = totalPages;
+      perfSession.loaded_items = billItems.length;
+      perfSession.total_available_count = Math.max(totalAvailableCount, billItems.length);
+    }
+
+    function emitPerfEvent(
+      action: string,
+      outcome: 'success' | 'error',
+      data: Record<string, unknown> = {}
+    ) {
+      const event: DirectoryPerfEvent = {
+        event: 'directory_interaction',
+        action,
+        outcome,
+        directory_label: directoryLabel,
+        route_path: window.location.pathname,
+        session_id: perfSessionId,
+        timestamp: new Date().toISOString(),
+        loaded_pages: loadedPages.size,
+        total_pages: totalPages,
+        loaded_items: billItems.length,
+        total_available_count: Math.max(totalAvailableCount, billItems.length),
+        active_category: activeCategory,
+        active_sort: billSort?.value || defaultSortValue,
+        query_length: searchInput?.value.trim().length || 0,
+        ...data,
+      };
+
+      perfStore.events.push(event);
+      if (perfStore.events.length > 200) {
+        perfStore.events.shift();
+      }
+
+      if (perfLoggingEnabled) {
+        console.info('[directory_perf]', event);
+      }
+
+      updatePerfSessionSnapshot();
+    }
+
+    type ItemData = {
+      item: HTMLElement;
+      title: string;
+      category: string;
+      sponsor: string;
+      tags: string;
+      committee: string;
+      categorySlug: string;
+    };
+
+    let billItemData: ItemData[] = billItems.map((item) => {
+      const title = item.dataset.title || '';
+      const category = item.dataset.category || '';
+      const sponsor = item.dataset.sponsor || '';
+      const tags = item.dataset.tags || '';
+      const committee = item.dataset.committee || '';
+      return {
+        item,
+        title,
+        category,
+        sponsor,
+        tags,
+        committee,
+        categorySlug: item.dataset.categorySlug || '',
+      };
+    });
+
+    function advanceNextPageCursor() {
+      while (loadedPages.has(nextPageCursor) && nextPageCursor <= totalPages) {
+        nextPageCursor += 1;
+      }
+    }
+
+    function hasNextPage() {
+      advanceNextPageCursor();
+      return Boolean(apiPagePath) && nextPageCursor <= totalPages;
+    }
+
+    function hasUnloadedPages() {
+      return Boolean(apiPagePath) && loadedPages.size < totalPages;
+    }
+
+    function toNumber(value: string | undefined): number {
+      const parsed = Number.parseFloat(value ?? '');
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+
+    function escapeHtml(value: string): string {
+      return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function toCategorySlug(value: string): string {
+      return value.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+    }
+
+    function getSponsorName(sponsor: string): string {
+      return sponsor.replace(/\s*\([^)]+\)\s*$/, '').trim();
+    }
+
+    function getSponsorParty(sponsor: string): string {
+      return sponsor.match(/\(([^)]+)\)/)?.[1] || '';
+    }
+
+    function getDateLabel(dateIso: string, fallbackLabel?: string): string {
+      if (fallbackLabel) return fallbackLabel;
+      const date = new Date(dateIso);
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    }
+
+    function getScoreBadgeClasses(score: number): string {
+      if (score <= 3) return 'bg-green-100 text-green-800 border-green-200';
+      if (score <= 6) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      if (score <= 8) return 'bg-orange-100 text-orange-800 border-orange-200';
+      return 'bg-red-100 text-red-800 border-red-200';
+    }
+
+    function getStageBadge(status: string): { label: string; classes: string } {
+      const s = status.toLowerCase();
+      if (s.includes('became public law') || s.includes('became law') || s.includes('enacted') || s.includes('signed')) {
+        return { label: 'Law', classes: 'bg-green-100 text-green-800' };
+      }
+      if (s.includes('vetoed')) {
+        return { label: 'Vetoed', classes: 'bg-red-100 text-red-800' };
+      }
+      if (s.includes('failed') || s.includes('rejected') || s.includes('died')) {
+        return { label: 'Dead', classes: 'bg-gray-200 text-gray-700' };
+      }
+      if (s.includes('passed') && s.includes('house') && s.includes('senate')) {
+        return { label: 'Passed Both', classes: 'bg-gold-100 text-gold-800' };
+      }
+      if (s.includes('passed house')) {
+        return { label: 'Passed House', classes: 'bg-gold-100 text-gold-800' };
+      }
+      if (s.includes('passed senate')) {
+        return { label: 'Passed Senate', classes: 'bg-gold-100 text-gold-800' };
+      }
+      if (s.includes('committee') || s.includes('referred')) {
+        return { label: 'In Committee', classes: 'bg-blue-100 text-blue-800' };
+      }
+      if (s.includes('introduced')) {
+        return { label: 'Introduced', classes: 'bg-gray-100 text-gray-700' };
+      }
+      return { label: 'Pending', classes: 'bg-gray-100 text-gray-700' };
+    }
+
+    type ApiBill = {
+      id: string;
+      title: string;
+      billNumber: string;
+      billType: 'real' | 'sensible' | 'absurd';
+      category: string;
+      categorySlug?: string;
+      tags?: string[];
+      sponsor: string;
+      sponsorName?: string;
+      sponsorParty?: string;
+      committee?: string;
+      status: string;
+      summary: string;
+      featured?: boolean;
+      absurdityIndex?: number | null;
+      dateIntroduced: string;
+      dateIntroducedTs?: number;
+      dateIntroducedLabel?: string;
+      url?: string;
+    };
+
+    type ApplySource =
+      | 'initial'
+      | 'search'
+      | 'sort'
+      | 'category'
+      | 'reset'
+      | 'load_more'
+      | 'auto_hydrate'
+      | 'unknown';
+
+    function renderAbsurdityBar(score: number): string {
+      const clamped = Math.max(1, Math.min(10, Math.round(score)));
+      const segments = Array.from({ length: 10 }, (_, index) => {
+        const segment = index + 1;
+        let activeClass = 'bg-red-600';
+        if (segment <= 3) activeClass = 'bg-green-600';
+        else if (segment <= 6) activeClass = 'bg-yellow-500';
+        else if (segment <= 8) activeClass = 'bg-orange-500';
+
+        return `<span class="h-1.5 flex-1 rounded-sm ${segment <= clamped ? activeClass : 'bg-cream-200'}"></span>`;
+      });
+
+      return segments.join('');
+    }
+
+    function renderCardHtml(bill: ApiBill): string {
+      const isReal = bill.billType === 'real';
+      const isRealGridCard = cardVariant === 'real-grid' && isReal;
+      const detailHref = bill.url || (isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`);
+      const sponsorName = bill.sponsorName || getSponsorName(bill.sponsor);
+      const sponsorParty = bill.sponsorParty || getSponsorParty(bill.sponsor);
+      const categorySlug = bill.categorySlug || toCategorySlug(bill.category);
+      const dateLabel = getDateLabel(bill.dateIntroduced, bill.dateIntroducedLabel);
+      const score = typeof bill.absurdityIndex === 'number' ? bill.absurdityIndex : null;
+      const featured = Boolean(bill.featured);
+      const stage = getStageBadge(bill.status || '');
+      const scoreBadge = score !== null
+        ? `<span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-mono font-bold ${getScoreBadgeClasses(score)}">${score}/10</span>`
+        : '';
+      const typeBadge = isReal
+        ? '<span class="inline-flex items-center rounded-full border border-navy-800 bg-navy-700/90 px-2.5 py-0.5 text-xs font-sans font-semibold text-white">Real Bill</span>'
+        : '<span class="inline-flex items-center rounded-full border border-green-800 bg-green-700/90 px-2.5 py-0.5 text-xs font-sans font-semibold text-white">Not Bill</span>';
+      const statusMarkup = isReal
+        ? `<div class="mb-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-sans font-medium ${stage.classes}">${escapeHtml(stage.label)}</span></div>`
+        : '';
+      const absurdityMarkup = isReal && score !== null
+        ? `<div class="mb-4 space-y-1"><div class="text-xs font-sans font-medium text-navy-500">Absurdity</div><div class="flex gap-0.5">${renderAbsurdityBar(score)}</div></div>`
+        : '';
+      const topBarClass = featured
+        ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400'
+        : isReal
+          ? 'bg-navy-600'
+          : 'bg-green-600';
+
+      return `
+        <article class="group relative bg-white shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden ${isRealGridCard ? 'rounded-xl hover:-translate-y-0.5 border border-gold-300 hover:border-gold-500' : 'rounded-lg border border-gold-200 hover:border-gold-400'} ${featured ? 'ring-2 ring-gold-400 border-gold-400' : ''}">
+          <div class="h-1 ${topBarClass}"></div>
+          ${featured ? '<div class="absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono">FEATURED</div>' : ''}
+          <div class="p-5 ${isRealGridCard ? 'space-y-0.5' : ''}">
+            <div class="mb-2 flex items-center justify-between gap-2">
+              <span class="inline-flex items-center rounded-full bg-navy-800 px-2.5 py-1 text-xs font-mono font-semibold tracking-wide text-gold-400">${escapeHtml(bill.billNumber)}</span>
+              ${isRealGridCard && scoreBadge ? scoreBadge : typeBadge}
+            </div>
+            ${statusMarkup}
+            <h3 class="mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700 ${isRealGridCard ? 'text-xl' : 'text-lg'}">
+              <a href="${escapeHtml(detailHref)}" class="after:absolute after:inset-0">${escapeHtml(bill.title)}</a>
+            </h3>
+            <p class="mb-4 text-sm leading-relaxed text-navy-600 ${isRealGridCard ? 'line-clamp-3' : 'line-clamp-2'}">${escapeHtml(bill.summary)}</p>
+            ${absurdityMarkup}
+            <div class="space-y-2 border-t border-cream-200 pt-3">
+              <div class="flex items-center gap-1.5 text-sm">
+                <span class="truncate font-medium text-navy-700" title="${escapeHtml(bill.sponsor)}">${escapeHtml(sponsorName)}</span>
+                ${sponsorParty ? `<span class="flex-shrink-0 font-mono text-xs text-navy-500">(${escapeHtml(sponsorParty)})</span>` : ''}
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <a href="/category/${escapeHtml(categorySlug)}" class="relative z-10 inline-flex items-center rounded-full bg-cream-100 px-2.5 py-1 text-xs font-medium text-navy-600 transition-colors hover:bg-cream-200">
+                  ${escapeHtml(bill.category)}
+                </a>
+                <time datetime="${escapeHtml(bill.dateIntroduced)}" class="text-xs text-navy-500">${escapeHtml(dateLabel)}</time>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function createBillItemFromApi(bill: ApiBill): HTMLElement {
+      const item = document.createElement('div');
+      const titleLower = (bill.title || '').toLowerCase();
+      const categoryLower = (bill.category || '').toLowerCase();
+      const sponsorLower = (bill.sponsor || '').toLowerCase();
+      const committeeLower = (bill.committee || '').toLowerCase();
+      const tagsLower = (bill.tags || []).join(',').toLowerCase();
+      const categorySlug = bill.categorySlug || toCategorySlug(bill.category || '');
+      const introducedTs = typeof bill.dateIntroducedTs === 'number'
+        ? bill.dateIntroducedTs
+        : new Date(bill.dateIntroduced).getTime();
+
+      item.className = 'bill-item';
+      item.dataset.title = titleLower;
+      item.dataset.category = categoryLower;
+      item.dataset.categorySlug = categorySlug;
+      item.dataset.type = bill.billType;
+      item.dataset.sponsor = sponsorLower;
+      item.dataset.committee = committeeLower;
+      item.dataset.tags = tagsLower;
+      item.dataset.featured = bill.featured ? '1' : '0';
+      item.dataset.score = String(bill.absurdityIndex ?? 0);
+      item.dataset.date = String(introducedTs);
+      item.innerHTML = renderCardHtml(bill);
+
+      return item;
+    }
+
+    function setCategoryButtonState(button: HTMLButtonElement, isActive: boolean) {
+      button.classList.toggle('bg-navy-800', isActive);
+      button.classList.toggle('text-white', isActive);
+      button.classList.toggle('border-navy-800', isActive);
+      button.classList.toggle('border-navy-700', !isActive);
+      button.classList.toggle('text-navy-700', !isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+
+    function updateCategoryButtonStates() {
+      categoryButtons.forEach((button) => {
+        setCategoryButtonState(button, button.dataset.categoryFilter === activeCategory);
+      });
+    }
+
+    function compareItems(a: HTMLElement, b: HTMLElement, sortValue: string): number {
+      if (sortValue === 'oldest') {
+        return toNumber(a.dataset.date) - toNumber(b.dataset.date);
+      }
+      if (sortValue === 'title') {
+        return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+      }
+      if (sortValue === 'featured') {
+        const featuredDiff = toNumber(b.dataset.featured) - toNumber(a.dataset.featured);
+        if (featuredDiff !== 0) return featuredDiff;
+        return toNumber(b.dataset.date) - toNumber(a.dataset.date);
+      }
+      if (sortValue === 'absurdity') {
+        const scoreDiff = toNumber(b.dataset.score) - toNumber(a.dataset.score);
+        if (scoreDiff !== 0) return scoreDiff;
+        return toNumber(b.dataset.date) - toNumber(a.dataset.date);
+      }
+      return toNumber(b.dataset.date) - toNumber(a.dataset.date);
+    }
+
+    function getSortSummaryText(): string {
+      if (!billSort) return 'Sorted by default order';
+      const selectedLabel = billSort.options[billSort.selectedIndex]?.textContent || 'default order';
+      return `Sorted by ${selectedLabel}`;
+    }
+
+    function isValidSortValue(value: string | null): value is string {
+      if (!billSort || !value) return false;
+      return Array.from(billSort.options).some((option) => option.value === value);
+    }
+
+    function isValidCategoryValue(value: string | null): value is string {
+      if (!value) return false;
+      return categoryButtons.some((button) => button.dataset.categoryFilter === value);
+    }
+
+    function syncUrlState(query: string, sortValue: string) {
+      const nextUrl = new URL(window.location.href);
+
+      if (query) {
+        nextUrl.searchParams.set('q', query);
+      } else {
+        nextUrl.searchParams.delete('q');
+      }
+
+      if (sortValue && sortValue !== defaultSortValue) {
+        nextUrl.searchParams.set('sort', sortValue);
+      } else {
+        nextUrl.searchParams.delete('sort');
+      }
+
+      if (categoryButtons.length > 0 && activeCategory !== 'all') {
+        nextUrl.searchParams.set('category', activeCategory);
+      } else {
+        nextUrl.searchParams.delete('category');
+      }
+
+      const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (nextPath !== currentPath) {
+        window.history.replaceState({}, '', nextPath);
+      }
+    }
+
+    function getResultsSummaryText(visibleCount: number, hasActiveFilters: boolean): string {
+      const loadedCount = billItems.length;
+      const effectiveTotal = Math.max(totalAvailableCount, loadedCount);
+
+      if (loadedCount >= effectiveTotal) {
+        return `Showing ${visibleCount} ${visibleCount === 1 ? 'bill' : 'bills'}`;
+      }
+
+      if (hasActiveFilters) {
+        return `Showing ${visibleCount} matching ${visibleCount === 1 ? 'bill' : 'bills'} (${loadedCount}/${effectiveTotal} loaded)`;
+      }
+
+      return `Showing ${visibleCount} ${visibleCount === 1 ? 'bill' : 'bills'} (${loadedCount}/${effectiveTotal} loaded)`;
+    }
+
+    function updateLoadMoreUi(message?: string) {
+      if (!loadMoreStatus) return;
+
+      if (message) {
+        loadMoreStatus.textContent = message;
+      } else {
+        const loadedCount = billItems.length;
+        const effectiveTotal = Math.max(totalAvailableCount, loadedCount);
+        loadMoreStatus.textContent = `Loaded ${loadedPages.size} of ${totalPages} pages (${loadedCount}/${effectiveTotal} ${directoryLabel})`;
+      }
+
+      if (!loadMoreButton) return;
+      if (!hasNextPage()) {
+        loadMoreButton.disabled = true;
+        loadMoreButton.textContent = 'All Loaded';
+        return;
+      }
+
+      loadMoreButton.disabled = isLoadingMore;
+      loadMoreButton.textContent = isLoadingMore ? 'Loading...' : 'Load More';
+    }
+
+    async function loadPage(pageToLoad: number, autoMode = false): Promise<boolean> {
+      if (!apiPagePath || isLoadingMore || pageToLoad < 1 || pageToLoad > totalPages || loadedPages.has(pageToLoad)) {
+        return false;
+      }
+
+      const fetchStartMs = performance.now();
+      isLoadingMore = true;
+      updateLoadMoreUi(`Loading page ${pageToLoad} of ${totalPages}...`);
+
+      try {
+        const response = await fetch(`${apiPagePath}/${pageToLoad}.json`, {
+          headers: { Accept: 'application/json' },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load page ${pageToLoad}`);
+        }
+
+        const payload = await response.json();
+        const incomingBills = Array.isArray(payload.bills) ? payload.bills : [];
+
+        if (typeof payload.total === 'number' && payload.total > 0) {
+          totalAvailableCount = payload.total;
+        }
+        if (typeof payload.totalPages === 'number' && payload.totalPages > 0) {
+          totalPages = payload.totalPages;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        incomingBills.forEach((bill: ApiBill) => {
+          const item = createBillItemFromApi(bill);
+          billItems.push(item);
+          billItemData.push({
+            item,
+            title: item.dataset.title || '',
+            category: item.dataset.category || '',
+            sponsor: item.dataset.sponsor || '',
+            tags: item.dataset.tags || '',
+            committee: item.dataset.committee || '',
+            categorySlug: item.dataset.categorySlug || '',
+          });
+          fragment.appendChild(item);
+        });
+
+        billsGrid.appendChild(fragment);
+
+        const resolvedPage = typeof payload.page === 'number' ? payload.page : pageToLoad;
+        loadedPages.add(resolvedPage);
+        if (resolvedPage >= nextPageCursor) {
+          nextPageCursor = resolvedPage + 1;
+        }
+        advanceNextPageCursor();
+
+        const fetchDurationMs = roundMs(performance.now() - fetchStartMs);
+        perfSession.fetch_count += 1;
+        perfSession.fetch_total_ms += fetchDurationMs;
+        perfSession.fetch_max_ms = Math.max(perfSession.fetch_max_ms, fetchDurationMs);
+        perfSession.total_fetched_bills += incomingBills.length;
+
+        emitPerfEvent('fetch_page', 'success', {
+          page: resolvedPage,
+          auto_mode: autoMode,
+          bills_received: incomingBills.length,
+          duration_ms: fetchDurationMs,
+          http_status: response.status,
+        });
+
+        if (!autoMode) {
+          updateLoadMoreUi();
+        }
+
+        return incomingBills.length > 0;
+      } catch (error) {
+        const fetchDurationMs = roundMs(performance.now() - fetchStartMs);
+        perfSession.fetch_count += 1;
+        perfSession.fetch_total_ms += fetchDurationMs;
+        perfSession.fetch_max_ms = Math.max(perfSession.fetch_max_ms, fetchDurationMs);
+        perfSession.fetch_error_count += 1;
+
+        emitPerfEvent('fetch_page', 'error', {
+          page: pageToLoad,
+          auto_mode: autoMode,
+          duration_ms: fetchDurationMs,
+          error_message: error instanceof Error ? error.message : 'Unknown fetch error',
+        });
+
+        console.error('[BillDirectoryControls] Failed to fetch page', error);
+        updateLoadMoreUi('Unable to load more right now. Try again.');
+        return false;
+      } finally {
+        isLoadingMore = false;
+        updateLoadMoreUi();
+      }
+    }
+
+    async function loadNextPage(autoMode = false): Promise<boolean> {
+      if (!hasNextPage()) return false;
+      return loadPage(nextPageCursor, autoMode);
+    }
+
+    async function maybeAutoLoadAll(query: string, sortValue: string) {
+      const shouldAutoLoadAll = Boolean(apiPagePath) && (query.length > 0 || activeCategory !== 'all' || sortValue !== defaultSortValue);
+      if (!shouldAutoLoadAll || autoLoadInFlight || !hasUnloadedPages()) return;
+
+      const autoHydrateStartMs = performance.now();
+      let pagesLoaded = 0;
+      perfSession.auto_hydrate_runs += 1;
+
+      autoLoadInFlight = true;
+      try {
+        for (let page = 1; page <= totalPages; page += 1) {
+          if (loadedPages.has(page)) continue;
+          const loaded = await loadPage(page, true);
+          if (!loaded) continue;
+          pagesLoaded += 1;
+          applyControls(false, 'auto_hydrate');
+        }
+      } finally {
+        autoLoadInFlight = false;
+        perfSession.auto_hydrate_pages += pagesLoaded;
+        emitPerfEvent('auto_hydrate', 'success', {
+          trigger_query: query.length > 0,
+          trigger_category: activeCategory !== 'all',
+          trigger_sort: sortValue !== defaultSortValue,
+          pages_loaded: pagesLoaded,
+          duration_ms: roundMs(performance.now() - autoHydrateStartMs),
+        });
+      }
+    }
+
+    function emitSessionSummary(reason: string) {
+      if (hasEmittedSessionSummary) return;
+      hasEmittedSessionSummary = true;
+
+      const averageApplyMs = perfSession.apply_count > 0
+        ? roundMs(perfSession.apply_total_ms / perfSession.apply_count)
+        : 0;
+      const averageFetchMs = perfSession.fetch_count > 0
+        ? roundMs(perfSession.fetch_total_ms / perfSession.fetch_count)
+        : 0;
+
+      emitPerfEvent('session_summary', 'success', {
+        reason,
+        apply_count: perfSession.apply_count,
+        apply_total_ms: roundMs(perfSession.apply_total_ms),
+        apply_avg_ms: averageApplyMs,
+        apply_max_ms: perfSession.apply_max_ms,
+        fetch_count: perfSession.fetch_count,
+        fetch_total_ms: roundMs(perfSession.fetch_total_ms),
+        fetch_avg_ms: averageFetchMs,
+        fetch_max_ms: perfSession.fetch_max_ms,
+        fetch_error_count: perfSession.fetch_error_count,
+        total_fetched_bills: perfSession.total_fetched_bills,
+        auto_hydrate_runs: perfSession.auto_hydrate_runs,
+        auto_hydrate_pages: perfSession.auto_hydrate_pages,
+        interactions: perfSession.interactions,
+      });
+    }
+
+    function applyControls(shouldAutoLoad = true, source: ApplySource = 'unknown') {
+      const applyStartMs = performance.now();
+      const rawQuery = searchInput?.value.trim() || '';
+      const query = rawQuery.toLowerCase();
+      const sortValue = billSort?.value || defaultSortValue;
+
+      const visibleItems = billItemData
+        .filter((itemData) => {
+          const matchesQuery =
+            !query ||
+            itemData.title.includes(query) ||
+            itemData.category.includes(query) ||
+            itemData.sponsor.includes(query) ||
+            itemData.tags.includes(query) ||
+            itemData.committee.includes(query);
+          const matchesCategory = activeCategory === 'all' || itemData.categorySlug === activeCategory;
+          return matchesQuery && matchesCategory;
+        })
+        .map((itemData) => itemData.item);
+
+      visibleItems.sort((a, b) => compareItems(a, b, sortValue));
+
+      billItems.forEach((item) => {
+        item.style.display = 'none';
+      });
+
+      const fragment = document.createDocumentFragment();
+      visibleItems.forEach((item) => {
+        item.style.display = '';
+        fragment.appendChild(item);
+      });
+      billsGrid.appendChild(fragment);
+
+      const visibleCount = visibleItems.length;
+      const hasActiveFilters = query.length > 0 || activeCategory !== 'all';
+
+      if (resultsSummary) {
+        resultsSummary.textContent = getResultsSummaryText(visibleCount, hasActiveFilters);
+      }
+      if (sortSummary) {
+        sortSummary.textContent = getSortSummaryText();
+      }
+
+      if (noResults) {
+        noResults.classList.toggle('hidden', visibleCount > 0);
+      }
+      billsGrid.classList.toggle('hidden', visibleCount === 0);
+
+      syncUrlState(rawQuery, sortValue);
+      updateLoadMoreUi();
+
+      const applyDurationMs = roundMs(performance.now() - applyStartMs);
+      perfSession.apply_count += 1;
+      perfSession.apply_total_ms += applyDurationMs;
+      perfSession.apply_max_ms = Math.max(perfSession.apply_max_ms, applyDurationMs);
+      perfSession.last_visible_count = visibleCount;
+
+      if (source === 'search') perfSession.interactions.search += 1;
+      if (source === 'sort') perfSession.interactions.sort += 1;
+      if (source === 'category') perfSession.interactions.category += 1;
+      if (source === 'reset') perfSession.interactions.reset += 1;
+      if (source === 'load_more') perfSession.interactions.load_more += 1;
+
+      emitPerfEvent('apply_controls', 'success', {
+        source,
+        visible_count: visibleCount,
+        has_active_filters: hasActiveFilters,
+        should_auto_load: shouldAutoLoad,
+        duration_ms: applyDurationMs,
+      });
+
+      if (shouldAutoLoad) {
+        void maybeAutoLoadAll(query, sortValue);
+      }
+    }
+
+    function scheduleApplyControls() {
+      if (searchTimer) {
+        window.clearTimeout(searchTimer);
+      }
+      searchTimer = window.setTimeout(() => applyControls(true, 'search'), Math.max(0, searchDebounceMs));
+    }
+
+    categoryButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        activeCategory = button.dataset.categoryFilter || 'all';
+        updateCategoryButtonStates();
+        applyControls(true, 'category');
+      });
+    });
+
+    clearFiltersButton?.addEventListener('click', () => {
+      activeCategory = 'all';
+      if (searchInput) searchInput.value = '';
+      if (billSort) billSort.value = defaultSortValue;
+      updateCategoryButtonStates();
+      applyControls(true, 'reset');
+    });
+
+    loadMoreButton?.addEventListener('click', async () => {
+      const loaded = await loadNextPage(false);
+      if (loaded) {
+        applyControls(false, 'load_more');
+      }
+    });
+
+    searchInput?.addEventListener('input', scheduleApplyControls);
+    billSort?.addEventListener('change', () => applyControls(true, 'sort'));
+
+    moreFiltersToggle?.addEventListener('click', () => {
+      if (!extraFilters) return;
+      const isHidden = extraFilters.classList.contains('hidden');
+      extraFilters.classList.toggle('hidden', !isHidden);
+      extraFilters.classList.toggle('flex', isHidden);
+      moreFiltersToggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+      moreFiltersToggle.textContent = isHidden ? 'Fewer filters' : 'More filters';
+    });
+
+    window.addEventListener('pagehide', () => {
+      emitSessionSummary('pagehide');
+    });
+
+    const queryFromUrl = urlParams.get('q')?.trim() || '';
+    const sortFromUrl = urlParams.get('sort');
+    const categoryFromUrl = urlParams.get('category');
+
+    if (searchInput && queryFromUrl) {
+      searchInput.value = queryFromUrl;
+    }
+    if (billSort && isValidSortValue(sortFromUrl)) {
+      billSort.value = sortFromUrl;
+    }
+    if (isValidCategoryValue(categoryFromUrl)) {
+      activeCategory = categoryFromUrl;
+      if (moreFiltersToggle && extraFilters && extraFilters.classList.contains('hidden')) {
+        const isOverflowCategory = !categoryButtons.some(
+          (button) =>
+            button.dataset.categoryFilter === activeCategory &&
+            button.closest('#extra-category-filters') === null
+        );
+        if (isOverflowCategory) {
+          extraFilters.classList.remove('hidden');
+          extraFilters.classList.add('flex');
+          moreFiltersToggle.setAttribute('aria-expanded', 'true');
+          moreFiltersToggle.textContent = 'Fewer filters';
+        }
+      }
+    }
+
+    emitPerfEvent('directory_init', 'success', {
+      perf_logging_enabled: perfLoggingEnabled,
+      initial_page: safeInitialPage,
+    });
+
+    updateCategoryButtonStates();
+    updateLoadMoreUi();
+    applyControls(true, 'initial');
+  }
+</script>

@@ -1,15 +1,15 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import BillCard from '../../components/bills/BillCard.astro';
-import BillDirectoryControls from '../../components/ui/BillDirectoryControls.astro';
-import Pagination from '../../components/ui/Pagination.astro';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import BillCard from '../../../../components/bills/BillCard.astro';
+import BillDirectoryControls from '../../../../components/ui/BillDirectoryControls.astro';
+import Pagination from '../../../../components/ui/Pagination.astro';
 import { getCollection } from 'astro:content';
 import {
   DIRECTORY_PAGE_SIZE,
   sortByDateDesc,
   toCategorySlug,
   toSponsorSlug,
-} from '../../utils/directory.js';
+} from '../../../../utils/directory.js';
 
 export async function getStaticPaths() {
   const bills = await getCollection('bills');
@@ -23,11 +23,15 @@ export async function getStaticPaths() {
     sponsorMap.get(sponsor).push(bill);
   }
 
-  return Array.from(sponsorMap.entries()).map(([sponsor, sponsorBills]) => {
+  return Array.from(sponsorMap.entries()).flatMap(([sponsor, sponsorBills]) => {
     const sponsorSlug = toSponsorSlug(sponsor);
     const sortedBills = [...sponsorBills].sort(sortByDateDesc);
     const totalCount = sortedBills.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / DIRECTORY_PAGE_SIZE));
+
+    if (totalPages <= 1) {
+      return [];
+    }
 
     const realBills = sortedBills.filter((bill) => bill.data.billType === 'real');
     const absurdityScores = realBills
@@ -39,19 +43,27 @@ export async function getStaticPaths() {
 
     const categories = [...new Set(sortedBills.map((bill) => bill.data.category))];
 
-    return {
-      params: { slug: sponsorSlug },
-      props: {
-        sponsor,
-        sponsorSlug,
-        bills: sortedBills.slice(0, DIRECTORY_PAGE_SIZE),
-        categories,
-        totalCount,
-        totalPages,
-        currentPage: 1,
-        avgAbsurdity,
-      },
-    };
+    return Array.from({ length: totalPages - 1 }, (_, index) => {
+      const page = index + 2;
+      const start = (page - 1) * DIRECTORY_PAGE_SIZE;
+
+      return {
+        params: {
+          slug: sponsorSlug,
+          page: String(page),
+        },
+        props: {
+          sponsor,
+          sponsorSlug,
+          bills: sortedBills.slice(start, start + DIRECTORY_PAGE_SIZE),
+          categories,
+          totalCount,
+          totalPages,
+          currentPage: page,
+          avgAbsurdity,
+        },
+      };
+    });
   });
 }
 
@@ -67,7 +79,7 @@ const {
 } = Astro.props;
 ---
 
-<BaseLayout title={sponsor} description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}>
+<BaseLayout title={`${sponsor} - Page ${currentPage}`} description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}>
   <section class="mx-auto max-w-6xl px-4 py-12">
     <div class="mb-2">
       <a href="/sponsors" class="text-sm font-sans text-gold-600 transition-colors hover:text-gold-500">&larr; All Sponsors</a>
