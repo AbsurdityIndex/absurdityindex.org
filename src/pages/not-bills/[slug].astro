@@ -4,6 +4,7 @@ import BillHeader from '../../components/bills/BillHeader.astro';
 import PairedBillCallout from '../../components/bills/PairedBillCallout.astro';
 import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
 import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
+import PartyBalance from '../../components/bills/PartyBalance.astro';
 import Icon from '../../components/ui/Icon.astro';
 import { getCollection, render } from 'astro:content';
 
@@ -45,6 +46,19 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
   <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
 
   <div class="max-w-4xl mx-auto px-4 py-12">
+    {/* Under Construction Disclaimer */}
+    <div class="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
+      <div class="flex items-start gap-3">
+        <Icon name="alert-triangle" size={24} class="text-yellow-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p class="font-bold text-yellow-800 text-sm uppercase tracking-wide">Under Construction</p>
+          <p class="text-yellow-700 text-sm mt-1">
+            This site is in active development. Content may be incomplete or change without notice.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <article class="bg-parchment rounded-lg shadow-lg overflow-hidden">
       {/* Header section with stamp */}
       <div class="relative p-6 md:p-10 pb-0">
@@ -105,6 +119,20 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       {d.absurdityIndex && (
         <div class="mx-6 md:mx-10 mb-8">
           <AbsurdityMeter score={d.absurdityIndex} />
+        </div>
+      )}
+
+      {/* Party Balance */}
+      {(d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
+        <div class="mx-6 md:mx-10 mb-8">
+          <PartyBalance
+            sponsor={d.sponsor}
+            sponsorParty={d.sponsorParty}
+            cosponsors={d.cosponsors}
+            cosponsorCount={d.cosponsorCount}
+            billEvolution={d.billEvolution}
+            totalPork={d.totalPork}
+          />
         </div>
       )}
 

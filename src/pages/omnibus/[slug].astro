@@ -6,6 +6,7 @@ import OmnibusSpendingChart from '../../components/omnibus/OmnibusSpendingChart.
 import OmnibusDivision from '../../components/omnibus/OmnibusDivision.astro';
 import OmnibusRiders from '../../components/omnibus/OmnibusRiders.astro';
 import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
+import PartyBalance from '../../components/bills/PartyBalance.astro';
 import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
 import Disclaimer from '../../components/ui/Disclaimer.astro';
 import ShareButtons from '../../components/ui/ShareButtons.astro';
@@ -67,10 +68,38 @@ const billSchema = {
   </div>
 
   <div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Under Construction Disclaimer -->
+    <div class="mb-8 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
+      <div class="flex items-start gap-3">
+        <Icon name="alert-triangle" size={24} class="text-yellow-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p class="font-bold text-yellow-800 text-sm uppercase tracking-wide">Under Construction</p>
+          <p class="text-yellow-700 text-sm mt-1">
+            This site is in active development. Bill data, scores, and commentary may be incomplete or inaccurate.
+            Always verify information at <a href="https://congress.gov" target="_blank" rel="noopener noreferrer" class="underline font-medium hover:text-yellow-900">Congress.gov</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Absurdity Score -->
     {d.absurdityIndex && (
       <div class="max-w-sm mx-auto mb-10">
         <AbsurdityMeter score={d.absurdityIndex} />
+      </div>
+    )}
+
+    <!-- Party Balance -->
+    {(d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
+      <div class="max-w-xl mx-auto mb-10">
+        <PartyBalance
+          sponsor={d.sponsor}
+          sponsorParty={d.sponsorParty}
+          cosponsors={d.cosponsors}
+          cosponsorCount={d.cosponsorCount}
+          billEvolution={d.billEvolution}
+          totalPork={d.totalPork}
+        />
       </div>
     )}
 

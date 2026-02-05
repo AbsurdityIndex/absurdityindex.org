@@ -147,6 +147,7 @@ const bills = defineCollection({
   schema: z.object({
     // Core identification
     title: z.string(),
+    subtitle: z.string().optional(),
     billNumber: z.string(),
     billType: z.enum(['sensible', 'absurd', 'real']),
     category: z.string(),

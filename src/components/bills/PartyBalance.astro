@@ -1,0 +1,366 @@
+---
+/**
+ * PartyBalance Component
+ *
+ * Displays party affiliation breakdown for:
+ * - Bill sponsor (with party badge)
+ * - Cosponsors (stacked bar + counts)
+ * - Pork attribution by party (if billEvolution data exists)
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Cosponsor {
+  name: string;
+  party?: string;
+  state?: string;
+}
+
+interface PorkSponsor {
+  name: string;
+  party: 'R' | 'D' | 'I';
+  state: string;
+  chamber: 'house' | 'senate';
+}
+
+interface PorkItem {
+  amount: number;
+  sponsor?: PorkSponsor;
+  cosponsors?: PorkSponsor[];
+}
+
+interface BillStage {
+  porkItems?: PorkItem[];
+}
+
+interface Props {
+  sponsor?: string;
+  sponsorParty?: string;
+  cosponsors?: (string | Cosponsor)[];
+  cosponsorCount?: number;
+  billEvolution?: BillStage[];
+  totalPork?: number;
+}
+
+const {
+  sponsor,
+  sponsorParty,
+  cosponsors = [],
+  cosponsorCount,
+  billEvolution = [],
+  totalPork = 0,
+} = Astro.props;
+
+// Parse sponsor party from string if not explicitly provided
+// Handles formats like "Rep. Name (R-GA)" or "Sen. Name (D-CA)"
+function parseSponsorParty(sponsorStr?: string, explicitParty?: string): string | null {
+  if (explicitParty) return explicitParty.toUpperCase();
+  if (!sponsorStr) return null;
+
+  const match = sponsorStr.match(/\(([RDILG])-?[A-Z]{0,2}\)/i);
+  return match ? match[1].toUpperCase() : null;
+}
+
+// Get party color classes
+function getPartyBgColor(party?: string): string {
+  if (!party) return 'bg-navy-100';
+  const p = party.toUpperCase();
+  if (p === 'R' || p === 'REPUBLICAN') return 'bg-red-100';
+  if (p === 'D' || p === 'DEMOCRAT' || p === 'DEMOCRATIC') return 'bg-blue-100';
+  if (p === 'I' || p === 'INDEPENDENT') return 'bg-purple-100';
+  if (p === 'L' || p === 'LIBERTARIAN') return 'bg-yellow-100';
+  if (p === 'G' || p === 'GREEN') return 'bg-green-100';
+  return 'bg-navy-100';
+}
+
+function getPartyTextColor(party?: string): string {
+  if (!party) return 'text-navy-600';
+  const p = party.toUpperCase();
+  if (p === 'R' || p === 'REPUBLICAN') return 'text-red-700';
+  if (p === 'D' || p === 'DEMOCRAT' || p === 'DEMOCRATIC') return 'text-blue-700';
+  if (p === 'I' || p === 'INDEPENDENT') return 'text-purple-700';
+  if (p === 'L' || p === 'LIBERTARIAN') return 'text-yellow-700';
+  if (p === 'G' || p === 'GREEN') return 'text-green-700';
+  return 'text-navy-600';
+}
+
+function getPartyBarColor(party?: string): string {
+  if (!party) return 'bg-navy-300';
+  const p = party.toUpperCase();
+  if (p === 'R' || p === 'REPUBLICAN') return 'bg-red-500';
+  if (p === 'D' || p === 'DEMOCRAT' || p === 'DEMOCRATIC') return 'bg-blue-500';
+  if (p === 'I' || p === 'INDEPENDENT') return 'bg-purple-500';
+  if (p === 'L' || p === 'LIBERTARIAN') return 'bg-yellow-500';
+  if (p === 'G' || p === 'GREEN') return 'bg-green-500';
+  return 'bg-navy-300';
+}
+
+function formatPartyLetter(party?: string): string {
+  if (!party) return '?';
+  const p = party.toUpperCase();
+  if (p === 'REPUBLICAN') return 'R';
+  if (p === 'DEMOCRAT' || p === 'DEMOCRATIC') return 'D';
+  if (p === 'INDEPENDENT') return 'I';
+  if (p === 'LIBERTARIAN') return 'L';
+  if (p === 'GREEN') return 'G';
+  return p.charAt(0);
+}
+
+// Normalize cosponsors to objects and count by party
+function countCosponsorsByParty(cosponsors: (string | Cosponsor)[]): Record<string, number> {
+  const counts: Record<string, number> = { R: 0, D: 0, I: 0, unknown: 0 };
+
+  for (const c of cosponsors) {
+    if (typeof c === 'string') {
+      // Try to parse party from string like "Name (R-GA)"
+      const match = c.match(/\(([RDILG])-?[A-Z]{0,2}\)/i);
+      const party = match ? match[1].toUpperCase() : null;
+      if (party && counts[party] !== undefined) {
+        counts[party]++;
+      } else if (party) {
+        counts[party] = (counts[party] || 0) + 1;
+      } else {
+        counts.unknown++;
+      }
+    } else if (c.party) {
+      const p = c.party.toUpperCase();
+      const normalized =
+        p === 'REPUBLICAN' ? 'R' :
+        p === 'DEMOCRAT' || p === 'DEMOCRATIC' ? 'D' :
+        p === 'INDEPENDENT' ? 'I' : p;
+      counts[normalized] = (counts[normalized] || 0) + 1;
+    } else {
+      counts.unknown++;
+    }
+  }
+
+  return counts;
+}
+
+// Aggregate pork amounts by party from billEvolution
+function aggregatePorkByParty(stages: BillStage[]): Record<string, number> {
+  const totals: Record<string, number> = { R: 0, D: 0, I: 0, unknown: 0 };
+
+  for (const stage of stages) {
+    if (!stage.porkItems) continue;
+    for (const item of stage.porkItems) {
+      if (!item.amount || item.amount === 0) continue;
+
+      // Primary sponsor party
+      if (item.sponsor?.party) {
+        const p = item.sponsor.party.toUpperCase();
+        totals[p] = (totals[p] || 0) + item.amount;
+      } else {
+        totals.unknown += item.amount;
+      }
+    }
+  }
+
+  return totals;
+}
+
+function formatAmount(amt: number): string {
+  if (amt >= 1_000_000_000_000) return `$${(amt / 1_000_000_000_000).toFixed(1)}T`;
+  if (amt >= 1_000_000_000) return `$${(amt / 1_000_000_000).toFixed(1)}B`;
+  if (amt >= 1_000_000) return `$${(amt / 1_000_000).toFixed(1)}M`;
+  if (amt >= 1_000) return `$${(amt / 1_000).toFixed(0)}K`;
+  return `$${amt.toLocaleString()}`;
+}
+
+// Compute values
+const sponsorPartyValue = parseSponsorParty(sponsor, sponsorParty);
+const cosponsorCounts = countCosponsorsByParty(cosponsors);
+const totalCosponsors = cosponsorCount ?? cosponsors.length;
+const porkByParty = aggregatePorkByParty(billEvolution);
+const hasPorkData = Object.values(porkByParty).some(v => v > 0);
+
+// Determine if bipartisan (both R and D present among sponsor + cosponsors)
+const parties = new Set<string>();
+if (sponsorPartyValue) parties.add(sponsorPartyValue);
+Object.entries(cosponsorCounts).forEach(([p, count]) => {
+  if (count > 0 && p !== 'unknown') parties.add(p);
+});
+const isBipartisan = parties.has('R') && parties.has('D');
+
+// Calculate percentages for stacked bar
+const cosponsorTotal = Object.values(cosponsorCounts).reduce((a, b) => a + b, 0);
+const cosponsorPercents: Record<string, number> = {};
+if (cosponsorTotal > 0) {
+  for (const [party, count] of Object.entries(cosponsorCounts)) {
+    cosponsorPercents[party] = (count / cosponsorTotal) * 100;
+  }
+}
+
+// Calculate pork percentages
+const porkTotal = Object.values(porkByParty).reduce((a, b) => a + b, 0);
+const porkPercents: Record<string, number> = {};
+if (porkTotal > 0) {
+  for (const [party, amount] of Object.entries(porkByParty)) {
+    porkPercents[party] = (amount / porkTotal) * 100;
+  }
+}
+
+// Don't render if no meaningful data
+const hasData = sponsorPartyValue || totalCosponsors > 0;
+if (!hasData) {
+  return null;
+}
+---
+
+<div class="bg-cream-100 border border-gold-300 rounded-lg p-5">
+  {/* Header */}
+  <div class="flex items-center justify-between mb-4">
+    <h4 class="font-serif font-bold text-navy-900 text-sm flex items-center gap-2">
+      <Icon name="scale" size={16} class="text-gold-600" />
+      Party Balance
+    </h4>
+    {isBipartisan && (
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-sans font-medium rounded-full bg-gradient-to-r from-blue-100 to-red-100 text-navy-700 border border-gold-300">
+        <Icon name="users" size={12} />
+        Bipartisan
+      </span>
+    )}
+  </div>
+
+  {/* Sponsor + Cosponsor Section */}
+  <div class="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 items-start">
+    {/* Sponsor Badge */}
+    {sponsor && (
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-navy-500 uppercase tracking-wide font-medium">Sponsor</span>
+        <div class="flex items-center gap-2">
+          <span class:list={[
+            'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
+            getPartyBgColor(sponsorPartyValue),
+            getPartyTextColor(sponsorPartyValue)
+          ]}>
+            {formatPartyLetter(sponsorPartyValue)}
+          </span>
+          <span class="text-sm text-navy-800 font-medium truncate max-w-[150px]" title={sponsor}>
+            {sponsor.replace(/^(Rep\.|Sen\.)\s*/, '').replace(/\s*\([^)]+\)$/, '')}
+          </span>
+        </div>
+      </div>
+    )}
+
+    {/* Cosponsor Breakdown */}
+    {totalCosponsors > 0 && (
+      <div class="flex-1">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs text-navy-500 uppercase tracking-wide font-medium">
+            Cosponsors ({totalCosponsors} total)
+          </span>
+          <div class="flex items-center gap-3 text-xs font-mono">
+            {cosponsorCounts.R > 0 && (
+              <span class="text-red-600">R:{cosponsorCounts.R}</span>
+            )}
+            {cosponsorCounts.D > 0 && (
+              <span class="text-blue-600">D:{cosponsorCounts.D}</span>
+            )}
+            {cosponsorCounts.I > 0 && (
+              <span class="text-purple-600">I:{cosponsorCounts.I}</span>
+            )}
+            {cosponsorCounts.unknown > 0 && (
+              <span class="text-navy-400">?:{cosponsorCounts.unknown}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Stacked Bar */}
+        {cosponsorTotal > 0 && (
+          <div class="flex h-4 rounded-full overflow-hidden border border-gold-200 shadow-inner">
+            {cosponsorPercents.R > 0 && (
+              <div class="bg-red-500" style={`width: ${cosponsorPercents.R}%`} title={`Republican: ${cosponsorCounts.R}`}></div>
+            )}
+            {cosponsorPercents.D > 0 && (
+              <div class="bg-blue-500" style={`width: ${cosponsorPercents.D}%`} title={`Democrat: ${cosponsorCounts.D}`}></div>
+            )}
+            {cosponsorPercents.I > 0 && (
+              <div class="bg-purple-500" style={`width: ${cosponsorPercents.I}%`} title={`Independent: ${cosponsorCounts.I}`}></div>
+            )}
+            {cosponsorPercents.unknown > 0 && (
+              <div class="bg-navy-300" style={`width: ${cosponsorPercents.unknown}%`} title={`Unknown: ${cosponsorCounts.unknown}`}></div>
+            )}
+          </div>
+        )}
+
+        {/* If only count known, show note */}
+        {cosponsorTotal === 0 && totalCosponsors > 0 && (
+          <p class="text-xs text-navy-500 italic">Party data not available</p>
+        )}
+      </div>
+    )}
+  </div>
+
+  {/* Pork by Party Section */}
+  {hasPorkData && (
+    <div class="mt-4 pt-4 border-t border-gold-200">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs text-navy-500 uppercase tracking-wide font-medium flex items-center gap-1">
+          <Icon name="piggy-bank" size={12} class="text-gold-600" />
+          Pork by Party
+        </span>
+        <span class="text-xs font-mono text-navy-600">
+          {formatAmount(porkTotal)} total
+        </span>
+      </div>
+
+      <div class="space-y-2">
+        {porkByParty.R > 0 && (
+          <div class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-red-100 text-red-700">R</span>
+            <div class="flex-1">
+              <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
+                <div class="bg-red-500" style={`width: ${porkPercents.R}%`}></div>
+              </div>
+            </div>
+            <span class="text-xs font-mono text-red-700 w-20 text-right">
+              {formatAmount(porkByParty.R)} ({porkPercents.R.toFixed(0)}%)
+            </span>
+          </div>
+        )}
+
+        {porkByParty.D > 0 && (
+          <div class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-blue-100 text-blue-700">D</span>
+            <div class="flex-1">
+              <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
+                <div class="bg-blue-500" style={`width: ${porkPercents.D}%`}></div>
+              </div>
+            </div>
+            <span class="text-xs font-mono text-blue-700 w-20 text-right">
+              {formatAmount(porkByParty.D)} ({porkPercents.D.toFixed(0)}%)
+            </span>
+          </div>
+        )}
+
+        {porkByParty.I > 0 && (
+          <div class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-purple-100 text-purple-700">I</span>
+            <div class="flex-1">
+              <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
+                <div class="bg-purple-500" style={`width: ${porkPercents.I}%`}></div>
+              </div>
+            </div>
+            <span class="text-xs font-mono text-purple-700 w-20 text-right">
+              {formatAmount(porkByParty.I)} ({porkPercents.I.toFixed(0)}%)
+            </span>
+          </div>
+        )}
+
+        {porkByParty.unknown > 0 && (
+          <div class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-navy-100 text-navy-600">?</span>
+            <div class="flex-1">
+              <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
+                <div class="bg-navy-300" style={`width: ${porkPercents.unknown}%`}></div>
+              </div>
+            </div>
+            <span class="text-xs font-mono text-navy-600 w-20 text-right">
+              {formatAmount(porkByParty.unknown)} ({porkPercents.unknown.toFixed(0)}%)
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+</div>

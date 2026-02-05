@@ -10,6 +10,7 @@ import CostEstimate from '../../components/bills/CostEstimate.astro';
 import CollapsibleSection from '../../components/ui/CollapsibleSection.astro';
 import PairedBillCallout from '../../components/bills/PairedBillCallout.astro';
 import BillEvolutionModal from '../../components/bills/BillEvolutionModal.astro';
+import PartyBalance from '../../components/bills/PartyBalance.astro';
 import Icon from '../../components/ui/Icon.astro';
 import { getCollection, render } from 'astro:content';
 
@@ -69,6 +70,20 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
   <div class="max-w-3xl mx-auto px-4 py-8 md:py-12">
 
+    {/* Under Construction Disclaimer */}
+    <div class="mb-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
+      <div class="flex items-start gap-3">
+        <Icon name="alert-triangle" size={24} class="text-yellow-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p class="font-bold text-yellow-800 text-sm uppercase tracking-wide">Under Construction</p>
+          <p class="text-yellow-700 text-sm mt-1">
+            This site is in active development. Bill data, scores, and commentary may be incomplete or inaccurate.
+            Always verify information at <a href="https://congress.gov" target="_blank" rel="noopener noreferrer" class="underline font-medium hover:text-yellow-900">Congress.gov</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
     {/* Compact header bar */}
     <div class="flex flex-wrap items-center gap-3 mb-6">
       <span class="font-mono text-lg font-bold text-navy-900">{d.billNumber}</span>
@@ -81,13 +96,16 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </span>
     </div>
 
-    {/* Title */}
-    <h1 class="text-2xl md:text-3xl font-serif font-bold text-navy-900 leading-tight mb-6">
+    {/* Title + Subtitle */}
+    <h1 class:list={["text-2xl md:text-3xl font-serif font-bold text-navy-900 leading-tight", d.subtitle ? "mb-2" : "mb-6"]}>
       {d.title}
     </h1>
+    {d.subtitle && (
+      <p class="text-lg text-navy-600 font-serif italic mb-6">{d.subtitle}</p>
+    )}
 
     {/* Legislative Progress Timeline */}
-    <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} />
+    <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} billNumber={d.billNumber} />
 
     {/* Absurdity Meter - Prominent */}
     {d.absurdityIndex && (
@@ -132,6 +150,20 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
         <dd class="font-sans text-navy-800">{d.category}</dd>
       </div>
     </div>
+
+    {/* Party Balance */}
+    {(d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
+      <div class="mb-8">
+        <PartyBalance
+          sponsor={d.sponsor}
+          sponsorParty={d.sponsorParty}
+          cosponsors={d.cosponsors}
+          cosponsorCount={d.cosponsorCount}
+          billEvolution={d.billEvolution}
+          totalPork={d.totalPork}
+        />
+      </div>
+    )}
 
     {/* Key Milestones */}
     {(hasActions || d.keyMilestones) && (

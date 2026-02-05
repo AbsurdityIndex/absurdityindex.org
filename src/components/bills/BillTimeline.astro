@@ -2,11 +2,16 @@
 interface Props {
   status: string;
   dateIntroduced: Date;
+  billNumber?: string;
 }
 
-const { status, dateIntroduced } = Astro.props;
+const { status, dateIntroduced, billNumber = '' } = Astro.props;
 
-const stages = [
+// Detect if this is a simple resolution (doesn't go to President)
+const isSimpleResolution = /^(H\.?\s*Res\.?|S\.?\s*Res\.?)\s/i.test(billNumber);
+
+// Standard bill stages (goes to President)
+const billStages = [
   { id: 'introduced', label: 'Introduced', keywords: ['introduced'] },
   { id: 'committee', label: 'In Committee', keywords: ['referred', 'committee'] },
   { id: 'reported', label: 'Reported', keywords: ['reported'] },
@@ -15,9 +20,29 @@ const stages = [
   { id: 'final', label: 'Signed/Vetoed', keywords: ['signed', 'law', 'vetoed', 'died'] },
 ];
 
-function getCurrentStage(status: string): number {
+// Resolution stages (single chamber, no President)
+const resolutionStages = [
+  { id: 'introduced', label: 'Introduced', keywords: ['introduced'] },
+  { id: 'committee', label: 'In Committee', keywords: ['referred', 'committee'] },
+  { id: 'reported', label: 'Reported', keywords: ['reported'] },
+  { id: 'final', label: 'Agreed To', keywords: ['adopted', 'agreed', 'passed'] },
+];
+
+const stages = isSimpleResolution ? resolutionStages : billStages;
+
+function getCurrentStage(status: string, isResolution: boolean): number {
   const s = status.toLowerCase();
-  if (s.includes('signed') || s.includes('law') || s.includes('vetoed') || s.includes('died') || s.includes('enacted') || s.includes('adopted') || s.includes('agreed')) return 5;
+
+  if (isResolution) {
+    // Resolution track: Introduced → Committee → Reported → Agreed To
+    if (s.includes('adopted') || s.includes('agreed') || s.includes('passed')) return 3;
+    if (s.includes('reported')) return 2;
+    if (s.includes('committee') || s.includes('referred')) return 1;
+    return 0;
+  }
+
+  // Standard bill track
+  if (s.includes('signed') || s.includes('law') || s.includes('vetoed') || s.includes('died') || s.includes('enacted')) return 5;
   if (s.includes('enrolled') || s.includes('passed both')) return 4;
   if (s.includes('passed house') || s.includes('passed senate') || s.includes('passed/agreed')) return 3;
   if (s.includes('reported')) return 2;
@@ -26,16 +51,22 @@ function getCurrentStage(status: string): number {
 }
 
 // Determine final outcome
-type Outcome = 'signed' | 'vetoed' | 'pending';
-function getFinalOutcome(status: string): Outcome {
+type Outcome = 'signed' | 'vetoed' | 'pending' | 'adopted';
+function getFinalOutcome(status: string, isResolution: boolean): Outcome {
   const s = status.toLowerCase();
-  if (s.includes('signed') || s.includes('law') || s.includes('enacted') || s.includes('adopted') || s.includes('agreed')) return 'signed';
+  if (isResolution) {
+    // Resolutions don't get signed - they're adopted/agreed to
+    if (s.includes('adopted') || s.includes('agreed') || s.includes('passed')) return 'adopted';
+    if (s.includes('failed') || s.includes('rejected') || s.includes('died')) return 'vetoed';
+    return 'pending';
+  }
+  if (s.includes('signed') || s.includes('law') || s.includes('enacted')) return 'signed';
   if (s.includes('vetoed') || s.includes('died') || s.includes('failed') || s.includes('pocket')) return 'vetoed';
   return 'pending';
 }
 
-const currentStage = getCurrentStage(status);
-const finalOutcome = getFinalOutcome(status);
+const currentStage = getCurrentStage(status, isSimpleResolution);
+const finalOutcome = getFinalOutcome(status, isSimpleResolution);
 const isFinalStage = currentStage === 5;
 
 // Format the introduction date
@@ -100,7 +131,7 @@ const formattedDate = dateIntroduced instanceof Date
           textColor = '#228B4A';
         } else if (isCurrent) {
           // Final stage with outcome
-          if (isFinal && finalOutcome === 'signed') {
+          if (isFinal && (finalOutcome === 'signed' || finalOutcome === 'adopted')) {
             fillColor = '#228B4A';
             strokeColor = '#1A6B3A';
             textColor = '#228B4A';
@@ -139,7 +170,7 @@ const formattedDate = dateIntroduced instanceof Date
                 cx={cx}
                 cy="40"
                 r="28"
-                fill={finalOutcome === 'signed' ? '#228B4A' : '#DC2626'}
+                fill={(finalOutcome === 'signed' || finalOutcome === 'adopted') ? '#228B4A' : '#DC2626'}
                 opacity="0.15"
               />
             )}
@@ -154,8 +185,8 @@ const formattedDate = dateIntroduced instanceof Date
               stroke-width={isFinalWithOutcome ? 3 : 2}
             />
 
-            {/* Checkmark for completed stages OR final signed */}
-            {(isCompleted || (isFinalWithOutcome && finalOutcome === 'signed')) && (
+            {/* Checkmark for completed stages OR final signed/adopted */}
+            {(isCompleted || (isFinalWithOutcome && (finalOutcome === 'signed' || finalOutcome === 'adopted'))) && (
               <path
                 d={isFinalWithOutcome
                   ? `M${cx - 8} 40 L${cx - 2} 46 L${cx + 10} 32`
@@ -187,7 +218,7 @@ const formattedDate = dateIntroduced instanceof Date
               font-weight={isCurrent ? '600' : '400'}
             >
               {isFinalWithOutcome
-                ? (finalOutcome === 'signed' ? 'Signed' : 'Vetoed')
+                ? (finalOutcome === 'signed' ? 'Signed' : finalOutcome === 'adopted' ? 'Adopted' : 'Vetoed')
                 : stage.label}
             </text>
 
@@ -230,7 +261,7 @@ const formattedDate = dateIntroduced instanceof Date
           borderColor = 'border-green-600';
           textColor = 'text-green-700';
         } else if (isCurrent) {
-          if (isFinalWithOutcome && finalOutcome === 'signed') {
+          if (isFinalWithOutcome && (finalOutcome === 'signed' || finalOutcome === 'adopted')) {
             bgColor = 'bg-green-600';
             borderColor = 'border-green-600';
             textColor = 'text-green-700';
@@ -266,7 +297,7 @@ const formattedDate = dateIntroduced instanceof Date
                 isFinalWithOutcome ? 'w-10 h-10' : isCurrent ? 'w-7 h-7 pulse-subtle' : 'w-5 h-5',
               ]}
             >
-              {(isCompleted || (isFinalWithOutcome && finalOutcome === 'signed')) && (
+              {(isCompleted || (isFinalWithOutcome && (finalOutcome === 'signed' || finalOutcome === 'adopted'))) && (
                 <svg class={isFinalWithOutcome ? 'w-5 h-5 text-white' : 'w-3 h-3 text-white'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                 </svg>
@@ -293,7 +324,7 @@ const formattedDate = dateIntroduced instanceof Date
                 ]}
               >
                 {isFinalWithOutcome
-                  ? (finalOutcome === 'signed' ? 'Signed into Law' : 'Vetoed')
+                  ? (finalOutcome === 'signed' ? 'Signed into Law' : finalOutcome === 'adopted' ? 'Adopted' : 'Vetoed')
                   : stage.label}
               </span>
             </div>
