@@ -1,0 +1,277 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+---
+
+<BaseLayout title="Constituent Cost Calculator" description="Find out YOUR share of federal spending. What's a trillion dollars divided by everyone? Spoiler: It's a lot of coffee.">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <OfficialSeal size="100" />
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Fiscal Transparency Tool</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">What's YOUR Share?</h1>
+      <p class="text-navy-600 font-serif italic mt-3">Dividing the national debt, one taxpayer at a time</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <form id="cost-form" class="space-y-6">
+        <div>
+          <label for="state-select" class="block font-serif font-bold text-navy-900 mb-2">
+            Select Your State <span class="text-red-700">*</span>
+          </label>
+          <select
+            id="state-select"
+            required
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-sans text-navy-900 focus:outline-none focus:border-gold-500 transition-colors"
+          >
+            <option value="">Choose a state...</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="district-input" class="block font-serif font-bold text-navy-900 mb-2">
+            Your District <span class="text-navy-400 font-normal">(optional)</span>
+          </label>
+          <input
+            type="number"
+            id="district-input"
+            min="1"
+            max="53"
+            placeholder="e.g., 7"
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-sans text-navy-900 placeholder:text-navy-400 focus:outline-none focus:border-gold-500 transition-colors"
+          />
+          <p class="text-sm text-navy-500 mt-1">Enter 1-53 depending on your state</p>
+        </div>
+
+        <div class="pt-4">
+          <button
+            type="submit"
+            class="w-full px-8 py-4 bg-navy-800 text-gold-300 font-serif text-lg font-bold rounded hover:bg-navy-700 transition-colors"
+          >
+            Calculate My Share
+          </button>
+        </div>
+      </form>
+
+      <!-- Results Section -->
+      <div id="results" class="hidden mt-8 pt-8 border-t-2 border-gold-300">
+        <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4 text-center">Your Fiscal Burden</h2>
+
+        <div class="bg-cream-100 rounded-lg p-6 mb-6">
+          <p class="text-navy-600 mb-2 font-sans">Selected State:</p>
+          <p class="text-2xl font-serif font-bold text-navy-900" id="result-state">-</p>
+          <p class="text-navy-600 mt-2">Approximate Population: <span id="result-population" class="font-bold">-</span></p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-cream-100 rounded-lg p-6 text-center">
+            <p class="text-navy-600 font-sans text-sm uppercase tracking-wider mb-2">Your share of a $1 Billion bill</p>
+            <p class="text-3xl font-serif font-bold text-gold-600" id="share-billion">$0.00</p>
+          </div>
+          <div class="bg-cream-100 rounded-lg p-6 text-center">
+            <p class="text-navy-600 font-sans text-sm uppercase tracking-wider mb-2">Your share of a $1 Trillion bill</p>
+            <p class="text-3xl font-serif font-bold text-red-700" id="share-trillion">$0.00</p>
+          </div>
+        </div>
+
+        <div class="bg-navy-800 text-cream-100 rounded-lg p-6">
+          <h3 class="font-serif text-xl font-bold mb-4 text-gold-400">What Does That Buy?</h3>
+          <div class="space-y-3 font-sans" id="comparisons">
+            <!-- Filled by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Divider />
+
+    <!-- Example Bills Section -->
+    <div class="mt-8">
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-6 text-center">Real Bill Examples</h2>
+      <p class="text-navy-600 text-center mb-8">See your share of actual legislation</p>
+
+      <div class="grid md:grid-cols-2 gap-6" id="bill-examples">
+        <!-- Filled by JavaScript -->
+      </div>
+    </div>
+
+    <Divider />
+
+    <div class="bg-cream-200 rounded-lg p-6 mt-8 border-l-4 border-gold-500">
+      <p class="font-serif text-navy-700 italic">
+        <strong>Disclaimer:</strong> These calculations assume Congress actually budgets, that money is distributed evenly (it isn't), and that these bills won't add to the national debt (they will). For entertainment purposes only. Your actual tax burden may vary based on income, deductions, and how good your accountant is.
+      </p>
+    </div>
+  </div>
+
+  <script is:inline>
+    // State population data (approximate 2024 estimates)
+    const stateData = {
+      'Alabama': { pop: 5108468, districts: 7 },
+      'Alaska': { pop: 733406, districts: 1 },
+      'Arizona': { pop: 7431344, districts: 9 },
+      'Arkansas': { pop: 3067732, districts: 4 },
+      'California': { pop: 38965193, districts: 52 },
+      'Colorado': { pop: 5877610, districts: 8 },
+      'Connecticut': { pop: 3617176, districts: 5 },
+      'Delaware': { pop: 1031890, districts: 1 },
+      'Florida': { pop: 23002651, districts: 28 },
+      'Georgia': { pop: 11029227, districts: 14 },
+      'Hawaii': { pop: 1435138, districts: 2 },
+      'Idaho': { pop: 1964726, districts: 2 },
+      'Illinois': { pop: 12549689, districts: 17 },
+      'Indiana': { pop: 6862199, districts: 9 },
+      'Iowa': { pop: 3207004, districts: 4 },
+      'Kansas': { pop: 2940546, districts: 4 },
+      'Kentucky': { pop: 4526154, districts: 6 },
+      'Louisiana': { pop: 4573749, districts: 6 },
+      'Maine': { pop: 1395722, districts: 2 },
+      'Maryland': { pop: 6180253, districts: 8 },
+      'Massachusetts': { pop: 7001399, districts: 9 },
+      'Michigan': { pop: 10037261, districts: 13 },
+      'Minnesota': { pop: 5737915, districts: 8 },
+      'Mississippi': { pop: 2939690, districts: 4 },
+      'Missouri': { pop: 6196156, districts: 8 },
+      'Montana': { pop: 1132812, districts: 2 },
+      'Nebraska': { pop: 1978379, districts: 3 },
+      'Nevada': { pop: 3194176, districts: 4 },
+      'New Hampshire': { pop: 1402054, districts: 2 },
+      'New Jersey': { pop: 9290841, districts: 12 },
+      'New Mexico': { pop: 2114371, districts: 3 },
+      'New York': { pop: 19571216, districts: 26 },
+      'North Carolina': { pop: 10835491, districts: 14 },
+      'North Dakota': { pop: 783926, districts: 1 },
+      'Ohio': { pop: 11785935, districts: 15 },
+      'Oklahoma': { pop: 4053824, districts: 5 },
+      'Oregon': { pop: 4233358, districts: 6 },
+      'Pennsylvania': { pop: 12961683, districts: 17 },
+      'Rhode Island': { pop: 1095962, districts: 2 },
+      'South Carolina': { pop: 5373555, districts: 7 },
+      'South Dakota': { pop: 919318, districts: 1 },
+      'Tennessee': { pop: 7126489, districts: 9 },
+      'Texas': { pop: 30503301, districts: 38 },
+      'Utah': { pop: 3417734, districts: 4 },
+      'Vermont': { pop: 647464, districts: 1 },
+      'Virginia': { pop: 8683619, districts: 11 },
+      'Washington': { pop: 7812880, districts: 10 },
+      'West Virginia': { pop: 1770071, districts: 2 },
+      'Wisconsin': { pop: 5910955, districts: 8 },
+      'Wyoming': { pop: 584057, districts: 1 }
+    };
+
+    // US total population
+    const usPopulation = 335000000;
+
+    // Example bills with cost estimates
+    const exampleBills = [
+      { name: 'Infrastructure Investment and Jobs Act (2021)', cost: 1200000000000, emoji: '🛣️' },
+      { name: 'CHIPS and Science Act (2022)', cost: 280000000000, emoji: '💻' },
+      { name: 'American Rescue Plan (2021)', cost: 1900000000000, emoji: '💰' },
+      { name: 'Build Back Better (proposed)', cost: 3500000000000, emoji: '🏗️' }
+    ];
+
+    // Populate state dropdown
+    const stateSelect = document.getElementById('state-select');
+    Object.keys(stateData).sort().forEach(state => {
+      const option = document.createElement('option');
+      option.value = state;
+      option.textContent = state;
+      stateSelect.appendChild(option);
+    });
+
+    // Format currency
+    function formatCurrency(amount) {
+      if (amount >= 1000000) {
+        return '$' + (amount / 1000000).toFixed(2) + ' million';
+      } else if (amount >= 1000) {
+        return '$' + (amount / 1000).toFixed(2) + 'K';
+      } else {
+        return '$' + amount.toFixed(2);
+      }
+    }
+
+    // Format large numbers with commas
+    function formatNumber(num) {
+      return num.toLocaleString();
+    }
+
+    // Calculate and display results
+    function calculateShare() {
+      const state = stateSelect.value;
+      if (!state) return;
+
+      const data = stateData[state];
+      const statePop = data.pop;
+
+      // Calculate per-capita share (using US population for federal bills)
+      const shareBillion = 1000000000 / usPopulation;
+      const shareTrillion = 1000000000000 / usPopulation;
+
+      // Update results
+      document.getElementById('result-state').textContent = state;
+      document.getElementById('result-population').textContent = formatNumber(statePop);
+      document.getElementById('share-billion').textContent = formatCurrency(shareBillion);
+      document.getElementById('share-trillion').textContent = formatCurrency(shareTrillion);
+
+      // Fun comparisons
+      const coffeePrice = 5.50;
+      const netflixPrice = 15.99;
+      const avocadoToastPrice = 12;
+      const gasPrice = 3.50;
+
+      const comparisons = document.getElementById('comparisons');
+      comparisons.innerHTML = `
+        <p>☕ <strong>${Math.round(shareTrillion / coffeePrice).toLocaleString()}</strong> cups of overpriced coffee</p>
+        <p>📺 <strong>${Math.round(shareTrillion / netflixPrice).toLocaleString()}</strong> months of Netflix</p>
+        <p>🥑 <strong>${Math.round(shareTrillion / avocadoToastPrice).toLocaleString()}</strong> avocado toasts (the reason millennials can't buy houses, apparently)</p>
+        <p>⛽ <strong>${Math.round(shareTrillion / gasPrice).toLocaleString()}</strong> gallons of gas</p>
+        <p>🏠 About <strong>${(shareTrillion / 350000 * 100).toFixed(3)}%</strong> of a median U.S. home</p>
+      `;
+
+      // Show results
+      document.getElementById('results').classList.remove('hidden');
+
+      // Update bill examples with per-capita cost
+      const examplesContainer = document.getElementById('bill-examples');
+      examplesContainer.innerHTML = exampleBills.map(bill => {
+        const perCapita = bill.cost / usPopulation;
+        return `
+          <div class="bg-parchment rounded-lg p-6 shadow">
+            <div class="text-3xl mb-2">${bill.emoji}</div>
+            <h3 class="font-serif font-bold text-navy-900 mb-2">${bill.name}</h3>
+            <p class="text-navy-600 text-sm mb-3">Total Cost: ${formatCurrency(bill.cost)}</p>
+            <p class="text-lg font-bold text-gold-600">Your Share: ${formatCurrency(perCapita)}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Form submission
+    document.getElementById('cost-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      calculateShare();
+    });
+
+    // Also calculate on state change for convenience
+    stateSelect.addEventListener('change', () => {
+      if (stateSelect.value) {
+        calculateShare();
+      }
+    });
+
+    // Initialize bill examples on load
+    const examplesContainer = document.getElementById('bill-examples');
+    examplesContainer.innerHTML = exampleBills.map(bill => {
+      const perCapita = bill.cost / usPopulation;
+      return `
+        <div class="bg-parchment rounded-lg p-6 shadow">
+          <div class="text-3xl mb-2">${bill.emoji}</div>
+          <h3 class="font-serif font-bold text-navy-900 mb-2">${bill.name}</h3>
+          <p class="text-navy-600 text-sm mb-3">Total Cost: ${formatCurrency(bill.cost)}</p>
+          <p class="text-lg font-bold text-gold-600">Your Share: ${formatCurrency(perCapita)}</p>
+        </div>
+      `;
+    }).join('');
+  </script>
+</BaseLayout>

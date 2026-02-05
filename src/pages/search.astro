@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Search" description="Search across all bills, not-bills, and legislation on the Absurdity Index.">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mb-2">Congressional Search</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Search the Record</h1>
+      <p class="text-navy-600 font-serif italic mt-3">Find any bill faster than Congress finds consensus</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <div id="search" class="mt-8"></div>
+  </div>
+</BaseLayout>
+
+<link href="/pagefind/pagefind-ui.css" rel="stylesheet" />
+
+<style>
+  /* Override Pagefind UI styles to match site theme */
+  :root {
+    --pagefind-ui-scale: 1;
+    --pagefind-ui-primary: #0A1628;
+    --pagefind-ui-text: #0A1628;
+    --pagefind-ui-background: #F5F0E8;
+    --pagefind-ui-border: #C5A572;
+    --pagefind-ui-tag: #C5A572;
+    --pagefind-ui-border-width: 2px;
+    --pagefind-ui-border-radius: 6px;
+    --pagefind-ui-font: 'Inter', sans-serif;
+  }
+
+  /* Dark mode for Pagefind */
+  :global(html.dark) {
+    --pagefind-ui-primary: #E8B85A;
+    --pagefind-ui-text: #F5F0E8;
+    --pagefind-ui-background: #0F1A2E;
+    --pagefind-ui-border: #C5A572;
+    --pagefind-ui-tag: #C5A572;
+  }
+</style>
+
+<script is:inline>
+  window.addEventListener('DOMContentLoaded', async () => {
+    const pagefindUI = await import('/pagefind/pagefind-ui.js');
+    new pagefindUI.PagefindUI({
+      element: '#search',
+      showSubResults: true,
+      showImages: false,
+    });
+  });
+</script>

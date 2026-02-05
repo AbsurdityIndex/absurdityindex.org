@@ -1,0 +1,196 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import OmnibusHeader from '../../components/omnibus/OmnibusHeader.astro';
+import OmnibusTableOfContents from '../../components/omnibus/OmnibusTableOfContents.astro';
+import OmnibusSpendingChart from '../../components/omnibus/OmnibusSpendingChart.astro';
+import OmnibusDivision from '../../components/omnibus/OmnibusDivision.astro';
+import OmnibusRiders from '../../components/omnibus/OmnibusRiders.astro';
+import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
+import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
+import Disclaimer from '../../components/ui/Disclaimer.astro';
+import ShareButtons from '../../components/ui/ShareButtons.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const bills = await getCollection('bills');
+  return bills
+    .filter((bill) => bill.data.isOmnibus && bill.data.omnibusData)
+    .map((bill) => ({
+      params: { slug: bill.id },
+      props: { bill },
+    }));
+}
+
+const { bill } = Astro.props;
+const { Content } = await render(bill);
+const d = bill.data;
+const omnibus = d.omnibusData!;
+
+const billSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": d.title,
+  "description": d.summary,
+  "datePublished": d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
+  "author": { "@type": "Organization", "name": "Absurdity Index" },
+  "publisher": { "@type": "Organization", "name": "Absurdity Index", "url": "https://absurdityindex.org" },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": `https://absurdityindex.org/omnibus/${bill.id}` },
+};
+---
+
+<BaseLayout
+  title={`${d.billNumber} — ${d.title}`}
+  description={d.summary}
+  ogType="article"
+  article={{
+    publishedTime: d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced),
+    section: d.category,
+    tags: d.tags,
+  }}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
+
+  <!-- Full-width header section -->
+  <div class="bg-parchment border-b border-gold-300">
+    <div class="max-w-6xl mx-auto px-4 py-12">
+      <OmnibusHeader
+        title={d.title}
+        billNumber={d.billNumber}
+        totalSpending={omnibus.totalSpending}
+        pageCount={omnibus.pageCount}
+        divisionCount={omnibus.divisions.length}
+        dateIntroduced={d.dateIntroduced}
+        status={d.status}
+      />
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Absurdity Score -->
+    {d.absurdityIndex && (
+      <div class="max-w-sm mx-auto mb-10">
+        <AbsurdityMeter score={d.absurdityIndex} />
+      </div>
+    )}
+
+    <!-- Two-column layout for TOC and Chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <OmnibusTableOfContents divisions={omnibus.divisions} pageCount={omnibus.pageCount} />
+      <OmnibusSpendingChart divisions={omnibus.divisions} totalSpending={omnibus.totalSpending} />
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 relative overflow-hidden mb-12">
+      <CommitteeStamp text={d.status} />
+
+      <!-- Summary Section -->
+      <section class="mb-8">
+        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-4 flex items-center gap-3">
+          <span class="text-gold-500">📋</span>
+          Executive Summary
+        </h2>
+        <p class="font-serif text-lg text-navy-700 leading-relaxed">{d.summary}</p>
+      </section>
+
+      <!-- MDX Content -->
+      <section class="bill-content mb-8">
+        <Content />
+      </section>
+
+      <ShareButtons
+        title={`${d.billNumber} — ${d.title}`}
+        summary={d.summary}
+        url={`https://absurdityindex.org/omnibus/${bill.id}/`}
+      />
+    </div>
+
+    <!-- Divisions Section -->
+    <section class="mb-12">
+      <h2 class="font-serif text-2xl font-bold text-navy-900 mb-6 flex items-center gap-3">
+        <span class="text-gold-500">📚</span>
+        Divisions Breakdown
+        <span class="text-sm font-normal text-navy-500">({omnibus.divisions.length} total)</span>
+      </h2>
+      <p class="text-navy-600 mb-6">
+        Click any division to expand details. Each division is essentially a separate appropriations bill bundled together.
+      </p>
+      <div class="space-y-4">
+        {omnibus.divisions.map((div, i) => (
+          <OmnibusDivision
+            number={i + 1}
+            title={div.title}
+            shortTitle={div.shortTitle}
+            spending={div.spending}
+            description={div.description}
+            isExpanded={i === 0}
+          />
+        ))}
+      </div>
+    </section>
+
+    <!-- Riders Section -->
+    {omnibus.riders && omnibus.riders.length > 0 && (
+      <section class="mb-12">
+        <OmnibusRiders riders={omnibus.riders} />
+      </section>
+    )}
+
+    <!-- Timeline Section -->
+    {omnibus.timeline && omnibus.timeline.length > 0 && (
+      <section class="mb-12">
+        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-6 flex items-center gap-3">
+          <span class="text-gold-500">📅</span>
+          Legislative Timeline
+        </h2>
+        <div class="relative border-l-4 border-gold-500 pl-6 space-y-6">
+          {omnibus.timeline.map((event) => (
+            <div class="relative">
+              <div class="absolute -left-8 w-4 h-4 bg-gold-500 rounded-full border-4 border-parchment"></div>
+              <div class="bg-cream-100 rounded-lg p-4 border border-gold-300">
+                <time class="font-mono text-sm text-gold-600">
+                  {event.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </time>
+                <p class="font-serif text-navy-900 mt-1">{event.event}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Source and Disclaimer -->
+    <div class="bg-cream-100 border border-gold-300 rounded-lg p-6">
+      <div class="flex items-start gap-4">
+        <span class="text-2xl">🔗</span>
+        <div>
+          <h3 class="font-serif font-bold text-navy-900 mb-2">Official Sources</h3>
+          {d.congressDotGovUrl && (
+            <a
+              href={d.congressDotGovUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 text-gold-700 hover:text-gold-600 font-semibold"
+            >
+              View on Congress.gov
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <Disclaimer context="bill-detail" />
+
+    <!-- Navigation -->
+    <div class="text-center mt-8 flex flex-wrap justify-center gap-4">
+      <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; All Real Bills
+      </a>
+      <a href="/omnibus" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        All Omnibus Bills
+      </a>
+    </div>
+  </div>
+</BaseLayout>

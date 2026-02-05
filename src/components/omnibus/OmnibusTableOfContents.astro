@@ -1,0 +1,83 @@
+---
+interface Division {
+  title: string;
+  shortTitle?: string;
+  spending: number;
+  description?: string;
+}
+
+interface Props {
+  divisions: Division[];
+  pageCount: number;
+}
+
+const { divisions, pageCount } = Astro.props;
+
+// Create slugs for anchor links
+const divisionsWithSlugs = divisions.map((div, i) => ({
+  ...div,
+  slug: `division-${i + 1}`,
+  number: i + 1,
+}));
+---
+
+<nav class="bg-parchment border border-gold-300 rounded-lg shadow-md" aria-label="Table of Contents">
+  <div class="px-6 py-4 border-b border-gold-300 bg-navy-800 rounded-t-lg">
+    <div class="flex items-center justify-between">
+      <h2 class="font-serif text-lg font-bold text-gold-400">
+        Table of Contents
+      </h2>
+      <div class="flex items-center gap-2 text-gold-400/70">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <span class="font-mono text-sm">{pageCount.toLocaleString()} pages</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-4 max-h-96 overflow-y-auto">
+    <ol class="space-y-2">
+      {divisionsWithSlugs.map((div) => (
+        <li>
+          <a
+            href={`#${div.slug}`}
+            class="flex items-start gap-3 p-2 rounded hover:bg-gold-100 transition-colors group"
+          >
+            <span class="font-mono text-xs text-gold-600 bg-cream-200 px-2 py-1 rounded shrink-0">
+              Div. {String.fromCharCode(64 + div.number)}
+            </span>
+            <div class="min-w-0 flex-1">
+              <span class="font-serif text-sm text-navy-900 group-hover:text-gold-700 transition-colors line-clamp-2">
+                {div.title}
+              </span>
+              <span class="font-mono text-xs text-navy-500 ml-2">
+                ${div.spending}B
+              </span>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  <div class="px-6 py-3 border-t border-gold-300 bg-cream-200 rounded-b-lg">
+    <p class="text-xs text-navy-600 italic text-center">
+      {divisions.length} divisions &bull; Scroll within to navigate
+    </p>
+  </div>
+</nav>
+
+<style>
+  /* Custom scrollbar for TOC */
+  nav div::-webkit-scrollbar {
+    width: 6px;
+  }
+  nav div::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  nav div::-webkit-scrollbar-thumb {
+    background-color: var(--color-gold-400);
+    border-radius: 3px;
+  }
+</style>

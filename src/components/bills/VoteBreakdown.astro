@@ -1,0 +1,59 @@
+---
+interface Props {
+  votes?: {
+    yeas: number;
+    nays: number;
+    notVoting: number;
+    passed: boolean;
+    chamber?: 'house' | 'senate';
+  };
+}
+
+const { votes } = Astro.props;
+
+if (!votes) {
+  return;
+}
+
+const total = votes.yeas + votes.nays + votes.notVoting;
+const yeaPercent = (votes.yeas / total * 100).toFixed(1);
+const nayPercent = (votes.nays / total * 100).toFixed(1);
+---
+
+{votes && (
+  <div class="bg-cream-100 border border-gold-300 rounded p-4 mt-4">
+    <h4 class="font-serif font-bold text-navy-900 text-sm mb-3 flex items-center gap-2">
+      <span>🗳️</span>
+      {votes.chamber ? `${votes.chamber === 'house' ? 'House' : 'Senate'} Vote` : 'Vote Results'}
+    </h4>
+
+    <!-- Vote bar visualization -->
+    <div class="flex h-6 rounded overflow-hidden mb-2">
+      <div class="bg-green-600" style={`width: ${yeaPercent}%`}></div>
+      <div class="bg-red-600" style={`width: ${nayPercent}%`}></div>
+      <div class="bg-gray-400" style={`width: ${100 - parseFloat(yeaPercent) - parseFloat(nayPercent)}%`}></div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 text-center text-sm">
+      <div>
+        <div class="font-mono font-bold text-green-700">{votes.yeas}</div>
+        <div class="text-xs text-navy-600">Yea</div>
+      </div>
+      <div>
+        <div class="font-mono font-bold text-red-700">{votes.nays}</div>
+        <div class="text-xs text-navy-600">Nay</div>
+      </div>
+      <div>
+        <div class="font-mono font-bold text-gray-500">{votes.notVoting}</div>
+        <div class="text-xs text-navy-600">Not Voting</div>
+      </div>
+    </div>
+
+    <p class="text-xs text-center mt-2 font-sans">
+      {votes.passed
+        ? <span class="text-green-700 font-semibold">PASSED</span>
+        : <span class="text-red-700 font-semibold">FAILED</span>
+      }
+    </p>
+  </div>
+)}

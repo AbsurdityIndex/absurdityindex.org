@@ -1,0 +1,286 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import { getCollection } from 'astro:content';
+
+const allBills = await getCollection('bills');
+
+// Get bills with absurdity scores, sorted by score
+const scoredBills = allBills
+  .filter(b => b.data.absurdityIndex !== undefined)
+  .sort((a, b) => (b.data.absurdityIndex ?? 0) - (a.data.absurdityIndex ?? 0));
+
+// Get absurd bills (R.A. type) for variety
+const absurdBills = allBills
+  .filter(b => b.data.billType === 'absurd')
+  .slice(0, 4);
+
+// Combine for an 8-bill bracket (4 real + 4 absurd, or fill with what we have)
+const bracketBills = [...scoredBills.slice(0, 4), ...absurdBills].slice(0, 8);
+
+// Pad if needed
+while (bracketBills.length < 8) {
+  bracketBills.push(bracketBills[0]);
+}
+
+// Create seeded matchups (1v8, 4v5, 3v6, 2v7 style)
+const seeds = [0, 7, 3, 4, 2, 5, 1, 6];
+const seededBills = seeds.map(i => bracketBills[i]);
+
+// Matchups for round 1
+const round1 = [
+  { top: seededBills[0], bottom: seededBills[1], seed1: 1, seed2: 8 },
+  { top: seededBills[2], bottom: seededBills[3], seed1: 4, seed2: 5 },
+  { top: seededBills[4], bottom: seededBills[5], seed1: 3, seed2: 6 },
+  { top: seededBills[6], bottom: seededBills[7], seed1: 2, seed2: 7 },
+];
+
+// Pre-determine "winners" for display (highest absurdity wins)
+const getScore = (bill: typeof bracketBills[0]) => bill.data.absurdityIndex ?? 5;
+
+const round2 = [
+  getScore(round1[0].top) >= getScore(round1[0].bottom) ? round1[0].top : round1[0].bottom,
+  getScore(round1[1].top) >= getScore(round1[1].bottom) ? round1[1].top : round1[1].bottom,
+  getScore(round1[2].top) >= getScore(round1[2].bottom) ? round1[2].top : round1[2].bottom,
+  getScore(round1[3].top) >= getScore(round1[3].bottom) ? round1[3].top : round1[3].bottom,
+];
+
+const finals = [
+  getScore(round2[0]) >= getScore(round2[1]) ? round2[0] : round2[1],
+  getScore(round2[2]) >= getScore(round2[3]) ? round2[2] : round2[3],
+];
+
+const champion = getScore(finals[0]) >= getScore(finals[1]) ? finals[0] : finals[1];
+
+function truncate(str: string, len: number) {
+  return str.length > len ? str.slice(0, len - 1) + '...' : str;
+}
+---
+
+<BaseLayout title="Absurdity Madness" description="March Madness-style tournament bracket to find the most absurd bill in Congress.">
+  <div class="max-w-7xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div class="flex justify-center mb-4">
+        <OfficialSeal size="80" />
+      </div>
+      <h1 class="font-serif text-4xl md:text-5xl font-bold text-navy-900 mb-3">
+        Absurdity Madness
+      </h1>
+      <p class="text-navy-600 font-sans text-lg max-w-2xl mx-auto mb-4">
+        The official tournament to crown the Most Absurd Bill in Congress.
+        Eight bills enter. One leaves with the trophy (and probably a committee hearing).
+      </p>
+      <div class="inline-block bg-gold-500 text-navy-900 font-serif font-bold px-6 py-2 rounded-full text-sm">
+        Voting Opens March 1st
+      </div>
+    </div>
+
+    <!-- Selection Committee Note -->
+    <div class="bg-parchment border border-gold-300 rounded-lg p-6 mb-12 max-w-3xl mx-auto">
+      <h3 class="font-serif font-bold text-navy-900 mb-2 flex items-center gap-2">
+        <svg class="w-5 h-5 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        From the Selection Committee
+      </h3>
+      <p class="text-navy-700 font-sans text-sm italic">
+        "The Selection Committee has agonized over this year's bracket. Every bill here earned its spot
+        through sheer legislative audacity. We apologize in advance to any bills that feel 'snubbed' -
+        there's always next session. Our criteria: absurdity index, sponsor confidence level,
+        and how hard the committee laughed during review."
+      </p>
+      <p class="text-navy-500 font-sans text-xs mt-2">
+        - The Absurdity Index Selection Committee (membership: classified)
+      </p>
+    </div>
+
+    <!-- Bracket Visualization -->
+    <div class="overflow-x-auto pb-8">
+      <div class="min-w-[900px] relative">
+        <!-- SVG Bracket Lines -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none" style="min-height: 600px;">
+          <!-- Round 1 to Round 2 connectors (left side) -->
+          <path d="M 200 75 H 240 V 115 H 280" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 200 165 H 240 V 115 H 280" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 200 275 H 240 V 315 H 280" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 200 365 H 240 V 315 H 280" stroke="#C5A572" stroke-width="2" fill="none" />
+
+          <!-- Round 1 to Round 2 connectors (right side) -->
+          <path d="M 700 75 H 660 V 115 H 620" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 700 165 H 660 V 115 H 620" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 700 275 H 660 V 315 H 620" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 700 365 H 660 V 315 H 620" stroke="#C5A572" stroke-width="2" fill="none" />
+
+          <!-- Round 2 to Finals connectors -->
+          <path d="M 380 115 H 400 V 200 H 420" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 380 315 H 400 V 200 H 420" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 520 115 H 500 V 200 H 480" stroke="#C5A572" stroke-width="2" fill="none" />
+          <path d="M 520 315 H 500 V 200 H 480" stroke="#C5A572" stroke-width="2" fill="none" />
+        </svg>
+
+        <div class="grid grid-cols-5 gap-4 relative" style="min-height: 600px;">
+          <!-- Left Round 1 -->
+          <div class="flex flex-col justify-around py-4 space-y-4">
+            {round1.slice(0, 2).map((matchup) => (
+              <div class="space-y-2">
+                <div class="bg-white border-2 border-navy-200 rounded p-3 hover:border-gold-500 transition-colors">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="bg-navy-800 text-gold-400 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                      {matchup.seed1}
+                    </span>
+                    <span class="font-mono text-xs text-navy-500">{matchup.top.data.billNumber}</span>
+                  </div>
+                  <p class="font-serif text-sm text-navy-900 leading-tight">{truncate(matchup.top.data.title, 35)}</p>
+                  {matchup.top.data.absurdityIndex && (
+                    <div class="mt-1 flex items-center gap-1">
+                      <span class="text-xs text-navy-500">Absurdity:</span>
+                      <span class="font-bold text-xs text-red-600">{matchup.top.data.absurdityIndex}/10</span>
+                    </div>
+                  )}
+                </div>
+                <div class="bg-white border-2 border-navy-200 rounded p-3 hover:border-gold-500 transition-colors">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="bg-navy-800 text-gold-400 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                      {matchup.seed2}
+                    </span>
+                    <span class="font-mono text-xs text-navy-500">{matchup.bottom.data.billNumber}</span>
+                  </div>
+                  <p class="font-serif text-sm text-navy-900 leading-tight">{truncate(matchup.bottom.data.title, 35)}</p>
+                  {matchup.bottom.data.absurdityIndex && (
+                    <div class="mt-1 flex items-center gap-1">
+                      <span class="text-xs text-navy-500">Absurdity:</span>
+                      <span class="font-bold text-xs text-red-600">{matchup.bottom.data.absurdityIndex}/10</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <!-- Left Round 2 (Semis) -->
+          <div class="flex flex-col justify-around py-12">
+            {round2.slice(0, 2).map((bill) => (
+              <div class="bg-cream-200 border-2 border-gold-400 rounded p-3 shadow-sm">
+                <span class="font-mono text-xs text-navy-500">{bill.data.billNumber}</span>
+                <p class="font-serif text-sm text-navy-900 font-semibold leading-tight mt-1">{truncate(bill.data.title, 30)}</p>
+              </div>
+            ))}
+          </div>
+
+          <!-- Center - Finals & Champion -->
+          <div class="flex flex-col items-center justify-center space-y-6">
+            <!-- Finals -->
+            <div class="space-y-4 w-full">
+              {finals.map((bill) => (
+                <div class="bg-gold-100 border-2 border-gold-500 rounded p-3 shadow">
+                  <span class="font-mono text-xs text-navy-600 font-bold">{bill.data.billNumber}</span>
+                  <p class="font-serif text-sm text-navy-900 font-bold leading-tight mt-1">{truncate(bill.data.title, 28)}</p>
+                </div>
+              ))}
+            </div>
+
+            <!-- Champion -->
+            <div class="relative">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-3xl">
+                <span role="img" aria-label="trophy">&#127942;</span>
+              </div>
+              <div class="bg-navy-900 border-4 border-gold-500 rounded-lg p-4 shadow-lg text-center mt-4">
+                <p class="text-gold-400 font-serif text-xs uppercase tracking-wider mb-1">Champion</p>
+                <span class="font-mono text-xs text-gold-300">{champion.data.billNumber}</span>
+                <p class="font-serif text-white font-bold leading-tight mt-1">{truncate(champion.data.title, 35)}</p>
+                {champion.data.absurdityIndex && (
+                  <div class="mt-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded inline-block">
+                    Absurdity: {champion.data.absurdityIndex}/10
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Round 2 (Semis) -->
+          <div class="flex flex-col justify-around py-12">
+            {round2.slice(2, 4).map((bill) => (
+              <div class="bg-cream-200 border-2 border-gold-400 rounded p-3 shadow-sm">
+                <span class="font-mono text-xs text-navy-500">{bill.data.billNumber}</span>
+                <p class="font-serif text-sm text-navy-900 font-semibold leading-tight mt-1">{truncate(bill.data.title, 30)}</p>
+              </div>
+            ))}
+          </div>
+
+          <!-- Right Round 1 -->
+          <div class="flex flex-col justify-around py-4 space-y-4">
+            {round1.slice(2, 4).map((matchup) => (
+              <div class="space-y-2">
+                <div class="bg-white border-2 border-navy-200 rounded p-3 hover:border-gold-500 transition-colors">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="bg-navy-800 text-gold-400 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                      {matchup.seed1}
+                    </span>
+                    <span class="font-mono text-xs text-navy-500">{matchup.top.data.billNumber}</span>
+                  </div>
+                  <p class="font-serif text-sm text-navy-900 leading-tight">{truncate(matchup.top.data.title, 35)}</p>
+                  {matchup.top.data.absurdityIndex && (
+                    <div class="mt-1 flex items-center gap-1">
+                      <span class="text-xs text-navy-500">Absurdity:</span>
+                      <span class="font-bold text-xs text-red-600">{matchup.top.data.absurdityIndex}/10</span>
+                    </div>
+                  )}
+                </div>
+                <div class="bg-white border-2 border-navy-200 rounded p-3 hover:border-gold-500 transition-colors">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="bg-navy-800 text-gold-400 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                      {matchup.seed2}
+                    </span>
+                    <span class="font-mono text-xs text-navy-500">{matchup.bottom.data.billNumber}</span>
+                  </div>
+                  <p class="font-serif text-sm text-navy-900 leading-tight">{truncate(matchup.bottom.data.title, 35)}</p>
+                  {matchup.bottom.data.absurdityIndex && (
+                    <div class="mt-1 flex items-center gap-1">
+                      <span class="text-xs text-navy-500">Absurdity:</span>
+                      <span class="font-bold text-xs text-red-600">{matchup.bottom.data.absurdityIndex}/10</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Round Labels -->
+    <div class="hidden md:grid grid-cols-5 gap-4 max-w-4xl mx-auto text-center mt-4 mb-12">
+      <div class="text-navy-500 font-sans text-sm font-semibold">Round 1</div>
+      <div class="text-navy-500 font-sans text-sm font-semibold">Semifinals</div>
+      <div class="text-gold-600 font-sans text-sm font-bold">Finals</div>
+      <div class="text-navy-500 font-sans text-sm font-semibold">Semifinals</div>
+      <div class="text-navy-500 font-sans text-sm font-semibold">Round 1</div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-navy-900 rounded-lg p-8 text-center max-w-2xl mx-auto">
+      <h2 class="font-serif text-2xl text-gold-400 font-bold mb-3">
+        Cast Your Vote
+      </h2>
+      <p class="text-cream-200 font-sans mb-6">
+        Think you know absurdity when you see it? When voting opens, you'll be able to
+        fill out your bracket and compete against other citizens to see who truly
+        understands the depths of legislative madness.
+      </p>
+      <div class="inline-flex items-center gap-2 bg-gold-500 text-navy-900 font-serif font-bold px-6 py-3 rounded">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Voting Opens March 1st
+      </div>
+    </div>
+
+    <!-- Back Link -->
+    <div class="text-center mt-10">
+      <a href="/" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; Back to Home
+      </a>
+    </div>
+  </div>
+</BaseLayout>

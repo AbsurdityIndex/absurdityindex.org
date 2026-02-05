@@ -1,0 +1,178 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
+import BillTypeBadge from '../../components/bills/BillTypeBadge.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const bills = await getCollection('bills');
+  const paths = [];
+
+  for (const bill of bills) {
+    if (!bill.data.pairedBillId) continue;
+    const paired = bills.find(b => b.id === bill.data.pairedBillId);
+    if (!paired) continue;
+
+    // Only create one comparison page per pair (use the real bill as the key)
+    if (bill.data.billType === 'real') {
+      paths.push({
+        params: { pair: bill.id },
+        props: { realBill: bill, notBill: paired },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { realBill, notBill } = Astro.props;
+const rd = realBill.data;
+const nd = notBill.data;
+
+const realHref = `/bills/${realBill.id}`;
+const notHref = `/not-bills/${notBill.id}`;
+
+const formattedRealDate = rd.dateIntroduced.toLocaleDateString('en-US', {
+  month: 'short', day: 'numeric', year: 'numeric',
+});
+const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
+  month: 'short', day: 'numeric', year: 'numeric',
+});
+---
+
+<BaseLayout
+  title={`${rd.billNumber} vs ${nd.billNumber} — Compare`}
+  description={`Side-by-side comparison: ${rd.title} vs ${nd.title}`}
+>
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Page title -->
+    <div class="text-center mb-10">
+      <h1 class="font-serif text-3xl md:text-4xl font-bold text-navy-900 mb-3">
+        Congress Proposed <span class="text-red-700">THIS</span>...
+        We Proposed <span class="text-green-700">THIS</span>.
+      </h1>
+      <p class="text-navy-600 font-sans text-lg max-w-2xl mx-auto">
+        One of these bills was introduced in the United States Congress. The other one actually makes sense.
+      </p>
+    </div>
+
+    <!-- Comparison grid -->
+    <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-start">
+
+      <!-- Real bill card -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden border-t-4 border-t-navy-800">
+        <div class="bg-navy-800 text-white px-6 py-4">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-sm font-bold opacity-80">{rd.billNumber}</span>
+            <BillTypeBadge billType={rd.billType} />
+          </div>
+          <h2 class="font-serif text-xl font-bold mt-2 leading-snug">{rd.title}</h2>
+        </div>
+        <div class="p-6 space-y-4">
+          <p class="text-sm text-navy-700 leading-relaxed">{rd.summary}</p>
+
+          {rd.absurdityIndex && (
+            <div>
+              <AbsurdityMeter score={rd.absurdityIndex} />
+            </div>
+          )}
+
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="font-sans font-semibold text-navy-600">Status</span>
+              <span class="text-navy-800">{rd.status}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-sans font-semibold text-navy-600">Sponsor</span>
+              <span class="text-navy-800 text-right">{rd.sponsor}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-sans font-semibold text-navy-600">Introduced</span>
+              <time class="text-navy-800" datetime={rd.dateIntroduced.toISOString()}>{formattedRealDate}</time>
+            </div>
+          </div>
+
+          <a
+            href={realHref}
+            class="block text-center bg-navy-800 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded hover:bg-navy-700 transition-colors"
+          >
+            Read Full Bill &rarr;
+          </a>
+        </div>
+      </div>
+
+      <!-- VS divider -->
+      <div class="hidden md:flex flex-col items-center justify-center self-center">
+        <div class="w-px h-16 bg-navy-300"></div>
+        <div class="bg-gold-500 text-navy-900 font-serif font-bold text-2xl w-14 h-14 rounded-full flex items-center justify-center shadow-md my-2">
+          VS
+        </div>
+        <div class="w-px h-16 bg-navy-300"></div>
+      </div>
+      <div class="md:hidden flex items-center justify-center py-2">
+        <div class="h-px w-16 bg-navy-300"></div>
+        <div class="bg-gold-500 text-navy-900 font-serif font-bold text-xl w-12 h-12 rounded-full flex items-center justify-center shadow-md mx-4">
+          VS
+        </div>
+        <div class="h-px w-16 bg-navy-300"></div>
+      </div>
+
+      <!-- Not-bill card -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden border-t-4 border-t-green-700">
+        <div class="bg-green-700 text-white px-6 py-4">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-sm font-bold opacity-80">{nd.billNumber}</span>
+            <BillTypeBadge billType={nd.billType} />
+          </div>
+          <h2 class="font-serif text-xl font-bold mt-2 leading-snug">{nd.title}</h2>
+        </div>
+        <div class="p-6 space-y-4">
+          <p class="text-sm text-navy-700 leading-relaxed">{nd.summary}</p>
+
+          {nd.absurdityIndex && (
+            <div>
+              <AbsurdityMeter score={nd.absurdityIndex} />
+            </div>
+          )}
+
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="font-sans font-semibold text-navy-600">Status</span>
+              <span class="text-navy-800">{nd.status}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-sans font-semibold text-navy-600">Sponsor</span>
+              <span class="text-navy-800 text-right">{nd.sponsor}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-sans font-semibold text-navy-600">Introduced</span>
+              <time class="text-navy-800" datetime={nd.dateIntroduced.toISOString()}>{formattedNotDate}</time>
+            </div>
+          </div>
+
+          <a
+            href={notHref}
+            class="block text-center bg-green-700 text-white font-sans font-semibold text-sm px-4 py-2.5 rounded hover:bg-green-600 transition-colors"
+          >
+            Read Full Not-Bill &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer navigation -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mt-12 pt-8 border-t border-cream-300">
+      <a href="/compare" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; All Comparisons
+      </a>
+      <span class="hidden sm:inline text-navy-300">|</span>
+      <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        Browse Real Bills
+      </a>
+      <span class="hidden sm:inline text-navy-300">|</span>
+      <a href="/not-bills" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        Browse Not-Bills
+      </a>
+    </div>
+  </div>
+</BaseLayout>

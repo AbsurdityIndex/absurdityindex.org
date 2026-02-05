@@ -7,26 +7,73 @@ import ConstructionBanner from '../components/ui/ConstructionBanner.astro';
 interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
+  ogType?: string;
+  article?: {
+    publishedTime?: string;
+    modifiedTime?: string;
+    author?: string;
+    section?: string;
+    tags?: string[];
+  };
 }
 
 const {
   title,
   description = 'Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.',
+  ogImage,
+  ogType = 'website',
+  article,
 } = Astro.props;
 
 const fullTitle = `${title} | Absurdity Index`;
 const siteUrl = Astro.url.origin;
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
+const resolvedOgImage = ogImage ? new URL(ogImage, siteUrl).href : `${siteUrl}/og-image.svg`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Absurdity Index',
+  url: 'https://absurdityindex.org',
+  description: 'Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.',
+  publisher: {
+    '@type': 'Organization',
+    name: 'Absurdity Index',
+    url: 'https://absurdityindex.org',
+  },
+};
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Basic meta -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      (function() {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+
+    <!-- Robots -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+
+    <!-- Author/Publisher -->
+    <meta name="author" content="Absurdity Index" />
+
+    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Font preconnect/preload -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
@@ -34,17 +81,36 @@ const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
     <!-- Open Graph -->
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content="Absurdity Index" />
+    <meta property="og:image" content={resolvedOgImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={fullTitle} />
+    <meta property="og:locale" content="en_US" />
+    {article?.publishedTime && <meta property="article:published_time" content={article.publishedTime} />}
+    {article?.modifiedTime && <meta property="article:modified_time" content={article.modifiedTime} />}
+    {article?.author && <meta property="article:author" content={article.author} />}
+    {article?.section && <meta property="article:section" content={article.section} />}
+    {article?.tags?.map((tag) => <meta property="article:tag" content={tag} />)}
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={resolvedOgImage} />
+    <meta name="twitter:image:alt" content={fullTitle} />
 
+    <!-- RSS Feed -->
+    <link rel="alternate" type="application/rss+xml" title="Absurdity Index RSS Feed" href="/feed.xml" />
+
+    <!-- Canonical URL -->
     <link rel="canonical" href={canonicalUrl} />
     <meta name="generator" content={Astro.generator} />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body class="bg-cream-100 text-navy-900 font-sans min-h-screen flex flex-col">
     <ConstructionBanner />

@@ -1,0 +1,369 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+
+// Pre-generated bill combinations for client-side random selection
+const generatedBills = [
+  // Technology
+  { category: "Technology", absurdity: 9, type: "absurd", number: "H.R. 99999", title: "The Blockchain Integration in Federal Cheese Monitoring Act", summary: "Requires all USDA cheese inspectors to record findings on an immutable distributed ledger. Appropriates $47 million for cheese-chain development and mandates that aged cheddar transactions be verified by at least three nodes.", sponsor: "Rep. Crypto McDataface (R-CA)" },
+  { category: "Technology", absurdity: 8, type: "absurd", number: "S. 8675309", title: "The Mandatory AI Assistant Politeness Standards Act", summary: "Establishes federal guidelines requiring all artificial intelligence systems to say 'please' and 'thank you' in user interactions. Creates an Office of Digital Courtesy within the Department of Commerce.", sponsor: "Sen. Manners B. Taught (D-VT)" },
+  { category: "Technology", absurdity: 7, type: "absurd", number: "H.R. 80085", title: "The Congressional Understanding of Modern Technology Enhancement Act", summary: "Mandates that all members of Congress complete a basic technology competency exam before voting on tech-related legislation. Includes questions like 'What is the internet?' and 'Is email a physical location?'", sponsor: "Rep. Actually Knows-Things (I-WA)" },
+  { category: "Technology", absurdity: 10, type: "absurd", number: "H.R. 12345", title: "The Federal Quantum Computing Horoscope Integration Act", summary: "Requires the National Institute of Standards and Technology to develop quantum computing applications for generating more accurate congressional horoscopes. Appropriates $200 million for 'vibrational frequency analysis.'", sponsor: "Rep. Starr Alignment (D-AZ)" },
+  { category: "Technology", absurdity: 6, type: "sensible", number: "S. 2048", title: "The Actually Read the Terms of Service Act", summary: "Requires all federal agencies to provide plain-language summaries of digital terms of service before employees click 'I Agree.' Establishes a maximum length of 500 words for consumer-facing agreements.", sponsor: "Sen. Fine Print (D-MA)" },
+  { category: "Technology", absurdity: 5, type: "sensible", number: "H.R. 64000", title: "The Congressional Email Reply-All Limitation Act", summary: "Prohibits the use of 'Reply All' in congressional email systems unless the sender can certify that all recipients actually need to see the message. Estimated to save 47,000 staff-hours annually.", sponsor: "Rep. Inbox Zero (R-TX)" },
+
+  // Food & Drink
+  { category: "Food & Drink", absurdity: 10, type: "absurd", number: "H.R. 31415", title: "The Federal Pie Authenticity and Circular Integrity Act", summary: "Establishes strict federal standards for what constitutes a 'pie' versus a 'tart' versus a 'galette.' Creates a Pie Authenticity Board with subpoena power. Sets pi to 3.14159 for all federal pie calculations.", sponsor: "Rep. Betty Crocker-Smith (R-IA)" },
+  { category: "Food & Drink", absurdity: 9, type: "absurd", number: "S. 80808", title: "The National Hot Dog Classification Resolution Act", summary: "Finally settles the debate: declares hot dogs to be sandwiches for federal regulatory purposes but 'spiritual outliers' for cultural purposes. Requires all hot dog packaging to include a philosophical disclaimer.", sponsor: "Sen. Oscar Mayer III (D-WI)" },
+  { category: "Food & Drink", absurdity: 8, type: "absurd", number: "H.R. 55555", title: "The Avocado Toast Economic Impact Study Act", summary: "Appropriates $12 million to study whether millennials' avocado toast consumption is actually affecting their ability to purchase homes. Requires quarterly reports to Congress on toast-related economic indicators.", sponsor: "Rep. Boomer McOkay (R-FL)" },
+  { category: "Food & Drink", absurdity: 7, type: "absurd", number: "S. 41214", title: "The Pineapple on Pizza Federal Mediation Act", summary: "Creates a federal mediation board to resolve disputes between pro-pineapple and anti-pineapple pizza factions. Declares August 8th as 'National Pizza Topping Tolerance Day.'", sponsor: "Sen. Hawaiian Shirley (D-HI)" },
+  { category: "Food & Drink", absurdity: 4, type: "sensible", number: "H.R. 10101", title: "The Federal Expiration Date Standardization Act", summary: "Standardizes food expiration date labels across all products sold in the United States. Eliminates confusion between 'sell by,' 'best by,' and 'use by' dates that results in 40% of food waste.", sponsor: "Rep. Common Sense (I-ME)" },
+
+  // Commemorative
+  { category: "Commemorative", absurdity: 10, type: "absurd", number: "H.R. 00000", title: "The National Day of Appreciating Days Act", summary: "Establishes a federal holiday to celebrate the existence of other federal holidays. Requires all federal employees to spend the day contemplating the importance of commemorative occasions.", sponsor: "Rep. Meta Peterson (D-OR)" },
+  { category: "Commemorative", absurdity: 9, type: "absurd", number: "S. 24601", title: "The Mandatory Study on Whether Studies Are Effective Act", summary: "Commissions a $8.7 million GAO study to determine whether congressional studies actually accomplish anything. Requires a follow-up study to evaluate the effectiveness of this study.", sponsor: "Sen. Circular Logic (R-KS)" },
+  { category: "Commemorative", absurdity: 8, type: "absurd", number: "H.R. 77777", title: "The National Awareness Month Awareness Month Act", summary: "Designates October as 'National Awareness Month Awareness Month' to raise awareness about the proliferation of awareness months. Includes funding for awareness campaigns about awareness campaigns.", sponsor: "Rep. So Meta (D-CA)" },
+  { category: "Commemorative", absurdity: 7, type: "absurd", number: "S. 11111", title: "The Congressional Participation Trophy Authorization Act", summary: "Authorizes the minting of commemorative participation trophies for all members of Congress who attended at least one floor vote during the session. Trophy design features a gavel and the words 'You Showed Up.'", sponsor: "Sen. At Least Tried (R-OH)" },
+  { category: "Commemorative", absurdity: 6, type: "absurd", number: "H.R. 90909", title: "The Bipartisan Agreement That Water Is Wet Affirmation Resolution", summary: "Expresses the sense of Congress that water is, in fact, wet. Passed unanimously after seven months of committee debate and three amendments specifying the exact definition of 'wetness.'", sponsor: "Rep. Obviously True (D-NY)" },
+
+  // Budget
+  { category: "Budget", absurdity: 10, type: "absurd", number: "H.R. 42069", title: "The Taxpayer-Funded Congressional Nap Room Enhancement Act", summary: "Appropriates $3.2 million to install premium napping pods in congressional office buildings. Includes $400,000 for a feasibility study on whether hammocks would be equally effective.", sponsor: "Rep. Tired McSleepy (R-AZ)" },
+  { category: "Budget", absurdity: 9, type: "absurd", number: "S. 98765", title: "The Federal Penny Elimination and Nostalgia Preservation Act", summary: "Eliminates the penny from circulation while simultaneously funding a $50 million penny museum. Requires all vending machines to round to the nearest nickel but preserve penny 'for heritage purposes.'", sponsor: "Sen. Abraham Lincoln-Adjacent (D-IL)" },
+  { category: "Budget", absurdity: 8, type: "absurd", number: "H.R. 33333", title: "The Bridge to Nowhere Memorial Bridge Act", summary: "Appropriates $398 million to build a bridge connecting two uninhabited islands in Alaska, then names it after the original Bridge to Nowhere. Includes interpretive signage explaining irony.", sponsor: "Rep. Pork Barrel Jr. (R-AK)" },
+  { category: "Budget", absurdity: 5, type: "sensible", number: "S. 50000", title: "The Congressional Budget Written in English Act", summary: "Requires all federal budget documents to include a plain-language summary that a high school graduate can understand. Prohibits the use of more than three acronyms per page.", sponsor: "Sen. Clarity Jones (I-VT)" },
+  { category: "Budget", absurdity: 4, type: "sensible", number: "H.R. 20202", title: "The Audit the Auditors Who Audit the Auditors Simplification Act", summary: "Consolidates the seventeen federal agencies responsible for auditing other federal agencies into a single Office of Actually Getting Things Done.", sponsor: "Rep. Efficiency Expert (R-TX)" },
+
+  // Transportation
+  { category: "Transportation", absurdity: 9, type: "absurd", number: "H.R. 88888", title: "The Federal Highway Sign Font Modernization Act", summary: "Appropriates $127 million to study whether changing the federal highway sign font from Highway Gothic to Comic Sans would improve driver engagement. Pilot program in three states.", sponsor: "Rep. Sans Serif (D-CA)" },
+  { category: "Transportation", absurdity: 8, type: "absurd", number: "S. 70707", title: "The National Pothole Memorial and Recognition Act", summary: "Establishes a registry of historically significant potholes that may not be repaired without congressional approval. Creates the National Pothole Preservation Trust with $15 million in annual funding.", sponsor: "Sen. Crater McBumpy (R-MI)" },
+  { category: "Transportation", absurdity: 7, type: "absurd", number: "H.R. 66666", title: "The TSA Approved Beverage Container Standardization Act", summary: "Mandates that all beverage companies produce 3.3-ounce travel versions of their products specifically for air travel. Creates federal standards for 'travel-sized refreshment adequacy.'", sponsor: "Rep. Three Point Four (D-NJ)" },
+  { category: "Transportation", absurdity: 5, type: "sensible", number: "S. 40404", title: "The Actually Fix the Roads Before Building New Ones Act", summary: "Requires states to certify that 80% of existing infrastructure is in good repair before receiving federal funding for new construction projects. Revolutionary concept.", sponsor: "Sen. Maintenance First (I-NH)" },
+
+  // Environment
+  { category: "Environment", absurdity: 10, type: "absurd", number: "H.R. 13579", title: "The Federal Fish Emotional Wellness Assessment Act", summary: "Requires the EPA to conduct annual emotional wellness surveys of fish populations in federal waterways. Appropriates $23 million for the development of underwater fish therapy protocols.", sponsor: "Rep. Gill Feelings (D-OR)" },
+  { category: "Environment", absurdity: 9, type: "absurd", number: "S. 24680", title: "The National Squirrel Census Accuracy Improvement Act", summary: "Mandates a comprehensive census of all squirrels on federal land. Requires each squirrel to be individually identified and tracked. Creates the Office of Rodent Demographics.", sponsor: "Sen. Nutkin McChipmunk (R-TN)" },
+  { category: "Environment", absurdity: 8, type: "absurd", number: "H.R. 11223", title: "The Congressional Carbon Footprint of Congressional Hearings About Carbon Footprints Study Act", summary: "Commissions a study to measure the environmental impact of holding congressional hearings about environmental impact. Results to be presented at a hearing with projected high environmental impact.", sponsor: "Rep. Meta Green (D-WA)" },
+  { category: "Environment", absurdity: 4, type: "sensible", number: "S. 30303", title: "The Stop Studying Things We Already Know Act", summary: "Prohibits federal agencies from commissioning studies on topics where scientific consensus already exists. Redirects funding to implementation of existing research findings.", sponsor: "Sen. Just Do It (I-CO)" },
+
+  // Education
+  { category: "Education", absurdity: 9, type: "absurd", number: "H.R. 27182", title: "The Mandatory Cursive Blockchain Certification Act", summary: "Requires all high school students to demonstrate cursive writing proficiency before graduation, with certificates stored on a federal blockchain. Appropriates $85 million for 'penmanship distributed ledger technology.'", sponsor: "Rep. Palmer Method (R-PA)" },
+  { category: "Education", absurdity: 8, type: "absurd", number: "S. 31416", title: "The Congressional Math Competency Optional Participation Resolution", summary: "Expresses the sense of Congress that members should not be required to understand statistics before voting on data-related legislation. Declares percentages to be 'advisory.'", sponsor: "Sen. Numbers Are Hard (D-FL)" },
+  { category: "Education", absurdity: 7, type: "absurd", number: "H.R. 54321", title: "The Federal Homework Abolition and Video Game Research Act", summary: "Provides $40 million in grants to study whether replacing homework with video games improves educational outcomes. Includes funding for congressional aides to 'test' video games.", sponsor: "Rep. Nintendo Thompson (R-WA)" },
+  { category: "Education", absurdity: 3, type: "sensible", number: "S. 12121", title: "The Teach Financial Literacy Before Student Loans Act", summary: "Requires all high schools receiving federal funding to provide comprehensive financial literacy education before students can apply for federal student loans. Seems obvious.", sponsor: "Sen. Should Already Exist (D-MA)" },
+
+  // Healthcare
+  { category: "Healthcare", absurdity: 10, type: "absurd", number: "H.R. 91919", title: "The Federal Essential Oil Research and Integration Act", summary: "Appropriates $150 million to study whether lavender essential oils can replace existing FDA-approved medications. Creates an Office of Alternative Vibrational Medicine within HHS.", sponsor: "Rep. Crystal Healer (R-UT)" },
+  { category: "Healthcare", absurdity: 9, type: "absurd", number: "S. 82828", title: "The Congressional Healthcare Plan Actually Understanding Requirement Act", summary: "Requires all members of Congress to correctly explain their own healthcare plan before voting on healthcare legislation. Estimated to delay all healthcare votes indefinitely.", sponsor: "Sen. Pop Quiz (I-ME)" },
+  { category: "Healthcare", absurdity: 8, type: "absurd", number: "H.R. 73737", title: "The WebMD Congressional Consultation Authorization Act", summary: "Authorizes members of Congress to cite WebMD as a primary source during healthcare debates. Requires the Surgeon General to maintain a congressional WebMD hotline.", sponsor: "Rep. Self Diagnosis (D-OH)" },
+  { category: "Healthcare", absurdity: 4, type: "sensible", number: "S. 60606", title: "The Post Drug Prices Clearly Act", summary: "Requires pharmaceutical companies to display actual prices that consumers will pay at the point of sale. Prohibits prices that require a decoder ring to understand.", sponsor: "Sen. Transparency Now (D-NJ)" },
+
+  // Defense
+  { category: "Defense", absurdity: 10, type: "absurd", number: "H.R. 50505", title: "The Space Force Intergalactic Diplomacy Preparedness Act", summary: "Appropriates $2.3 billion to develop protocols for first contact with alien civilizations. Includes funding for a 'Universal Translator' and an 'Interstellar Handshake Committee.'", sponsor: "Rep. Fox Mulder (R-NM)" },
+  { category: "Defense", absurdity: 9, type: "absurd", number: "S. 47474", title: "The Pentagon Coffee Maker Replacement Modernization Act", summary: "Authorizes $1.2 million for the procurement of a single coffee maker for the Pentagon. Includes $340,000 for a feasibility study on whether to use pods or grounds.", sponsor: "Sen. Caffeinated Defense (R-VA)" },
+  { category: "Defense", absurdity: 8, type: "absurd", number: "H.R. 36363", title: "The Tactical Assault Stapler Authorization Act", summary: "Provides $8 million for the development of a 'military-grade stapler' capable of 'securing documents in hostile environments.' Requires compatibility with existing NATO paperclip systems.", sponsor: "Rep. Office Warrior (R-GA)" },
+
+  // Government Operations
+  { category: "Government Operations", absurdity: 10, type: "absurd", number: "H.R. 00001", title: "The Federal Form to Request Forms About Forms Act", summary: "Requires all citizens to fill out Form 27B/6 before requesting access to other federal forms. Creates a new form (27B/7) to appeal Form 27B/6 decisions. Appropriates $12 million for form printing.", sponsor: "Rep. Bureaucracy Jones (D-DC)" },
+  { category: "Government Operations", absurdity: 9, type: "absurd", number: "S. 10000", title: "The Congressional Recess Duration Extension Study Committee Formation Act", summary: "Establishes a committee to study whether congressional recesses should be longer. Committee to meet only during recess. Final report due 'whenever we get around to it.'", sponsor: "Sen. Vacation Planner (R-HI)" },
+  { category: "Government Operations", absurdity: 8, type: "absurd", number: "H.R. 22222", title: "The Federal 'Reply Hazy, Try Again' Standard Response Authorization Act", summary: "Authorizes federal agencies to respond to FOIA requests with Magic 8-Ball responses when documentation is unavailable. Appropriates funding for Magic 8-Ball procurement.", sponsor: "Rep. Ask Again Later (I-NV)" },
+  { category: "Government Operations", absurdity: 3, type: "sensible", number: "S. 99990", title: "The Actually Answer Your Phone at Federal Agencies Act", summary: "Requires all federal agencies to answer constituent phone calls within 10 minutes during business hours. Creates accountability metrics that are publicly posted. Groundbreaking.", sponsor: "Sen. Customer Service (D-MI)" },
+
+  // Miscellaneous Absurdity
+  { category: "Miscellaneous", absurdity: 10, type: "absurd", number: "H.R. 69420", title: "The Congressional Meme Literacy and Digital Culture Competency Act", summary: "Requires all congressional social media posts to be reviewed by a panel of individuals under 30 before publication. Establishes the Office of Meme Quality Assurance.", sponsor: "Rep. Okay Boomer (D-NY)" },
+  { category: "Miscellaneous", absurdity: 9, type: "absurd", number: "S. 80081", title: "The Federal Daylight Saving Time Permanent Temporary Extension Reversal Study Act", summary: "Commissions yet another study on daylight saving time while simultaneously making it permanent, temporary, and abolished depending on which section of the bill you read.", sponsor: "Sen. Time Confused (R-IN)" },
+  { category: "Miscellaneous", absurdity: 8, type: "absurd", number: "H.R. 14141", title: "The National Procrastination Week Postponement Resolution", summary: "Postpones the establishment of National Procrastination Week indefinitely. To be revisited 'at some point, probably, maybe, we'll see.'", sponsor: "Rep. Getting To It (D-CA)" },
+  { category: "Miscellaneous", absurdity: 7, type: "absurd", number: "S. 15151", title: "The Bipartisan Agreement to Disagree Institutionalization Act", summary: "Formally establishes a process by which Congress can officially agree to disagree on any issue, thereby avoiding the need to actually address it. Unlimited applications per session.", sponsor: "Sen. Middle Ground (I-AK)" },
+  { category: "Miscellaneous", absurdity: 6, type: "absurd", number: "H.R. 16161", title: "The Congressional Jargon Elimination and Plain Speaking Mandate Act", summary: "Prohibits the use of phrases like 'at this juncture,' 'pursuant to,' and 'notwithstanding the foregoing' in any legislation. Violations punishable by mandatory vocabulary remediation.", sponsor: "Rep. Speak English (R-TX)" },
+];
+
+const categories = [...new Set(generatedBills.map(b => b.category))].sort();
+---
+
+<BaseLayout
+  title="Bill-O-Matic 3000"
+  description="Generate bills so absurd, they might already exist. The Legislative Randomizer creates fake legislation that's indistinguishable from the real thing."
+>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <OfficialSeal size="120" />
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Interactive Tool</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">The Bill-O-Matic 3000</h1>
+      <p class="text-navy-600 font-serif italic mt-3">Generate bills so absurd, they might already exist</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <!-- Generator Form -->
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <h2 class="font-serif text-xl font-bold text-navy-900 mb-6 text-center uppercase tracking-wide">
+        Configure Your Legislation
+      </h2>
+
+      <div class="space-y-6">
+        <!-- Category Dropdown -->
+        <div>
+          <label for="category" class="block font-serif text-navy-800 font-semibold mb-2">
+            Legislative Category
+          </label>
+          <select
+            id="category"
+            class="w-full p-3 border-2 border-gold-300 rounded-lg bg-cream-100 font-sans text-navy-900 focus:border-gold-500 focus:outline-none"
+          >
+            <option value="any">Any Category (Surprise Me)</option>
+            {categories.map(cat => (
+              <option value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Absurdity Slider -->
+        <div>
+          <label for="absurdity" class="block font-serif text-navy-800 font-semibold mb-2">
+            Absurdity Level: <span id="absurdity-value" class="text-gold-600">5</span>/10
+          </label>
+          <input
+            type="range"
+            id="absurdity"
+            min="1"
+            max="10"
+            value="5"
+            class="w-full h-3 rounded-lg appearance-none cursor-pointer"
+            style="background: linear-gradient(to right, #228B4A 0%, #228B4A 30%, #EAB308 30%, #EAB308 60%, #F97316 60%, #F97316 80%, #DC2626 80%, #DC2626 100%);"
+          />
+          <div class="flex justify-between text-xs font-mono text-navy-600 mt-1">
+            <span>Business as Usual</span>
+            <span>Fish on Meth</span>
+          </div>
+        </div>
+
+        <!-- Type Toggle -->
+        <div>
+          <label class="block font-serif text-navy-800 font-semibold mb-2">
+            Bill Type
+          </label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="billType" value="any" checked class="w-4 h-4 text-gold-600" />
+              <span class="font-sans text-navy-700">Either</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="billType" value="sensible" class="w-4 h-4 text-gold-600" />
+              <span class="font-sans text-navy-700">Sensible</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="billType" value="absurd" class="w-4 h-4 text-gold-600" />
+              <span class="font-sans text-navy-700">Absurd</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="text-center pt-4">
+          <button
+            id="generate-btn"
+            class="px-8 py-4 bg-gold-500 text-navy-900 font-serif text-lg font-bold rounded-lg hover:bg-gold-400 transition-colors shadow-md hover:shadow-lg"
+          >
+            Generate Bill
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Card (hidden initially) -->
+    <div id="result-card" class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8 hidden">
+      <div class="border-b-2 border-gold-300 pb-4 mb-6">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <span id="result-number" class="font-mono text-gold-600 text-lg font-bold">H.R. 99999</span>
+          <div class="flex items-center gap-2">
+            <span id="result-type-badge" class="px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wide bg-red-600 text-white">
+              Absurd
+            </span>
+            <span id="result-category-badge" class="px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wide bg-navy-700 text-cream-100">
+              Technology
+            </span>
+          </div>
+        </div>
+        <h3 id="result-title" class="font-serif text-2xl font-bold text-navy-900 mt-4">
+          The Blockchain Integration in Federal Cheese Monitoring Act
+        </h3>
+      </div>
+
+      <!-- Absurdity Meter -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-sans text-sm text-navy-600 font-semibold">Absurdity Score</span>
+          <span id="result-score" class="font-mono text-lg font-bold text-red-600">9/10</span>
+        </div>
+        <div class="h-4 rounded-full overflow-hidden bg-cream-200">
+          <div id="result-meter" class="h-full rounded-full transition-all duration-500" style="width: 90%; background: linear-gradient(to right, #228B4A, #EAB308, #F97316, #DC2626);"></div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="mb-6">
+        <h4 class="font-serif text-lg font-bold text-navy-800 mb-2">Summary</h4>
+        <p id="result-summary" class="font-serif text-navy-700 leading-relaxed">
+          Requires all USDA cheese inspectors to record findings on an immutable distributed ledger...
+        </p>
+      </div>
+
+      <!-- Sponsor -->
+      <div class="flex items-center gap-3 p-4 bg-cream-100 rounded-lg">
+        <div class="w-12 h-12 rounded-full bg-navy-700 flex items-center justify-center text-gold-400 font-serif text-xl font-bold">
+          <span id="result-sponsor-initial">C</span>
+        </div>
+        <div>
+          <p class="font-sans text-xs text-navy-500 uppercase tracking-wide">Primary Sponsor</p>
+          <p id="result-sponsor" class="font-serif text-navy-900 font-semibold">Rep. Crypto McDataface (R-CA)</p>
+        </div>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="mt-6 p-4 border-2 border-dashed border-gold-400 rounded-lg bg-gold-100/50">
+        <p class="font-mono text-xs text-navy-600 text-center">
+          DISCLAIMER: This bill may or may not already exist. Given the state of modern legislation, we honestly can't tell anymore. Any resemblance to actual bills, living or dead, is probably intentional on Congress's part, not ours.
+        </p>
+      </div>
+
+      <!-- Generate Another Button -->
+      <div class="text-center mt-6">
+        <button
+          id="generate-another-btn"
+          class="px-6 py-3 bg-navy-800 text-gold-400 font-serif font-bold rounded-lg hover:bg-navy-700 transition-colors"
+        >
+          Generate Another
+        </button>
+      </div>
+    </div>
+
+    <!-- Back link -->
+    <div class="text-center mt-8">
+      <a href="/" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; Back to Home
+      </a>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ generatedBills }}>
+    const bills = generatedBills;
+
+    const categorySelect = document.getElementById('category');
+    const absurditySlider = document.getElementById('absurdity');
+    const absurdityValue = document.getElementById('absurdity-value');
+    const generateBtn = document.getElementById('generate-btn');
+    const generateAnotherBtn = document.getElementById('generate-another-btn');
+    const resultCard = document.getElementById('result-card');
+
+    // Result elements
+    const resultNumber = document.getElementById('result-number');
+    const resultTypeBadge = document.getElementById('result-type-badge');
+    const resultCategoryBadge = document.getElementById('result-category-badge');
+    const resultTitle = document.getElementById('result-title');
+    const resultScore = document.getElementById('result-score');
+    const resultMeter = document.getElementById('result-meter');
+    const resultSummary = document.getElementById('result-summary');
+    const resultSponsor = document.getElementById('result-sponsor');
+    const resultSponsorInitial = document.getElementById('result-sponsor-initial');
+
+    // Update absurdity value display
+    absurditySlider.addEventListener('input', function() {
+      absurdityValue.textContent = this.value;
+    });
+
+    function getScoreColor(score) {
+      if (score <= 3) return '#228B4A';
+      if (score <= 6) return '#EAB308';
+      if (score <= 8) return '#F97316';
+      return '#DC2626';
+    }
+
+    function generateBill() {
+      const category = categorySelect.value;
+      const targetAbsurdity = parseInt(absurditySlider.value);
+      const billType = document.querySelector('input[name="billType"]:checked').value;
+
+      // Filter bills based on criteria
+      let filtered = bills.filter(bill => {
+        const categoryMatch = category === 'any' || bill.category === category;
+        const typeMatch = billType === 'any' || bill.type === billType;
+        const absurdityMatch = Math.abs(bill.absurdity - targetAbsurdity) <= 2;
+        return categoryMatch && typeMatch && absurdityMatch;
+      });
+
+      // If no exact matches, relax the absurdity constraint
+      if (filtered.length === 0) {
+        filtered = bills.filter(bill => {
+          const categoryMatch = category === 'any' || bill.category === category;
+          const typeMatch = billType === 'any' || bill.type === billType;
+          return categoryMatch && typeMatch;
+        });
+      }
+
+      // If still no matches, use all bills
+      if (filtered.length === 0) {
+        filtered = bills;
+      }
+
+      // Pick a random bill
+      const bill = filtered[Math.floor(Math.random() * filtered.length)];
+
+      // Update the result card
+      resultNumber.textContent = bill.number;
+      resultTitle.textContent = bill.title;
+      resultScore.textContent = bill.absurdity + '/10';
+      resultScore.style.color = getScoreColor(bill.absurdity);
+      resultMeter.style.width = (bill.absurdity * 10) + '%';
+      resultSummary.textContent = bill.summary;
+      resultSponsor.textContent = bill.sponsor;
+      resultSponsorInitial.textContent = bill.sponsor.charAt(bill.sponsor.indexOf('.') + 2) || bill.sponsor.charAt(0);
+
+      // Update type badge
+      if (bill.type === 'sensible') {
+        resultTypeBadge.textContent = 'Sensible';
+        resultTypeBadge.className = 'px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wide bg-green-600 text-white';
+      } else {
+        resultTypeBadge.textContent = 'Absurd';
+        resultTypeBadge.className = 'px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wide bg-red-600 text-white';
+      }
+
+      // Update category badge
+      resultCategoryBadge.textContent = bill.category;
+
+      // Show the result card with animation
+      resultCard.classList.remove('hidden');
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    generateBtn.addEventListener('click', generateBill);
+    generateAnotherBtn.addEventListener('click', generateBill);
+  </script>
+
+  <style>
+    /* Custom slider thumb styles */
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0A1628;
+      cursor: pointer;
+      border: 3px solid #C5A572;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0A1628;
+      cursor: pointer;
+      border: 3px solid #C5A572;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    input[type="radio"] {
+      accent-color: #C5A572;
+    }
+  </style>
+</BaseLayout>

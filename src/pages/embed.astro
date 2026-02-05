@@ -1,0 +1,309 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+import { getCollection } from 'astro:content';
+
+// Get a sample real bill and not-bill for the preview
+const bills = await getCollection('bills');
+const sampleRealBill = bills.find((b) => b.data.billType === 'real' && b.data.absurdityIndex);
+const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
+---
+
+<BaseLayout
+  title="API & Embed Widget"
+  description="Embed Absurdity Index bill cards on your website and access our public JSON API for bill data."
+>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <OfficialSeal size="120" />
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">
+        Developer Resources
+      </p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">
+        API & Embed Widget
+      </h1>
+      <p class="text-navy-600 font-serif italic mt-3">
+        Bring congressional absurdity to your own website
+      </p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <!-- Embed Widget Section -->
+    <section class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4 flex items-center gap-3">
+        <span class="text-gold-600">1.</span> Embed Widget
+      </h2>
+      <p class="text-navy-700 mb-6">
+        Add interactive bill cards to your website with a simple script tag. The widget automatically
+        fetches bill data and displays a styled card that matches your site.
+      </p>
+
+      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Basic Usage</h3>
+      <p class="text-navy-600 text-sm mb-3">
+        Add this script tag where you want the bill card to appear:
+      </p>
+      <div class="bg-navy-900 rounded-lg p-4 mb-6 overflow-x-auto">
+        <pre class="text-gold-300 font-mono text-sm"><code>&lt;script
+  src="https://absurdityindex.org/embed.js"
+  data-bill="{sampleRealBill?.id || 'real-hr-25'}"
+&gt;&lt;/script&gt;</code></pre>
+      </div>
+
+      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Options</h3>
+      <div class="overflow-x-auto mb-6">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b-2 border-gold-300">
+              <th class="text-left py-2 px-3 font-sans font-semibold text-navy-900">Attribute</th>
+              <th class="text-left py-2 px-3 font-sans font-semibold text-navy-900">Required</th>
+              <th class="text-left py-2 px-3 font-sans font-semibold text-navy-900">Description</th>
+            </tr>
+          </thead>
+          <tbody class="font-sans">
+            <tr class="border-b border-gold-200">
+              <td class="py-2 px-3 font-mono text-navy-800">data-bill</td>
+              <td class="py-2 px-3 text-navy-600">Yes</td>
+              <td class="py-2 px-3 text-navy-600">
+                The bill ID (e.g., <code class="bg-cream-200 px-1 rounded">real-hr-25</code>,
+                <code class="bg-cream-200 px-1 rounded">ra-001</code>)
+              </td>
+            </tr>
+            <tr class="border-b border-gold-200">
+              <td class="py-2 px-3 font-mono text-navy-800">data-theme</td>
+              <td class="py-2 px-3 text-navy-600">No</td>
+              <td class="py-2 px-3 text-navy-600">
+                <code class="bg-cream-200 px-1 rounded">light</code> (default) or
+                <code class="bg-cream-200 px-1 rounded">dark</code>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Live Preview</h3>
+      <p class="text-navy-600 text-sm mb-4">
+        Here's what the embed looks like with a real bill:
+      </p>
+      <div class="flex flex-col lg:flex-row gap-6 mb-6">
+        <div class="flex-1">
+          <p class="text-xs font-mono text-navy-500 mb-2 uppercase tracking-wide">Light Theme</p>
+          <div class="bg-white p-4 rounded border border-cream-300">
+            <script src="/embed.js" data-bill={sampleRealBill?.id || 'real-hr-25'}></script>
+          </div>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs font-mono text-navy-500 mb-2 uppercase tracking-wide">Dark Theme</p>
+          <div class="bg-navy-800 p-4 rounded">
+            <script src="/embed.js" data-bill={sampleRealBill?.id || 'real-hr-25'} data-theme="dark"></script>
+          </div>
+        </div>
+      </div>
+
+      {sampleNotBill && (
+        <>
+          <p class="text-navy-600 text-sm mb-4">
+            And here's a satirical "not-bill":
+          </p>
+          <div class="bg-white p-4 rounded border border-cream-300 max-w-md">
+            <script src="/embed.js" data-bill={sampleNotBill.id}></script>
+          </div>
+        </>
+      )}
+    </section>
+
+    <Divider />
+
+    <!-- JSON API Section -->
+    <section class="bg-parchment rounded-lg shadow-lg p-8 md:p-12">
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4 flex items-center gap-3">
+        <span class="text-gold-600">2.</span> JSON API
+      </h2>
+      <p class="text-navy-700 mb-6">
+        Access bill data programmatically with our public JSON API. All endpoints support CORS and
+        return data in a consistent format.
+      </p>
+
+      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Endpoints</h3>
+      <div class="space-y-4 mb-8">
+        <div class="bg-cream-200 rounded-lg p-4">
+          <div class="flex flex-wrap items-center gap-3 mb-2">
+            <span class="bg-green-700 text-white text-xs font-mono font-bold px-2 py-1 rounded">
+              GET
+            </span>
+            <code class="font-mono text-navy-800 text-sm">/api/bills.json</code>
+          </div>
+          <p class="text-navy-600 text-sm">
+            Returns all bills (real and satirical) with full metadata.
+          </p>
+        </div>
+
+        <div class="bg-cream-200 rounded-lg p-4">
+          <div class="flex flex-wrap items-center gap-3 mb-2">
+            <span class="bg-green-700 text-white text-xs font-mono font-bold px-2 py-1 rounded">
+              GET
+            </span>
+            <code class="font-mono text-navy-800 text-sm">/api/real-bills.json</code>
+          </div>
+          <p class="text-navy-600 text-sm">
+            Returns only real bills from Congress with absurdity scores.
+          </p>
+        </div>
+
+        <div class="bg-cream-200 rounded-lg p-4">
+          <div class="flex flex-wrap items-center gap-3 mb-2">
+            <span class="bg-green-700 text-white text-xs font-mono font-bold px-2 py-1 rounded">
+              GET
+            </span>
+            <code class="font-mono text-navy-800 text-sm">/api/not-bills.json</code>
+          </div>
+          <p class="text-navy-600 text-sm">
+            Returns only satirical "not-bills" (sensible and absurd types).
+          </p>
+        </div>
+
+        <div class="bg-cream-200 rounded-lg p-4">
+          <div class="flex flex-wrap items-center gap-3 mb-2">
+            <span class="bg-green-700 text-white text-xs font-mono font-bold px-2 py-1 rounded">
+              GET
+            </span>
+            <code class="font-mono text-navy-800 text-sm">/api/stats.json</code>
+          </div>
+          <p class="text-navy-600 text-sm">
+            Returns aggregate statistics: totals, average absurdity, bills by category, and more.
+          </p>
+        </div>
+      </div>
+
+      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Response Format</h3>
+      <p class="text-navy-600 text-sm mb-3">
+        Bill endpoints return data in this structure:
+      </p>
+      <div class="bg-navy-900 rounded-lg p-4 overflow-x-auto mb-6">
+        <pre class="text-gold-300 font-mono text-sm"><code>{`{
+  "generated": "2025-01-15T12:00:00.000Z",
+  "count": 42,
+  "bills": [
+    {
+      "id": "real-hr-25",
+      "title": "FairTax Act of 2025",
+      "billNumber": "H.R. 25",
+      "billType": "real",
+      "category": "Budget",
+      "tags": ["taxes", "irs", "fair tax"],
+      "sponsor": "Rep. Buddy Carter (R-GA)",
+      "status": "Referred to Committee",
+      "dateIntroduced": "2025-01-03T00:00:00.000Z",
+      "summary": "Abolishes the IRS entirely...",
+      "absurdityIndex": 8,
+      "congressDotGovUrl": "https://congress.gov/...",
+      "url": "https://absurdityindex.org/bills/real-hr-25/"
+    }
+  ]
+}`}</code></pre>
+      </div>
+
+      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Example: Fetch with JavaScript</h3>
+      <div class="bg-navy-900 rounded-lg p-4 overflow-x-auto mb-6">
+        <pre class="text-gold-300 font-mono text-sm"><code>{`fetch('https://absurdityindex.org/api/bills.json')
+  .then(res => res.json())
+  .then(data => {
+    console.log(\`Found \${data.count} bills\`);
+
+    // Filter by absurdity score
+    const veryAbsurd = data.bills.filter(
+      b => b.absurdityIndex >= 8
+    );
+
+    console.log(\`\${veryAbsurd.length} bills scored 8+\`);
+  });`}</code></pre>
+      </div>
+
+      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Stats Response</h3>
+      <p class="text-navy-600 text-sm mb-3">
+        The stats endpoint provides aggregate data:
+      </p>
+      <div class="bg-navy-900 rounded-lg p-4 overflow-x-auto">
+        <pre class="text-gold-300 font-mono text-sm"><code>{`{
+  "generated": "2025-01-15T12:00:00.000Z",
+  "totals": {
+    "all": 42,
+    "real": 25,
+    "satirical": 17,
+    "featured": 5
+  },
+  "absurdity": {
+    "average": 6.8,
+    "billsWithScore": 25,
+    "distribution": { "1": 0, "2": 1, ... }
+  },
+  "byCategory": {
+    "Budget": { "total": 8, "real": 5, "satirical": 3 }
+  },
+  "topTags": [
+    { "tag": "taxes", "count": 12 }
+  ]
+}`}</code></pre>
+      </div>
+    </section>
+
+    <Divider />
+
+    <!-- Terms of Use -->
+    <section class="bg-cream-200 rounded-lg p-6 md:p-8">
+      <h2 class="font-serif text-xl text-navy-900 font-bold mb-3">Terms of Use</h2>
+      <ul class="text-navy-700 text-sm space-y-2">
+        <li class="flex items-start gap-2">
+          <span class="text-gold-600 mt-0.5">-</span>
+          <span>
+            The API is free for personal and non-commercial use. Attribution appreciated but not
+            required.
+          </span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-gold-600 mt-0.5">-</span>
+          <span>
+            For commercial use or high-volume access, please reach out first. We'd love to hear what
+            you're building.
+          </span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-gold-600 mt-0.5">-</span>
+          <span>
+            Data is regenerated at build time. For real-time congressional data, use
+            <a
+              href="https://www.congress.gov"
+              target="_blank"
+              rel="noopener"
+              class="text-navy-800 underline hover:text-gold-600"
+            >
+              Congress.gov
+            </a>
+            directly.
+          </span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-gold-600 mt-0.5">-</span>
+          <span>
+            Absurdity scores are editorial opinions, not objective measurements. Use responsibly.
+          </span>
+        </li>
+      </ul>
+    </section>
+
+    <Divider withSeal={true} />
+
+    <div class="text-center mt-8">
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4">Questions?</h2>
+      <p class="text-navy-600 mb-6">
+        Building something with the API? Have a feature request? We'd love to hear from you.
+      </p>
+      <a
+        href="/submit"
+        class="inline-block px-8 py-3 bg-gold-500 text-navy-900 font-serif text-lg rounded hover:bg-gold-400 transition-colors font-bold"
+      >
+        Get in Touch
+      </a>
+    </div>
+  </div>
+</BaseLayout>

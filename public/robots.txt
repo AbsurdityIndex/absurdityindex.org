@@ -1,0 +1,98 @@
+# =============================================================================
+# robots.txt — Absurdity Index (absurdityindex.org)
+# Real Bills. Real Absurdity. Satirical Common Sense.
+# =============================================================================
+
+# Sitemap
+Sitemap: https://absurdityindex.org/sitemap-index.xml
+
+# Host
+Host: https://absurdityindex.org
+
+# =============================================================================
+# Default: Allow all well-behaved crawlers
+# =============================================================================
+User-agent: *
+Allow: /
+Crawl-delay: 1
+
+# =============================================================================
+# Google
+# =============================================================================
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+
+User-agent: Googlebot-Image
+Allow: /images/
+Allow: /og-image.svg
+Allow: /favicon.svg
+
+User-agent: Google-Extended
+Allow: /
+
+# =============================================================================
+# Social Media Crawlers — Welcome to the floor
+# =============================================================================
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+# =============================================================================
+# AI Crawlers — Allowed with open arms
+# =============================================================================
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# =============================================================================
+# Bad Actor Bots — Blocked from the chamber
+# =============================================================================
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /

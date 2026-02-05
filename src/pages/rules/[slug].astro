@@ -1,0 +1,285 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
+import VoteBreakdown from '../../components/bills/VoteBreakdown.astro';
+import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
+import Disclaimer from '../../components/ui/Disclaimer.astro';
+import ShareButtons from '../../components/ui/ShareButtons.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const rules = await getCollection('rules');
+  return rules.map((rule) => ({
+    params: { slug: rule.id },
+    props: { rule },
+  }));
+}
+
+const { rule } = Astro.props;
+const { Content } = await render(rule);
+const d = rule.data;
+
+// Get other rules from the same Congress for navigation
+const allRules = await getCollection('rules');
+const sameCongressRules = allRules.filter(r => r.data.congressNumber === d.congressNumber && r.id !== rule.id);
+
+const chamberColors = {
+  house: { bg: 'bg-red-700', text: 'text-cream-100', light: 'bg-red-100' },
+  senate: { bg: 'bg-navy-700', text: 'text-cream-100', light: 'bg-navy-100' },
+};
+const colors = chamberColors[d.chamber];
+
+const categoryColors = {
+  procedure: 'bg-navy-600 text-cream-100',
+  committee: 'bg-gold-600 text-navy-900',
+  floor: 'bg-green-700 text-cream-100',
+  ethics: 'bg-red-600 text-cream-100',
+  administrative: 'bg-navy-500 text-cream-100',
+  controversial: 'bg-red-800 text-cream-100',
+};
+
+const ruleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": d.title,
+  "description": d.summary,
+  "datePublished": d.dateAdopted instanceof Date ? d.dateAdopted.toISOString() : d.dateAdopted,
+  "author": { "@type": "Organization", "name": "Absurdity Index" },
+  "publisher": { "@type": "Organization", "name": "Absurdity Index", "url": "https://absurdityindex.org" },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": `https://absurdityindex.org/rules/${rule.id}` },
+};
+---
+
+<BaseLayout
+  title={`${d.resolution} — ${d.chamber === 'house' ? 'House' : 'Senate'} Rules (${d.congressNumber}th Congress)`}
+  description={d.summary}
+  ogType="article"
+>
+  <script type="application/ld+json" set:html={JSON.stringify(ruleSchema)} />
+
+  <!-- Subnav -->
+  <nav class="bg-navy-800 border-b border-gold-500 sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="/rules" class="text-gold-400 hover:text-gold-300 font-mono text-sm flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          All Rules
+        </a>
+        <span class="text-gold-500">|</span>
+        <span class="text-gold-400 font-mono text-sm">{d.congressNumber}th Congress</span>
+      </div>
+      {sameCongressRules.length > 0 && (
+        <div class="flex items-center gap-2">
+          <span class="text-gold-400/70 text-sm hidden sm:inline">Also in this Congress:</span>
+          {sameCongressRules.map(r => (
+            <a
+              href={`/rules/${r.id}`}
+              class={`px-3 py-1 rounded text-sm font-mono ${
+                r.data.chamber === 'house' ? 'bg-red-700 text-cream-100' : 'bg-navy-600 text-cream-100'
+              } hover:opacity-80 transition-opacity`}
+            >
+              {r.data.chamber === 'house' ? 'House' : 'Senate'}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </nav>
+
+  <div class="max-w-5xl mx-auto px-4 py-12">
+    <!-- Header Card -->
+    <div class="bg-parchment rounded-lg shadow-lg overflow-hidden mb-8">
+      <div class={`${colors.bg} px-8 py-6`}>
+        <div class="flex items-start justify-between">
+          <div>
+            <span class="font-mono text-lg text-cream-100/80">{d.resolution}</span>
+            <h1 class={`font-serif text-3xl md:text-4xl font-bold ${colors.text} mt-2`}>
+              {d.chamber === 'house' ? 'House' : 'Senate'} Rules Package
+            </h1>
+            <p class={`${colors.text}/80 mt-2 font-serif`}>
+              {d.congressNumber}th Congress ({d.congressYears})
+            </p>
+          </div>
+          {d.pageCount && (
+            <div class="text-right">
+              <div class="font-mono text-3xl font-bold text-cream-100">{d.pageCount}</div>
+              <div class="text-sm text-cream-100/70">pages</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div class="p-8">
+        <p class="font-serif text-lg text-navy-700 leading-relaxed mb-6">{d.summary}</p>
+
+        <div class="flex flex-wrap gap-4 text-sm text-navy-600">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span>
+              Adopted {d.dateAdopted.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+          {d.congressDotGovUrl && (
+            <a
+              href={d.congressDotGovUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-2 text-gold-700 hover:text-gold-600"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              View on Congress.gov
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- Absurdity Score -->
+        {d.absurdityIndex && (
+          <div class="bg-parchment rounded-lg shadow-lg p-6">
+            <AbsurdityMeter score={d.absurdityIndex} />
+          </div>
+        )}
+
+        <!-- Major Changes -->
+        {d.majorChanges && d.majorChanges.length > 0 && (
+          <div class="bg-parchment rounded-lg shadow-lg p-6">
+            <h2 class="font-serif text-xl font-bold text-navy-900 mb-4 flex items-center gap-2">
+              <span class="text-gold-500">⚡</span>
+              Major Changes
+            </h2>
+            <div class="space-y-4">
+              {d.majorChanges.map((change) => (
+                <div class="bg-cream-100 border border-gold-200 rounded-lg p-4">
+                  <div class="flex items-start justify-between gap-4 mb-2">
+                    <h3 class="font-serif font-bold text-navy-900">{change.title}</h3>
+                    {change.category && (
+                      <span class={`${categoryColors[change.category]} text-xs font-mono px-2 py-1 rounded shrink-0`}>
+                        {change.category}
+                      </span>
+                    )}
+                  </div>
+                  <p class="text-sm text-navy-600">{change.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Notable Rules -->
+        {d.notableRules && d.notableRules.length > 0 && (
+          <div class="bg-parchment rounded-lg shadow-lg p-6">
+            <h2 class="font-serif text-xl font-bold text-navy-900 mb-4 flex items-center gap-2">
+              <span class="text-gold-500">📋</span>
+              Notable Standing Rules
+            </h2>
+            <div class="space-y-3">
+              {d.notableRules.map((rule) => (
+                <div class="flex gap-4 p-3 bg-cream-100 border border-gold-200 rounded">
+                  <span class="font-mono text-sm text-gold-700 shrink-0 font-bold">{rule.rule}</span>
+                  <div>
+                    <h4 class="font-serif font-bold text-navy-900 text-sm">{rule.title}</h4>
+                    <p class="text-xs text-navy-600 mt-1">{rule.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- MDX Content -->
+        <div class="bg-parchment rounded-lg shadow-lg p-8 relative overflow-hidden">
+          <CommitteeStamp text={d.votes?.passed ? 'ADOPTED' : 'PENDING'} />
+          <div class="bill-content">
+            <Content />
+          </div>
+        </div>
+
+        <ShareButtons
+          title={`${d.resolution} — ${d.chamber === 'house' ? 'House' : 'Senate'} Rules`}
+          summary={d.summary}
+          url={`https://absurdityindex.org/rules/${rule.id}/`}
+        />
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="space-y-6">
+        <!-- Vote Breakdown -->
+        {d.votes && (
+          <VoteBreakdown votes={d.votes} />
+        )}
+
+        <!-- Quick Facts -->
+        <div class="bg-cream-100 border border-gold-300 rounded-lg p-6">
+          <h3 class="font-serif font-bold text-navy-900 mb-4">Quick Facts</h3>
+          <dl class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-navy-600">Chamber</dt>
+              <dd class="font-mono text-navy-900 capitalize">{d.chamber}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-navy-600">Congress</dt>
+              <dd class="font-mono text-navy-900">{d.congressNumber}th</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-navy-600">Years</dt>
+              <dd class="font-mono text-navy-900">{d.congressYears}</dd>
+            </div>
+            {d.pageCount && (
+              <div class="flex justify-between">
+                <dt class="text-navy-600">Pages</dt>
+                <dd class="font-mono text-navy-900">{d.pageCount}</dd>
+              </div>
+            )}
+            {d.majorChanges && (
+              <div class="flex justify-between">
+                <dt class="text-navy-600">Major Changes</dt>
+                <dd class="font-mono text-navy-900">{d.majorChanges.length}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
+
+        <!-- Related Rules -->
+        {sameCongressRules.length > 0 && (
+          <div class="bg-cream-100 border border-gold-300 rounded-lg p-6">
+            <h3 class="font-serif font-bold text-navy-900 mb-4">Same Congress</h3>
+            <div class="space-y-2">
+              {sameCongressRules.map(r => (
+                <a
+                  href={`/rules/${r.id}`}
+                  class="block p-3 bg-parchment rounded border border-gold-200 hover:border-gold-400 transition-colors"
+                >
+                  <span class="font-mono text-sm text-gold-600">{r.data.resolution}</span>
+                  <span class="font-serif text-navy-900 ml-2 capitalize">{r.data.chamber}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </aside>
+    </div>
+
+    <Disclaimer context="bill-detail" />
+
+    <!-- Navigation -->
+    <div class="text-center mt-8 flex flex-wrap justify-center gap-4">
+      <a href="/rules" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; All Rules
+      </a>
+      <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        Bills
+      </a>
+    </div>
+  </div>
+</BaseLayout>

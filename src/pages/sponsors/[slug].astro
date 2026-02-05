@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BillCard from '../../components/bills/BillCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const bills = await getCollection('bills');
+
+  // Group bills by sponsor
+  const sponsorMap = new Map();
+  for (const bill of bills) {
+    const sponsor = bill.data.sponsor;
+    if (!sponsorMap.has(sponsor)) {
+      sponsorMap.set(sponsor, []);
+    }
+    sponsorMap.get(sponsor).push(bill);
+  }
+
+  return Array.from(sponsorMap.entries()).map(([sponsor, bills]) => {
+    // Create a URL-safe slug from the sponsor name
+    const slug = sponsor
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    return {
+      params: { slug },
+      props: { sponsor, bills },
+    };
+  });
+}
+
+const { sponsor, bills } = Astro.props;
+
+// Calculate stats
+const realBills = bills.filter(b => b.data.billType === 'real');
+const absurdityScores = realBills
+  .map(b => b.data.absurdityIndex)
+  .filter(Boolean);
+const avgAbsurdity = absurdityScores.length > 0
+  ? (absurdityScores.reduce((a, b) => a + b, 0) / absurdityScores.length).toFixed(1)
+  : null;
+
+const categories = [...new Set(bills.map(b => b.data.category))];
+
+// Sort by date
+const sortedBills = [...bills].sort((a, b) =>
+  b.data.dateIntroduced.getTime() - a.data.dateIntroduced.getTime()
+);
+---
+
+<BaseLayout title={sponsor} description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}>
+  <section class="max-w-6xl mx-auto px-4 py-12">
+    <div class="mb-2">
+      <a href="/sponsors" class="text-sm font-sans text-gold-600 hover:text-gold-500 transition-colors">&larr; All Sponsors</a>
+    </div>
+
+    <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold mb-4">{sponsor}</h1>
+    <div class="gold-rule"></div>
+
+    {/* Stats bar */}
+    <div class="flex flex-wrap gap-6 mt-6 mb-10 py-4 px-5 bg-white border border-cream-200 rounded-sm shadow-sm">
+      <div class="flex flex-col">
+        <span class="text-xs font-sans text-navy-500 uppercase tracking-wide">Total Bills</span>
+        <span class="font-mono text-2xl text-navy-900 font-bold">{bills.length}</span>
+      </div>
+      {avgAbsurdity && (
+        <div class="flex flex-col">
+          <span class="text-xs font-sans text-navy-500 uppercase tracking-wide">Avg. Absurdity</span>
+          <span class="font-mono text-2xl text-gold-600 font-bold">{avgAbsurdity}<span class="text-sm text-navy-400">/10</span></span>
+        </div>
+      )}
+      <div class="flex flex-col">
+        <span class="text-xs font-sans text-navy-500 uppercase tracking-wide">Categories</span>
+        <div class="flex flex-wrap gap-1 mt-1">
+          {categories.map(cat => (
+            <span class="inline-block text-xs font-sans bg-navy-100 text-navy-600 px-2 py-0.5 rounded">{cat}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* Bill grid */}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {sortedBills.map((bill) => (
+        <BillCard bill={bill} />
+      ))}
+    </div>
+  </section>
+</BaseLayout>

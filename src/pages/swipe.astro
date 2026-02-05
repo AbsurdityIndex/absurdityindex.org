@@ -1,0 +1,372 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import { getCollection } from 'astro:content';
+
+const allBills = await getCollection('bills');
+
+// Prepare bills for the game - mix of real and satirical
+const gameBills = allBills.map(bill => ({
+  id: bill.id,
+  title: bill.data.title,
+  summary: bill.data.summary.slice(0, 200) + (bill.data.summary.length > 200 ? '...' : ''),
+  billNumber: bill.data.billNumber,
+  billType: bill.data.billType,
+  absurdityIndex: bill.data.absurdityIndex ?? null,
+  isReal: bill.data.billType === 'real',
+  category: bill.data.category,
+  sponsor: bill.data.sponsor,
+}));
+
+// Shuffle the bills
+const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
+---
+
+<BaseLayout title="Would You Pass It?" description="Tinder-style voting game: swipe to pass or veto bills, then find out if they're real or satirical.">
+  <div class="max-w-2xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="flex justify-center mb-4">
+        <OfficialSeal size="60" />
+      </div>
+      <h1 class="font-serif text-3xl md:text-4xl font-bold text-navy-900 mb-2">
+        Would You Pass It?
+      </h1>
+      <p class="text-navy-600 font-sans text-base max-w-lg mx-auto">
+        Read the bill. Cast your vote. Then discover if it's <strong>real legislation</strong> or <strong>satire</strong>.
+        How well do you know Congress?
+      </p>
+    </div>
+
+    <!-- Score Display -->
+    <div id="score-display" class="bg-parchment border border-gold-300 rounded-lg p-4 mb-8 text-center">
+      <div class="flex justify-center gap-8">
+        <div>
+          <p class="text-navy-500 font-sans text-xs uppercase tracking-wider">Bills Reviewed</p>
+          <p id="bills-reviewed" class="font-serif text-2xl font-bold text-navy-900">0</p>
+        </div>
+        <div class="border-l border-gold-300"></div>
+        <div>
+          <p class="text-navy-500 font-sans text-xs uppercase tracking-wider">Agreed with Congress</p>
+          <p id="agreement-rate" class="font-serif text-2xl font-bold text-gold-600">--%</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Container -->
+    <div id="card-container" class="relative" style="min-height: 400px;">
+      <!-- Initial Card -->
+      <div id="bill-card" class="bg-white rounded-xl shadow-lg border-2 border-navy-200 overflow-hidden transition-all duration-300">
+        <!-- Card Header -->
+        <div class="bg-navy-900 px-6 py-4">
+          <p class="text-gold-400 font-serif text-xs uppercase tracking-wider mb-1">Proposed Legislation</p>
+          <h2 id="card-title" class="font-serif text-xl text-white font-bold leading-tight">
+            Loading...
+          </h2>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6">
+          <p id="card-summary" class="font-sans text-navy-700 leading-relaxed mb-6">
+            Loading bill summary...
+          </p>
+
+          <!-- Category Badge -->
+          <div id="card-category" class="inline-block bg-cream-200 text-navy-600 font-sans text-xs font-semibold px-3 py-1 rounded-full mb-4">
+            Category
+          </div>
+
+          <!-- Hidden info (revealed after vote) -->
+          <div id="reveal-section" class="hidden border-t border-gold-200 pt-4 mt-4">
+            <div id="reveal-type" class="text-center mb-4">
+              <!-- Type badge appears here -->
+            </div>
+            <div id="reveal-details" class="space-y-2 text-sm">
+              <!-- Bill number, sponsor, absurdity score appear here -->
+            </div>
+            <div id="reveal-link" class="mt-4 text-center">
+              <!-- Link to full bill -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Vote Buttons -->
+        <div id="vote-buttons" class="px-6 pb-6">
+          <div class="flex gap-4">
+            <button
+              id="veto-btn"
+              class="flex-1 bg-red-600 hover:bg-red-700 text-white font-serif font-bold py-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              Veto It
+            </button>
+            <button
+              id="pass-btn"
+              class="flex-1 bg-green-600 hover:bg-green-700 text-white font-serif font-bold py-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Pass It
+            </button>
+          </div>
+        </div>
+
+        <!-- Next Button (hidden until vote) -->
+        <div id="next-section" class="hidden px-6 pb-6">
+          <button
+            id="next-btn"
+            class="w-full bg-navy-800 hover:bg-navy-700 text-gold-300 font-serif font-bold py-4 rounded-lg transition-colors"
+          >
+            Next Bill &rarr;
+          </button>
+        </div>
+      </div>
+
+      <!-- Game Complete State -->
+      <div id="game-complete" class="hidden bg-white rounded-xl shadow-lg border-2 border-gold-400 overflow-hidden text-center p-8">
+        <div class="text-5xl mb-4">&#128477;&#65039;</div>
+        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-2">Session Adjourned!</h2>
+        <p class="text-navy-600 font-sans mb-4">You've reviewed all available bills.</p>
+        <div class="bg-parchment rounded-lg p-4 mb-6">
+          <p class="text-navy-500 font-sans text-sm">Final Score</p>
+          <p class="font-serif text-3xl font-bold text-navy-900">
+            You agreed with Congress <span id="final-rate" class="text-gold-600">0%</span> of the time.
+          </p>
+        </div>
+        <p id="score-commentary" class="text-navy-600 font-serif italic mb-6">
+          <!-- Commentary based on score -->
+        </p>
+        <button
+          id="restart-btn"
+          class="bg-gold-500 hover:bg-gold-600 text-navy-900 font-serif font-bold px-8 py-3 rounded-lg transition-colors"
+        >
+          Start New Session
+        </button>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="mt-8 text-center text-navy-500 font-sans text-sm">
+      <p><strong>Pass It</strong> = You'd vote YES on this bill</p>
+      <p><strong>Veto It</strong> = You'd vote NO on this bill</p>
+    </div>
+
+    <!-- Back Link -->
+    <div class="text-center mt-10">
+      <a href="/" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; Back to Home
+      </a>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ bills: shuffledBills }}>
+    // Game state
+    let currentIndex = 0;
+    let totalVotes = 0;
+    let agreements = 0;
+    let allBills = bills;
+    let hasVoted = false;
+
+    // DOM elements
+    const cardTitle = document.getElementById('card-title');
+    const cardSummary = document.getElementById('card-summary');
+    const cardCategory = document.getElementById('card-category');
+    const revealSection = document.getElementById('reveal-section');
+    const revealType = document.getElementById('reveal-type');
+    const revealDetails = document.getElementById('reveal-details');
+    const revealLink = document.getElementById('reveal-link');
+    const voteButtons = document.getElementById('vote-buttons');
+    const nextSection = document.getElementById('next-section');
+    const billsReviewed = document.getElementById('bills-reviewed');
+    const agreementRate = document.getElementById('agreement-rate');
+    const billCard = document.getElementById('bill-card');
+    const gameComplete = document.getElementById('game-complete');
+    const finalRate = document.getElementById('final-rate');
+    const scoreCommentary = document.getElementById('score-commentary');
+    const vetoBtn = document.getElementById('veto-btn');
+    const passBtn = document.getElementById('pass-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    function loadBill() {
+      if (currentIndex >= allBills.length) {
+        showGameComplete();
+        return;
+      }
+
+      const bill = allBills[currentIndex];
+      hasVoted = false;
+
+      // Reset card state
+      cardTitle.textContent = bill.title;
+      cardSummary.textContent = bill.summary;
+      cardCategory.textContent = bill.category;
+
+      revealSection.classList.add('hidden');
+      voteButtons.classList.remove('hidden');
+      nextSection.classList.add('hidden');
+
+      // Reset card styling
+      billCard.classList.remove('border-green-500', 'border-red-500');
+      billCard.classList.add('border-navy-200');
+    }
+
+    function vote(passed) {
+      if (hasVoted) return;
+      hasVoted = true;
+
+      const bill = allBills[currentIndex];
+      totalVotes++;
+
+      // Determine if user "agreed" with Congress (simplified logic)
+      // For real bills: if they passed and bill has absurdityIndex < 7, or user vetoed absurd bills
+      // For satirical bills: agreement is if they would pass sensible satirical bills
+      let agreed = false;
+      if (bill.isReal) {
+        // For real bills, "agreeing" means you'd pass low-absurdity bills or veto high-absurdity ones
+        if (bill.absurdityIndex) {
+          agreed = (passed && bill.absurdityIndex < 6) || (!passed && bill.absurdityIndex >= 6);
+        } else {
+          agreed = passed; // Default to passed if no score
+        }
+      } else {
+        // For satirical bills, "agreeing" means passing sensible ones
+        agreed = (passed && bill.billType === 'sensible') || (!passed && bill.billType === 'absurd');
+      }
+
+      if (agreed) agreements++;
+
+      // Update score display
+      billsReviewed.textContent = totalVotes;
+      const rate = totalVotes > 0 ? Math.round((agreements / totalVotes) * 100) : 0;
+      agreementRate.textContent = rate + '%';
+
+      // Show reveal
+      revealSection.classList.remove('hidden');
+      voteButtons.classList.add('hidden');
+      nextSection.classList.remove('hidden');
+
+      // Update card border based on vote
+      billCard.classList.remove('border-navy-200');
+      billCard.classList.add(passed ? 'border-green-500' : 'border-red-500');
+
+      // Populate reveal
+      const typeColor = bill.isReal ? 'bg-navy-800' : (bill.billType === 'sensible' ? 'bg-green-700' : 'bg-gold-600');
+      const typeLabel = bill.isReal ? 'REAL BILL' : (bill.billType === 'sensible' ? 'SATIRICAL (Sensible)' : 'SATIRICAL (Absurd)');
+      const typeTextColor = bill.isReal ? 'text-white' : (bill.billType === 'sensible' ? 'text-white' : 'text-navy-900');
+
+      revealType.innerHTML = `
+        <span class="${typeColor} ${typeTextColor} font-serif font-bold px-4 py-2 rounded-full text-sm inline-block">
+          ${typeLabel}
+        </span>
+        <p class="mt-2 font-sans text-sm ${agreed ? 'text-green-700' : 'text-red-700'}">
+          ${agreed ? '&#10003; You voted like a sensible legislator!' : '&#10007; Congress might disagree with you on this one.'}
+        </p>
+      `;
+
+      let detailsHtml = `
+        <p><strong class="text-navy-600">Bill Number:</strong> <span class="font-mono">${bill.billNumber}</span></p>
+        <p><strong class="text-navy-600">Sponsor:</strong> ${bill.sponsor}</p>
+      `;
+
+      if (bill.isReal && bill.absurdityIndex) {
+        detailsHtml += `
+          <p><strong class="text-navy-600">Absurdity Index:</strong>
+            <span class="font-bold ${bill.absurdityIndex >= 7 ? 'text-red-600' : bill.absurdityIndex >= 4 ? 'text-orange-600' : 'text-green-600'}">
+              ${bill.absurdityIndex}/10
+            </span>
+          </p>
+        `;
+      }
+
+      revealDetails.innerHTML = detailsHtml;
+
+      // Link to bill page
+      const billPath = bill.isReal ? `/bills/${bill.id}` : (bill.billType === 'sensible' ? `/bills/${bill.id}` : `/not-bills/${bill.id}`);
+      revealLink.innerHTML = `
+        <a href="${billPath}" class="text-gold-600 hover:text-gold-700 font-serif text-sm underline">
+          Read Full Bill &rarr;
+        </a>
+      `;
+    }
+
+    function nextBill() {
+      currentIndex++;
+      loadBill();
+    }
+
+    function showGameComplete() {
+      billCard.classList.add('hidden');
+      gameComplete.classList.remove('hidden');
+
+      const rate = totalVotes > 0 ? Math.round((agreements / totalVotes) * 100) : 0;
+      finalRate.textContent = rate + '%';
+
+      let commentary = '';
+      if (rate >= 80) {
+        commentary = '"You have excellent legislative instincts. Have you considered running for office? (Please don\'t.)"';
+      } else if (rate >= 60) {
+        commentary = '"Not bad! You\'d fit right in on Capitol Hill. Take that as you will."';
+      } else if (rate >= 40) {
+        commentary = '"You\'re a true independent thinker. Congress has no idea what to do with you."';
+      } else if (rate >= 20) {
+        commentary = '"You and Congress appear to be operating in different realities. Possibly a good thing."';
+      } else {
+        commentary = '"You disagree with Congress on almost everything. Congratulations, you\'re officially a contrarian."';
+      }
+      scoreCommentary.textContent = commentary;
+    }
+
+    function restartGame() {
+      currentIndex = 0;
+      totalVotes = 0;
+      agreements = 0;
+      hasVoted = false;
+      allBills = shuffleArray(bills);
+
+      billsReviewed.textContent = '0';
+      agreementRate.textContent = '--%';
+
+      gameComplete.classList.add('hidden');
+      billCard.classList.remove('hidden');
+
+      loadBill();
+    }
+
+    // Event listeners
+    vetoBtn.addEventListener('click', () => vote(false));
+    passBtn.addEventListener('click', () => vote(true));
+    nextBtn.addEventListener('click', nextBill);
+    restartBtn.addEventListener('click', restartGame);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (!hasVoted) {
+        if (e.key === 'ArrowLeft' || e.key === 'n' || e.key === 'N') {
+          vote(false);
+        } else if (e.key === 'ArrowRight' || e.key === 'y' || e.key === 'Y') {
+          vote(true);
+        }
+      } else {
+        if (e.key === 'Enter' || e.key === ' ') {
+          nextBill();
+        }
+      }
+    });
+
+    // Initialize
+    loadBill();
+  </script>
+</BaseLayout>

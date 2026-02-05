@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BillTypeBadge from '../../components/bills/BillTypeBadge.astro';
+import { getCollection } from 'astro:content';
+
+const bills = await getCollection('bills');
+
+// Build comparison pairs: real bill + its paired not-bill
+const pairs: { realBill: typeof bills[number]; notBill: typeof bills[number] }[] = [];
+
+for (const bill of bills) {
+  if (bill.data.billType !== 'real' || !bill.data.pairedBillId) continue;
+  const paired = bills.find(b => b.id === bill.data.pairedBillId);
+  if (!paired) continue;
+  pairs.push({ realBill: bill, notBill: paired });
+}
+---
+
+<BaseLayout title="Compare Bills" description="Side-by-side comparisons of real congressional bills and our satirical alternatives.">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <h1 class="font-serif text-3xl md:text-4xl font-bold text-navy-900 mb-3">
+        Bill Comparisons
+      </h1>
+      <p class="text-navy-600 font-sans text-lg max-w-2xl mx-auto">
+        Real congressional bills paired with satirical alternatives that might actually make more sense.
+      </p>
+    </div>
+
+    {pairs.length === 0 ? (
+      <p class="text-center text-navy-500 font-sans py-12">No comparisons available yet. Check back soon.</p>
+    ) : (
+      <div class="space-y-6">
+        {pairs.map(({ realBill, notBill }) => (
+          <a
+            href={`/compare/${realBill.id}`}
+            class="block bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr]">
+              <!-- Real bill side -->
+              <div class="p-5 border-l-4 border-l-navy-800">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="font-mono text-xs font-bold text-navy-500">{realBill.data.billNumber}</span>
+                  <BillTypeBadge billType={realBill.data.billType} />
+                </div>
+                <h3 class="font-serif font-bold text-navy-900 leading-snug">{realBill.data.title}</h3>
+                <p class="text-sm text-navy-600 mt-1 line-clamp-2">{realBill.data.summary}</p>
+              </div>
+
+              <!-- VS badge -->
+              <div class="hidden md:flex items-center justify-center px-4">
+                <div class="bg-gold-500 text-navy-900 font-serif font-bold text-sm w-10 h-10 rounded-full flex items-center justify-center shadow-sm">
+                  VS
+                </div>
+              </div>
+              <div class="md:hidden flex items-center justify-center py-1">
+                <div class="bg-gold-500 text-navy-900 font-serif font-bold text-xs w-8 h-8 rounded-full flex items-center justify-center shadow-sm">
+                  VS
+                </div>
+              </div>
+
+              <!-- Not-bill side -->
+              <div class="p-5 border-l-4 border-l-green-700">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="font-mono text-xs font-bold text-navy-500">{notBill.data.billNumber}</span>
+                  <BillTypeBadge billType={notBill.data.billType} />
+                </div>
+                <h3 class="font-serif font-bold text-navy-900 leading-snug">{notBill.data.title}</h3>
+                <p class="text-sm text-navy-600 mt-1 line-clamp-2">{notBill.data.summary}</p>
+              </div>
+            </div>
+
+            <div class="bg-cream-100 px-5 py-2.5 text-center">
+              <span class="text-sm font-sans font-semibold text-gold-700">Compare Side by Side &rarr;</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+
+    <div class="text-center mt-10">
+      <a href="/" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; Back to Home
+      </a>
+    </div>
+  </div>
+</BaseLayout>

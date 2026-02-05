@@ -1,0 +1,263 @@
+---
+/**
+ * Congress Session Calendar Component
+ * Shows whether Congress is in session or on recess, with a visual mini-calendar
+ * and statistics about session/recess days.
+ */
+
+const today = new Date();
+const currentYear = today.getFullYear();
+
+// 119th Congress session periods for 2025 (approximate based on historical patterns)
+// Format: [start, end] as YYYY-MM-DD strings
+const sessionPeriods2025: [string, string][] = [
+  ['2025-01-03', '2025-01-19'],   // New Congress convenes through MLK weekend
+  ['2025-02-03', '2025-02-16'],   // Post-inauguration through Presidents Day
+  ['2025-02-24', '2025-03-23'],   // Post-Presidents Day through Easter recess
+  ['2025-04-07', '2025-05-25'],   // Post-Easter through Memorial Day
+  ['2025-06-02', '2025-07-03'],   // Post-Memorial Day through July 4th
+  ['2025-09-08', '2025-10-12'],   // Post-Labor Day through Columbus Day
+  ['2025-11-10', '2025-11-23'],   // Post-Veterans Day through Thanksgiving
+  ['2025-12-01', '2025-12-18'],   // Post-Thanksgiving through Holiday recess
+];
+
+// Recess periods with names
+const recessPeriods2025 = [
+  { start: '2025-01-20', end: '2025-02-02', name: 'Inauguration Recess' },
+  { start: '2025-02-17', end: '2025-02-23', name: "Presidents' Day Recess" },
+  { start: '2025-03-24', end: '2025-04-06', name: 'Easter Recess' },
+  { start: '2025-05-26', end: '2025-06-01', name: 'Memorial Day Recess' },
+  { start: '2025-07-04', end: '2025-09-07', name: 'Summer Recess' },
+  { start: '2025-10-13', end: '2025-11-09', name: 'Columbus Day & Election Recess' },
+  { start: '2025-11-24', end: '2025-11-30', name: 'Thanksgiving Recess' },
+  { start: '2025-12-19', end: '2025-12-31', name: 'Holiday Recess' },
+];
+
+function parseDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDateStr(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function isInSession(date: Date): boolean {
+  const dateStr = formatDateStr(date);
+  return sessionPeriods2025.some(([start, end]) => dateStr >= start && dateStr <= end);
+}
+
+function getCurrentRecessName(date: Date): string | null {
+  const dateStr = formatDateStr(date);
+  const recess = recessPeriods2025.find(r => dateStr >= r.start && dateStr <= r.end);
+  return recess?.name ?? null;
+}
+
+function getNextStatusChange(date: Date): { date: Date; toSession: boolean } | null {
+  const dateStr = formatDateStr(date);
+  const currentlyInSession = isInSession(date);
+
+  if (currentlyInSession) {
+    // Find the end of current session
+    for (const [start, end] of sessionPeriods2025) {
+      if (dateStr >= start && dateStr <= end) {
+        const endDate = parseDate(end);
+        endDate.setDate(endDate.getDate() + 1);
+        return { date: endDate, toSession: false };
+      }
+    }
+  } else {
+    // Find the start of next session
+    for (const [start] of sessionPeriods2025) {
+      if (dateStr < start) {
+        return { date: parseDate(start), toSession: true };
+      }
+    }
+  }
+  return null;
+}
+
+function daysBetween(date1: Date, date2: Date): number {
+  const oneDay = 24 * 60 * 60 * 1000;
+  return Math.round(Math.abs((date2.getTime() - date1.getTime()) / oneDay));
+}
+
+function countSessionDays(upToDate: Date): { sessionDays: number; recessDays: number } {
+  const startOfYear = new Date(2025, 0, 1);
+  let sessionDays = 0;
+  let recessDays = 0;
+
+  const current = new Date(startOfYear);
+  while (current <= upToDate && current.getFullYear() === 2025) {
+    if (isInSession(current)) {
+      sessionDays++;
+    } else if (current >= parseDate('2025-01-03')) {
+      // Only count recess days after Congress convenes
+      recessDays++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return { sessionDays, recessDays };
+}
+
+function getCalendarDays(year: number, month: number): (number | null)[] {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startDayOfWeek = firstDay.getDay();
+
+  const days: (number | null)[] = [];
+
+  // Fill in empty slots for days before the 1st
+  for (let i = 0; i < startDayOfWeek; i++) {
+    days.push(null);
+  }
+
+  // Fill in the days of the month
+  for (let day = 1; day <= daysInMonth; day++) {
+    days.push(day);
+  }
+
+  return days;
+}
+
+const inSession = isInSession(today);
+const currentRecessName = !inSession ? getCurrentRecessName(today) : null;
+const nextChange = getNextStatusChange(today);
+const daysUntilChange = nextChange ? daysBetween(today, nextChange.date) : null;
+const { sessionDays, recessDays } = countSessionDays(today);
+
+const currentMonth = today.getMonth();
+const currentDay = today.getDate();
+const calendarDays = getCalendarDays(currentYear, currentMonth);
+
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+
+const wittyComments = inSession
+  ? [
+      "They're working hard. Or hardly working.",
+      "Democracy in action (results may vary).",
+      "Bills being debated. Coffee being consumed.",
+      "Committees are meeting. Progress is optional.",
+    ]
+  : [
+      "Your tax dollars on vacation.",
+      "Gone fishin'. Back whenever.",
+      "Working from home (their home states).",
+      "Recess: Like school, but with more fundraising.",
+    ];
+
+const randomComment = wittyComments[Math.floor(today.getDate() % wittyComments.length)];
+---
+
+<div class="bg-parchment rounded-lg shadow-lg p-6 md:p-8">
+  <!-- Status Banner -->
+  <div class={`text-center p-4 rounded-lg mb-6 ${inSession ? 'bg-green-700/10 border border-green-700/30' : 'bg-red-600/10 border border-red-600/30'}`}>
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <span class={`w-3 h-3 rounded-full ${inSession ? 'bg-green-600 pulse-subtle' : 'bg-red-600 pulse-subtle'}`}></span>
+      <span class={`font-serif font-bold text-xl ${inSession ? 'text-green-700' : 'text-red-700'}`}>
+        Congress is currently {inSession ? 'IN SESSION' : 'ON RECESS'}
+      </span>
+    </div>
+    {currentRecessName && (
+      <p class="text-navy-600 font-serif text-sm">{currentRecessName}</p>
+    )}
+    <p class="text-navy-500 font-sans text-sm italic mt-2">{randomComment}</p>
+  </div>
+
+  <!-- Countdown -->
+  {nextChange && daysUntilChange !== null && (
+    <div class="text-center mb-6">
+      <p class="font-sans text-sm text-navy-600">
+        {nextChange.toSession ? 'Back in session' : 'Next recess'} in
+      </p>
+      <p class="font-mono text-3xl font-bold text-navy-800">
+        {daysUntilChange} {daysUntilChange === 1 ? 'day' : 'days'}
+      </p>
+      <p class="font-sans text-xs text-navy-500">
+        {nextChange.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+      </p>
+    </div>
+  )}
+
+  <!-- Mini Calendar -->
+  <div class="bg-cream-100 rounded-lg p-4 mb-6">
+    <h3 class="font-serif font-bold text-navy-900 text-center mb-3">
+      {monthNames[currentMonth]} {currentYear}
+    </h3>
+    <div class="grid grid-cols-7 gap-1 text-center text-xs">
+      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+        <div class="font-sans font-semibold text-navy-600 py-1">{day}</div>
+      ))}
+      {calendarDays.map((day) => {
+        if (day === null) {
+          return <div class="py-1"></div>;
+        }
+        const dayDate = new Date(currentYear, currentMonth, day);
+        const dayInSession = isInSession(dayDate);
+        const isToday = day === currentDay;
+        const isPast = dayDate < today && !isToday;
+
+        return (
+          <div
+            class:list={[
+              'py-1 rounded text-xs font-mono',
+              {
+                'bg-green-600 text-white': dayInSession && !isPast,
+                'bg-green-600/40 text-green-800': dayInSession && isPast,
+                'bg-red-600 text-white': !dayInSession && !isPast,
+                'bg-red-600/40 text-red-800': !dayInSession && isPast,
+                'ring-2 ring-gold-500 ring-offset-1': isToday,
+              }
+            ]}
+          >
+            {day}
+          </div>
+        );
+      })}
+    </div>
+    <div class="flex justify-center gap-4 mt-3 text-xs font-sans">
+      <span class="flex items-center gap-1">
+        <span class="w-3 h-3 bg-green-600 rounded"></span> In Session
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="w-3 h-3 bg-red-600 rounded"></span> Recess
+      </span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 gap-4">
+    <div class="text-center p-3 bg-green-700/10 rounded-lg">
+      <p class="font-mono text-2xl font-bold text-green-700">{sessionDays}</p>
+      <p class="font-sans text-xs text-navy-600">Session Days</p>
+      <p class="font-sans text-xs text-navy-500">in {currentYear}</p>
+    </div>
+    <div class="text-center p-3 bg-red-600/10 rounded-lg">
+      <p class="font-mono text-2xl font-bold text-red-700">{recessDays}</p>
+      <p class="font-sans text-xs text-navy-600">Recess Days</p>
+      <p class="font-sans text-xs text-navy-500">in {currentYear}</p>
+    </div>
+  </div>
+
+  <!-- Session Percentage -->
+  {sessionDays + recessDays > 0 && (
+    <div class="mt-4">
+      <div class="flex justify-between text-xs font-sans text-navy-600 mb-1">
+        <span>Session Rate</span>
+        <span>{Math.round((sessionDays / (sessionDays + recessDays)) * 100)}%</span>
+      </div>
+      <div class="h-2 bg-cream-200 rounded-full overflow-hidden">
+        <div
+          class="h-full bg-green-600 rounded-full transition-all"
+          style={`width: ${(sessionDays / (sessionDays + recessDays)) * 100}%`}
+        ></div>
+      </div>
+    </div>
+  )}
+</div>

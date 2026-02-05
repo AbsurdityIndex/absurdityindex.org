@@ -1,0 +1,255 @@
+---
+interface Props {
+  status: string;
+  dateIntroduced: Date;
+}
+
+const { status, dateIntroduced } = Astro.props;
+
+const stages = [
+  { id: 'introduced', label: 'Introduced', keywords: ['introduced'] },
+  { id: 'committee', label: 'In Committee', keywords: ['referred', 'committee'] },
+  { id: 'reported', label: 'Reported', keywords: ['reported'] },
+  { id: 'floor', label: 'Floor Vote', keywords: ['passed house', 'passed senate', 'vote'] },
+  { id: 'enrolled', label: 'Enrolled', keywords: ['enrolled', 'passed both'] },
+  { id: 'final', label: 'Signed/Vetoed', keywords: ['signed', 'law', 'vetoed', 'died'] },
+];
+
+function getCurrentStage(status: string): number {
+  const s = status.toLowerCase();
+  if (s.includes('signed') || s.includes('law') || s.includes('vetoed') || s.includes('died')) return 5;
+  if (s.includes('enrolled') || s.includes('passed both')) return 4;
+  if (s.includes('passed house') || s.includes('passed senate')) return 3;
+  if (s.includes('reported')) return 2;
+  if (s.includes('committee') || s.includes('referred')) return 1;
+  return 0;
+}
+
+const currentStage = getCurrentStage(status);
+
+// Format the introduction date
+const formattedDate = dateIntroduced instanceof Date
+  ? dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  : String(dateIntroduced);
+---
+
+<div class="bill-timeline mb-8">
+  <div class="flex items-center justify-between mb-2">
+    <span class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-700">
+      Legislative Progress
+    </span>
+    <span class="text-xs font-sans text-navy-600">
+      Introduced {formattedDate}
+    </span>
+  </div>
+
+  <!-- Desktop horizontal timeline -->
+  <div class="hidden md:block">
+    <svg
+      class="w-full h-24"
+      viewBox="0 0 600 96"
+      preserveAspectRatio="xMidYMid meet"
+      aria-label={`Bill progress: currently at ${stages[currentStage].label}`}
+      role="img"
+    >
+      <!-- Connection lines -->
+      {stages.map((stage, i) => {
+        if (i === stages.length - 1) return null;
+        const x1 = 50 + i * 100;
+        const x2 = 50 + (i + 1) * 100;
+        const isCompleted = i < currentStage;
+        return (
+          <line
+            x1={x1 + 12}
+            y1="36"
+            x2={x2 - 12}
+            y2="36"
+            stroke={isCompleted ? '#228B4A' : '#E0D8C8'}
+            stroke-width="3"
+            stroke-linecap="round"
+          />
+        );
+      })}
+
+      <!-- Stage circles and labels -->
+      {stages.map((stage, i) => {
+        const cx = 50 + i * 100;
+        const isCompleted = i < currentStage;
+        const isCurrent = i === currentStage;
+        const isFuture = i > currentStage;
+
+        let fillColor = '#E0D8C8'; // gray for future
+        let strokeColor = '#C5CDD8';
+        let textColor = '#667788';
+
+        if (isCompleted) {
+          fillColor = '#228B4A';
+          strokeColor = '#1A6B3A';
+          textColor = '#228B4A';
+        } else if (isCurrent) {
+          fillColor = '#C5A572';
+          strokeColor = '#A88B4A';
+          textColor = '#A88B4A';
+        }
+
+        return (
+          <g>
+            {/* Pulse animation for current stage */}
+            {isCurrent && (
+              <circle
+                cx={cx}
+                cy="36"
+                r="18"
+                fill={fillColor}
+                opacity="0.3"
+                class="animate-pulse-ring"
+              />
+            )}
+
+            {/* Main circle */}
+            <circle
+              cx={cx}
+              cy="36"
+              r={isCurrent ? 14 : 10}
+              fill={fillColor}
+              stroke={strokeColor}
+              stroke-width="2"
+            />
+
+            {/* Checkmark for completed stages */}
+            {isCompleted && (
+              <path
+                d={`M${cx - 4} 36 L${cx - 1} 39 L${cx + 5} 33`}
+                stroke="white"
+                stroke-width="2"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            )}
+
+            {/* Stage label */}
+            <text
+              x={cx}
+              y="68"
+              text-anchor="middle"
+              fill={textColor}
+              font-size="11"
+              font-family="var(--font-sans)"
+              font-weight={isCurrent ? '600' : '400'}
+            >
+              {stage.label}
+            </text>
+
+            {/* Stage number */}
+            {!isCompleted && (
+              <text
+                x={cx}
+                y={isCurrent ? 40 : 39}
+                text-anchor="middle"
+                fill={isCurrent ? '#0A1628' : '#8899AA'}
+                font-size={isCurrent ? '12' : '10'}
+                font-family="var(--font-mono)"
+                font-weight="600"
+              >
+                {i + 1}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  </div>
+
+  <!-- Mobile vertical timeline -->
+  <div class="md:hidden">
+    <div class="relative pl-8">
+      {stages.map((stage, i) => {
+        const isCompleted = i < currentStage;
+        const isCurrent = i === currentStage;
+        const isFuture = i > currentStage;
+        const isLast = i === stages.length - 1;
+
+        let bgColor = 'bg-cream-300';
+        let borderColor = 'border-cream-300';
+        let textColor = 'text-navy-500';
+
+        if (isCompleted) {
+          bgColor = 'bg-green-600';
+          borderColor = 'border-green-600';
+          textColor = 'text-green-700';
+        } else if (isCurrent) {
+          bgColor = 'bg-gold-500';
+          borderColor = 'border-gold-500';
+          textColor = 'text-gold-600';
+        }
+
+        return (
+          <div class="relative pb-6 last:pb-0">
+            {/* Vertical line */}
+            {!isLast && (
+              <div
+                class:list={[
+                  'absolute left-0 top-6 w-0.5 h-full -translate-x-1/2',
+                  isCompleted ? 'bg-green-600' : 'bg-cream-300',
+                ]}
+              />
+            )}
+
+            {/* Circle */}
+            <div
+              class:list={[
+                'absolute left-0 -translate-x-1/2 rounded-full border-2 flex items-center justify-center',
+                bgColor,
+                borderColor,
+                isCurrent ? 'w-7 h-7 pulse-subtle' : 'w-5 h-5',
+              ]}
+            >
+              {isCompleted && (
+                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              {!isCompleted && (
+                <span class:list={['font-mono text-xs font-bold', isCurrent ? 'text-navy-900' : 'text-navy-500']}>
+                  {i + 1}
+                </span>
+              )}
+            </div>
+
+            {/* Label */}
+            <div class="ml-4">
+              <span
+                class:list={[
+                  'font-sans text-sm',
+                  isCurrent ? 'font-semibold' : 'font-normal',
+                  textColor,
+                ]}
+              >
+                {stage.label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes pulse-ring {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.3;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.1;
+    }
+  }
+
+  .animate-pulse-ring {
+    animation: pulse-ring 2s ease-in-out infinite;
+    transform-origin: center;
+  }
+</style>

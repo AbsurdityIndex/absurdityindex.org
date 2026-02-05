@@ -1,0 +1,300 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+
+// Historical legislative oddities data
+const historicalOddities = [
+  {
+    id: 'pizza-vegetable',
+    title: 'Pizza as a Vegetable',
+    year: 2011,
+    category: 'USDA Ruling',
+    description: 'Congress blocked USDA efforts to limit pizza and french fries in school lunches. The ruling effectively allowed two tablespoons of tomato paste on pizza to count as a serving of vegetables. Frozen food lobbyists celebrated. Nutritionists wept.',
+    whereAreTheyNow: 'Still on the books. Your child\'s school lunch pizza remains, legally speaking, a vegetable. The tomato paste industry remains grateful.',
+    absurdityLevel: 9,
+  },
+  {
+    id: 'bridge-to-nowhere',
+    title: 'The Bridge to Nowhere',
+    year: 2005,
+    category: 'Earmark',
+    description: 'A proposed $398 million bridge in Alaska would have connected the town of Ketchikan (population: 8,900) to Gravina Island (population: 50) and its airport. The bridge would have been nearly as long as the Golden Gate Bridge.',
+    whereAreTheyNow: 'Cancelled after public outrage. Alaska kept the $223 million in federal funding anyway and used it for other projects. The 50 residents of Gravina Island still take the ferry.',
+    absurdityLevel: 10,
+  },
+  {
+    id: 'helium-reserve',
+    title: 'The Federal Helium Reserve',
+    year: 1925,
+    category: 'Strategic Reserve',
+    description: 'The U.S. government maintains a massive underground helium reserve in Texas, originally established for military airships (blimps). Despite the blimp-based military strategy becoming obsolete around 1937, the reserve continued operating for decades.',
+    whereAreTheyNow: 'Congress voted to sell off the reserve in 1996, then reversed course in 2013 when they realized helium is actually important for MRI machines and scientific research. The blimps remain retired.',
+    absurdityLevel: 7,
+  },
+  {
+    id: 'commemorative-coins',
+    title: 'The Commemorative Coin Obsession',
+    year: 'Ongoing',
+    category: 'Numismatic',
+    description: 'Congress has authorized over 150 commemorative coins, honoring everything from the Boy Scouts to the National Baseball Hall of Fame. Each coin requires an act of Congress. Each act takes congressional time. The coins fund various charitable causes and museums, but one wonders if there\'s a more efficient way.',
+    whereAreTheyNow: 'Still going strong. Recent coins commemorate Christa McAuliffe, the Purple Heart, and the Negro Leagues Baseball. The commemorative coin lobby remains one of Washington\'s most niche but persistent special interests.',
+    absurdityLevel: 5,
+  },
+  {
+    id: 'daylight-saving',
+    title: 'The Eternal Daylight Saving Time Debate',
+    year: '1918-Present',
+    category: 'Time Itself',
+    description: 'Congress has been debating whether to make Daylight Saving Time permanent since 1918. The Senate unanimously passed the Sunshine Protection Act in 2022, then the House... did nothing. States have passed conflicting laws. Arizona and Hawaii opt out. Everyone changes their clocks and complains twice a year.',
+    whereAreTheyNow: 'Still changing clocks. The 2022 Sunshine Protection Act expired without House action. New bills are introduced every session. The alarm clock industry presumably lobbies in secret.',
+    absurdityLevel: 8,
+  },
+  {
+    id: 'post-office-naming',
+    title: 'The Post Office Naming Industrial Complex',
+    year: 'Eternal',
+    category: 'Naming Rights',
+    description: 'Naming post offices is consistently one of Congress\'s most successful legislative activities. The 117th Congress (2021-2022) passed over 60 post office naming bills. That\'s roughly 15% of all bills that became law. Each naming takes floor time, votes, and presidential signature.',
+    whereAreTheyNow: 'Post offices continue to be named at an impressive clip. It remains the most bipartisan activity in Congress. If only other legislation moved as smoothly as honoring local heroes with building names.',
+    absurdityLevel: 6,
+  },
+  {
+    id: 'mohair-subsidy',
+    title: 'The Mohair Subsidy',
+    year: 1954,
+    category: 'Agricultural Subsidy',
+    description: 'Congress established subsidies for mohair (goat hair) production during the Korean War because mohair was used in military uniforms. The military stopped using mohair in uniforms in 1960. The subsidy continued until 1993, was briefly eliminated, then restored in 2002.',
+    whereAreTheyNow: 'The direct mohair payment program was finally ended in 2014, but mohair producers can still access other agricultural support programs. The goats remain unfazed by legislative developments.',
+    absurdityLevel: 8,
+  },
+  {
+    id: 'wooden-arrows',
+    title: 'The Wooden Arrow Tax Break',
+    year: 2008,
+    category: 'Tax Code',
+    description: 'During the 2008 financial crisis bailout bill, Congress added a provision exempting "certain wooden arrows designed for use by children" from excise taxes. This saved the wooden arrow industry an estimated $200,000 per year. The provision was added to help pass a $700 billion bailout package.',
+    whereAreTheyNow: 'Still in the tax code. Children\'s wooden arrows remain tax-advantaged. The provision cost taxpayers roughly $2 million over a decade. The bailout cost considerably more.',
+    absurdityLevel: 7,
+  },
+];
+
+// Get absurdity color
+function getAbsurdityColor(level: number): string {
+  if (level <= 3) return 'green-600';
+  if (level <= 6) return 'gold-500';
+  if (level <= 8) return 'orange-500';
+  return 'red-600';
+}
+
+function getAbsurdityBg(level: number): string {
+  if (level <= 3) return 'bg-green-600/20';
+  if (level <= 6) return 'bg-gold-500/20';
+  if (level <= 8) return 'bg-orange-500/20';
+  return 'bg-red-600/20';
+}
+---
+
+<BaseLayout
+  title="The Hall of Legislative Infamy"
+  description="A curated collection of history's most memorable legislative oddities. Real laws, real absurdity, real tax dollars."
+>
+  <div class="max-w-5xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <header class="text-center mb-10">
+      <OfficialSeal size="120" />
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-gold-600 mt-6 mb-2">
+        Historical Archives
+      </p>
+      <h1 class="font-serif text-3xl md:text-4xl font-bold text-navy-900 mb-4">
+        The Hall of Legislative Infamy
+      </h1>
+      <p class="font-serif text-navy-600 italic max-w-2xl mx-auto">
+        A curated collection of legislative decisions that made history — not always for the right reasons.
+        Every entry is real. We couldn't make this stuff up if we tried.
+      </p>
+      <div class="gold-rule max-w-xs mx-auto mt-6"></div>
+    </header>
+
+    <!-- Stats Banner -->
+    <div class="bg-navy-900 rounded-lg p-6 mb-10">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div>
+          <p class="font-mono text-2xl font-bold text-gold-400">{historicalOddities.length}</p>
+          <p class="font-sans text-xs text-gold-300/70">Documented Oddities</p>
+        </div>
+        <div>
+          <p class="font-mono text-2xl font-bold text-gold-400">100+</p>
+          <p class="font-sans text-xs text-gold-300/70">Years of History</p>
+        </div>
+        <div>
+          <p class="font-mono text-2xl font-bold text-gold-400">$Billions</p>
+          <p class="font-sans text-xs text-gold-300/70">Taxpayer Dollars</p>
+        </div>
+        <div>
+          <p class="font-mono text-2xl font-bold text-gold-400">0</p>
+          <p class="font-sans text-xs text-gold-300/70">Lessons Learned</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historical Oddities Grid -->
+    <section class="space-y-8">
+      {historicalOddities.map((oddity, index) => (
+        <article
+          class="bg-parchment rounded-lg shadow-lg overflow-hidden border border-gold-200"
+          id={oddity.id}
+        >
+          <div class="p-6 md:p-8">
+            <!-- Header Row -->
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+              <div>
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="font-mono text-xs bg-navy-800 text-gold-300 px-2 py-1 rounded">
+                    #{index + 1}
+                  </span>
+                  <span class="font-mono text-xs text-navy-500 uppercase tracking-wider">
+                    {oddity.category}
+                  </span>
+                  <span class="font-mono text-xs text-navy-600">
+                    {typeof oddity.year === 'number' ? oddity.year : oddity.year}
+                  </span>
+                </div>
+                <h2 class="font-serif text-2xl font-bold text-navy-900">
+                  {oddity.title}
+                </h2>
+              </div>
+              <div class={`shrink-0 px-4 py-2 rounded-lg text-center ${getAbsurdityBg(oddity.absurdityLevel)}`}>
+                <p class="font-mono text-xs text-navy-600 mb-1">Absurdity</p>
+                <p class={`font-mono text-2xl font-bold text-${getAbsurdityColor(oddity.absurdityLevel)}`}>
+                  {oddity.absurdityLevel}/10
+                </p>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="prose prose-navy max-w-none mb-6">
+              <p class="font-serif text-navy-700 leading-relaxed">
+                {oddity.description}
+              </p>
+            </div>
+
+            <!-- Where Are They Now -->
+            <div class="bg-cream-100 rounded-lg p-4 border-l-4 border-gold-500">
+              <p class="font-sans text-xs uppercase tracking-widest text-gold-600 mb-2">
+                Where Are They Now?
+              </p>
+              <p class="font-serif text-navy-600 text-sm leading-relaxed">
+                {oddity.whereAreTheyNow}
+              </p>
+            </div>
+          </div>
+        </article>
+      ))}
+    </section>
+
+    <Divider withSeal={true} />
+
+    <!-- Timeline Visualization -->
+    <section class="mt-12">
+      <h2 class="font-serif text-2xl font-bold text-navy-900 mb-6 text-center">
+        A Century of Questionable Decisions
+      </h2>
+      <div class="relative">
+        <!-- Timeline line -->
+        <div class="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gold-300 hidden md:block"></div>
+
+        <div class="space-y-4 md:space-y-0">
+          {historicalOddities
+            .filter(o => typeof o.year === 'number')
+            .sort((a, b) => (a.year as number) - (b.year as number))
+            .map((oddity, index) => (
+              <div class={`md:flex items-center ${index % 2 === 0 ? '' : 'md:flex-row-reverse'}`}>
+                <div class={`md:w-1/2 ${index % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12'}`}>
+                  <a
+                    href={`#${oddity.id}`}
+                    class="inline-block bg-white rounded-lg border border-navy-200 p-4 shadow-sm hover:border-gold-400 transition-colors"
+                  >
+                    <p class="font-mono text-sm text-gold-600">{oddity.year}</p>
+                    <p class="font-serif font-semibold text-navy-900">{oddity.title}</p>
+                  </a>
+                </div>
+                <div class="hidden md:flex items-center justify-center w-4 h-4 bg-gold-500 rounded-full border-4 border-parchment z-10"></div>
+                <div class="md:w-1/2"></div>
+              </div>
+            ))}
+        </div>
+      </div>
+    </section>
+
+    <Divider />
+
+    <!-- Submit Your Own Section -->
+    <section class="mt-12 bg-navy-900 rounded-lg p-8 md:p-10 text-center">
+      <p class="font-mono text-xs uppercase tracking-widest text-gold-500 mb-3">
+        Know Something We Don't?
+      </p>
+      <h2 class="font-serif text-2xl md:text-3xl font-bold text-gold-400 mb-4">
+        Submit a Historical Oddity
+      </h2>
+      <p class="font-serif text-gold-300/80 max-w-2xl mx-auto mb-6">
+        Did your state pass a law requiring horses to wear pants? Did Congress spend six months debating pickle jar sizes?
+        We want to know. Submit your favorite legislative oddities and help us build the definitive archive of governmental absurdity.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a
+          href="/submit"
+          class="inline-block px-8 py-3 bg-gold-500 text-navy-900 font-serif text-lg rounded hover:bg-gold-400 transition-colors font-bold"
+        >
+          Submit an Oddity
+        </a>
+        <a
+          href="/about"
+          class="inline-block px-8 py-3 border-2 border-gold-500 text-gold-400 font-serif text-lg rounded hover:bg-gold-500/10 transition-colors"
+        >
+          Learn About Our Research
+        </a>
+      </div>
+    </section>
+
+    <!-- Fun Facts Footer -->
+    <section class="mt-12">
+      <h2 class="font-serif text-xl font-bold text-navy-900 mb-4">
+        Did You Know?
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-lg border border-navy-200 p-5 shadow-sm">
+          <p class="font-serif text-navy-700">
+            <span class="text-gold-600 font-bold">*</span>
+            The longest filibuster in U.S. history lasted 24 hours and 18 minutes. Senator Strom Thurmond read the Declaration of Independence, the Bill of Rights, and George Washington's Farewell Address — all to delay civil rights legislation.
+          </p>
+        </div>
+        <div class="bg-white rounded-lg border border-navy-200 p-5 shadow-sm">
+          <p class="font-serif text-navy-700">
+            <span class="text-gold-600 font-bold">*</span>
+            Congress once spent several days debating whether the official government cheese should be orange or white. They compromised by allowing both. Bipartisanship at its finest.
+          </p>
+        </div>
+        <div class="bg-white rounded-lg border border-navy-200 p-5 shadow-sm">
+          <p class="font-serif text-navy-700">
+            <span class="text-gold-600 font-bold">*</span>
+            There is still a law on the books in Washington D.C. making it illegal to fly a kite. It was passed in 1892. Enforcement has been... lax.
+          </p>
+        </div>
+        <div class="bg-white rounded-lg border border-navy-200 p-5 shadow-sm">
+          <p class="font-serif text-navy-700">
+            <span class="text-gold-600 font-bold">*</span>
+            The IRS tax code is over 74,000 pages long. If printed as a single document, it would stand over 14 feet tall. Nobody has read the whole thing. Not even the IRS.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Back link -->
+    <div class="text-center mt-10">
+      <a href="/" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; Back to Home
+      </a>
+    </div>
+  </div>
+</BaseLayout>

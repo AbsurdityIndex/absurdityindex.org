@@ -1,0 +1,106 @@
+---
+interface Rider {
+  title: string;
+  description: string;
+  category?: 'policy' | 'spending' | 'tax' | 'controversial' | 'sneaky';
+}
+
+interface Props {
+  riders: Rider[];
+}
+
+const { riders } = Astro.props;
+
+const categoryConfig = {
+  policy: {
+    label: 'Policy Rider',
+    bg: 'bg-navy-600',
+    text: 'text-cream-100',
+    icon: '⚖️',
+    description: 'Non-spending policy change',
+  },
+  spending: {
+    label: 'Spending Rider',
+    bg: 'bg-green-700',
+    text: 'text-cream-100',
+    icon: '💰',
+    description: 'Additional spending provision',
+  },
+  tax: {
+    label: 'Tax Provision',
+    bg: 'bg-gold-600',
+    text: 'text-navy-900',
+    icon: '🧾',
+    description: 'Tax code modification',
+  },
+  controversial: {
+    label: 'Controversial',
+    bg: 'bg-red-700',
+    text: 'text-cream-100',
+    icon: '🔥',
+    description: 'Politically contentious addition',
+  },
+  sneaky: {
+    label: 'Buried Deep',
+    bg: 'bg-navy-800',
+    text: 'text-gold-400',
+    icon: '🕵️',
+    description: 'Easy to miss in 4,000+ pages',
+  },
+};
+---
+
+<div class="bg-parchment border border-gold-300 rounded-lg overflow-hidden">
+  <div class="px-6 py-4 bg-navy-800 border-b border-gold-300">
+    <div class="flex items-center justify-between">
+      <h3 class="font-serif text-lg font-bold text-gold-400 flex items-center gap-2">
+        <span>🎁</span>
+        Policy Riders & Hidden Provisions
+      </h3>
+      <span class="font-mono text-sm text-gold-400/70">
+        {riders.length} found
+      </span>
+    </div>
+    <p class="text-sm text-gold-300/70 mt-1">
+      Non-appropriations items slipped into the spending bill
+    </p>
+  </div>
+
+  <div class="divide-y divide-gold-200">
+    {riders.map((rider, i) => {
+      const config = categoryConfig[rider.category || 'policy'];
+      return (
+        <div class="px-6 py-4 hover:bg-cream-200 transition-colors">
+          <div class="flex items-start gap-4">
+            <span class="text-2xl shrink-0" aria-hidden="true">
+              {config.icon}
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                <h4 class="font-serif font-bold text-navy-900">
+                  {rider.title}
+                </h4>
+                <span class={`${config.bg} ${config.text} text-xs font-mono px-2 py-0.5 rounded`}>
+                  {config.label}
+                </span>
+              </div>
+              <p class="text-sm text-navy-700 leading-relaxed">
+                {rider.description}
+              </p>
+            </div>
+            <span class="font-mono text-xs text-navy-400 shrink-0">
+              #{i + 1}
+            </span>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  <div class="px-6 py-3 bg-cream-200 border-t border-gold-300">
+    <p class="text-xs text-navy-600 italic text-center">
+      <strong>Rider:</strong> A provision attached to a bill that has little or no connection to the bill's main subject.
+      Often used to pass measures that couldn't pass on their own merits.
+    </p>
+  </div>
+</div>

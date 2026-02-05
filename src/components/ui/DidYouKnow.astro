@@ -1,0 +1,48 @@
+---
+const facts = [
+  "The 110th Congress named 109 post offices — nearly 20% of all laws passed.",
+  "The FairTax Act (H.R. 25) has been introduced every Congress since 1999 without ever reaching a floor vote.",
+  "Congress averages 147 session days per year. The average American works 260.",
+  "The 113th Congress passed a law giving a missile site 3 extra acres... for a parking lot.",
+  "A 2024 NSF grant spent $118,971 studying whether Thanos could snap his fingers wearing the Infinity Gauntlet.",
+  "The Congressional cafeteria renamed French Fries to 'Freedom Fries' in 2003. This was considered important.",
+  "The COVFEFE Act was a real bill. Its acronym stands for 'Communications Over Various Feeds Electronically for Engagement.'",
+  "Congress declared pizza a vegetable in 2011 by ruling that 2 tablespoons of tomato paste counts as a serving.",
+  "$7.5 billion was allocated for EV chargers in 2021. By 2024, only 68 were operational.",
+  "The Bridge to Nowhere would have connected 8,900 people to 50 people for $223 million.",
+  "Members of Congress have not received a raise since 2009. Their base salary is $174,000.",
+  "The 'Each Day Is Not a Calendar Day' rule in the 119th Congress literally declared that tomorrow never comes.",
+  "Congress once debated the size of precious-metal blanks for Baseball Hall of Fame commemorative coins.",
+  "National Catfish Month has been passed by Congress at least twice.",
+  "The ANTI-SOCIAL CCP Act has one of the longest acronyms in congressional history: 58 characters.",
+  "A $14.6 million grant funded monkeys playing a 'Price Is Right' video game.",
+  "The Department of Veterans Affairs funded teaching teenage ferrets to binge drink. Cost: $1,079,360.",
+];
+
+// Pick 2-3 facts deterministically based on day of year (offset from Bill of the Day)
+const now = new Date();
+const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
+const offset = 7; // offset so we don't overlap with Bill of the Day's index
+const count = (dayOfYear % 2 === 0) ? 3 : 2;
+const selectedFacts: string[] = [];
+for (let i = 0; i < count; i++) {
+  selectedFacts.push(facts[(dayOfYear + offset + i) % facts.length]);
+}
+---
+
+<aside class="bg-cream-50 border border-gold-300 rounded-sm p-6 shadow-sm">
+  <div class="flex items-center gap-2 mb-4">
+    <svg class="w-5 h-5 text-gold-500 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M10 2a6 6 0 00-2 11.66V16a2 2 0 104 0v-2.34A6 6 0 0010 2zm0 2a4 4 0 012.6 7.04.75.75 0 01-.35.64l-.25.15V14H8v-2.17l-.25-.15a.75.75 0 01-.35-.64A4 4 0 0110 4z"/>
+    </svg>
+    <h3 class="font-serif text-lg font-bold text-navy-900">Did You Know?</h3>
+  </div>
+  <ul class="space-y-3">
+    {selectedFacts.map((fact) => (
+      <li class="flex gap-2 text-sm font-sans text-navy-700 leading-relaxed">
+        <span class="text-gold-500 shrink-0 mt-0.5">&starf;</span>
+        <span>{fact}</span>
+      </li>
+    ))}
+  </ul>
+</aside>

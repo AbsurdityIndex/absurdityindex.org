@@ -2,12 +2,16 @@
 
 /**
  * Fetches bills from the Congress.gov API and generates MDX files.
+ * Optionally uses the Anthropic API to generate plain-language summaries.
  *
  * Usage:
  *   CONGRESS_GOV_API_KEY=<key> node scripts/fetch-bills.mjs
  *
  * Or set CONGRESS_GOV_API_KEY in .env and run:
  *   node scripts/fetch-bills.mjs
+ *
+ * Options:
+ *   --no-ai   Skip AI summarization even if ANTHROPIC_API_KEY is set
  */
 
 import fs from 'node:fs';
@@ -38,6 +42,8 @@ try {
 }
 
 const API_KEY = process.env.CONGRESS_GOV_API_KEY;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const USE_AI = !process.argv.includes('--no-ai') && !!ANTHROPIC_API_KEY;
 if (!API_KEY) {
   console.error('Error: CONGRESS_GOV_API_KEY is required.');
   console.error('Set it in .env or pass as environment variable.');
@@ -86,6 +92,64 @@ function escapeMdx(text) {
   return text.replace(/[{}]/g, (ch) => `\\${ch}`);
 }
 
+async function aiSummarize(crsSummary, billTitle, billNumber) {
+  if (!crsSummary) {
+    return null;
+  }
+
+  const promptText = `You are writing for AbsurdityIndex.org, a satirical commentary site about real congressional legislation. Given the following Congressional Research Service summary of a real bill, write two things:
+
+1. SHORT_SUMMARY: A 1-2 sentence punchy, plain-language summary suitable for a card preview. Be accurate but inject dry editorial wit. Don't be mean to specific people.
+
+2. LONG_SUMMARY: A 2-3 paragraph plain-language explanation of what this bill actually does, why it matters (or doesn't), and any notable context. Write for someone with no legal background. Maintain a dry, editorial tone.
+
+Bill: ${billTitle} (${billNumber})
+CRS Summary: ${crsSummary}
+
+Respond in this exact format:
+SHORT_SUMMARY: [your short summary]
+LONG_SUMMARY: [your long summary]`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: promptText }],
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`Anthropic API ${response.status}: ${errBody}`);
+    }
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '';
+
+    const shortMatch = text.match(/SHORT_SUMMARY:\s*([\s\S]*?)(?=\nLONG_SUMMARY:)/);
+    const longMatch = text.match(/LONG_SUMMARY:\s*([\s\S]*)/);
+
+    if (!shortMatch || !longMatch) {
+      throw new Error('Could not parse AI response format');
+    }
+
+    return {
+      shortSummary: shortMatch[1].trim(),
+      longSummary: longMatch[1].trim(),
+    };
+  } catch (err) {
+    console.warn(`  WARN  AI summarization failed: ${err.message}`);
+    return null;
+  }
+}
+
 async function fetchBillData(congress, type, number) {
   // Fetch bill metadata
   const bill = await apiFetch(`/bill/${congress}/${type}/${number}`);
@@ -122,7 +186,7 @@ async function fetchBillData(congress, type, number) {
   return { bill: bill.bill, summary, excerpt };
 }
 
-function generateMdx(billData, meta) {
+function generateMdx(billData, meta, aiSummary) {
   const b = billData.bill;
   const title = (b.title || '').replace(/"/g, '\\"');
   const billNumber = formatBillNumber(meta.type, meta.number);
@@ -137,9 +201,9 @@ function generateMdx(billData, meta) {
     ? b.url.replace('api.congress.gov/v3', 'www.congress.gov')
     : `https://www.congress.gov/bill/${meta.congress}th-congress/${meta.type === 'hr' ? 'house-bill' : 'senate-bill'}/${meta.number}`;
 
-  // Trim summary for frontmatter (1-2 sentences)
-  let shortSummary = billData.summary;
-  if (shortSummary.length > 300) {
+  // Use AI short summary if available, otherwise trim CRS summary
+  let shortSummary = aiSummary?.shortSummary || billData.summary;
+  if (!aiSummary?.shortSummary && shortSummary.length > 300) {
     const sentences = shortSummary.split(/(?<=\.)\s+/);
     shortSummary = sentences.slice(0, 2).join(' ');
     if (shortSummary.length > 300) shortSummary = shortSummary.slice(0, 297) + '...';
@@ -169,8 +233,17 @@ function generateMdx(billData, meta) {
     .filter(Boolean)
     .join('\n');
 
+  const aiSection = aiSummary?.longSummary
+    ? `
+## What This Bill Actually Does
+
+${escapeMdx(aiSummary.longSummary)}
+
+`
+    : '';
+
   const body = `
-## Congressional Research Service Summary
+${aiSection}## Congressional Research Service Summary
 
 ${escapeMdx(billData.summary) || '*No CRS summary available yet.*'}
 
@@ -185,7 +258,15 @@ ${escapeMdx(billData.excerpt) || '*Full text not yet available in machine-readab
 }
 
 async function main() {
-  console.log(`Fetching ${BILL_LIST.length} bills from Congress.gov API...\n`);
+  console.log(`Fetching ${BILL_LIST.length} bills from Congress.gov API...`);
+  if (USE_AI) {
+    console.log('AI summarization enabled (using Anthropic API)');
+  } else if (process.argv.includes('--no-ai')) {
+    console.log('AI summarization disabled (--no-ai flag)');
+  } else if (!ANTHROPIC_API_KEY) {
+    console.log('AI summarization disabled (no ANTHROPIC_API_KEY set)');
+  }
+  console.log();
 
   let created = 0;
   let skipped = 0;
@@ -203,7 +284,19 @@ async function main() {
     try {
       console.log(`  FETCH ${slug}...`);
       const data = await fetchBillData(meta.congress, meta.type, meta.number);
-      const mdx = generateMdx(data, meta);
+
+      let aiResult = null;
+      if (USE_AI && data.summary) {
+        const billNumber = formatBillNumber(meta.type, meta.number);
+        const billTitle = data.bill.title || '';
+        console.log(`  AI    Summarizing ${slug}...`);
+        aiResult = await aiSummarize(data.summary, billTitle, billNumber);
+        if (aiResult) {
+          console.log(`  AI    Done`);
+        }
+      }
+
+      const mdx = generateMdx(data, meta, aiResult);
       fs.writeFileSync(filepath, mdx, 'utf-8');
       console.log(`  WRITE ${slug}`);
       created++;

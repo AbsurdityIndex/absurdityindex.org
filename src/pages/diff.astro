@@ -1,0 +1,349 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+---
+
+<BaseLayout title="Bill Diff Tool" description="Compare bill versions and see what changed when you weren't looking. Track additions, deletions, and sneaky amendments.">
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <OfficialSeal size="100" />
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Legislative Analysis Tool</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Bill Diff Tool</h1>
+      <p class="text-navy-600 font-serif italic mt-3">See what they changed when you weren't looking</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <div class="bg-parchment rounded-lg shadow-lg p-6 md:p-8 mt-8">
+      <!-- Text Areas -->
+      <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <label for="original-text" class="block font-serif font-bold text-navy-900 mb-2">
+            Original Version
+          </label>
+          <textarea
+            id="original-text"
+            rows="15"
+            placeholder="Paste the original bill text here..."
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-mono text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:border-gold-500 transition-colors resize-none"
+          ></textarea>
+        </div>
+        <div>
+          <label for="amended-text" class="block font-serif font-bold text-navy-900 mb-2">
+            Amended Version
+          </label>
+          <textarea
+            id="amended-text"
+            rows="15"
+            placeholder="Paste the amended bill text here..."
+            class="w-full px-4 py-3 border-2 border-gold-300 bg-cream-100 rounded font-mono text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:border-gold-500 transition-colors resize-none"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex flex-wrap gap-4 justify-center">
+        <button
+          id="compare-btn"
+          class="px-8 py-3 bg-navy-800 text-gold-300 font-serif text-lg font-bold rounded hover:bg-navy-700 transition-colors"
+        >
+          Compare Versions
+        </button>
+        <button
+          id="load-example-btn"
+          class="px-6 py-3 bg-gold-500 text-navy-900 font-serif font-bold rounded hover:bg-gold-400 transition-colors"
+        >
+          Load Example
+        </button>
+        <button
+          id="clear-btn"
+          class="px-6 py-3 border-2 border-navy-400 text-navy-700 font-serif font-bold rounded hover:bg-navy-100 transition-colors"
+        >
+          Clear All
+        </button>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="results" class="hidden mt-8">
+      <div class="bg-parchment rounded-lg shadow-lg p-6 md:p-8">
+        <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4">Comparison Results</h2>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-green-700/10 border border-green-700 rounded-lg p-4 text-center">
+            <p class="text-3xl font-bold text-green-700" id="stat-added">0</p>
+            <p class="text-sm font-sans text-green-700">Lines Added</p>
+          </div>
+          <div class="bg-red-700/10 border border-red-700 rounded-lg p-4 text-center">
+            <p class="text-3xl font-bold text-red-700" id="stat-removed">0</p>
+            <p class="text-sm font-sans text-red-700">Lines Removed</p>
+          </div>
+          <div class="bg-yellow-500/10 border border-yellow-500 rounded-lg p-4 text-center">
+            <p class="text-3xl font-bold text-yellow-500" id="stat-changed">0</p>
+            <p class="text-sm font-sans text-yellow-500">Lines Changed</p>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex flex-wrap gap-4 mb-4 text-sm font-mono">
+          <span class="flex items-center gap-2">
+            <span class="w-4 h-4 bg-green-200 border border-green-700 rounded"></span>
+            Addition
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="w-4 h-4 bg-red-200 border border-red-700 rounded"></span>
+            Deletion
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="w-4 h-4 bg-yellow-200 border border-yellow-500 rounded"></span>
+            Changed
+          </span>
+        </div>
+
+        <!-- Diff Output -->
+        <div id="diff-output" class="bg-cream-100 border-2 border-gold-300 rounded-lg p-4 font-mono text-sm overflow-x-auto max-h-[600px] overflow-y-auto">
+          <!-- Filled by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <Divider />
+
+    <div class="bg-cream-200 rounded-lg p-6 mt-8 border-l-4 border-gold-500">
+      <p class="font-serif text-navy-700 italic">
+        <strong>Fun fact:</strong> The average bill is amended 47 times before anyone reads it. By the time it passes, even its sponsors aren't entirely sure what's in it. But hey, at least they got the naming rights.
+      </p>
+    </div>
+  </div>
+
+  <script is:inline>
+    // Example texts
+    const exampleOriginal = `SECTION 1. SHORT TITLE.
+
+This Act may be cited as the "Simple Tax Reform Act of 2024".
+
+SEC. 2. PURPOSE.
+
+The purpose of this Act is to simplify the federal tax code by:
+(a) Reducing the number of tax brackets from 7 to 3.
+(b) Eliminating obsolete deductions.
+(c) Making filing easier for working families.
+
+SEC. 3. EFFECTIVE DATE.
+
+This Act shall take effect on January 1, 2025.
+
+SEC. 4. DEFINITIONS.
+
+For purposes of this Act:
+(a) "Taxpayer" means any individual required to file a return.
+(b) "Qualified income" means wages, salaries, and tips.`;
+
+    const exampleAmended = `SECTION 1. SHORT TITLE.
+
+This Act may be cited as the "Comprehensive Tax Reform and Carrier Pigeon Preservation Act of 2024".
+
+SEC. 2. PURPOSE.
+
+The purpose of this Act is to reform the federal tax code by:
+(a) Reducing the number of tax brackets from 7 to 3.
+(b) Eliminating obsolete deductions (except for yacht maintenance).
+(c) Making filing easier for working families earning over $500,000.
+(d) Establishing a National Carrier Pigeon Reserve.
+
+SEC. 3. CARRIER PIGEON PROVISIONS.
+
+(a) The Secretary shall establish no fewer than 12 carrier pigeon sanctuaries.
+(b) Annual funding of $50 million shall be appropriated.
+
+SEC. 4. EFFECTIVE DATE.
+
+This Act shall take effect on January 1, 2025, or when pigs fly, whichever comes first.
+
+SEC. 5. DEFINITIONS.
+
+For purposes of this Act:
+(a) "Taxpayer" means any individual or corporation required to file a return.
+(b) "Qualified income" means wages, salaries, tips, and carrier pigeon racing winnings.
+(c) "Yacht" means any watercraft over 30 feet in length.`;
+
+    // Simple line-by-line diff algorithm
+    function computeDiff(original, amended) {
+      const originalLines = original.split('\n');
+      const amendedLines = amended.split('\n');
+      const results = [];
+
+      let added = 0;
+      let removed = 0;
+      let changed = 0;
+
+      // Use longest common subsequence approach for better diff
+      const lcs = computeLCS(originalLines, amendedLines);
+
+      let origIdx = 0;
+      let amendIdx = 0;
+      let lcsIdx = 0;
+
+      while (origIdx < originalLines.length || amendIdx < amendedLines.length) {
+        if (lcsIdx < lcs.length && origIdx < originalLines.length && originalLines[origIdx] === lcs[lcsIdx]) {
+          if (amendIdx < amendedLines.length && amendedLines[amendIdx] === lcs[lcsIdx]) {
+            // Line unchanged
+            results.push({ type: 'unchanged', content: originalLines[origIdx] });
+            origIdx++;
+            amendIdx++;
+            lcsIdx++;
+          } else if (amendIdx < amendedLines.length) {
+            // Line added in amended
+            results.push({ type: 'added', content: amendedLines[amendIdx] });
+            added++;
+            amendIdx++;
+          }
+        } else if (lcsIdx < lcs.length && amendIdx < amendedLines.length && amendedLines[amendIdx] === lcs[lcsIdx]) {
+          // Line removed from original
+          results.push({ type: 'removed', content: originalLines[origIdx] });
+          removed++;
+          origIdx++;
+        } else if (origIdx < originalLines.length && amendIdx < amendedLines.length) {
+          // Both lines differ - check if it's a change or add/remove
+          if (originalLines[origIdx].trim() !== '' && amendedLines[amendIdx].trim() !== '' &&
+              similarity(originalLines[origIdx], amendedLines[amendIdx]) > 0.3) {
+            // Lines are similar enough to be considered a change
+            results.push({ type: 'changed', oldContent: originalLines[origIdx], newContent: amendedLines[amendIdx] });
+            changed++;
+            origIdx++;
+            amendIdx++;
+          } else {
+            // Removed line
+            results.push({ type: 'removed', content: originalLines[origIdx] });
+            removed++;
+            origIdx++;
+          }
+        } else if (origIdx < originalLines.length) {
+          results.push({ type: 'removed', content: originalLines[origIdx] });
+          removed++;
+          origIdx++;
+        } else if (amendIdx < amendedLines.length) {
+          results.push({ type: 'added', content: amendedLines[amendIdx] });
+          added++;
+          amendIdx++;
+        }
+      }
+
+      return { results, stats: { added, removed, changed } };
+    }
+
+    // Compute longest common subsequence
+    function computeLCS(arr1, arr2) {
+      const m = arr1.length;
+      const n = arr2.length;
+      const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          if (arr1[i - 1] === arr2[j - 1]) {
+            dp[i][j] = dp[i - 1][j - 1] + 1;
+          } else {
+            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+          }
+        }
+      }
+
+      // Backtrack to find LCS
+      const lcs = [];
+      let i = m, j = n;
+      while (i > 0 && j > 0) {
+        if (arr1[i - 1] === arr2[j - 1]) {
+          lcs.unshift(arr1[i - 1]);
+          i--;
+          j--;
+        } else if (dp[i - 1][j] > dp[i][j - 1]) {
+          i--;
+        } else {
+          j--;
+        }
+      }
+
+      return lcs;
+    }
+
+    // Simple string similarity (Jaccard-ish)
+    function similarity(str1, str2) {
+      const words1 = new Set(str1.toLowerCase().split(/\s+/));
+      const words2 = new Set(str2.toLowerCase().split(/\s+/));
+      const intersection = [...words1].filter(w => words2.has(w)).length;
+      const union = new Set([...words1, ...words2]).size;
+      return union > 0 ? intersection / union : 0;
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Render diff output
+    function renderDiff(diffResults) {
+      const output = document.getElementById('diff-output');
+      let html = '';
+      let lineNum = 1;
+
+      diffResults.results.forEach(item => {
+        const lineNumStr = String(lineNum).padStart(3, ' ');
+
+        switch (item.type) {
+          case 'unchanged':
+            html += `<div class="flex"><span class="text-navy-400 select-none mr-4">${lineNumStr}</span><span class="text-navy-900">${escapeHtml(item.content) || '&nbsp;'}</span></div>`;
+            lineNum++;
+            break;
+          case 'added':
+            html += `<div class="flex bg-green-200 -mx-4 px-4"><span class="text-green-800 select-none mr-4">${lineNumStr}+</span><span class="text-green-800 font-medium">${escapeHtml(item.content) || '&nbsp;'}</span></div>`;
+            lineNum++;
+            break;
+          case 'removed':
+            html += `<div class="flex bg-red-200 -mx-4 px-4"><span class="text-red-800 select-none mr-4">   -</span><span class="text-red-800 line-through">${escapeHtml(item.content) || '&nbsp;'}</span></div>`;
+            break;
+          case 'changed':
+            html += `<div class="flex bg-yellow-200 -mx-4 px-4"><span class="text-yellow-800 select-none mr-4">${lineNumStr}~</span><span class="text-yellow-800"><del class="bg-red-300/50">${escapeHtml(item.oldContent)}</del> <ins class="bg-green-300/50 no-underline">${escapeHtml(item.newContent)}</ins></span></div>`;
+            lineNum++;
+            break;
+        }
+      });
+
+      output.innerHTML = html || '<p class="text-navy-400 italic">No differences found. The bills are identical.</p>';
+    }
+
+    // Event handlers
+    document.getElementById('compare-btn').addEventListener('click', () => {
+      const original = document.getElementById('original-text').value;
+      const amended = document.getElementById('amended-text').value;
+
+      if (!original.trim() || !amended.trim()) {
+        alert('Please enter text in both fields to compare.');
+        return;
+      }
+
+      const { results, stats } = computeDiff(original, amended);
+
+      document.getElementById('stat-added').textContent = stats.added;
+      document.getElementById('stat-removed').textContent = stats.removed;
+      document.getElementById('stat-changed').textContent = stats.changed;
+
+      renderDiff({ results });
+      document.getElementById('results').classList.remove('hidden');
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('load-example-btn').addEventListener('click', () => {
+      document.getElementById('original-text').value = exampleOriginal;
+      document.getElementById('amended-text').value = exampleAmended;
+    });
+
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      document.getElementById('original-text').value = '';
+      document.getElementById('amended-text').value = '';
+      document.getElementById('results').classList.add('hidden');
+    });
+  </script>
+</BaseLayout>

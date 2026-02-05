@@ -1,0 +1,26 @@
+{
+  "name": "Absurdity Index — Real Bills. Real Absurdity.",
+  "short_name": "Absurdity Index",
+  "description": "Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "theme_color": "#0A1628",
+  "background_color": "#0A1628",
+  "categories": ["news", "entertainment", "education"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}

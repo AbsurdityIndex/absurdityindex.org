@@ -1,30 +1,41 @@
 ---
 import BillNumberBadge from './BillNumberBadge.astro';
 import BillTypeBadge from './BillTypeBadge.astro';
+import ReadingTime from '../ui/ReadingTime.astro';
 
 interface Props {
   title: string;
   billNumber: string;
   billType: 'sensible' | 'absurd' | 'real';
-  category: string;
-  sponsor: string;
-  status: string;
-  summary: string;
-  dateIntroduced: Date;
+  category?: string;
+  sponsor?: string;
+  status?: string;
+  summary?: string;
+  dateIntroduced?: Date;
   tags?: string[];
   featured?: boolean;
+  readingTimeContent?: string;
   [key: string]: any;
 }
 
-const { title, billNumber, billType } = Astro.props;
+const { title, billNumber, billType, readingTimeContent } = Astro.props;
+
+// Determine the chamber text based on bill type
+const chamberText = billType === 'real'
+  ? 'In the Congress of the United States'
+  : 'In the Not-Congress of the United States';
+
+const sessionText = billType === 'real'
+  ? '119th Congress — 1st Session'
+  : '119th Not-Congress — 1st Session of Futility';
 ---
 
 <header class="text-center max-w-3xl mx-auto py-10">
   <p class="font-serif text-xs uppercase tracking-[0.2em] text-navy-600 mb-1">
-    In the Not-Congress of the United States
+    {chamberText}
   </p>
   <p class="font-sans text-xs text-navy-500 italic mb-6">
-    119th Not-Congress &mdash; 1st Session of Futility
+    {sessionText}
   </p>
 
   <div class="flex items-center justify-center gap-3 mb-5">
@@ -34,9 +45,15 @@ const { title, billNumber, billType } = Astro.props;
     <BillTypeBadge billType={billType} />
   </div>
 
-  <h1 class="font-serif text-3xl md:text-4xl font-bold text-navy-900 leading-tight mb-6">
+  <h1 class="font-serif text-3xl md:text-4xl font-bold text-navy-900 leading-tight mb-4">
     {title}
   </h1>
+
+  {readingTimeContent && (
+    <div class="flex justify-center mb-4">
+      <ReadingTime content={readingTimeContent} />
+    </div>
+  )}
 
   <hr class="gold-rule" />
 </header>

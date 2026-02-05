@@ -9,7 +9,7 @@
     Get the latest bills delivered to your inbox. We promise to read them before sending. (Unlike actual Congress.)
   </p>
 
-  <form class="flex flex-col sm:flex-row gap-3">
+  <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3">
     <input
       type="email"
       placeholder="your@email.gov"
@@ -24,3 +24,58 @@
     </button>
   </form>
 </section>
+
+<!-- Newsletter Modal -->
+<div
+  id="newsletter-modal"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden"
+>
+  <div id="newsletter-modal-backdrop" class="absolute inset-0 bg-navy-900/60"></div>
+  <div class="relative bg-parchment border-2 border-gold-400 rounded-lg shadow-xl max-w-md w-full p-8 text-center">
+    <p class="text-4xl mb-4">📬</p>
+    <h3 class="font-serif text-2xl font-bold text-navy-900 mb-3">Just Kidding.</h3>
+    <p class="font-sans text-sm text-navy-700 leading-relaxed mb-4">
+      You think Congress reads their mail? Neither do we. This feature is currently in committee &mdash; which means it'll be ready sometime between now and never.
+    </p>
+    <p class="font-sans text-xs text-navy-500 italic mb-6">
+      In the meantime, bookmark us. We'll be here &mdash; unlike your representatives.
+    </p>
+    <button
+      id="newsletter-modal-close"
+      class="font-sans font-semibold text-sm bg-gold-500 text-navy-900 px-6 py-2.5 rounded hover:bg-gold-400 transition-colors"
+    >
+      Motion to Adjourn
+    </button>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('newsletter-form');
+  const modal = document.getElementById('newsletter-modal');
+  const backdrop = document.getElementById('newsletter-modal-backdrop');
+  const closeBtn = document.getElementById('newsletter-modal-close');
+
+  function openModal() {
+    modal?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    openModal();
+  });
+
+  backdrop?.addEventListener('click', closeModal);
+  closeBtn?.addEventListener('click', closeModal);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal?.classList.contains('hidden')) {
+      closeModal();
+    }
+  });
+</script>

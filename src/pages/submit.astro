@@ -135,4 +135,48 @@ import OfficialSeal from '../components/ui/OfficialSeal.astro';
       </form>
     </div>
   </div>
+
+  <!-- Popup modal -->
+  <div id="submit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+    <div class="bg-parchment rounded-lg shadow-2xl max-w-md w-full p-8 text-center border-4 border-gold-500 relative">
+      <div class="text-5xl mb-4">🏛️</div>
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-3">Just Kidding.</h2>
+      <p class="text-navy-700 font-serif text-lg mb-2">
+        You think we actually work around here?
+      </p>
+      <p class="text-navy-600 text-sm mb-6">
+        Congress averages 147 days in session per year. Our submission inbox averages 0. Check back when we get around to it — so, never.
+      </p>
+      <button
+        id="close-modal"
+        class="px-8 py-3 bg-navy-800 text-gold-300 font-serif font-bold rounded hover:bg-navy-700 transition-colors"
+      >
+        Return to Recess
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const form = document.querySelector('form[name="bill-submission"]');
+    const modal = document.getElementById('submit-modal');
+    const closeBtn = document.getElementById('close-modal');
+
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      modal?.classList.remove('hidden');
+      modal?.classList.add('flex');
+    });
+
+    closeBtn?.addEventListener('click', () => {
+      modal?.classList.remove('flex');
+      modal?.classList.add('hidden');
+    });
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+      }
+    });
+  </script>
 </BaseLayout>

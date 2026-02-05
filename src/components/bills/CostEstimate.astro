@@ -1,0 +1,38 @@
+---
+interface Props {
+  status: string;
+  billNumber: string;
+}
+
+const { status, billNumber } = Astro.props;
+
+const COST_PER_HOUR = 79158;
+
+function estimateHours(status: string): number {
+  const s = status.toLowerCase();
+  if (s.includes('signed into law') || s.includes('became law')) return 24;
+  if (s.includes('passed house') || s.includes('passed senate') || s.includes('passed both')) return 16;
+  if (s.includes('reported')) return 8;
+  if (s.includes('died')) return 4;
+  return 2; // referred to committee or introduced
+}
+
+const hours = estimateHours(status);
+const cost = hours * COST_PER_HOUR;
+const formatted = cost.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+---
+
+<div class="bg-cream-100 border border-gold-300 rounded p-4 mt-6">
+  <div class="flex items-center gap-2 mb-2">
+    <span class="text-lg">&#x1F4B0;</span>
+    <h4 class="font-serif font-bold text-navy-900 text-sm">Estimated Taxpayer Cost</h4>
+  </div>
+  <p class="font-mono text-2xl font-bold text-navy-900">{formatted}</p>
+  <p class="text-xs text-navy-600 mt-1">
+    ~{hours} hours of congressional session time at $79,158/hour
+    <span class="text-navy-400">(535 members &times; $174k salary &divide; 147 session days &divide; 8 hours)</span>
+  </p>
+  <p class="text-xs text-navy-400 italic mt-2">
+    This is a simplified estimate based on congressional salary costs only. Actual costs include staff, facilities, and the immeasurable cost of lost productivity.
+  </p>
+</div>

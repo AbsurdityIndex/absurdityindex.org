@@ -1,0 +1,434 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+import { getCollection } from 'astro:content';
+
+// Get actual bill count from collection
+const bills = await getCollection('bills');
+const actualBillCount = bills.length;
+
+// Congressional session estimates
+const ESTIMATED_SESSION_BILLS = 10000;
+const AVG_BILL_LENGTH_WORDS = 15000;
+const READING_SPEED_WPM = 200;
+
+// Calculate reading time
+const totalWords = ESTIMATED_SESSION_BILLS * AVG_BILL_LENGTH_WORDS;
+const totalMinutes = totalWords / READING_SPEED_WPM;
+const totalHours = totalMinutes / 60;
+const totalDays = totalHours / 24;
+const totalYears = totalDays / 365;
+
+// Fun calculations
+const pagesNeeded = Math.round(totalWords / 250); // ~250 words per page
+const coffeeNeeded = Math.round(totalHours / 2); // one coffee every 2 hours
+const bathroomBreaks = Math.round(totalHours / 1.5); // every 90 mins
+
+// Comparison data
+const lotrExtendedMinutes = 683; // extended trilogy runtime in minutes
+const lotrTimes = Math.round(totalMinutes / lotrExtendedMinutes);
+
+const moonDistanceMiles = 238900;
+const avgDrivingSpeedMph = 60;
+const moonDriveHours = (moonDistanceMiles * 2) / avgDrivingSpeedMph;
+const moonTrips = Math.round(totalHours / moonDriveHours);
+
+const beatlesSongsMinutes = 213 * 3; // ~213 songs, avg 3 mins each
+const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
+---
+
+<BaseLayout
+  title="Congressional Reading Marathon"
+  description="How long would it take to read every bill in Congress? Spoiler: longer than your lifetime."
+>
+  <main class="bg-parchment min-h-screen">
+    <!-- Animated background pages -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none opacity-10 dark:opacity-5" id="page-bg">
+      <div class="page-flip page-1"></div>
+      <div class="page-flip page-2"></div>
+      <div class="page-flip page-3"></div>
+    </div>
+
+    <!-- Hero -->
+    <section class="relative bg-navy-900 py-12 sm:py-20">
+      <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
+        <OfficialSeal size="100" />
+        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-6 mb-2">
+          An Exercise in Congressional Futility
+        </p>
+        <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl text-gold-400 font-bold">
+          The Congressional Reading Marathon
+        </h1>
+        <p class="mt-4 text-gold-300/80 font-sans text-xl max-w-2xl mx-auto">
+          Spoiler: You'll never finish.
+        </p>
+      </div>
+    </section>
+
+    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-14 relative z-10">
+
+      <!-- Giant Date Display -->
+      <section class="bg-white rounded-xl border-4 border-navy-800 shadow-2xl overflow-hidden mb-10">
+        <div class="bg-navy-800 py-4 px-6">
+          <h2 class="text-gold-400 font-serif text-xl text-center">
+            If you started reading every bill today...
+          </h2>
+        </div>
+        <div class="p-8 sm:p-12 text-center">
+          <p class="text-navy-600 font-mono text-sm uppercase tracking-widest mb-4">
+            You'd finish on
+          </p>
+          <div id="finish-date" class="font-serif text-4xl sm:text-6xl lg:text-7xl text-navy-900 font-bold leading-tight">
+            Loading...
+          </div>
+          <p class="mt-4 text-navy-500 font-mono text-sm">
+            That's <span id="years-from-now" class="text-red-600 font-bold">{totalYears.toFixed(1)}</span> years from now
+          </p>
+          <div class="mt-6 p-4 bg-cream-200 rounded-lg inline-block">
+            <p class="text-navy-700 font-sans text-sm">
+              <span class="font-bold">Assuming</span> you read 24/7 without sleep, food, or bathroom breaks
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats Dashboard -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
+          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Bills This Session</p>
+          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">{ESTIMATED_SESSION_BILLS.toLocaleString()}</p>
+          <p class="text-navy-400 text-xs mt-1">(estimated)</p>
+        </div>
+        <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
+          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Avg Bill Length</p>
+          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">{AVG_BILL_LENGTH_WORDS.toLocaleString()}</p>
+          <p class="text-navy-400 text-xs mt-1">words per bill</p>
+        </div>
+        <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
+          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Total Words</p>
+          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">{(totalWords / 1000000000).toFixed(1)}B</p>
+          <p class="text-navy-400 text-xs mt-1">billion words</p>
+        </div>
+        <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
+          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Reading Speed</p>
+          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">{READING_SPEED_WPM}</p>
+          <p class="text-navy-400 text-xs mt-1">words/minute</p>
+        </div>
+      </section>
+
+      <!-- Lifetime Progress Bar -->
+      <section class="bg-white rounded-lg border border-navy-200 p-6 sm:p-8 shadow-md mb-10">
+        <h3 class="font-serif text-xl text-navy-900 font-bold mb-6 text-center">
+          Your Lifetime vs. Time to Read All Bills
+        </h3>
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between text-sm font-mono text-navy-600 mb-1">
+              <span>Average Human Lifespan</span>
+              <span>~79 years</span>
+            </div>
+            <div class="h-8 bg-green-600 rounded-full relative overflow-hidden">
+              <div class="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+                Your entire life
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm font-mono text-navy-600 mb-1">
+              <span>Time to Read All Bills</span>
+              <span>~{totalYears.toFixed(0)} years</span>
+            </div>
+            <div class="h-8 bg-navy-200 rounded-full relative overflow-hidden">
+              <div
+                class="h-full bg-red-600 rounded-full"
+                style={`width: ${Math.min((totalYears / 79) * 100, 100)}%`}
+              ></div>
+              <div class="absolute inset-0 flex items-center justify-center text-navy-900 font-bold text-sm">
+                {totalYears > 79 ? `${(totalYears / 79).toFixed(1)}x your lifespan` : `${((totalYears / 79) * 100).toFixed(0)}% of your life`}
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="text-center text-navy-500 text-sm mt-4 italic">
+          Hope you weren't planning on sleeping, eating, or having a social life.
+        </p>
+      </section>
+
+      <!-- Start Reading Button -->
+      <section class="bg-navy-800 rounded-xl p-8 mb-10 text-center">
+        <h3 class="font-serif text-2xl text-gold-400 font-bold mb-4">
+          Ready to Start?
+        </h3>
+        <button
+          id="start-reading-btn"
+          class="px-8 py-4 bg-gold-500 text-navy-900 font-serif text-xl rounded-lg hover:bg-gold-400 transition-colors font-bold shadow-lg"
+        >
+          Start Reading Marathon
+        </button>
+        <div id="fake-progress" class="hidden mt-6">
+          <div class="h-4 bg-navy-700 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-gold-500 transition-all duration-1000 ease-out" style="width: 0%"></div>
+          </div>
+          <p id="progress-text" class="text-gold-300 font-mono text-sm mt-2">
+            0.000000001% complete
+          </p>
+          <p class="text-gold-500/60 text-xs mt-2 italic">
+            At this rate, you'll finish in approximately never.
+          </p>
+        </div>
+      </section>
+
+      <Divider withSeal={true} />
+
+      <!-- Live Counters -->
+      <section class="bg-white rounded-lg border border-navy-200 p-6 sm:p-8 shadow-md mb-10">
+        <h3 class="font-serif text-2xl text-navy-900 font-bold mb-6 text-center">
+          While You've Been on This Page...
+        </h3>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="text-center p-4 bg-cream-100 rounded-lg">
+            <p class="font-serif text-3xl sm:text-4xl text-red-600 font-bold" id="bills-counter">0</p>
+            <p class="text-navy-600 font-sans text-sm mt-1">New bills introduced</p>
+          </div>
+          <div class="text-center p-4 bg-cream-100 rounded-lg">
+            <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold" id="pages-counter">{pagesNeeded.toLocaleString()}</p>
+            <p class="text-navy-600 font-sans text-sm mt-1">Pages to print</p>
+          </div>
+          <div class="text-center p-4 bg-cream-100 rounded-lg">
+            <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold" id="coffee-counter">{coffeeNeeded.toLocaleString()}</p>
+            <p class="text-navy-600 font-sans text-sm mt-1">Coffees needed</p>
+          </div>
+          <div class="text-center p-4 bg-cream-100 rounded-lg">
+            <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold" id="bathroom-counter">{bathroomBreaks.toLocaleString()}</p>
+            <p class="text-navy-600 font-sans text-sm mt-1">Bathroom breaks</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Comparison Section -->
+      <section class="bg-navy-900 rounded-xl p-6 sm:p-10 mb-10">
+        <h3 class="font-serif text-2xl text-gold-400 font-bold mb-8 text-center">
+          In the Time It Takes to Read All Bills, You Could...
+        </h3>
+        <div class="space-y-6">
+          <div class="flex items-center gap-4 bg-navy-800 rounded-lg p-4">
+            <div class="text-4xl shrink-0">🎬</div>
+            <div class="flex-1">
+              <p class="text-gold-300 font-sans">
+                Watch the <span class="text-gold-400 font-bold">entire Lord of the Rings extended edition</span>
+              </p>
+              <p class="text-gold-500 font-serif text-3xl font-bold mt-1">
+                {lotrTimes.toLocaleString()} times
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 bg-navy-800 rounded-lg p-4">
+            <div class="text-4xl shrink-0">🚗</div>
+            <div class="flex-1">
+              <p class="text-gold-300 font-sans">
+                Drive to the <span class="text-gold-400 font-bold">Moon and back</span>
+              </p>
+              <p class="text-gold-500 font-serif text-3xl font-bold mt-1">
+                {moonTrips.toLocaleString()} times
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 bg-navy-800 rounded-lg p-4">
+            <div class="text-4xl shrink-0">🎵</div>
+            <div class="flex-1">
+              <p class="text-gold-300 font-sans">
+                Listen to <span class="text-gold-400 font-bold">every Beatles song ever recorded</span>
+              </p>
+              <p class="text-gold-500 font-serif text-3xl font-bold mt-1">
+                {beatlesTimes.toLocaleString()} times
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fun Fact -->
+      <section class="bg-gold-500 rounded-lg p-6 sm:p-8 mb-10 text-center">
+        <h3 class="font-serif text-2xl text-navy-900 font-bold mb-4">
+          Fun Fact
+        </h3>
+        <p class="font-serif text-lg text-navy-800 max-w-2xl mx-auto">
+          Congress members have <span class="font-bold">staff</span> to read bills for them.
+          You don't. <span class="font-bold">Good luck.</span>
+        </p>
+      </section>
+
+      <!-- Your Collection -->
+      <section class="bg-white rounded-lg border border-navy-200 p-6 sm:p-8 shadow-md">
+        <h3 class="font-serif text-xl text-navy-900 font-bold mb-4 text-center">
+          Start Small: Our Collection
+        </h3>
+        <p class="text-center text-navy-600 mb-6">
+          We've collected <span class="font-bold text-navy-900">{actualBillCount}</span> bills for you to browse.
+          Only <span class="font-bold text-red-600">{(ESTIMATED_SESSION_BILLS - actualBillCount).toLocaleString()}</span> more to go!
+        </p>
+        <div class="text-center">
+          <a
+            href="/bills"
+            class="inline-block px-6 py-3 bg-navy-800 text-gold-400 font-serif rounded-lg hover:bg-navy-700 transition-colors font-bold"
+          >
+            Browse Our Bills
+          </a>
+        </div>
+      </section>
+
+      <!-- Disclaimer -->
+      <div class="mt-8 bg-cream-200 border border-gold-300 rounded p-4 text-xs text-navy-600 leading-relaxed text-center">
+        <p>
+          <strong>Methodology:</strong> These calculations assume {ESTIMATED_SESSION_BILLS.toLocaleString()} bills per congressional session
+          with an average length of {AVG_BILL_LENGTH_WORDS.toLocaleString()} words, read at {READING_SPEED_WPM} words per minute.
+          Actual results may vary based on your tolerance for legalese, caffeine intake, and will to live.
+          Side effects may include existential dread and a sudden appreciation for ignorance.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script is:inline define:vars={{ totalYears, totalMinutes, pagesNeeded, coffeeNeeded, bathroomBreaks, AVG_BILL_LENGTH_WORDS }}>
+    // Calculate finish date
+    function calculateFinishDate() {
+      const now = new Date();
+      const finishDate = new Date(now.getTime() + totalMinutes * 60 * 1000);
+
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      const formatted = finishDate.toLocaleDateString('en-US', options);
+
+      document.getElementById('finish-date').textContent = formatted;
+    }
+
+    calculateFinishDate();
+
+    // Bills counter - Congress introduces ~1 bill every 3 hours on average during session
+    let billsIntroduced = 0;
+    const billsEl = document.getElementById('bills-counter');
+
+    setInterval(() => {
+      // Random chance to introduce a bill (simulates ~8 bills per day)
+      if (Math.random() < 0.05) {
+        billsIntroduced++;
+        billsEl.textContent = billsIntroduced;
+        billsEl.classList.add('scale-125');
+        setTimeout(() => billsEl.classList.remove('scale-125'), 200);
+      }
+    }, 3000);
+
+    // Update other counters based on new bills
+    let currentPages = pagesNeeded;
+    let currentCoffee = coffeeNeeded;
+    let currentBathroom = bathroomBreaks;
+
+    setInterval(() => {
+      if (billsIntroduced > 0) {
+        const extraWords = billsIntroduced * AVG_BILL_LENGTH_WORDS;
+        const extraPages = Math.round(extraWords / 250);
+        const extraHours = extraWords / 200 / 60;
+
+        document.getElementById('pages-counter').textContent = (currentPages + extraPages).toLocaleString();
+        document.getElementById('coffee-counter').textContent = (currentCoffee + Math.round(extraHours / 2)).toLocaleString();
+        document.getElementById('bathroom-counter').textContent = (currentBathroom + Math.round(extraHours / 1.5)).toLocaleString();
+      }
+    }, 5000);
+
+    // Fake progress bar
+    const startBtn = document.getElementById('start-reading-btn');
+    const progressContainer = document.getElementById('fake-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+
+    let isReading = false;
+    let progress = 0;
+
+    startBtn.addEventListener('click', () => {
+      if (!isReading) {
+        isReading = true;
+        startBtn.textContent = 'Reading...';
+        startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        progressContainer.classList.remove('hidden');
+
+        // Simulate painfully slow progress
+        const interval = setInterval(() => {
+          progress += 0.0000001;
+          const displayProgress = progress.toFixed(9);
+          progressBar.style.width = `${Math.min(progress * 100000000, 0.1)}%`;
+          progressText.textContent = `${displayProgress}% complete`;
+
+          if (progress > 0.000001) {
+            clearInterval(interval);
+            progressText.innerHTML = `${displayProgress}% complete<br><span class="text-gold-400">You've been at this for a while. Maybe take a break?</span>`;
+          }
+        }, 1000);
+      }
+    });
+  </script>
+
+  <style>
+    /* Animated page flip background */
+    .page-flip {
+      position: absolute;
+      width: 200px;
+      height: 280px;
+      background: linear-gradient(135deg, #f5f0e1 0%, #e8d5b0 100%);
+      border: 1px solid #c5a572;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .page-1 {
+      top: 10%;
+      left: 5%;
+      animation: float1 12s ease-in-out infinite;
+      transform: rotate(-5deg);
+    }
+
+    .page-2 {
+      top: 30%;
+      right: 10%;
+      animation: float2 15s ease-in-out infinite;
+      transform: rotate(8deg);
+    }
+
+    .page-3 {
+      bottom: 20%;
+      left: 15%;
+      animation: float3 18s ease-in-out infinite;
+      transform: rotate(-3deg);
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: rotate(-5deg) translateY(0); }
+      50% { transform: rotate(-8deg) translateY(-30px); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: rotate(8deg) translateY(0); }
+      50% { transform: rotate(5deg) translateY(-25px); }
+    }
+
+    @keyframes float3 {
+      0%, 100% { transform: rotate(-3deg) translateY(0); }
+      50% { transform: rotate(-6deg) translateY(-35px); }
+    }
+
+    /* Counter animation */
+    #bills-counter {
+      transition: transform 0.2s ease-out;
+    }
+
+    /* Progress bar shimmer */
+    #progress-bar {
+      background: linear-gradient(90deg, #C5A572 0%, #D4BB8A 50%, #C5A572 100%);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+  </style>
+</BaseLayout>

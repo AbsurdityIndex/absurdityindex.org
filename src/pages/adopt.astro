@@ -1,0 +1,202 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import { getCollection } from 'astro:content';
+
+const bills = await getCollection('bills');
+
+// Real bills without a paired not-bill
+const needsPairing = bills.filter(b =>
+  b.data.billType === 'real' && !b.data.pairedBillId
+);
+
+// Bills with short summaries (needs more detail)
+const needsDetail = bills.filter(b =>
+  b.data.summary.length < 100
+);
+
+// Get unique bills that need attention
+const allNeedingAttention = [...new Set([...needsPairing, ...needsDetail])];
+---
+
+<BaseLayout title="Adopt a Bill" description="Help us make sense of the nonsense. Contribute to the Absurdity Index by adopting a bill that needs work.">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <OfficialSeal size="120" />
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Community Contribution</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Adopt a Bill</h1>
+      <p class="text-navy-600 font-serif italic mt-3">Help us make sense of the nonsense</p>
+    </div>
+    <div class="gold-rule"></div>
+
+    <!-- How It Works -->
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-6 text-center">How It Works</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="text-center p-4">
+          <div class="w-12 h-12 bg-gold-500 rounded-full flex items-center justify-center mx-auto mb-3">
+            <span class="font-serif font-bold text-navy-900 text-xl">1</span>
+          </div>
+          <h3 class="font-serif font-bold text-navy-900 mb-2">Pick a Bill</h3>
+          <p class="text-sm text-navy-600">Choose a bill below that needs attention</p>
+        </div>
+
+        <div class="text-center p-4">
+          <div class="w-12 h-12 bg-gold-500 rounded-full flex items-center justify-center mx-auto mb-3">
+            <span class="font-serif font-bold text-navy-900 text-xl">2</span>
+          </div>
+          <h3 class="font-serif font-bold text-navy-900 mb-2">Research It</h3>
+          <p class="text-sm text-navy-600">Fact-check it or write its satirical counterpart</p>
+        </div>
+
+        <div class="text-center p-4">
+          <div class="w-12 h-12 bg-gold-500 rounded-full flex items-center justify-center mx-auto mb-3">
+            <span class="font-serif font-bold text-navy-900 text-xl">3</span>
+          </div>
+          <h3 class="font-serif font-bold text-navy-900 mb-2">Submit</h3>
+          <p class="text-sm text-navy-600">Send via GitHub PR or email</p>
+        </div>
+
+        <div class="text-center p-4">
+          <div class="w-12 h-12 bg-gold-500 rounded-full flex items-center justify-center mx-auto mb-3">
+            <span class="font-serif font-bold text-navy-900 text-xl">4</span>
+          </div>
+          <h3 class="font-serif font-bold text-navy-900 mb-2">Get Credit</h3>
+          <p class="text-sm text-navy-600">Your name on the bill page forever</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bills Needing Pairing -->
+    {needsPairing.length > 0 && (
+      <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+        <h2 class="font-serif text-2xl text-navy-900 font-bold mb-2">Needs a Satirical Counterpart</h2>
+        <p class="text-navy-600 mb-6">These real bills don't have a paired "not-bill" yet. Write a sensible alternative!</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {needsPairing.slice(0, 8).map((bill) => (
+            <a
+              href={`/bills/${bill.id}`}
+              class="block p-4 bg-cream-100 border border-gold-300 rounded hover:border-gold-500 hover:shadow transition-all"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="font-mono text-sm text-gold-600">{bill.data.billNumber}</span>
+                  <h3 class="font-serif font-bold text-navy-900 text-sm mt-1 line-clamp-2">{bill.data.title}</h3>
+                </div>
+                <span class="shrink-0 px-2 py-1 bg-red-700 text-cream-100 text-xs font-mono rounded">
+                  Needs Pair
+                </span>
+              </div>
+              <p class="text-xs text-navy-600 mt-2 line-clamp-2">{bill.data.summary}</p>
+            </a>
+          ))}
+        </div>
+
+        {needsPairing.length > 8 && (
+          <p class="text-center text-sm text-navy-500 mt-4">
+            + {needsPairing.length - 8} more bills need satirical counterparts
+          </p>
+        )}
+      </div>
+    )}
+
+    <!-- Bills Needing Detail -->
+    {needsDetail.length > 0 && (
+      <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+        <h2 class="font-serif text-2xl text-navy-900 font-bold mb-2">Needs More Detail</h2>
+        <p class="text-navy-600 mb-6">These bills have short summaries and could use deeper analysis or fact-checking.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {needsDetail.slice(0, 6).map((bill) => (
+            <a
+              href={bill.data.billType === 'real' ? `/bills/${bill.id}` : `/not-bills/${bill.id}`}
+              class="block p-4 bg-cream-100 border border-gold-300 rounded hover:border-gold-500 hover:shadow transition-all"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="font-mono text-sm text-gold-600">{bill.data.billNumber}</span>
+                  <h3 class="font-serif font-bold text-navy-900 text-sm mt-1 line-clamp-2">{bill.data.title}</h3>
+                </div>
+                <span class="shrink-0 px-2 py-1 bg-navy-600 text-cream-100 text-xs font-mono rounded">
+                  Needs Detail
+                </span>
+              </div>
+              <p class="text-xs text-navy-600 mt-2 line-clamp-2">{bill.data.summary}</p>
+            </a>
+          ))}
+        </div>
+
+        {needsDetail.length > 6 && (
+          <p class="text-center text-sm text-navy-500 mt-4">
+            + {needsDetail.length - 6} more bills need more detail
+          </p>
+        )}
+      </div>
+    )}
+
+    <!-- Contribution Guidelines -->
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-6 text-center">Contribution Guidelines</h2>
+
+      <div class="bill-content">
+        <h3>Be Accurate</h3>
+        <p>Link to your sources. Real bill data should come from Congress.gov or other official sources. Satirical bills should be clearly labeled as such.</p>
+
+        <h3>Be Funny But Fair</h3>
+        <p>We're here to highlight absurdity, not defame anyone. Satire should punch up, not down. No personal attacks on individuals that could be mistaken for factual claims.</p>
+
+        <h3>Match the Voice</h3>
+        <p>Dry, editorial, and factual. Bureaucratic language meets deadpan satire. Unnecessary subsections are a bonus.</p>
+      </div>
+
+      <div class="mt-8 p-6 bg-cream-100 border border-gold-300 rounded">
+        <h3 class="font-serif font-bold text-navy-900 mb-4">How to Submit</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-serif font-bold text-navy-800 text-sm mb-2">Via GitHub (Preferred)</h4>
+            <p class="text-sm text-navy-600 mb-2">Fork the repository, add your bill as an MDX file in <code class="bg-cream-200 px-1 rounded text-xs">src/data/bills/</code>, and submit a PR.</p>
+            <a
+              href="https://github.com/absurdityindex/absurdityindex.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 text-sm text-gold-600 hover:text-gold-500 font-semibold"
+            >
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+              View Repository
+            </a>
+          </div>
+          <div>
+            <h4 class="font-serif font-bold text-navy-800 text-sm mb-2">Via Email</h4>
+            <p class="text-sm text-navy-600 mb-2">Send your contribution to our submissions inbox. Include the bill title, summary, and full text.</p>
+            <a
+              href="mailto:adopt@absurdityindex.org"
+              class="inline-flex items-center gap-2 text-sm text-gold-600 hover:text-gold-500 font-semibold"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              adopt@absurdityindex.org
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adopted Bills / Credits -->
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-2 text-center">Hall of Contributors</h2>
+      <p class="text-navy-600 text-center mb-6">Citizens who have adopted bills and helped make sense of the nonsense.</p>
+
+      <div class="text-center py-8 border-2 border-dashed border-gold-300 rounded bg-cream-100">
+        <p class="text-navy-500 font-serif italic">No adoptions yet.</p>
+        <p class="text-sm text-navy-400 mt-2">Be the first to contribute!</p>
+      </div>
+    </div>
+
+    <div class="text-center mt-8">
+      <a href="/" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; Back to Home
+      </a>
+    </div>
+  </div>
+</BaseLayout>

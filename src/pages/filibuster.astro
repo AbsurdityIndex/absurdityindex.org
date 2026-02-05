@@ -1,0 +1,641 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+
+// Historic filibuster records
+const historicFilibusters = [
+  { name: "Strom Thurmond", year: 1957, duration: "24h 18m", topic: "Civil Rights Act" },
+  { name: "Alfonse D'Amato", year: 1986, duration: "23h 30m", topic: "Defense Bill" },
+  { name: "Wayne Morse", year: 1953, duration: "22h 26m", topic: "Tidelands Oil" },
+  { name: "Ted Cruz", year: 2013, duration: "21h 19m", topic: "Obamacare (read Green Eggs and Ham)" },
+  { name: "Robert La Follette Sr.", year: 1908, duration: "18h 23m", topic: "Banking Bill" },
+];
+
+// Fun facts about filibusters
+const funFacts = [
+  "The word 'filibuster' comes from the Dutch 'vrijbuiter' meaning 'pirate' or 'freebooter'",
+  "Senator Strom Thurmond prepared for his 24-hour filibuster by taking steam baths to dehydrate himself",
+  "There's no rule requiring senators to stay on topic during a filibuster",
+  "Ted Cruz read 'Green Eggs and Ham' during his 2013 filibuster",
+  "In 1935, Huey Long recited Shakespeare and read recipes during his filibuster",
+  "The Senate record for longest speech is 24 hours and 18 minutes",
+  "A 'talking filibuster' requires continuous speaking; a 'silent filibuster' just requires 60 votes to end",
+  "The cloture rule requiring 60 votes to end debate was adopted in 1917",
+  "Before 1917, there was no way to end a filibuster except unanimous consent",
+  "Senator Robert Byrd once read from his mother's biscuit recipe during a filibuster",
+];
+
+// Absurd filibuster text snippets to cycle through
+const filibusterSnippets = [
+  // Real-ish legislative droning
+  "And I say to my distinguished colleagues across the aisle, with all due respect to the gentleman from Nebraska...",
+  "Now, Mr. President, let me read into the record this very important letter from a constituent in my home state...",
+  "The founding fathers, in their infinite wisdom, never could have anticipated the bureaucratic overreach we see today...",
+  "I yield to no one in my commitment to fiscal responsibility, and yet here we are, once again...",
+  "If I may direct the attention of this chamber to subsection 4, paragraph 3, clause 2-A of the proposed amendment...",
+  "The American people are watching, Mr. President. They are watching and they are not impressed...",
+  "I have here in my hand a stack of letters from hard-working families in my district...",
+  "Now, some may say that this is obstructionism. I say it is democracy in action...",
+  "Let the record show that I have been standing here for several hours and I am just getting started...",
+  "With the indulgence of my colleagues, I would like to read from the Constitution of these United States...",
+
+  // Recipe readings (Ted Cruz style)
+  "And now, with the chamber's permission, I shall read from my grandmother's famous meatloaf recipe...",
+  "Take two cups of flour, sifted. The importance of sifting cannot be overstated, Mr. President...",
+  "Preheat the oven to 350 degrees, which I believe represents the temperature at which democracy bakes best...",
+  "Green eggs and ham. I do not like them, Sam-I-am. I do not like green eggs and ham...",
+  "Now fold in the chocolate chips gently. Just as we must gently fold bipartisanship into legislation...",
+  "Let the dough rise for two hours. Much like this filibuster, good things take time...",
+  "My mother's buttermilk biscuit recipe has been in our family for generations...",
+  "Season to taste. As I season this chamber with the flavor of extended debate...",
+  "Simmer on low heat for 45 minutes, stirring occasionally. Democracy also requires constant stirring...",
+  "The secret ingredient is love. And also paprika. Mostly paprika...",
+
+  // Phone book style
+  "Adams, John. 555-0123. Adams, John Quincy. 555-0124. Adams, Samuel. Disconnected...",
+  "Arlington Heights Plumbing. Available 24/7. Much like this filibuster...",
+  "Bob's Discount Furniture. 'We've got sofas!' And I've got stamina, Mr. President...",
+  "Directory assistance, how may I help you? By listening to me speak for several more hours...",
+  "Johnson, Johnson, Johnson, Johnson, and Schmidt. Attorneys at Law...",
+  "Pizza Palace, home of the Filibuster Special: toppings that never end...",
+
+  // Fake Wikipedia facts
+  "The platypus is one of only five species of monotremes. This has nothing to do with this bill...",
+  "The Great Wall of China is not actually visible from space. Unlike the length of this speech...",
+  "Honey never spoils. Archaeologists have found 3,000-year-old honey. This filibuster may last as long...",
+  "A group of flamingos is called a 'flamboyance.' A group of senators is called a 'frustration'...",
+  "Octopi have three hearts. I have but one heart, dedicated to this republic...",
+  "The shortest war in history lasted 38 minutes. This filibuster will not be so brief...",
+  "A jiffy is an actual unit of time: 1/100th of a second. I have many jiffies left to speak...",
+  "The average cloud weighs 1.1 million pounds. The weight of democracy is immeasurable...",
+  "Bananas are berries, but strawberries are not. Let that sink in, my colleagues...",
+  "The dot over an 'i' is called a tittle. I have many tittles of wisdom to share...",
+
+  // Generated legislative nonsense
+  "Pursuant to section 508-B of the omnibus reconciliation omnibus, the omnibus shall be omnibused...",
+  "Whereas, and notwithstanding the foregoing, the aforementioned heretofore shall be hereinafter...",
+  "The bipartisan commission on bipartisanship has determined that partisanship is insufficiently bipartisan...",
+  "I move to table the motion to reconsider the motion to recommit the motion...",
+  "The Congressional Budget Office has scored this bill at approximately one very large number of dollars...",
+  "Under the terms of the continuing resolution to continue resolving, we shall continue...",
+  "The interstate commerce clause clearly implies that commerce between states shall be interstate...",
+  "Let me be clear: when I say 'clear,' I mean 'opaque,' and when I say 'opaque,' I mean 'legislative'...",
+  "This amendment to the amendment amending the amended amendment is fundamentally unamendable...",
+  "The Department of Redundancy Department has issued a redundant report on redundancies...",
+];
+
+// Congressional salary data for cost calculator (2024 rate)
+const congressionalSalaryPerYear = 174000;
+const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65/hour
+---
+
+<BaseLayout
+  title="Filibuster Simulator"
+  description="Experience the thrill of saying nothing for hours! Click to filibuster and watch your taxpayer cost accumulate."
+>
+  <div class="bg-parchment min-h-screen">
+
+    <!-- Hero Section -->
+    <section class="bg-navy-900 py-12 sm:py-16">
+      <div class="max-w-5xl mx-auto px-4 text-center">
+        <OfficialSeal size="100" />
+        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-6 mb-2">An Exercise in Legislative Endurance</p>
+        <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl text-gold-400 font-bold">
+          The Filibuster Simulator
+        </h1>
+        <p class="mt-4 text-gold-300/80 font-sans text-lg max-w-2xl mx-auto">
+          Experience the thrill of saying nothing for hours
+        </p>
+        <p class="mt-2 text-navy-400 font-mono text-sm">
+          Warning: May induce existential dread about the legislative process
+        </p>
+      </div>
+    </section>
+
+    <div class="max-w-6xl mx-auto px-4 py-10 sm:py-14">
+
+      <div class="grid lg:grid-cols-3 gap-8">
+
+        <!-- Main Simulator Column -->
+        <div class="lg:col-span-2 space-y-6">
+
+          <!-- Timer Display -->
+          <div class="bg-navy-800 rounded-lg p-8 shadow-xl border border-navy-700">
+            <div class="text-center">
+              <p class="text-gold-500 font-mono text-sm uppercase tracking-widest mb-4">Time Filibustered</p>
+              <div id="timer-display" class="font-mono text-5xl sm:text-6xl lg:text-7xl text-gold-400 tracking-wider">
+                00:00:00
+              </div>
+              <p class="text-navy-400 font-mono text-xs mt-2">Hours : Minutes : Seconds</p>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="grid grid-cols-2 gap-4 mt-8">
+              <div class="bg-navy-900 rounded-lg p-4 text-center">
+                <p class="text-gold-500 font-mono text-xs uppercase tracking-wide mb-1">Words Spoken</p>
+                <p id="words-counter" class="text-gold-400 font-mono text-2xl sm:text-3xl">0</p>
+              </div>
+              <div class="bg-navy-900 rounded-lg p-4 text-center">
+                <p class="text-gold-500 font-mono text-xs uppercase tracking-wide mb-1">Taxpayer Cost</p>
+                <p id="cost-counter" class="text-gold-400 font-mono text-2xl sm:text-3xl">$0.00</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="bg-white rounded-lg p-6 shadow-lg border border-navy-200">
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
+              <button
+                id="start-btn"
+                class="w-full sm:w-auto px-8 py-4 bg-gold-500 text-navy-900 font-serif text-lg font-bold rounded-lg hover:bg-gold-400 transition-colors shadow-md flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                </svg>
+                <span id="start-btn-text">Start Filibuster</span>
+              </button>
+              <button
+                id="reset-btn"
+                class="w-full sm:w-auto px-6 py-4 bg-navy-700 text-cream-100 font-serif text-lg rounded-lg hover:bg-navy-600 transition-colors font-bold flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                </svg>
+                Reset
+              </button>
+            </div>
+
+            <!-- Speed Controls -->
+            <div class="mt-6">
+              <p class="text-navy-600 font-mono text-xs uppercase tracking-wide text-center mb-3">Speaking Speed</p>
+              <div class="flex flex-wrap justify-center gap-2">
+                <button
+                  data-speed="slow"
+                  class="speed-btn px-4 py-2 rounded-lg font-mono text-sm border-2 border-gold-400 text-gold-600 hover:bg-gold-100 transition-colors"
+                >
+                  Slow & Steady
+                </button>
+                <button
+                  data-speed="medium"
+                  class="speed-btn px-4 py-2 rounded-lg font-mono text-sm border-2 border-gold-500 bg-gold-500 text-navy-900 font-bold"
+                >
+                  Moderate Drone
+                </button>
+                <button
+                  data-speed="fast"
+                  class="speed-btn px-4 py-2 rounded-lg font-mono text-sm border-2 border-gold-400 text-gold-600 hover:bg-gold-100 transition-colors"
+                >
+                  Speed Reader
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filibuster Text Display -->
+          <div class="bg-cream-100 rounded-lg border-2 border-navy-800 shadow-lg overflow-hidden">
+            <div class="bg-navy-800 px-4 py-2 flex items-center justify-between">
+              <span class="text-gold-400 font-mono text-sm">SENATE FLOOR TRANSCRIPT</span>
+              <span id="transcript-status" class="text-navy-400 font-mono text-xs">AWAITING SPEAKER</span>
+            </div>
+            <div
+              id="text-display"
+              class="h-64 sm:h-80 overflow-hidden p-6 font-serif text-lg text-navy-800 leading-relaxed relative"
+            >
+              <div id="text-content" class="transition-opacity duration-300">
+                <p class="text-navy-500 italic">Press "Start Filibuster" to begin the proceedings...</p>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-cream-100 to-transparent pointer-events-none"></div>
+            </div>
+          </div>
+
+          <!-- Share Button -->
+          <div class="text-center">
+            <button
+              id="share-btn"
+              class="px-6 py-3 bg-navy-800 text-gold-400 font-serif font-bold rounded-lg hover:bg-navy-700 transition-colors inline-flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+              </svg>
+              Share Your Filibuster
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+
+          <!-- Your Record -->
+          <div class="bg-white rounded-lg border border-navy-200 p-6 shadow-md">
+            <h2 class="font-serif text-xl text-navy-900 font-bold mb-4 flex items-center gap-2">
+              <span class="text-2xl">&#127942;</span>
+              Your Personal Best
+            </h2>
+            <div class="bg-cream-200 rounded-lg p-4 text-center">
+              <p id="personal-best" class="font-mono text-2xl text-navy-800">00:00:00</p>
+              <p class="text-navy-500 text-sm mt-1">Stored locally, never forgotten</p>
+            </div>
+          </div>
+
+          <!-- Historic Leaderboard -->
+          <div class="bg-navy-800 rounded-lg p-6 border border-navy-700 shadow-lg">
+            <h2 class="font-serif text-xl text-gold-400 font-bold mb-4 flex items-center gap-2">
+              <span class="text-2xl">&#128220;</span>
+              Historic Filibusters
+            </h2>
+            <div class="space-y-3">
+              {historicFilibusters.map((record, index) => (
+                <div class="flex items-center gap-3 p-3 bg-navy-900 rounded-lg">
+                  <span class="text-gold-500 font-mono font-bold text-lg w-6">{index + 1}</span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-cream-100 font-sans font-semibold text-sm truncate">{record.name}</p>
+                    <p class="text-navy-400 font-mono text-xs">{record.year}</p>
+                  </div>
+                  <span class="text-gold-400 font-mono text-sm font-bold shrink-0">{record.duration}</span>
+                </div>
+              ))}
+              <!-- User's current session -->
+              <div class="flex items-center gap-3 p-3 bg-gold-500/20 border border-gold-500 rounded-lg">
+                <span class="text-gold-500 font-mono font-bold text-lg w-6">?</span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-gold-400 font-sans font-semibold text-sm">Your Session</p>
+                  <p class="text-gold-500/60 font-mono text-xs">Right now</p>
+                </div>
+                <span id="leaderboard-time" class="text-gold-400 font-mono text-sm font-bold shrink-0">00:00:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fun Facts -->
+          <div class="bg-cream-200 rounded-lg border border-gold-300 p-6">
+            <h2 class="font-serif text-xl text-navy-900 font-bold mb-4 flex items-center gap-2">
+              <span class="text-2xl">&#128161;</span>
+              Filibuster Facts
+            </h2>
+            <div id="fun-fact" class="font-sans text-navy-700 text-sm leading-relaxed">
+              <p class="italic">"{funFacts[0]}"</p>
+            </div>
+            <button
+              id="new-fact-btn"
+              class="mt-4 text-gold-600 hover:text-gold-700 font-mono text-xs uppercase tracking-wide flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+              </svg>
+              Another fact
+            </button>
+          </div>
+
+          <!-- Cost Breakdown -->
+          <div class="bg-white rounded-lg border border-navy-200 p-6 shadow-md">
+            <h2 class="font-serif text-lg text-navy-900 font-bold mb-3">Cost Breakdown</h2>
+            <div class="space-y-2 font-mono text-sm">
+              <div class="flex justify-between">
+                <span class="text-navy-600">Congressional Salary:</span>
+                <span class="text-navy-800">$174,000/yr</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-navy-600">Hourly Rate:</span>
+                <span class="text-navy-800">~$83.65/hr</span>
+              </div>
+              <div class="flex justify-between border-t border-navy-200 pt-2 mt-2">
+                <span class="text-navy-600">Your Session Cost:</span>
+                <span id="sidebar-cost" class="text-red-600 font-bold">$0.00</span>
+              </div>
+            </div>
+            <p class="text-navy-500 text-xs mt-3 italic">
+              *Does not include staff salaries, building costs, opportunity costs, or existential costs to democracy
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <Divider withSeal={true} />
+
+      <!-- Educational Section -->
+      <section class="bg-white rounded-lg border border-navy-200 p-6 sm:p-8 shadow-md">
+        <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4">What is a Filibuster?</h2>
+        <div class="prose prose-navy max-w-none font-sans text-navy-700">
+          <p>
+            A filibuster is a parliamentary procedure where debate is extended to delay or prevent a vote on a proposal.
+            In the U.S. Senate, a filibuster can only be ended by invoking "cloture," which requires 60 votes.
+          </p>
+          <p class="mt-4">
+            Historically, senators conducting filibusters had to speak continuously. Senator Strom Thurmond holds
+            the record at 24 hours and 18 minutes. Modern filibusters rarely require continuous speaking, leading
+            to what critics call "silent filibusters" that can block legislation without any public effort.
+          </p>
+        </div>
+      </section>
+
+      <!-- Disclaimer -->
+      <div class="mt-8 bg-cream-200 border border-gold-300 rounded p-4 text-xs text-navy-600 leading-relaxed text-center">
+        <p>
+          <strong>Satire Notice:</strong> This simulator is for entertainment purposes only. No actual legislation
+          was harmed in the making of this page. The cost calculations are based on real congressional salaries
+          but do not reflect the true cost of legislative gridlock, which is incalculable.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ filibusterSnippets, funFacts, congressionalSalaryPerHour }}>
+    // State
+    let isRunning = false;
+    let elapsedSeconds = 0;
+    let wordsSpoken = 0;
+    let timerInterval = null;
+    let textInterval = null;
+    let currentSnippetIndex = 0;
+    let currentCharIndex = 0;
+    let currentSpeed = 'medium';
+    let personalBest = 0;
+
+    // Speed settings (characters per tick)
+    const speeds = {
+      slow: { chars: 1, interval: 80 },
+      medium: { chars: 2, interval: 50 },
+      fast: { chars: 4, interval: 30 }
+    };
+
+    // DOM Elements
+    const timerDisplay = document.getElementById('timer-display');
+    const wordsCounter = document.getElementById('words-counter');
+    const costCounter = document.getElementById('cost-counter');
+    const sidebarCost = document.getElementById('sidebar-cost');
+    const startBtn = document.getElementById('start-btn');
+    const startBtnText = document.getElementById('start-btn-text');
+    const resetBtn = document.getElementById('reset-btn');
+    const textContent = document.getElementById('text-content');
+    const transcriptStatus = document.getElementById('transcript-status');
+    const leaderboardTime = document.getElementById('leaderboard-time');
+    const personalBestEl = document.getElementById('personal-best');
+    const shareBtn = document.getElementById('share-btn');
+    const funFactEl = document.getElementById('fun-fact');
+    const newFactBtn = document.getElementById('new-fact-btn');
+    const speedBtns = document.querySelectorAll('.speed-btn');
+
+    // Format time as HH:MM:SS
+    function formatTime(seconds) {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return [hrs, mins, secs].map(n => n.toString().padStart(2, '0')).join(':');
+    }
+
+    // Format currency
+    function formatCost(amount) {
+      return '$' + amount.toFixed(2);
+    }
+
+    // Calculate cost based on elapsed time
+    function calculateCost(seconds) {
+      const hours = seconds / 3600;
+      return hours * congressionalSalaryPerHour;
+    }
+
+    // Update all displays
+    function updateDisplays() {
+      const timeStr = formatTime(elapsedSeconds);
+      timerDisplay.textContent = timeStr;
+      leaderboardTime.textContent = timeStr;
+      wordsCounter.textContent = wordsSpoken.toLocaleString();
+
+      const cost = calculateCost(elapsedSeconds);
+      const costStr = formatCost(cost);
+      costCounter.textContent = costStr;
+      sidebarCost.textContent = costStr;
+    }
+
+    // Load personal best from localStorage
+    function loadPersonalBest() {
+      const stored = localStorage.getItem('filibuster-best');
+      if (stored) {
+        personalBest = parseInt(stored, 10);
+        personalBestEl.textContent = formatTime(personalBest);
+      }
+    }
+
+    // Save personal best to localStorage
+    function savePersonalBest() {
+      if (elapsedSeconds > personalBest) {
+        personalBest = elapsedSeconds;
+        localStorage.setItem('filibuster-best', personalBest.toString());
+        personalBestEl.textContent = formatTime(personalBest);
+      }
+    }
+
+    // Shuffle array
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Shuffled snippets for variety
+    let shuffledSnippets = shuffleArray(filibusterSnippets);
+
+    // Get next snippet
+    function getNextSnippet() {
+      const snippet = shuffledSnippets[currentSnippetIndex];
+      currentSnippetIndex = (currentSnippetIndex + 1) % shuffledSnippets.length;
+      if (currentSnippetIndex === 0) {
+        shuffledSnippets = shuffleArray(filibusterSnippets);
+      }
+      return snippet;
+    }
+
+    // Current displayed text and snippet being typed
+    let displayedText = '';
+    let currentSnippet = '';
+
+    // Type out text character by character
+    function typeText() {
+      if (!isRunning) return;
+
+      const speed = speeds[currentSpeed];
+
+      // If we've finished the current snippet, get a new one
+      if (currentCharIndex >= currentSnippet.length) {
+        displayedText += currentSnippet + ' ';
+        currentSnippet = getNextSnippet();
+        currentCharIndex = 0;
+
+        // Count words in completed snippet
+        wordsSpoken += currentSnippet.split(/\s+/).filter(w => w.length > 0).length;
+
+        // Trim displayed text if it gets too long
+        if (displayedText.length > 2000) {
+          displayedText = displayedText.slice(-1500);
+        }
+      }
+
+      // Add characters
+      const charsToAdd = Math.min(speed.chars, currentSnippet.length - currentCharIndex);
+      currentCharIndex += charsToAdd;
+
+      // Update display with the text typed so far
+      const visibleText = displayedText + currentSnippet.slice(0, currentCharIndex);
+      textContent.innerHTML = `<p>${visibleText}<span class="animate-pulse">|</span></p>`;
+
+      // Scroll to bottom
+      const container = textContent.parentElement;
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Start the filibuster
+    function startFilibuster() {
+      isRunning = true;
+      startBtnText.textContent = 'Pause';
+      transcriptStatus.textContent = 'RECORDING';
+      transcriptStatus.classList.add('text-red-500');
+
+      // Initialize first snippet if needed
+      if (!currentSnippet) {
+        currentSnippet = getNextSnippet();
+        currentCharIndex = 0;
+      }
+
+      // Start timer
+      timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        updateDisplays();
+        savePersonalBest();
+      }, 1000);
+
+      // Start text animation
+      const speed = speeds[currentSpeed];
+      textInterval = setInterval(typeText, speed.interval);
+    }
+
+    // Pause the filibuster
+    function pauseFilibuster() {
+      isRunning = false;
+      startBtnText.textContent = 'Resume';
+      transcriptStatus.textContent = 'PAUSED';
+      transcriptStatus.classList.remove('text-red-500');
+
+      clearInterval(timerInterval);
+      clearInterval(textInterval);
+    }
+
+    // Reset the filibuster
+    function resetFilibuster() {
+      pauseFilibuster();
+      elapsedSeconds = 0;
+      wordsSpoken = 0;
+      currentSnippetIndex = 0;
+      currentCharIndex = 0;
+      displayedText = '';
+      currentSnippet = '';
+      shuffledSnippets = shuffleArray(filibusterSnippets);
+
+      startBtnText.textContent = 'Start Filibuster';
+      transcriptStatus.textContent = 'AWAITING SPEAKER';
+      textContent.innerHTML = '<p class="text-navy-500 italic">Press "Start Filibuster" to begin the proceedings...</p>';
+
+      updateDisplays();
+    }
+
+    // Set speed
+    function setSpeed(speed) {
+      currentSpeed = speed;
+
+      // Update button styles
+      speedBtns.forEach(btn => {
+        if (btn.dataset.speed === speed) {
+          btn.classList.remove('text-gold-600', 'hover:bg-gold-100');
+          btn.classList.add('bg-gold-500', 'text-navy-900', 'font-bold');
+        } else {
+          btn.classList.add('text-gold-600', 'hover:bg-gold-100');
+          btn.classList.remove('bg-gold-500', 'text-navy-900', 'font-bold');
+        }
+      });
+
+      // If running, restart text interval with new speed
+      if (isRunning) {
+        clearInterval(textInterval);
+        const speedSettings = speeds[currentSpeed];
+        textInterval = setInterval(typeText, speedSettings.interval);
+      }
+    }
+
+    // Show random fun fact
+    let currentFactIndex = 0;
+    function showRandomFact() {
+      currentFactIndex = (currentFactIndex + 1) % funFacts.length;
+      funFactEl.innerHTML = `<p class="italic">"${funFacts[currentFactIndex]}"</p>`;
+    }
+
+    // Share functionality
+    function shareFilibuster() {
+      const timeStr = formatTime(elapsedSeconds);
+      const text = `I filibustered for ${timeStr} on the Absurdity Index Filibuster Simulator! That cost taxpayers ${formatCost(calculateCost(elapsedSeconds))}. How long can you go?`;
+      const url = window.location.href;
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'My Filibuster Record',
+          text: text,
+          url: url
+        }).catch(() => {
+          // Fallback to clipboard
+          copyToClipboard(text + ' ' + url);
+        });
+      } else {
+        copyToClipboard(text + ' ' + url);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = shareBtn.innerHTML;
+        shareBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg> Copied!';
+        setTimeout(() => {
+          shareBtn.innerHTML = originalText;
+        }, 2000);
+      });
+    }
+
+    // Event Listeners
+    startBtn.addEventListener('click', () => {
+      if (isRunning) {
+        pauseFilibuster();
+      } else {
+        startFilibuster();
+      }
+    });
+
+    resetBtn.addEventListener('click', resetFilibuster);
+
+    speedBtns.forEach(btn => {
+      btn.addEventListener('click', () => setSpeed(btn.dataset.speed));
+    });
+
+    newFactBtn.addEventListener('click', showRandomFact);
+    shareBtn.addEventListener('click', shareFilibuster);
+
+    // Initialize
+    loadPersonalBest();
+    updateDisplays();
+  </script>
+
+  <style>
+    /* Cursor animation */
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    #text-content span.animate-pulse {
+      animation: blink 0.8s infinite;
+    }
+  </style>
+</BaseLayout>

@@ -1,11 +1,15 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BillHeader from '../../components/bills/BillHeader.astro';
+import BillTimeline from '../../components/bills/BillTimeline.astro';
 import BillMeta from '../../components/bills/BillMeta.astro';
+import CostEstimate from '../../components/bills/CostEstimate.astro';
+import VoteBreakdown from '../../components/bills/VoteBreakdown.astro';
 import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
 import PairedBillCallout from '../../components/bills/PairedBillCallout.astro';
 import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
 import Disclaimer from '../../components/ui/Disclaimer.astro';
+import ShareButtons from '../../components/ui/ShareButtons.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -21,9 +25,39 @@ export async function getStaticPaths() {
 const { bill } = Astro.props;
 const { Content } = await render(bill);
 const d = bill.data;
+
+// Estimate reading time content from summary + excerpt + base estimate for bill content
+// Real bills tend to have more detailed analysis, so we add padding
+const readingTimeContent = [
+  d.summary || '',
+  d.excerpt || '',
+  ' '.repeat(400), // Base padding for typical bill content (~2 min baseline)
+].join(' ');
+
+const billSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": d.title,
+  "description": d.summary,
+  "datePublished": d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
+  "author": {
+    "@type": "Organization",
+    "name": "Absurdity Index",
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Absurdity Index",
+    "url": "https://absurdityindex.org",
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": `https://absurdityindex.org/bills/${bill.id}`,
+  },
+};
 ---
 
-<BaseLayout title={`${d.billNumber} — ${d.title}`} description={d.summary}>
+<BaseLayout title={`${d.billNumber} — ${d.title}`} description={d.summary} ogType="article" article={{ publishedTime: d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced), section: d.category, tags: d.tags }}>
+  <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
   <div class="max-w-4xl mx-auto px-4 py-12">
     <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 relative overflow-hidden">
       <CommitteeStamp text={d.status} />
@@ -33,7 +67,10 @@ const d = bill.data;
         billNumber={d.billNumber}
         billType={d.billType}
         status={d.status}
+        readingTimeContent={readingTimeContent}
       />
+
+      <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} />
 
       {d.absurdityIndex && (
         <div class="max-w-xs mx-auto mb-8">
@@ -46,6 +83,12 @@ const d = bill.data;
           <div class="bill-content">
             <Content />
           </div>
+
+          <ShareButtons
+            title={`${d.billNumber} — ${d.title}`}
+            summary={d.summary}
+            url={`https://absurdityindex.org/bills/${bill.id}/`}
+          />
 
           <Disclaimer context="bill-detail" />
 
@@ -67,6 +110,8 @@ const d = bill.data;
             congressNumber={d.congressNumber}
             excerpt={d.excerpt}
           />
+          <CostEstimate status={d.status} billNumber={d.billNumber} />
+          <VoteBreakdown votes={d.votes} />
         </aside>
       </div>
     </div>

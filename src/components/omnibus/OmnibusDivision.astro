@@ -1,0 +1,151 @@
+---
+interface Props {
+  number: number;
+  title: string;
+  shortTitle?: string;
+  spending: number;
+  description?: string;
+  content?: string;
+  isExpanded?: boolean;
+}
+
+const { number, title, shortTitle, spending, description, content, isExpanded = false } = Astro.props;
+
+const divisionLetter = String.fromCharCode(64 + number);
+const slug = `division-${number}`;
+const percent = spending > 0 ? spending : 0;
+---
+
+<section
+  id={slug}
+  class="bg-parchment border border-gold-300 rounded-lg overflow-hidden scroll-mt-24 division-section"
+  data-division={number}
+>
+  <button
+    type="button"
+    class="w-full px-6 py-4 flex items-center justify-between bg-cream-200 hover:bg-cream-300 transition-colors cursor-pointer text-left division-toggle"
+    aria-expanded={isExpanded}
+    aria-controls={`${slug}-content`}
+  >
+    <div class="flex items-center gap-4 min-w-0">
+      <span class="font-mono text-sm font-bold text-gold-600 bg-navy-800 px-3 py-1 rounded shrink-0">
+        DIVISION {divisionLetter}
+      </span>
+      <div class="min-w-0">
+        <h3 class="font-serif text-lg font-bold text-navy-900 truncate">
+          {shortTitle || title}
+        </h3>
+        {shortTitle && shortTitle !== title && (
+          <p class="text-sm text-navy-600 truncate">{title}</p>
+        )}
+      </div>
+    </div>
+    <div class="flex items-center gap-4 shrink-0">
+      <span class="font-mono text-xl font-bold text-navy-900">
+        ${spending}B
+      </span>
+      <svg
+        class="w-6 h-6 text-navy-600 transition-transform division-chevron"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </div>
+  </button>
+
+  <div
+    id={`${slug}-content`}
+    class="division-content overflow-hidden transition-all duration-300"
+    style={isExpanded ? '' : 'max-height: 0; opacity: 0;'}
+  >
+    <div class="px-6 py-4 border-t border-gold-300">
+      {description && (
+        <div class="mb-4">
+          <p class="font-serif text-navy-700 leading-relaxed">{description}</p>
+        </div>
+      )}
+
+      <!-- Spending visualization bar -->
+      <div class="mb-4">
+        <div class="flex items-center justify-between text-xs text-navy-600 mb-1">
+          <span>Portion of Total Package</span>
+          <span class="font-mono">{percent.toFixed(1)}%</span>
+        </div>
+        <div class="h-2 bg-cream-300 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-gradient-to-r from-gold-500 to-gold-600 transition-all duration-500"
+            style={`width: ${Math.min(percent * 2, 100)}%`}
+          ></div>
+        </div>
+      </div>
+
+      {content && (
+        <div class="prose prose-sm max-w-none text-navy-700">
+          <Fragment set:html={content} />
+        </div>
+      )}
+
+      <slot />
+
+      <!-- Quick stats -->
+      <div class="mt-4 pt-4 border-t border-gold-200 flex flex-wrap gap-4 text-xs text-navy-600">
+        <span class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          ${spending}B appropriated
+        </span>
+        <span class="flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          Division {divisionLetter} of package
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Toggle division content
+  document.querySelectorAll('.division-toggle').forEach(button => {
+    button.addEventListener('click', () => {
+      const section = button.closest('.division-section');
+      const content = section?.querySelector('.division-content') as HTMLElement;
+      const chevron = section?.querySelector('.division-chevron');
+      const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+      if (content) {
+        if (isExpanded) {
+          content.style.maxHeight = '0';
+          content.style.opacity = '0';
+        } else {
+          content.style.maxHeight = content.scrollHeight + 'px';
+          content.style.opacity = '1';
+        }
+      }
+
+      button.setAttribute('aria-expanded', String(!isExpanded));
+      chevron?.classList.toggle('rotate-180');
+    });
+  });
+
+  // Expand division if navigated to via anchor
+  if (window.location.hash.startsWith('#division-')) {
+    const target = document.querySelector(window.location.hash);
+    if (target) {
+      const button = target.querySelector('.division-toggle');
+      if (button && button.getAttribute('aria-expanded') === 'false') {
+        (button as HTMLElement).click();
+      }
+    }
+  }
+</script>
+
+<style>
+  .division-chevron.rotate-180 {
+    transform: rotate(180deg);
+  }
+</style>

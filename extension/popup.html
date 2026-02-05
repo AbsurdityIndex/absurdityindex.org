@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      width: 280px;
+      padding: 16px;
+      font-family: Georgia, serif;
+      background: #0A1628;
+      color: #F5F0E8;
+      margin: 0;
+    }
+    h1 {
+      font-size: 16px;
+      color: #C5A572;
+      margin: 0 0 8px 0;
+    }
+    p {
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0 0 12px 0;
+    }
+    a {
+      color: #C5A572;
+    }
+    .stats {
+      background: #112240;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+    }
+    .stat-value {
+      font-family: monospace;
+      color: #C5A572;
+    }
+  </style>
+</head>
+<body>
+  <h1>Absurdity Index</h1>
+  <p>Navigate to any bill on <a href="https://www.congress.gov" target="_blank">Congress.gov</a> to see its Absurdity Score.</p>
+  <div class="stats" id="stats">Loading stats...</div>
+  <script src="popup.js"></script>
+</body>
+</html>

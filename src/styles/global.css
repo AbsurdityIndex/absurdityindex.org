@@ -166,3 +166,232 @@ body {
 .pulse-subtle {
   animation: subtle-pulse 3s ease-in-out infinite;
 }
+
+/* Dark mode overrides - comprehensive theme swap */
+html.dark {
+  /* Background colors - invert light to dark */
+  --color-cream-100: #0A1220;
+  --color-cream-200: #0D1626;
+  --color-cream-300: #121C30;
+  --color-parchment: #0F1A2E;
+
+  /* Text colors - navy becomes light for readability */
+  --color-navy-900: #F5F0E8;
+  --color-navy-800: #E8E4DC;
+  --color-navy-700: #D4D0C8;
+  --color-navy-600: #B8B4AC;
+  --color-navy-500: #9A968E;
+  --color-navy-400: #7C7870;
+
+  /* Gold stays warm but slightly brighter for dark bg */
+  --color-gold-600: #D4A04A;
+  --color-gold-500: #E8B85A;
+  --color-gold-400: #F0C86A;
+  --color-gold-300: #F8D87A;
+  --color-gold-200: #FFF0C0;
+  --color-gold-100: #FFF8E8;
+
+  /* Keep red/green semantic colors readable */
+  --color-red-700: #EF4444;
+  --color-red-600: #F87171;
+  --color-green-700: #22C55E;
+  --color-green-600: #4ADE80;
+}
+
+/* Dark mode class-based overrides for common patterns */
+html.dark body {
+  background-color: #0A1220;
+  color: #F5F0E8;
+}
+
+html.dark .bg-parchment {
+  background-color: #0F1A2E;
+}
+
+html.dark .bg-cream-100 {
+  background-color: #0A1220;
+}
+
+html.dark .bg-cream-200 {
+  background-color: #0D1626;
+}
+
+/* Dark mode for cards and containers */
+html.dark .bg-white {
+  background-color: #0F1A2E;
+}
+
+/* Dark mode borders */
+html.dark .border-gold-300 {
+  border-color: #C5A572;
+}
+
+html.dark .border-gold-200 {
+  border-color: #A88B4A;
+}
+
+/* Dark mode for bill content */
+html.dark .bill-content {
+  color: #E8E4DC;
+}
+
+html.dark .bill-content h2 {
+  border-bottom-color: #C5A572;
+}
+
+html.dark .bill-content blockquote {
+  border-left-color: #C5A572;
+  color: #B8B4AC;
+}
+
+/* Dark mode for inputs and forms */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #121C30;
+  border-color: #2D3748;
+  color: #F5F0E8;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #6B7280;
+}
+
+/* Dark mode for code blocks */
+html.dark code {
+  background-color: #1A2744;
+  color: #E8B85A;
+}
+
+/* Dark mode for tables */
+html.dark table {
+  border-color: #2D3748;
+}
+
+html.dark th {
+  background-color: #121C30;
+  color: #F5F0E8;
+}
+
+html.dark td {
+  border-color: #2D3748;
+}
+
+html.dark tr:hover {
+  background-color: #0F1A2E;
+}
+
+/* Print-friendly styles */
+@media print {
+  @page {
+    margin: 2cm;
+    @bottom-center {
+      content: "Absurdity Index — absurdityindex.org";
+      font-family: 'Libre Caslon Text', Georgia, serif;
+      font-size: 9pt;
+      color: #666;
+    }
+  }
+
+  /* Hide non-essential elements */
+  header,
+  footer,
+  nav,
+  .construction-banner,
+  .share-buttons,
+  [data-mobile-menu],
+  .mobile-menu,
+  .mobile-nav {
+    display: none !important;
+  }
+
+  /* Base print typography */
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: 'Libre Caslon Text', Georgia, 'Times New Roman', serif !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Show URLs after external links */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    font-weight: normal;
+    color: #444;
+  }
+
+  /* Full-width bill content */
+  .bill-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Remove decorative styles from cards */
+  .bg-parchment,
+  .bg-cream-100,
+  .bg-cream-200,
+  .bg-navy-800,
+  .bg-navy-900,
+  [class*="bg-"] {
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Remove box shadows and rounded corners globally */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  [class*="rounded"] {
+    border-radius: 0 !important;
+  }
+
+  /* Simplify the absurdity meter for print */
+  .absurdity-meter {
+    border: 1px solid #333 !important;
+    background: white !important;
+  }
+
+  /* Ensure text is readable */
+  [class*="text-navy"],
+  [class*="text-gold"],
+  [class*="text-cream"] {
+    color: black !important;
+  }
+
+  /* Gold rule simplified for print */
+  .gold-rule {
+    background: #333 !important;
+    height: 1px !important;
+  }
+
+  /* Stamp overlay lighter for print */
+  .stamp-overlay {
+    opacity: 0.1 !important;
+    color: #666 !important;
+  }
+
+  /* Avoid page breaks inside key content */
+  .bill-content h2,
+  .bill-content h3 {
+    page-break-after: avoid;
+  }
+
+  .bill-content p,
+  .bill-content blockquote {
+    orphans: 3;
+    widows: 3;
+  }
+
+  img, svg {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+}

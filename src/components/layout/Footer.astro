@@ -6,9 +6,25 @@ const currentYear = new Date().getFullYear();
 const quickLinks = [
   { href: '/bills', label: 'Real Bills' },
   { href: '/not-bills', label: 'Not Bills' },
-  { href: '/under-consideration', label: 'Under Consideration' },
+  { href: '/today', label: 'Today in Congress' },
+  { href: '/trends', label: 'Trends' },
+  { href: '/how-we-score', label: 'How We Score' },
   { href: '/about', label: 'About' },
-  { href: '/submit', label: 'Submit a Bill' },
+];
+
+const toolLinks = [
+  { href: '/swipe', label: 'Would You Pass It?' },
+  { href: '/bracket', label: 'Absurdity Madness' },
+  { href: '/filibuster', label: 'Filibuster Simulator' },
+  { href: '/marathon', label: 'Reading Marathon' },
+  { href: '/pork', label: 'Pork Leaderboard' },
+  { href: '/asmr', label: 'Legislation ASMR' },
+  { href: '/quiz', label: 'Vocab Quiz' },
+  { href: '/bingo', label: 'Bingo Cards' },
+  { href: '/generator', label: 'Bill Generator' },
+  { href: '/cost-calculator', label: 'Cost Calculator' },
+  { href: '/diff', label: 'Diff Tool' },
+  { href: '/embed', label: 'API & Embed' },
 ];
 ---
 
@@ -16,7 +32,7 @@ const quickLinks = [
   <hr class="gold-rule !mb-0" />
 
   <div class="max-w-7xl mx-auto px-4 py-10 sm:py-14">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
       <!-- Column 1: Brand -->
       <div>
         <p class="font-serif font-bold text-xl text-gold-400">ABSURDITY INDEX</p>
@@ -44,7 +60,26 @@ const quickLinks = [
         </ul>
       </div>
 
-      <!-- Column 3: Newsletter -->
+      <!-- Column 3: Tools & Games -->
+      <div>
+        <h3 class="font-sans text-xs uppercase tracking-widest text-gold-500 mb-3">
+          Tools & Games
+        </h3>
+        <ul class="space-y-2">
+          {toolLinks.slice(0, 8).map(({ href, label }) => (
+            <li>
+              <a
+                href={href}
+                class="text-sm text-gold-300 hover:text-gold-200 transition-colors"
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Column 4: Newsletter -->
       <div>
         <h3 class="font-sans text-xs uppercase tracking-widest text-gold-500 mb-3">
           Congressional Record
@@ -52,7 +87,7 @@ const quickLinks = [
         <p class="text-sm text-gold-300/80 mb-3">
           Get the latest bills delivered to your inbox. Unsubscribe any time &mdash; unlike real legislation.
         </p>
-        <form class="flex gap-2">
+        <form id="footer-newsletter-form" class="flex gap-2">
           <label for="footer-email" class="sr-only">Email address</label>
           <input
             id="footer-email"
@@ -70,6 +105,58 @@ const quickLinks = [
       </div>
     </div>
   </div>
+
+  <!-- Footer Newsletter Modal -->
+  <div
+    id="footer-newsletter-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden"
+  >
+    <div id="footer-newsletter-modal-backdrop" class="absolute inset-0 bg-navy-900/60"></div>
+    <div class="relative bg-parchment border-2 border-gold-400 rounded-lg shadow-xl max-w-sm w-full p-8 text-center">
+      <p class="text-4xl mb-4">📭</p>
+      <h3 class="font-serif text-2xl font-bold text-navy-900 mb-3">Nice Try.</h3>
+      <p class="font-sans text-sm text-navy-700 leading-relaxed mb-6">
+        Our newsletter is in committee. The committee meets every other leap year during a full moon.
+      </p>
+      <button
+        id="footer-newsletter-modal-close"
+        class="font-sans font-semibold text-sm bg-gold-500 text-navy-900 px-6 py-2.5 rounded hover:bg-gold-400 transition-colors"
+      >
+        Understood
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const footerForm = document.getElementById('footer-newsletter-form');
+    const footerModal = document.getElementById('footer-newsletter-modal');
+    const footerBackdrop = document.getElementById('footer-newsletter-modal-backdrop');
+    const footerCloseBtn = document.getElementById('footer-newsletter-modal-close');
+
+    function openFooterModal() {
+      footerModal?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeFooterModal() {
+      footerModal?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    footerForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      openFooterModal();
+    });
+
+    footerBackdrop?.addEventListener('click', closeFooterModal);
+    footerCloseBtn?.addEventListener('click', closeFooterModal);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !footerModal?.classList.contains('hidden')) {
+        closeFooterModal();
+      }
+    });
+  </script>
 
   <!-- Disclaimer -->
   <Disclaimer context="footer" />

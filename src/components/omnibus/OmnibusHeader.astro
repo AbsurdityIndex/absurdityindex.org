@@ -1,0 +1,110 @@
+---
+interface Props {
+  title: string;
+  billNumber: string;
+  totalSpending: number;
+  pageCount: number;
+  divisionCount: number;
+  dateIntroduced: Date;
+  status: string;
+}
+
+const { title, billNumber, totalSpending, pageCount, divisionCount, dateIntroduced, status } = Astro.props;
+
+// Calculate some fun stats
+const wordsEstimate = pageCount * 250; // ~250 words per page
+const readingHours = Math.round(wordsEstimate / 200 / 60); // 200 words per minute
+const stackHeight = (pageCount * 0.004 * 12).toFixed(1); // ~0.004 inches per page, convert to inches
+const dollarPerPage = (totalSpending * 1000000000 / pageCount).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+const formattedDate = dateIntroduced.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<header class="text-center mb-8">
+  <!-- Massive Bill Alert Banner -->
+  <div class="inline-flex items-center gap-2 px-4 py-2 bg-red-700 text-cream-100 rounded-full text-sm font-mono mb-4 animate-pulse">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+    </svg>
+    <span>OMNIBUS LEGISLATION</span>
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+    </svg>
+  </div>
+
+  <div class="mb-4">
+    <span class="font-mono text-lg text-gold-600 tracking-wide">{billNumber}</span>
+  </div>
+
+  <h1 class="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-navy-900 mb-4 leading-tight">
+    {title}
+  </h1>
+
+  <p class="text-navy-600 font-serif italic mb-6">
+    Introduced {formattedDate} • {status}
+  </p>
+
+  <!-- Key Stats Grid -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-8">
+    <div class="bg-cream-200 rounded-lg p-4 border border-gold-300">
+      <div class="font-mono text-2xl md:text-3xl font-bold text-navy-900">
+        ${totalSpending}B
+      </div>
+      <div class="text-xs text-navy-600 uppercase tracking-wide">Total Spending</div>
+    </div>
+    <div class="bg-cream-200 rounded-lg p-4 border border-gold-300">
+      <div class="font-mono text-2xl md:text-3xl font-bold text-navy-900">
+        {pageCount.toLocaleString()}
+      </div>
+      <div class="text-xs text-navy-600 uppercase tracking-wide">Pages</div>
+    </div>
+    <div class="bg-cream-200 rounded-lg p-4 border border-gold-300">
+      <div class="font-mono text-2xl md:text-3xl font-bold text-navy-900">
+        {divisionCount}
+      </div>
+      <div class="text-xs text-navy-600 uppercase tracking-wide">Divisions</div>
+    </div>
+    <div class="bg-cream-200 rounded-lg p-4 border border-gold-300">
+      <div class="font-mono text-2xl md:text-3xl font-bold text-navy-900">
+        ~{readingHours}h
+      </div>
+      <div class="text-xs text-navy-600 uppercase tracking-wide">Reading Time</div>
+    </div>
+  </div>
+
+  <!-- Fun Facts Callout -->
+  <div class="bg-navy-800 rounded-lg p-4 text-cream-100 max-w-2xl mx-auto">
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <span class="text-gold-400">📚</span>
+      <span class="font-serif font-bold text-gold-400">By The Numbers</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+      <div>
+        <span class="text-gold-400 font-mono">{stackHeight}"</span>
+        <span class="text-cream-100/80"> tall if printed</span>
+      </div>
+      <div>
+        <span class="text-gold-400 font-mono">~{wordsEstimate.toLocaleString()}</span>
+        <span class="text-cream-100/80"> words</span>
+      </div>
+      <div>
+        <span class="text-gold-400 font-mono">${dollarPerPage}</span>
+        <span class="text-cream-100/80"> per page</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  .animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
+  }
+</style>

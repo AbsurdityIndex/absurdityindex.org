@@ -3,44 +3,48 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
 ---
 
-<BaseLayout title="H.R. 404 — Page Not Found" description="This page has been filibustered out of existence.">
-  <div class="min-h-[60vh] flex items-center justify-center px-4">
+<BaseLayout title="404 — This Bill Died in Committee" description="The page you're looking for was referred to the Subcommittee on Missing Pages, where it will remain indefinitely.">
+  <div class="min-h-[60vh] flex items-center justify-center px-4 py-16">
     <div class="text-center max-w-2xl">
-      <OfficialSeal size="120" />
+      <OfficialSeal size="140" />
 
-      <div class="mt-8 mb-6">
-        <span class="font-mono text-lg text-gold-600 bg-navy-800 px-4 py-1 rounded">H.R. 404</span>
+      <div class="mt-8 mb-4">
+        <span class="font-mono text-lg text-gold-600 bg-navy-800 px-4 py-1 rounded">STATUS: DEAD IN COMMITTEE</span>
       </div>
 
       <h1 class="font-serif text-4xl md:text-5xl text-navy-900 font-bold mb-4">
-        Page Not Found Act
+        404 — This Bill Died in Committee
       </h1>
 
       <div class="gold-rule max-w-md mx-auto"></div>
 
       <div class="bg-parchment rounded-lg p-8 mt-6 relative overflow-hidden">
         <div class="stamp-overlay text-red-700 text-3xl top-4 right-4">
-          FILIBUSTERED
+          TABLED
         </div>
 
         <p class="font-serif text-navy-800 text-lg leading-relaxed">
-          <em>Be it resolved</em> that the page you are looking for has been filibustered out of existence
-          by the Honorable Senator from the State of Confusion.
+          The page you're looking for was referred to the <strong>Subcommittee on Missing Pages</strong>, where it will remain indefinitely.
         </p>
         <p class="font-serif text-navy-600 mt-4">
-          The motion to locate this page was defeated 0-535, with all members voting "present"
-          (which is more attendance than we usually get).
+          Much like most legislation, it simply ceased to exist without explanation.
         </p>
       </div>
 
-      <div class="mt-10 space-x-4">
-        <a href="/" class="inline-block px-6 py-3 bg-navy-800 text-gold-300 font-serif rounded hover:bg-navy-700 transition-colors">
-          Return to the Floor
+      <nav class="mt-10 flex flex-wrap justify-center gap-4" aria-label="404 navigation">
+        <a href="/bills" class="inline-block px-6 py-3 bg-navy-800 text-gold-300 font-serif rounded hover:bg-navy-700 transition-colors">
+          Bills
         </a>
-        <a href="/bills" class="inline-block px-6 py-3 border-2 border-navy-800 text-navy-800 font-serif rounded hover:bg-navy-800 hover:text-gold-300 transition-colors">
-          Browse Bills
+        <a href="/not-bills" class="inline-block px-6 py-3 bg-navy-800 text-gold-300 font-serif rounded hover:bg-navy-700 transition-colors">
+          Not Bills
         </a>
-      </div>
+        <a href="/under-consideration" class="inline-block px-6 py-3 border-2 border-navy-800 text-navy-800 font-serif rounded hover:bg-navy-800 hover:text-gold-300 transition-colors">
+          Under Consideration
+        </a>
+        <a href="/" class="inline-block px-6 py-3 border-2 border-navy-800 text-navy-800 font-serif rounded hover:bg-navy-800 hover:text-gold-300 transition-colors">
+          Home
+        </a>
+      </nav>
 
       <p class="text-navy-400 text-sm mt-8 italic">
         "Any resemblance to a functioning URL is purely coincidental."

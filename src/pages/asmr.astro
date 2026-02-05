@@ -1,0 +1,497 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+
+// Fake playlist tracks
+const playlist = [
+  { title: "Appropriations Bill Section 4, Subsection B (Whispered)", duration: "3:42:00", durationSeconds: 13320 },
+  { title: "The Entire Tax Code, But Relaxing", duration: "892:00:00", durationSeconds: 3211200 },
+  { title: "Committee Roll Call - 10 Hour Loop", duration: "10:00:00", durationSeconds: 36000 },
+  { title: "Filibuster White Noise", duration: "\u221e", durationSeconds: Infinity },
+  { title: "Congressional Record - ASMR Edition", duration: "24:00:00", durationSeconds: 86400 },
+  { title: "Gentle Gavel Sounds for Sleep", duration: "1:00:00", durationSeconds: 3600 },
+  { title: "Soft-Spoken Amendments", duration: "5:30:00", durationSeconds: 19800 },
+  { title: "Rain Sounds + Budget Reconciliation", duration: "8:00:00", durationSeconds: 28800 },
+];
+
+// Fake reviews
+const reviews = [
+  { text: "I was asleep before they finished reading the title", stars: 5 },
+  { text: "Finally, a use for the Congressional Record", stars: 5 },
+  { text: "My insomnia is cured. Thanks, Congress!", stars: 5 },
+  { text: "Better than any white noise machine I've owned", stars: 5 },
+  { text: "The filibuster track just... never ends. Perfect.", stars: 5 },
+];
+
+// Coming soon tracks
+const comingSoon = [
+  "Infrastructure Bill Bedtime Stories",
+  "Bipartisan Lullabies",
+  "Omnibus Bill Ocean Sounds",
+  "Procedural Motion Meditation",
+  "Quorum Call Sleep Sounds",
+];
+---
+
+<BaseLayout title="Legislation ASMR" description="Drift off to the dulcet tones of democracy. Soothing audio of bill titles being read in monotone.">
+  <main class="bg-navy-900 min-h-screen">
+
+    <!-- Hero Section -->
+    <section class="py-12 sm:py-16 relative overflow-hidden">
+      <!-- Ambient background glow -->
+      <div class="absolute inset-0 opacity-20">
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-navy-600 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gold-600/30 rounded-full blur-3xl"></div>
+      </div>
+
+      <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
+        <OfficialSeal size="80" />
+        <p class="text-sm text-gold-500/80 font-mono uppercase tracking-widest mt-6 mb-2">Sleep Aid Certified</p>
+        <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl text-gold-400 font-bold">
+          Legislation ASMR
+        </h1>
+        <p class="mt-4 text-gold-300/70 font-sans text-xl max-w-2xl mx-auto italic">
+          Drift off to the dulcet tones of democracy
+        </p>
+        <p class="mt-6 text-navy-400 font-mono text-xs">
+          47,000+ hours of content | 0 actual audio files | 100% guaranteed to induce drowsiness
+        </p>
+      </div>
+    </section>
+
+    <div class="max-w-4xl mx-auto px-4 pb-16">
+
+      <!-- Main Player Card -->
+      <section class="bg-navy-800 rounded-2xl border border-navy-700 shadow-2xl overflow-hidden">
+
+        <!-- Now Playing Header -->
+        <div class="bg-gradient-to-r from-navy-700 to-navy-800 px-4 py-3 flex items-center justify-between border-b border-navy-700">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+            <span class="text-xs font-mono text-gold-500/70 uppercase tracking-wider">Now Playing</span>
+          </div>
+          <div class="flex items-center gap-2 text-navy-400">
+            <span class="text-xs font-mono">LIVE</span>
+            <div class="flex gap-0.5">
+              <div class="w-1 h-3 bg-gold-500 equalizer-bar"></div>
+              <div class="w-1 h-4 bg-gold-500 equalizer-bar" style="animation-delay: 0.1s"></div>
+              <div class="w-1 h-2 bg-gold-500 equalizer-bar" style="animation-delay: 0.2s"></div>
+              <div class="w-1 h-5 bg-gold-500 equalizer-bar" style="animation-delay: 0.15s"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player Body -->
+        <div class="p-6 sm:p-8">
+          <div class="flex flex-col sm:flex-row gap-6 items-center">
+
+            <!-- Album Art (Gavel SVG) -->
+            <div class="shrink-0 w-40 h-40 sm:w-48 sm:h-48 bg-navy-700 rounded-lg flex items-center justify-center border border-navy-600 shadow-inner relative overflow-hidden">
+              <!-- Congressional seal background pattern -->
+              <div class="absolute inset-0 opacity-10">
+                <svg viewBox="0 0 100 100" class="w-full h-full">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2" class="text-gold-500"/>
+                  <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="1" class="text-gold-500"/>
+                  <text x="50" y="20" text-anchor="middle" class="text-gold-500 text-[6px]">UNITED STATES</text>
+                  <text x="50" y="85" text-anchor="middle" class="text-gold-500 text-[6px]">CONGRESS</text>
+                </svg>
+              </div>
+              <!-- Gavel icon -->
+              <svg viewBox="0 0 64 64" class="w-20 h-20 text-gold-500 relative z-10">
+                <rect x="8" y="28" width="48" height="8" rx="2" fill="currentColor" transform="rotate(-45 32 32)" opacity="0.8"/>
+                <rect x="26" y="10" width="12" height="24" rx="2" fill="currentColor" transform="rotate(-45 32 32)"/>
+                <rect x="40" y="44" width="20" height="6" rx="1" fill="currentColor" opacity="0.6"/>
+                <circle cx="32" cy="32" r="4" fill="currentColor" opacity="0.4"/>
+              </svg>
+              <!-- Ambient glow -->
+              <div class="absolute inset-0 bg-gradient-to-br from-gold-500/10 to-transparent"></div>
+            </div>
+
+            <!-- Track Info -->
+            <div class="flex-1 text-center sm:text-left">
+              <p class="text-gold-500/60 font-mono text-xs uppercase tracking-wider mb-1">Featured Track</p>
+              <h2 class="font-serif text-xl sm:text-2xl text-gold-400 font-bold leading-tight mb-2">
+                H.R. 4521 - The America COMPETES Act
+              </h2>
+              <p class="text-gold-300/60 font-sans text-sm mb-4">(Full Reading)</p>
+
+              <!-- Progress Bar -->
+              <div class="mb-4">
+                <div class="h-2 bg-navy-700 rounded-full overflow-hidden relative">
+                  <div id="progress-bar" class="h-full bg-gradient-to-r from-gold-600 to-gold-400 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                </div>
+                <div class="flex justify-between mt-1 text-xs font-mono text-navy-400">
+                  <span id="current-time">0:00:00</span>
+                  <span>47:32:18</span>
+                </div>
+              </div>
+
+              <!-- Controls -->
+              <div class="flex items-center justify-center sm:justify-start gap-4">
+                <button class="text-navy-400 hover:text-gold-400 transition-colors" title="Previous">
+                  <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                  </svg>
+                </button>
+
+                <button
+                  id="play-btn"
+                  class="w-16 h-16 rounded-full bg-gold-500 text-navy-900 hover:bg-gold-400 transition-all hover:scale-105 flex items-center justify-center shadow-lg play-btn-pulse"
+                  title="Play"
+                >
+                  <svg id="play-icon" class="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <svg id="pause-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                  </svg>
+                </button>
+
+                <button class="text-navy-400 hover:text-gold-400 transition-colors" title="Next">
+                  <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Volume Control -->
+          <div class="mt-6 pt-6 border-t border-navy-700 flex items-center justify-center gap-4">
+            <svg class="w-5 h-5 text-navy-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+            </svg>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value="69"
+              class="w-32 h-2 bg-navy-700 rounded-lg appearance-none cursor-pointer accent-gold-500"
+              id="volume-slider"
+            />
+            <svg class="w-5 h-5 text-navy-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- Error Toast (hidden by default) -->
+      <div id="error-toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-navy-700 border border-gold-500/50 rounded-lg px-6 py-4 shadow-2xl transform translate-y-32 opacity-0 transition-all duration-300 z-50 max-w-md text-center">
+        <p id="error-message" class="text-gold-400 font-serif"></p>
+        <p class="text-navy-400 text-xs font-mono mt-2">Error Code: RECESS_IN_PROGRESS</p>
+      </div>
+
+      <Divider withSeal={false} />
+
+      <!-- Playlist Section -->
+      <section class="mt-8">
+        <h2 class="font-serif text-2xl text-gold-400 font-bold mb-6 flex items-center gap-3">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/>
+          </svg>
+          Sleep Playlist
+        </h2>
+
+        <div class="bg-navy-800 rounded-xl border border-navy-700 overflow-hidden">
+          <ul class="divide-y divide-navy-700">
+            {playlist.map((track, i) => (
+              <li class="playlist-item flex items-center gap-4 px-4 py-4 hover:bg-navy-700/50 transition-colors cursor-pointer group" data-index={i}>
+                <span class="w-8 text-center font-mono text-navy-500 group-hover:hidden">{i + 1}</span>
+                <svg class="w-8 h-8 text-gold-500 hidden group-hover:block" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                <div class="flex-1 min-w-0">
+                  <p class="text-gold-300 font-sans truncate">{track.title}</p>
+                </div>
+                <span class="font-mono text-sm text-navy-400 shrink-0">{track.duration}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <Divider withSeal={false} />
+
+      <!-- Premium CTA -->
+      <section class="mt-8 bg-gradient-to-br from-gold-600/20 to-gold-500/10 rounded-2xl border border-gold-500/30 p-8 text-center relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-gold-500/10 rounded-full blur-3xl"></div>
+        <div class="relative z-10">
+          <p class="text-gold-500 font-mono text-xs uppercase tracking-widest mb-2">Premium Membership</p>
+          <h2 class="font-serif text-2xl sm:text-3xl text-gold-400 font-bold mb-4">
+            Legislation ASMR+
+          </h2>
+          <p class="text-gold-300/70 font-sans max-w-lg mx-auto mb-6">
+            Get unlimited access to <strong class="text-gold-400">47,000 hours</strong> of legislative content.
+            Fall asleep to committee hearings, filibusters, and procedural motions.
+          </p>
+          <button
+            id="premium-btn"
+            class="px-8 py-4 bg-gold-500 text-navy-900 font-serif text-lg rounded-lg hover:bg-gold-400 transition-all hover:scale-105 font-bold shadow-lg"
+          >
+            Subscribe for $0.00/mo*
+          </button>
+          <p class="text-navy-400 text-xs font-mono mt-4">
+            *Free because none of this is real. Just like congressional productivity.
+          </p>
+        </div>
+      </section>
+
+      <Divider withSeal={true} />
+
+      <!-- Reviews Section -->
+      <section class="mt-8">
+        <h2 class="font-serif text-2xl text-gold-400 font-bold mb-6 flex items-center gap-3">
+          <span class="text-2xl">&#9733;</span>
+          Listener Reviews
+        </h2>
+
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {reviews.map((review) => (
+            <div class="bg-navy-800 rounded-lg border border-navy-700 p-5">
+              <div class="flex gap-0.5 mb-3">
+                {[...Array(review.stars)].map(() => (
+                  <svg class="w-5 h-5 text-gold-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                ))}
+              </div>
+              <p class="text-gold-300/80 font-sans text-sm italic">"{review.text}"</p>
+              <p class="text-navy-500 text-xs font-mono mt-3">Verified Insomniac</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <Divider withSeal={false} />
+
+      <!-- Coming Soon Section -->
+      <section class="mt-8">
+        <h2 class="font-serif text-2xl text-gold-400 font-bold mb-6 flex items-center gap-3">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+          Coming Soon
+        </h2>
+
+        <div class="bg-navy-800 rounded-xl border border-navy-700 p-6">
+          <ul class="space-y-3">
+            {comingSoon.map((title) => (
+              <li class="flex items-center gap-3 text-gold-300/60">
+                <svg class="w-5 h-5 text-navy-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                <span class="font-sans">{title}</span>
+                <span class="ml-auto text-xs font-mono text-navy-500 bg-navy-700 px-2 py-1 rounded">Q? 2025</span>
+              </li>
+            ))}
+          </ul>
+          <p class="text-navy-500 text-xs font-mono mt-6 text-center">
+            Release dates subject to congressional approval (so, never)
+          </p>
+        </div>
+      </section>
+
+      <!-- Disclaimer -->
+      <div class="mt-10 bg-navy-800/50 border border-navy-700 rounded-lg p-4 text-xs text-navy-400 leading-relaxed text-center">
+        <p>
+          <strong class="text-gold-500">Satire Notice:</strong> This page contains no actual audio.
+          If you're genuinely having trouble sleeping, we recommend tuning into the Congressional Snooze Network,
+          which has roughly the same effect. Side effects may include increased civic awareness and
+          the sudden urge to call your representative.
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+  <script is:inline>
+    // Error messages that get increasingly frustrated
+    const errorMessages = [
+      "Audio not found. Congress is on recess.",
+      "Still no audio. Have you tried calling your representative?",
+      "Look, there's no audio. It's a joke. Like congressional productivity.",
+      "We admire your persistence, but there's really nothing here.",
+      "At this point, you're just clicking for the messages, aren't you?",
+      "Fine. Here's your audio: *silence* (That's the filibuster track)",
+      "You've clicked more times than Congress has passed bills this session.",
+      "This is your democracy. This is your democracy on recess.",
+      "ERROR 404: Bipartisanship not found",
+      "The audio exists in committee. It will be released... eventually.",
+    ];
+
+    let clickCount = 0;
+    let isPlaying = false;
+    let progressInterval = null;
+    let currentProgress = 0;
+
+    // Play button handler
+    const playBtn = document.getElementById('play-btn');
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+    const errorToast = document.getElementById('error-toast');
+    const errorMessage = document.getElementById('error-message');
+    const progressBar = document.getElementById('progress-bar');
+    const currentTime = document.getElementById('current-time');
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorToast.classList.remove('translate-y-32', 'opacity-0');
+      errorToast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        errorToast.classList.remove('translate-y-0', 'opacity-100');
+        errorToast.classList.add('translate-y-32', 'opacity-0');
+      }, 3000);
+    }
+
+    function formatTime(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = Math.floor(seconds % 60);
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function togglePlay() {
+      clickCount++;
+      const messageIndex = Math.min(clickCount - 1, errorMessages.length - 1);
+      showError(errorMessages[messageIndex]);
+
+      // Toggle visual state anyway for fun
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        playBtn.classList.add('playing');
+
+        // Start fake progress
+        progressInterval = setInterval(() => {
+          currentProgress += 0.001; // Very slow progress for 47 hours
+          if (currentProgress > 100) currentProgress = 100;
+          progressBar.style.width = currentProgress + '%';
+
+          // Update time display (47:32:18 = 171138 seconds total)
+          const totalSeconds = 171138;
+          const elapsedSeconds = Math.floor((currentProgress / 100) * totalSeconds);
+          currentTime.textContent = formatTime(elapsedSeconds);
+        }, 1000);
+      } else {
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        playBtn.classList.remove('playing');
+
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+      }
+    }
+
+    playBtn.addEventListener('click', togglePlay);
+
+    // Playlist item clicks
+    document.querySelectorAll('.playlist-item').forEach(item => {
+      item.addEventListener('click', () => {
+        clickCount++;
+        const messageIndex = Math.min(clickCount - 1, errorMessages.length - 1);
+        showError(errorMessages[messageIndex]);
+      });
+    });
+
+    // Premium button
+    const premiumBtn = document.getElementById('premium-btn');
+    premiumBtn.addEventListener('click', () => {
+      showError("Subscription failed. The government shutdown includes our servers.");
+    });
+
+    // Volume slider (does nothing but looks good)
+    const volumeSlider = document.getElementById('volume-slider');
+    volumeSlider.addEventListener('input', () => {
+      // It does absolutely nothing, just like certain pieces of legislation
+    });
+  </script>
+
+  <style>
+    /* Equalizer bar animation */
+    @keyframes equalizer {
+      0%, 100% { height: 0.5rem; }
+      50% { height: 1rem; }
+    }
+
+    .equalizer-bar {
+      animation: equalizer 0.4s ease-in-out infinite;
+    }
+
+    /* Play button pulse when "playing" */
+    .play-btn-pulse {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(197, 165, 114, 0.4); }
+      50% { box-shadow: 0 0 20px 10px rgba(197, 165, 114, 0.1); }
+    }
+
+    .playing {
+      animation: pulse-strong 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse-strong {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Custom range slider styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      background: var(--color-navy-700);
+      border-radius: 3px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--color-gold-500);
+      border-radius: 50%;
+      cursor: pointer;
+      margin-top: -5px;
+      transition: transform 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    input[type="range"]::-moz-range-track {
+      width: 100%;
+      height: 6px;
+      background: var(--color-navy-700);
+      border-radius: 3px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: var(--color-gold-500);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+
+    /* Playlist hover effect */
+    .playlist-item:hover {
+      background: linear-gradient(90deg, rgba(197, 165, 114, 0.1) 0%, transparent 100%);
+    }
+  </style>
+</BaseLayout>

@@ -1,0 +1,237 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AbsurdityMeter from '../components/bills/AbsurdityMeter.astro';
+---
+
+<BaseLayout
+  title="How We Score Absurdity"
+  description="A completely scientific methodology for measuring legislative absurdity, developed by people who read too many congressional records."
+>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <!-- Header Section -->
+    <header class="text-center mb-12">
+      <h1 class="font-serif text-4xl md:text-5xl font-bold text-navy-900 mb-4">
+        How We Score Absurdity
+      </h1>
+      <p class="font-sans text-lg text-navy-600 max-w-2xl mx-auto">
+        A completely scientific methodology developed by people who read too many congressional records
+      </p>
+      <hr class="gold-rule max-w-xs mx-auto mt-8" />
+    </header>
+
+    <!-- The Scale Section -->
+    <section class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mb-10">
+      <h2 class="font-serif text-2xl font-bold text-navy-900 mb-8 text-center uppercase tracking-wide">
+        The Absurdity Scale
+      </h2>
+
+      <!-- Full-size meter visualization -->
+      <div class="max-w-2xl mx-auto mb-12">
+        <div class="scale-visualization">
+          <!-- Scale bar with gradient -->
+          <div class="relative h-12 rounded-lg overflow-hidden mb-4 shadow-inner">
+            <div class="absolute inset-0 flex">
+              <div class="flex-[3] bg-green-600"></div>
+              <div class="flex-[3] bg-yellow-500"></div>
+              <div class="flex-[2] bg-orange-500"></div>
+              <div class="flex-[2] bg-red-600"></div>
+            </div>
+            <!-- Number markers -->
+            <div class="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <span class="font-mono text-white text-sm font-bold drop-shadow-md">{n}</span>
+              ))}
+            </div>
+          </div>
+          <!-- Labels beneath -->
+          <div class="flex text-center">
+            <div class="flex-[3] px-1">
+              <span class="text-xs font-sans font-semibold text-green-700">Business as Usual</span>
+            </div>
+            <div class="flex-[3] px-1">
+              <span class="text-xs font-sans font-semibold text-yellow-700">Questionable</span>
+            </div>
+            <div class="flex-[2] px-1">
+              <span class="text-xs font-sans font-semibold text-orange-700">Your Tax Dollars</span>
+            </div>
+            <div class="flex-[2] px-1">
+              <span class="text-xs font-sans font-semibold text-red-700">Fish on Meth</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier explanations -->
+      <div class="space-y-8">
+        <!-- Tier 1-3: Business as Usual -->
+        <div class="tier-card bg-cream-100 border-l-4 border-green-600 rounded-r-lg p-6">
+          <div class="flex items-start gap-4">
+            <div class="shrink-0">
+              <div class="w-16 text-center">
+                <AbsurdityMeter score={2} compact />
+              </div>
+            </div>
+            <div>
+              <h3 class="font-serif text-xl font-bold text-navy-900 mb-2">
+                1-3: Business as Usual
+              </h3>
+              <p class="font-sans text-navy-700 mb-3">
+                Standard legislation, procedural stuff, post office namings. The kind of bills that make you say "yeah, I guess someone has to do that."
+              </p>
+              <div class="font-sans text-sm text-navy-600">
+                <span class="font-semibold">Examples:</span> Naming federal buildings, routine appropriations, technical corrections to existing law
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tier 4-6: Questionable -->
+        <div class="tier-card bg-cream-100 border-l-4 border-yellow-500 rounded-r-lg p-6">
+          <div class="flex items-start gap-4">
+            <div class="shrink-0">
+              <div class="w-16 text-center">
+                <AbsurdityMeter score={5} compact />
+              </div>
+            </div>
+            <div>
+              <h3 class="font-serif text-xl font-bold text-navy-900 mb-2">
+                4-6: Questionable
+              </h3>
+              <p class="font-sans text-navy-700 mb-3">
+                Bills that make you raise an eyebrow. Creative acronyms, odd priorities, solutions in search of problems. Not necessarily bad, just... curious.
+              </p>
+              <div class="font-sans text-sm text-navy-600">
+                <span class="font-semibold">Examples:</span> Tortured backronyms (PATRIOT Act, anyone?), weirdly specific regulations, commemorative coin proliferation
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tier 7-8: Your Tax Dollars -->
+        <div class="tier-card bg-cream-100 border-l-4 border-orange-500 rounded-r-lg p-6">
+          <div class="flex items-start gap-4">
+            <div class="shrink-0">
+              <div class="w-16 text-center">
+                <AbsurdityMeter score={7} compact />
+              </div>
+            </div>
+            <div>
+              <h3 class="font-serif text-xl font-bold text-navy-900 mb-2">
+                7-8: Your Tax Dollars
+              </h3>
+              <p class="font-sans text-navy-700 mb-3">
+                Genuinely wasteful spending, bizarre research funding, pork barrel projects. The bills that make you wonder if anyone is paying attention.
+              </p>
+              <div class="font-sans text-sm text-navy-600">
+                <span class="font-semibold">Examples:</span> Earmarks for questionable projects, studies on topics of dubious importance, infrastructure to nowhere
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tier 9-10: Fish on Meth -->
+        <div class="tier-card bg-cream-100 border-l-4 border-red-600 rounded-r-lg p-6">
+          <div class="flex items-start gap-4">
+            <div class="shrink-0">
+              <div class="w-16 text-center">
+                <AbsurdityMeter score={10} compact />
+              </div>
+            </div>
+            <div>
+              <h3 class="font-serif text-xl font-bold text-navy-900 mb-2">
+                9-10: Fish on Meth
+              </h3>
+              <p class="font-sans text-navy-700 mb-3">
+                The pinnacle of absurdity. Pizza-as-vegetable tier. Bridge to Nowhere. Bills so absurd they transcend partisan criticism and unite us all in confused disbelief.
+              </p>
+              <div class="font-sans text-sm text-navy-600">
+                <span class="font-semibold">Examples:</span> The infamous school lunch pizza classification, actual studies on fish exposed to methamphetamines, legislative riders that defy explanation
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Methodology Section -->
+    <section class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mb-10">
+      <h2 class="font-serif text-2xl font-bold text-navy-900 mb-8 text-center uppercase tracking-wide">
+        Our Methodology
+      </h2>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="methodology-item">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-2xl">📖</span>
+            <h3 class="font-serif text-lg font-bold text-navy-900">We Read the Bills</h3>
+          </div>
+          <p class="font-sans text-navy-700 text-sm leading-relaxed">
+            Yes, we actually read them. The full text. The amendments. The committee reports. So you don't have to experience that particular form of existential dread.
+          </p>
+        </div>
+
+        <div class="methodology-item">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-2xl">🎭</span>
+            <h3 class="font-serif text-lg font-bold text-navy-900">Editorial Opinion</h3>
+          </div>
+          <p class="font-sans text-navy-700 text-sm leading-relaxed">
+            Our scores are editorial opinion, not objective fact. Reasonable people can disagree about what constitutes absurdity. Unreasonable people can disagree more loudly.
+          </p>
+        </div>
+
+        <div class="methodology-item">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-2xl">🔍</span>
+            <h3 class="font-serif text-lg font-bold text-navy-900">What We Consider</h3>
+          </div>
+          <ul class="font-sans text-navy-700 text-sm leading-relaxed space-y-1">
+            <li>• Wasteful or inefficient spending</li>
+            <li>• Tortured acronyms and naming</li>
+            <li>• Time spent relative to importance</li>
+            <li>• Actual impact vs. stated goals</li>
+            <li>• Unintended consequences</li>
+          </ul>
+        </div>
+
+        <div class="methodology-item">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-2xl">⚖️</span>
+            <h3 class="font-serif text-lg font-bold text-navy-900">Non-Partisan Absurdity</h3>
+          </div>
+          <p class="font-sans text-navy-700 text-sm leading-relaxed">
+            Absurdity knows no party. We critique bills from all political persuasions because wasteful legislation is a truly bipartisan achievement.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Disclaimer Section -->
+    <section class="bg-navy-800 rounded-lg shadow-lg p-8 md:p-10 text-center">
+      <h2 class="font-serif text-xl font-bold text-gold-400 mb-4 uppercase tracking-wide">
+        Important Disclaimer
+      </h2>
+      <p class="font-sans text-gold-300/90 text-sm leading-relaxed max-w-2xl mx-auto mb-4">
+        This is satire and commentary. While we base our analysis on real legislation, our scores and commentary are intended to entertain and provoke thought, not serve as legal or policy guidance.
+      </p>
+      <p class="font-sans text-gold-300/70 text-sm">
+        For official bill text and status, visit{' '}
+        <a
+          href="https://www.congress.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-gold-400 hover:text-gold-300 underline transition-colors"
+        >
+          Congress.gov
+        </a>
+      </p>
+    </section>
+
+    <!-- Back link -->
+    <div class="text-center mt-8">
+      <a href="/" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+        &larr; Back to Home
+      </a>
+    </div>
+  </div>
+</BaseLayout>

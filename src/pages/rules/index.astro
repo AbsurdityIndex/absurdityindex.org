@@ -1,0 +1,208 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import OfficialSeal from '../../components/ui/OfficialSeal.astro';
+import { getCollection } from 'astro:content';
+
+const allRules = await getCollection('rules');
+
+// Sort by congress number descending, then by chamber
+const rules = allRules.sort((a, b) => {
+  if (b.data.congressNumber !== a.data.congressNumber) {
+    return b.data.congressNumber - a.data.congressNumber;
+  }
+  return a.data.chamber === 'house' ? -1 : 1;
+});
+
+// Get unique congress numbers for subnav
+const congressNumbers = [...new Set(rules.map(r => r.data.congressNumber))].sort((a, b) => b - a);
+
+// Group rules by congress
+const rulesByCongress = congressNumbers.map(num => ({
+  congressNumber: num,
+  years: rules.find(r => r.data.congressNumber === num)?.data.congressYears || '',
+  rules: rules.filter(r => r.data.congressNumber === num),
+}));
+---
+
+<BaseLayout
+  title="Congressional Rules"
+  description="Explore the rules packages adopted by each Congress — the procedural frameworks that determine how (or whether) anything gets done."
+>
+  <main class="bg-parchment min-h-screen">
+    <!-- Hero Section -->
+    <section class="bg-navy-900 py-16">
+      <div class="max-w-5xl mx-auto px-4 text-center">
+        <OfficialSeal size="100" />
+        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-6 mb-2">Procedural Framework</p>
+        <h1 class="font-serif text-4xl md:text-5xl text-gold-400 font-bold mb-4">
+          Congressional Rules
+        </h1>
+        <p class="text-gold-300/80 max-w-2xl mx-auto text-lg">
+          The rules that govern how Congress operates — adopted at the start of each Congress,
+          frequently ignored thereafter.
+        </p>
+      </div>
+    </section>
+
+    <!-- Subnav for Congress Selection -->
+    <nav class="bg-navy-800 border-b border-gold-500 sticky top-0 z-40">
+      <div class="max-w-5xl mx-auto px-4">
+        <div class="flex items-center gap-2 overflow-x-auto py-3 scrollbar-hide">
+          <span class="text-gold-400 font-mono text-sm shrink-0 mr-2">Congress:</span>
+          {congressNumbers.map((num, i) => (
+            <a
+              href={`#congress-${num}`}
+              class={`px-4 py-2 rounded-full font-mono text-sm transition-colors shrink-0 ${
+                i === 0
+                  ? 'bg-gold-500 text-navy-900 font-bold'
+                  : 'bg-navy-700 text-gold-300 hover:bg-navy-600 hover:text-gold-200'
+              }`}
+            >
+              {num}th
+            </a>
+          ))}
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto px-4 py-12">
+      <!-- Explainer Card -->
+      <div class="bg-parchment border border-gold-300 rounded-lg p-8 mb-10">
+        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-4 flex items-center gap-3">
+          <span class="text-gold-500">⚖️</span>
+          What Are Congressional Rules?
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-serif font-bold text-navy-800 mb-2">House Rules</h3>
+            <p class="text-sm text-navy-600">
+              The House adopts a complete rules package (H.Res. 5) at the start of each Congress.
+              Rules can change dramatically with new majorities, affecting everything from the
+              Speaker's power to how amendments are considered.
+            </p>
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-navy-800 mb-2">Senate Rules</h3>
+            <p class="text-sm text-navy-600">
+              The Senate considers itself a "continuing body" with permanent rules. Changes are
+              rare because they require 67 votes — or the controversial "nuclear option."
+              The filibuster lives here.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rules by Congress -->
+      {rulesByCongress.map(({ congressNumber, years, rules: congressRules }) => (
+        <section id={`congress-${congressNumber}`} class="mb-12 scroll-mt-24">
+          <div class="flex items-baseline gap-4 mb-6">
+            <h2 class="font-serif text-2xl font-bold text-navy-900">
+              {congressNumber}th Congress
+            </h2>
+            <span class="font-mono text-sm text-gold-600">{years}</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {congressRules.map((rule) => {
+              const d = rule.data;
+              const chamberColors = d.chamber === 'house'
+                ? 'bg-red-700 text-cream-100'
+                : 'bg-navy-700 text-cream-100';
+
+              return (
+                <a
+                  href={`/rules/${rule.id}`}
+                  class="block bg-white rounded-lg border-2 border-gold-300 shadow-lg overflow-hidden hover:shadow-xl hover:border-gold-500 transition-all group"
+                >
+                  <div class={`px-4 py-2 ${chamberColors} flex items-center justify-between`}>
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-sm">{d.resolution}</span>
+                      <span class="font-serif capitalize">{d.chamber}</span>
+                    </div>
+                    {d.absurdityIndex && (
+                      <span class="text-xs opacity-80">
+                        Absurdity: {d.absurdityIndex}/10
+                      </span>
+                    )}
+                  </div>
+
+                  <div class="p-5">
+                    <h3 class="font-serif text-lg font-bold text-navy-900 group-hover:text-gold-700 transition-colors mb-2">
+                      {d.chamber === 'house' ? 'House' : 'Senate'} Rules Package
+                    </h3>
+                    <p class="text-sm text-navy-600 line-clamp-2 mb-4">{d.summary}</p>
+
+                    <div class="flex items-center justify-between text-xs text-navy-500">
+                      <span>
+                        Adopted {d.dateAdopted.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      {d.pageCount && (
+                        <span class="font-mono">{d.pageCount} pages</span>
+                      )}
+                    </div>
+
+                    {d.votes && (
+                      <div class="mt-3 pt-3 border-t border-gold-200 flex items-center gap-4 text-xs">
+                        <span class="text-green-700 font-mono">{d.votes.yeas} Yea</span>
+                        <span class="text-red-700 font-mono">{d.votes.nays} Nay</span>
+                        <span class={d.votes.passed ? 'text-green-700' : 'text-red-700'}>
+                          {d.votes.passed ? '✓ Passed' : '✗ Failed'}
+                        </span>
+                      </div>
+                    )}
+
+                    {d.majorChanges && d.majorChanges.length > 0 && (
+                      <div class="mt-3 pt-3 border-t border-gold-200">
+                        <span class="text-xs text-navy-500">Major changes:</span>
+                        <div class="flex flex-wrap gap-1 mt-1">
+                          {d.majorChanges.slice(0, 3).map(change => (
+                            <span class="px-2 py-0.5 bg-cream-200 text-navy-700 text-xs rounded">
+                              {change.title}
+                            </span>
+                          ))}
+                          {d.majorChanges.length > 3 && (
+                            <span class="px-2 py-0.5 bg-gold-200 text-navy-700 text-xs rounded">
+                              +{d.majorChanges.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+
+      {rules.length === 0 && (
+        <div class="text-center py-16 bg-cream-100 rounded-lg border border-gold-300">
+          <span class="text-6xl mb-4 block">📜</span>
+          <h2 class="font-serif text-2xl text-navy-900 font-bold mb-2">No Rules Yet</h2>
+          <p class="text-navy-600">
+            We're working on documenting congressional rules packages. Check back soon.
+          </p>
+        </div>
+      )}
+
+      <!-- Navigation -->
+      <div class="text-center mt-12">
+        <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+          &larr; Back to Bills
+        </a>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+</style>
