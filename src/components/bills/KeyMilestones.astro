@@ -109,11 +109,11 @@ const formatDate = (date: Date) => {
 <div class="key-milestones">
   <div class="flex items-center justify-between mb-4">
     <h4 class="text-sm font-sans font-semibold text-navy-600 uppercase tracking-wide flex items-center gap-2">
-      <Icon name="git-commit" size={14} />
+      <Icon name="git-commit" size={14} class="text-gold-600" />
       Key Milestones
     </h4>
     <span class="text-xs font-mono text-navy-400">
-      {totalActions} total actions
+      {totalActions} total action{totalActions !== 1 ? 's' : ''}
     </span>
   </div>
 

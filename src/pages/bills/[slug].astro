@@ -108,7 +108,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} billNumber={d.billNumber} />
 
     {/* Absurdity Meter - Prominent */}
-    {d.absurdityIndex && (
+    {d.absurdityIndex !== undefined && (
       <div class="mb-8">
         <AbsurdityMeter score={d.absurdityIndex} />
       </div>
@@ -131,23 +131,27 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </div>
     )}
 
-    {/* Compact metadata */}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 text-sm">
-      <div class="p-3 bg-cream-100 rounded-lg">
-        <dt class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Sponsor</dt>
-        <dd class="font-sans text-navy-800 truncate" title={d.sponsor}>{d.sponsor}</dd>
+    {/* Compact metadata - 2x2 on mobile, 4-col on desktop */}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8 text-sm">
+      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg">
+        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1">Sponsor</dt>
+        <dd class="font-sans text-navy-800 text-sm leading-tight line-clamp-2" title={d.sponsor}>
+          {d.sponsor?.replace(/^(Rep\.|Sen\.)\s*/, '').trim() || 'Unknown'}
+        </dd>
       </div>
-      <div class="p-3 bg-cream-100 rounded-lg">
-        <dt class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Committee</dt>
-        <dd class="font-sans text-navy-800 truncate" title={d.committee}>{d.committee}</dd>
+      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg">
+        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1">Committee</dt>
+        <dd class="font-sans text-navy-800 text-sm leading-tight line-clamp-2" title={d.committee}>
+          {d.committee?.replace(/^House |^Senate /, '').trim() || 'N/A'}
+        </dd>
       </div>
-      <div class="p-3 bg-cream-100 rounded-lg">
-        <dt class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Introduced</dt>
-        <dd class="font-sans text-navy-800">{formatDate(d.dateIntroduced)}</dd>
+      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg">
+        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1">Introduced</dt>
+        <dd class="font-sans text-navy-800 text-sm">{formatDate(d.dateIntroduced)}</dd>
       </div>
-      <div class="p-3 bg-cream-100 rounded-lg">
-        <dt class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Category</dt>
-        <dd class="font-sans text-navy-800">{d.category}</dd>
+      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg">
+        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1">Category</dt>
+        <dd class="font-sans text-navy-800 text-sm">{d.category}</dd>
       </div>
     </div>
 
@@ -167,7 +171,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
     {/* Key Milestones */}
     {(hasActions || d.keyMilestones) && (
-      <div class="mb-8 p-5 bg-white rounded-lg border border-gold-200">
+      <div class="mb-8 p-5 bg-cream-100 rounded-lg border border-gold-300">
         <KeyMilestones
           actions={d.actions || []}
           status={d.status}
@@ -214,8 +218,9 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
     {/* Collapsible Deep Dive Sections */}
     <div class="space-y-3 mb-8">
-      <h3 class="text-xs font-sans font-semibold text-navy-500 uppercase tracking-wide mb-3">
-        Deep Dive
+      <h3 class="flex items-center gap-2 text-sm font-sans font-semibold text-navy-600 mb-3">
+        <Icon name="search" size={14} class="text-gold-600" />
+        <span class="uppercase tracking-wide">Deep Dive</span>
       </h3>
 
       {/* CRS Summary */}

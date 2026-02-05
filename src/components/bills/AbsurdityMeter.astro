@@ -17,6 +17,13 @@ function getLabel(s: number) {
   return 'Fish on Meth';
 }
 
+function getTierRange(s: number) {
+  if (s <= 3) return '1-3';
+  if (s <= 6) return '4-6';
+  if (s <= 8) return '7-8';
+  return '9-10';
+}
+
 function getColor(segment: number) {
   if (segment <= 3) return 'bg-green-600';
   if (segment <= 6) return 'bg-yellow-500';
@@ -31,7 +38,16 @@ function getScoreBadgeColor(s: number) {
   return 'bg-red-100 text-red-800 border-red-200';
 }
 
+function getTierBadgeColors(s: number) {
+  if (s <= 3) return { bg: 'bg-green-600', text: 'text-white' };
+  if (s <= 6) return { bg: 'bg-yellow-500', text: 'text-yellow-900' };
+  if (s <= 8) return { bg: 'bg-orange-500', text: 'text-white' };
+  return { bg: 'bg-red-600', text: 'text-white' };
+}
+
 const label = getLabel(clampedScore);
+const tierRange = getTierRange(clampedScore);
+const tierBadge = getTierBadgeColors(clampedScore);
 ---
 
 {compact ? (
@@ -55,8 +71,9 @@ const label = getLabel(clampedScore);
     </span>
   </div>
 ) : (
-  <div class="absurdity-meter">
-    <div class="flex items-center justify-between mb-2">
+  <div class="absurdity-meter bg-cream-100 border border-gold-300 rounded-lg p-5">
+    {/* Header row */}
+    <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
         <div class="w-6 h-6 rounded-full bg-gold-100 flex items-center justify-center">
           <Icon name="zap" size={14} class="text-gold-700" />
@@ -66,11 +83,11 @@ const label = getLabel(clampedScore);
         </span>
         <button
           type="button"
-          class="absurdity-help-trigger w-5 h-5 rounded-full bg-cream-200 hover:bg-cream-300 flex items-center justify-center transition-colors"
+          class="absurdity-help-trigger w-6 h-6 rounded-full bg-cream-200 hover:bg-cream-300 flex items-center justify-center transition-colors"
           aria-label="What is the Absurdity Index?"
           title="What is this?"
         >
-          <Icon name="help-circle" size={12} class="text-navy-500" />
+          <Icon name="help-circle" size={14} class="text-navy-500" />
         </button>
       </div>
       <div class="flex items-baseline gap-1">
@@ -79,7 +96,8 @@ const label = getLabel(clampedScore);
       </div>
     </div>
 
-    <div class="flex gap-1 mb-2" role="meter" aria-valuenow={clampedScore} aria-valuemin={1} aria-valuemax={10} aria-label={`Absurdity Index: ${clampedScore} out of 10 — ${label}`}>
+    {/* Score bar */}
+    <div class="flex gap-1 mb-3" role="meter" aria-valuenow={clampedScore} aria-valuemin={1} aria-valuemax={10} aria-label={`Absurdity Index: ${clampedScore} out of 10 — ${label}`}>
       {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
         <div
           class:list={[
@@ -90,7 +108,19 @@ const label = getLabel(clampedScore);
       ))}
     </div>
 
-    <p class="text-xs font-sans italic text-navy-600 text-center">&ldquo;{label}&rdquo;</p>
+    {/* Tier badge with label - provides immediate context */}
+    <div class="flex items-center justify-center gap-2">
+      <span class:list={[
+        'inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-mono font-bold',
+        tierBadge.bg,
+        tierBadge.text,
+      ]}>
+        {tierRange}
+      </span>
+      <span class="text-sm font-serif font-medium text-navy-700">
+        {label}
+      </span>
+    </div>
   </div>
 )}
 

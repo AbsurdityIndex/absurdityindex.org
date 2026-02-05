@@ -75,7 +75,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
       {/* Metadata strip with icons */}
       <div class="mx-6 md:mx-10 my-8">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-cream-100 rounded-lg border border-gold-200">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-cream-100 rounded-lg border border-gold-300">
           <div class="flex items-start gap-3">
             <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
               <Icon name="user" size={14} class="text-green-700" />
@@ -116,7 +116,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </div>
 
       {/* Absurdity Meter */}
-      {d.absurdityIndex && (
+      {d.absurdityIndex !== undefined && (
         <div class="mx-6 md:mx-10 mb-8">
           <AbsurdityMeter score={d.absurdityIndex} />
         </div>

@@ -83,7 +83,7 @@ const billSchema = {
     </div>
 
     <!-- Absurdity Score -->
-    {d.absurdityIndex && (
+    {d.absurdityIndex !== undefined && (
       <div class="max-w-sm mx-auto mb-10">
         <AbsurdityMeter score={d.absurdityIndex} />
       </div>
