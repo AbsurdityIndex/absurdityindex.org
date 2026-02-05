@@ -5,6 +5,7 @@ import VoteBreakdown from '../../components/bills/VoteBreakdown.astro';
 import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
 import Disclaimer from '../../components/ui/Disclaimer.astro';
 import ShareButtons from '../../components/ui/ShareButtons.astro';
+import Icon from '../../components/ui/Icon.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -62,9 +63,7 @@ const ruleSchema = {
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-4">
         <a href="/rules" class="text-gold-400 hover:text-gold-300 font-mono text-sm flex items-center gap-1">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
+          <Icon name="chevron-right" size={14} class="rotate-180" />
           All Rules
         </a>
         <span class="text-gold-500">|</span>
@@ -155,7 +154,9 @@ const ruleSchema = {
         {d.majorChanges && d.majorChanges.length > 0 && (
           <div class="bg-parchment rounded-lg shadow-lg p-6">
             <h2 class="font-serif text-xl font-bold text-navy-900 mb-4 flex items-center gap-2">
-              <span class="text-gold-500">⚡</span>
+              <div class="w-7 h-7 rounded-full bg-gold-100 flex items-center justify-center">
+                <Icon name="zap" size={14} class="text-gold-700" />
+              </div>
               Major Changes
             </h2>
             <div class="space-y-4">
@@ -180,7 +181,9 @@ const ruleSchema = {
         {d.notableRules && d.notableRules.length > 0 && (
           <div class="bg-parchment rounded-lg shadow-lg p-6">
             <h2 class="font-serif text-xl font-bold text-navy-900 mb-4 flex items-center gap-2">
-              <span class="text-gold-500">📋</span>
+              <div class="w-7 h-7 rounded-full bg-gold-100 flex items-center justify-center">
+                <Icon name="clipboard-list" size={14} class="text-gold-700" />
+              </div>
               Notable Standing Rules
             </h2>
             <div class="space-y-3">

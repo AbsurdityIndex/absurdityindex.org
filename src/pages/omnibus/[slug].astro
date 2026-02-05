@@ -9,6 +9,7 @@ import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
 import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
 import Disclaimer from '../../components/ui/Disclaimer.astro';
 import ShareButtons from '../../components/ui/ShareButtons.astro';
+import Icon from '../../components/ui/Icon.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -86,7 +87,9 @@ const billSchema = {
       <!-- Summary Section -->
       <section class="mb-8">
         <h2 class="font-serif text-2xl font-bold text-navy-900 mb-4 flex items-center gap-3">
-          <span class="text-gold-500">📋</span>
+          <div class="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center">
+            <Icon name="clipboard-list" size={18} class="text-gold-700" />
+          </div>
           Executive Summary
         </h2>
         <p class="font-serif text-lg text-navy-700 leading-relaxed">{d.summary}</p>
@@ -107,7 +110,9 @@ const billSchema = {
     <!-- Divisions Section -->
     <section class="mb-12">
       <h2 class="font-serif text-2xl font-bold text-navy-900 mb-6 flex items-center gap-3">
-        <span class="text-gold-500">📚</span>
+        <div class="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center">
+          <Icon name="book-open" size={18} class="text-gold-700" />
+        </div>
         Divisions Breakdown
         <span class="text-sm font-normal text-navy-500">({omnibus.divisions.length} total)</span>
       </h2>
@@ -139,7 +144,9 @@ const billSchema = {
     {omnibus.timeline && omnibus.timeline.length > 0 && (
       <section class="mb-12">
         <h2 class="font-serif text-2xl font-bold text-navy-900 mb-6 flex items-center gap-3">
-          <span class="text-gold-500">📅</span>
+          <div class="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center">
+            <Icon name="calendar-days" size={18} class="text-gold-700" />
+          </div>
           Legislative Timeline
         </h2>
         <div class="relative border-l-4 border-gold-500 pl-6 space-y-6">
@@ -161,7 +168,9 @@ const billSchema = {
     <!-- Source and Disclaimer -->
     <div class="bg-cream-100 border border-gold-300 rounded-lg p-6">
       <div class="flex items-start gap-4">
-        <span class="text-2xl">🔗</span>
+        <div class="w-10 h-10 rounded-full bg-gold-100 flex items-center justify-center shrink-0">
+          <Icon name="external-link" size={20} class="text-gold-700" />
+        </div>
         <div>
           <h3 class="font-serif font-bold text-navy-900 mb-2">Official Sources</h3>
           {d.congressDotGovUrl && (
@@ -172,9 +181,7 @@ const billSchema = {
               class="inline-flex items-center gap-2 text-gold-700 hover:text-gold-600 font-semibold"
             >
               View on Congress.gov
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-              </svg>
+              <Icon name="external-link" size={14} />
             </a>
           )}
         </div>

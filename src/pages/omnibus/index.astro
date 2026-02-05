@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import OfficialSeal from '../../components/ui/OfficialSeal.astro';
+import Icon from '../../components/ui/Icon.astro';
 import { getCollection } from 'astro:content';
 
 const bills = await getCollection('bills');
@@ -59,7 +60,9 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
       <!-- What is an Omnibus -->
       <div class="bg-parchment border border-gold-300 rounded-lg p-8 mb-10">
         <h2 class="font-serif text-2xl font-bold text-navy-900 mb-4 flex items-center gap-3">
-          <span class="text-gold-500">❓</span>
+          <div class="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center">
+            <Icon name="help-circle" size={18} class="text-gold-700" />
+          </div>
           What is an Omnibus Bill?
         </h2>
         <div class="prose prose-navy max-w-none">
@@ -79,7 +82,9 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
 
       {omnibusBills.length === 0 ? (
         <div class="text-center py-16 bg-cream-100 rounded-lg border border-gold-300">
-          <span class="text-6xl mb-4 block">📚</span>
+          <div class="w-16 h-16 rounded-full bg-gold-100 flex items-center justify-center mx-auto mb-4">
+            <Icon name="book-open" size={32} class="text-gold-700" />
+          </div>
           <h2 class="font-serif text-2xl text-navy-900 font-bold mb-2">No Omnibus Bills Yet</h2>
           <p class="text-navy-600">
             We're working on adding comprehensive omnibus bill analysis. Check back soon.

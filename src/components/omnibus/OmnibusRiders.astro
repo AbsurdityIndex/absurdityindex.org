@@ -1,4 +1,6 @@
 ---
+import Icon from '../ui/Icon.astro';
+
 interface Rider {
   title: string;
   description: string;
@@ -16,35 +18,35 @@ const categoryConfig = {
     label: 'Policy Rider',
     bg: 'bg-navy-600',
     text: 'text-cream-100',
-    icon: '⚖️',
+    icon: 'scale' as const,
     description: 'Non-spending policy change',
   },
   spending: {
     label: 'Spending Rider',
     bg: 'bg-green-700',
     text: 'text-cream-100',
-    icon: '💰',
+    icon: 'banknote' as const,
     description: 'Additional spending provision',
   },
   tax: {
     label: 'Tax Provision',
     bg: 'bg-gold-600',
     text: 'text-navy-900',
-    icon: '🧾',
+    icon: 'receipt' as const,
     description: 'Tax code modification',
   },
   controversial: {
     label: 'Controversial',
     bg: 'bg-red-700',
     text: 'text-cream-100',
-    icon: '🔥',
+    icon: 'flame' as const,
     description: 'Politically contentious addition',
   },
   sneaky: {
     label: 'Buried Deep',
     bg: 'bg-navy-800',
     text: 'text-gold-400',
-    icon: '🕵️',
+    icon: 'eye-off' as const,
     description: 'Easy to miss in 4,000+ pages',
   },
 };
@@ -54,7 +56,7 @@ const categoryConfig = {
   <div class="px-6 py-4 bg-navy-800 border-b border-gold-300">
     <div class="flex items-center justify-between">
       <h3 class="font-serif text-lg font-bold text-gold-400 flex items-center gap-2">
-        <span>🎁</span>
+        <Icon name="gift" size={20} class="text-gold-400" />
         Policy Riders & Hidden Provisions
       </h3>
       <span class="font-mono text-sm text-gold-400/70">
@@ -72,15 +74,15 @@ const categoryConfig = {
       return (
         <div class="px-6 py-4 hover:bg-cream-200 transition-colors">
           <div class="flex items-start gap-4">
-            <span class="text-2xl shrink-0" aria-hidden="true">
-              {config.icon}
-            </span>
+            <div class="w-8 h-8 rounded-full bg-cream-200 flex items-center justify-center shrink-0">
+              <Icon name={config.icon} size={18} class="text-navy-700" />
+            </div>
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2 flex-wrap mb-1">
                 <h4 class="font-serif font-bold text-navy-900">
                   {rider.title}
                 </h4>
-                <span class={`${config.bg} ${config.text} text-xs font-mono px-2 py-0.5 rounded`}>
+                <span class={`${config.bg} ${config.text} text-xs font-mono px-2.5 py-0.5 rounded-full`}>
                   {config.label}
                 </span>
               </div>

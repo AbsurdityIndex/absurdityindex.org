@@ -1,28 +1,41 @@
 ---
+import Icon from '../ui/Icon.astro';
+
 interface Props {
   billType: 'sensible' | 'absurd' | 'real';
+  size?: 'sm' | 'md';
 }
 
-const { billType } = Astro.props;
+const { billType, size = 'sm' } = Astro.props;
 
 const config = {
   sensible: {
     label: 'Not Bill',
-    classes: 'bg-green-700 text-white',
+    classes: 'bg-green-700/90 text-white border-green-800',
+    icon: 'lightbulb' as const,
   },
   absurd: {
     label: 'Not Bill',
-    classes: 'bg-green-700 text-white',
+    classes: 'bg-green-700/90 text-white border-green-800',
+    icon: 'lightbulb' as const,
   },
   real: {
     label: 'Real Bill',
-    classes: 'bg-navy-600 text-white',
+    classes: 'bg-navy-700/90 text-white border-navy-800',
+    icon: 'landmark' as const,
   },
 };
 
-const { label, classes } = config[billType];
+const { label, classes, icon } = config[billType];
+const sizeClasses = size === 'sm' ? 'text-xs px-2.5 py-0.5' : 'text-sm px-3 py-1';
+const iconSize = size === 'sm' ? 12 : 14;
 ---
 
-<span class:list={['inline-block text-xs font-sans font-semibold px-2.5 py-0.5 rounded-full', classes]}>
+<span class:list={[
+  'inline-flex items-center gap-1.5 font-sans font-semibold rounded-full border',
+  classes,
+  sizeClasses
+]}>
+  <Icon name={icon} size={iconSize} strokeWidth={2.5} />
   {label}
 </span>
