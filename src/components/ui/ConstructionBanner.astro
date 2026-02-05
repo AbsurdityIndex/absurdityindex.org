@@ -1,20 +1,20 @@
 ---
 /**
- * Under-construction banner styled as yellow caution tape.
- * Includes a rotating joke about congressional work schedules.
+ * Site-wide satirical disclaimer banner styled as yellow caution tape.
+ * Covers legal bases while staying on-brand with the satirical tone.
  */
-const jokes = [
-  "Under Construction — Congress averages 147 days in session per year. We're trying to match their work ethic.",
-  "Under Construction — The 118th Congress passed 27 laws in its first year. Our site has more pages than that.",
-  "Under Construction — Pardon our dust. Unlike Congress, we actually plan to finish.",
-  "Under Construction — Moving faster than a bipartisan bill in an election year.",
-  "Under Construction — We've been in session longer today than the average Friday in the House.",
-  "Under Construction — Our build pipeline has fewer delays than the legislative process.",
+const disclaimers = [
+  "This site is satire. Data may be incomplete, links may break, scores are opinions. Verify at Congress.gov before citing us in your dissertation.",
+  "Not legal advice. Not financial advice. Not even particularly good life advice. But it's more entertaining than C-SPAN.",
+  "Accuracy not guaranteed. Neither is Congress's. At least we're honest about it. Always verify at Congress.gov.",
+  "This is satire and commentary. If you're using this for serious research, please also consult Congress.gov. We're funnier, they're official.",
+  "Data sourced from Congress.gov, filtered through sarcasm. Links may rot faster than a stalled bill in committee.",
+  "Satire ahead. Our absurdity scores are editorial opinions, not constitutional law. The Founding Fathers would probably be fine with this.",
 ];
 
 // Pick one based on day of year so it changes daily but stays consistent per build
 const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-const joke = jokes[dayOfYear % jokes.length];
+const disclaimer = disclaimers[dayOfYear % disclaimers.length];
 ---
 
 <div class="construction-banner relative overflow-hidden bg-yellow-500 text-navy-900" role="status">
@@ -22,7 +22,7 @@ const joke = jokes[dayOfYear % jokes.length];
   <div class="relative py-2 px-4 text-center">
     <p class="text-xs sm:text-sm font-sans font-bold tracking-wide">
       <span aria-hidden="true" class="mr-1">&#9888;</span>
-      {joke}
+      {disclaimer}
       <span aria-hidden="true" class="ml-1">&#9888;</span>
     </p>
   </div>
