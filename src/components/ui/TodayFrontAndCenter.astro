@@ -30,6 +30,10 @@
     </div>
 
     <div id="today-front-content" class="mt-5 hidden space-y-5">
+      <p id="today-front-deck" class="rounded-lg border border-gold-200 bg-cream-100 px-3 py-2 font-serif text-base italic text-navy-800">
+        -
+      </p>
+
       <div class="grid grid-cols-1 gap-3 min-[520px]:grid-cols-2">
         <article class="rounded-lg border border-gold-200 bg-cream-100 p-3">
           <p class="font-mono text-[11px] uppercase tracking-[0.18em] text-gold-700">House</p>
@@ -110,6 +114,7 @@
   const loadingEl = document.getElementById('today-front-loading');
   const errorEl = document.getElementById('today-front-error');
   const contentEl = document.getElementById('today-front-content');
+  const deckEl = document.getElementById('today-front-deck');
   const houseStatusEl = document.getElementById('today-front-house-status');
   const houseLineEl = document.getElementById('today-front-house-line');
   const senateStatusEl = document.getElementById('today-front-senate-status');
@@ -170,8 +175,8 @@
       houseStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(house.status)}`;
 
       const houseLine =
-        house.latestAction?.time && house.latestAction?.text
-          ? `${house.latestAction.time}: ${house.latestAction.text}`
+        house.latestAction?.text
+          ? `${house.latestAction.time ? `${house.latestAction.time}: ` : ''}${house.latestAction.text}`
           : house.nextConvene
           ? `Next House meeting: ${house.nextConvene}`
           : 'No House floor action posted yet.';
@@ -186,8 +191,12 @@
         (senate.nextConvene ? `Next Senate meeting: ${senate.nextConvene}` : 'No Senate floor summary posted yet.');
       senateLineEl.textContent = truncate(senateLine);
 
+      deckEl.textContent =
+        data?.summary?.deck ||
+        'Satire desk is still warming up the teleprompter for this legislative day.';
+
       const bullets = Array.isArray(data?.summary?.bullets)
-        ? data.summary.bullets.slice(0, 3)
+        ? data.summary.bullets.slice(0, 4)
         : ['No summary available yet.'];
       appendListItems(bulletsEl, bullets);
 
@@ -201,7 +210,19 @@
             const chamber = meeting.chamber || 'Committee';
             const time = meeting.time ? `${meeting.time} - ` : '';
             const title = meeting.committee || meeting.title || 'Committee meeting';
-            return `${time}${chamber}: ${truncate(title, 90)}`;
+            const focus = meeting.focus ? ` (${meeting.focus})` : '';
+            const extras = [];
+            if (Number.isFinite(meeting.relatedBillCount) && meeting.relatedBillCount > 0) {
+              extras.push(`${meeting.relatedBillCount} bill${meeting.relatedBillCount === 1 ? '' : 's'}`);
+            }
+            if (Number.isFinite(meeting.relatedNominationCount) && meeting.relatedNominationCount > 0) {
+              extras.push(`${meeting.relatedNominationCount} nomination${meeting.relatedNominationCount === 1 ? '' : 's'}`);
+            }
+            if (meeting.isClosed) {
+              extras.push('closed');
+            }
+            const extraText = extras.length > 0 ? ` [${extras.join(', ')}]` : '';
+            return `${time}${chamber}: ${truncate(`${title}${focus}${extraText}`, 120)}`;
           })
         );
       }

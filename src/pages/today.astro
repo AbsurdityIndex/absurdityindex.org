@@ -38,6 +38,7 @@ const recentBills = allBills
         <section>
           <h2 class="font-serif text-2xl font-bold text-navy-900">Today&apos;s Summary</h2>
           <p id="today-live-headline" class="mt-2 font-sans text-base text-navy-800"></p>
+          <p id="today-live-deck" class="mt-2 rounded-lg border border-gold-200 bg-cream-100 px-3 py-2 font-serif text-base italic text-navy-800"></p>
           <ul id="today-live-bullets" class="mt-3 space-y-2 font-sans text-sm text-navy-700"></ul>
         </section>
 
@@ -135,6 +136,7 @@ const recentBills = allBills
   const contentEl = document.getElementById('today-live-content');
 
   const headlineEl = document.getElementById('today-live-headline');
+  const deckEl = document.getElementById('today-live-deck');
   const bulletsEl = document.getElementById('today-live-bullets');
 
   const houseStatusEl = document.getElementById('today-live-house-status');
@@ -199,8 +201,23 @@ const recentBills = allBills
 
       const detail = document.createElement('p');
       detail.className = 'mt-1 font-sans text-sm text-navy-700';
-      const location = meeting.location ? ` (${meeting.location})` : '';
-      detail.textContent = truncate(`${meeting.title || meeting.type || 'Meeting'}${location}`, 180);
+      const detailParts = [];
+      if (meeting.focus) detailParts.push(`Focus: ${meeting.focus}.`);
+      if (Number.isFinite(meeting.relatedBillCount) && meeting.relatedBillCount > 0) {
+        detailParts.push(`${meeting.relatedBillCount} related bill${meeting.relatedBillCount === 1 ? '' : 's'}.`);
+      }
+      if (Number.isFinite(meeting.relatedNominationCount) && meeting.relatedNominationCount > 0) {
+        detailParts.push(`${meeting.relatedNominationCount} nomination item${meeting.relatedNominationCount === 1 ? '' : 's'}.`);
+      }
+      if (meeting.isClosed) {
+        detailParts.push('Closed session.');
+      }
+      const location = meeting.location ? `Location: ${meeting.location}.` : '';
+      const fallback = meeting.title || meeting.type || 'Meeting';
+      const detailText = detailParts.length > 0
+        ? `${detailParts.join(' ')} ${location}`.trim()
+        : `${fallback}${location ? ` (${meeting.location})` : ''}`;
+      detail.textContent = truncate(detailText, 200);
 
       item.appendChild(heading);
       item.appendChild(committee);
@@ -290,13 +307,16 @@ const recentBills = allBills
 
       dateEl.textContent = data?.today?.label || 'Today';
       headlineEl.textContent = data?.summary?.headline || '';
+      deckEl.textContent =
+        data?.summary?.deck ||
+        'Satire desk is waiting for proceedings to escalate beyond procedural verbs.';
       listItems(bulletsEl, Array.isArray(data?.summary?.bullets) ? data.summary.bullets : []);
 
       const house = data?.chambers?.house || {};
       houseStatusEl.textContent = house.status || 'No update';
       houseStatusEl.className = `mt-1 font-serif text-2xl font-bold ${statusClass(house.status)}`;
-      houseLine1El.textContent = house.latestAction?.time
-        ? `${house.latestAction.time}: ${truncate(house.latestAction.text, 190)}`
+      houseLine1El.textContent = house.latestAction?.text
+        ? `${house.latestAction.time ? `${house.latestAction.time}: ` : ''}${truncate(house.latestAction.text, 190)}`
         : 'No House floor action posted yet.';
       houseLine2El.textContent = house.nextConvene
         ? `Next House meeting: ${house.nextConvene}`

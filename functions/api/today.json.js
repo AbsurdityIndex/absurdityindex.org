@@ -153,6 +153,55 @@ function cleanCommitteeName(name) {
     .trim();
 }
 
+function normalizeWhitespace(value) {
+  if (!value) return '';
+  return String(value).replace(/\s+/g, ' ').trim();
+}
+
+function toRelatedBillLabel(bill) {
+  if (!bill?.type || !bill?.number) return null;
+  return `${bill.type} ${bill.number}`;
+}
+
+function toNominationLabel(item) {
+  if (!item?.number) return null;
+  const partRaw = item.part !== null && item.part !== undefined ? String(item.part) : '';
+  if (!partRaw || partRaw === '0' || partRaw === '00') return `PN${item.number}`;
+  const parsed = Number.parseInt(partRaw, 10);
+  return Number.isNaN(parsed) ? `PN${item.number}-${partRaw}` : `PN${item.number}-${parsed}`;
+}
+
+function deriveMeetingFocus(meeting) {
+  const combined = normalizeWhitespace(`${meeting?.title || ''} ${meeting?.committees?.[0]?.name || ''}`).toLowerCase();
+
+  if (combined.includes('financial stability') || combined.includes('oversight council')) {
+    return 'financial-stability oversight';
+  }
+  if (combined.includes('retirement')) {
+    return 'retirement oversight';
+  }
+  if (combined.includes('pig butchering') || combined.includes('elder financial fraud')) {
+    return 'anti-fraud enforcement';
+  }
+  if (combined.includes('child sexual abuse material')) {
+    return 'child-safety criminal law package';
+  }
+  if (combined.includes('nomination')) {
+    return 'nominations pipeline';
+  }
+  if (combined.includes('closed business meeting') || combined.includes('intelligence')) {
+    return 'closed intelligence matters';
+  }
+  if (combined.includes('markup')) {
+    return 'bill markup';
+  }
+  if (combined.includes('hearing')) {
+    return 'oversight hearing';
+  }
+
+  return 'committee business';
+}
+
 function getApiKey(context, options) {
   if (options?.apiKey) return options.apiKey;
   if (context?.env?.CONGRESS_GOV_API_KEY) return context.env.CONGRESS_GOV_API_KEY;
@@ -205,18 +254,39 @@ async function mapLimit(items, limit, asyncMapper) {
 function summarizeMeeting(meeting, chamber) {
   const primaryCommittee = cleanCommitteeName(meeting.committees?.[0]?.name);
   const secondaryCommittee = meeting.committees?.[1]?.name ? cleanCommitteeName(meeting.committees[1].name) : null;
+  const relatedBills = Array.isArray(meeting.relatedItems?.bills)
+    ? meeting.relatedItems.bills.map((item) => toRelatedBillLabel(item)).filter(Boolean)
+    : [];
+  const relatedNominations = Array.isArray(meeting.relatedItems?.nominations)
+    ? meeting.relatedItems.nominations.map((item) => toNominationLabel(item)).filter(Boolean)
+    : [];
+  const witnessCount = Array.isArray(meeting.witnesses) ? meeting.witnesses.length : 0;
+  const videoCount = Array.isArray(meeting.videos) ? meeting.videos.length : 0;
+  const meetingDocumentCount = Array.isArray(meeting.meetingDocuments) ? meeting.meetingDocuments.length : 0;
+  const focus = deriveMeetingFocus(meeting);
+  const title = normalizeWhitespace(meeting.title || 'Committee meeting');
+  const isClosed = /closed/i.test(title) || /closed/i.test(meeting.type || '');
 
   return {
     chamber: chamber === 'house' ? 'House' : 'Senate',
     committee: primaryCommittee,
     subcommittee: secondaryCommittee,
-    title: meeting.title || 'Committee meeting',
+    title,
     type: meeting.type || null,
     status: meeting.meetingStatus || null,
+    focus,
     time: formatEtTime(meeting.date),
     location: formatLocation(meeting.location),
     dateTime: meeting.date || null,
     eventId: meeting.eventId || null,
+    isClosed,
+    relatedBillCount: relatedBills.length,
+    relatedNominationCount: relatedNominations.length,
+    relatedBills: relatedBills.slice(0, 6),
+    relatedNominations: relatedNominations.slice(0, 6),
+    witnessCount,
+    videoCount,
+    meetingDocumentCount,
   };
 }
 
@@ -448,7 +518,7 @@ function buildHouseStatus({ houseMeetings, houseVotes, dailyRecord }) {
   if (dailyRecord.issueDateUsed) {
     return {
       status: 'No Same-Day Vote Data',
-      summary: `Latest Congressional Record issue: ${formatEtDateLabel(dailyRecord.issueDateUsed) || 'recent issue'}.`,
+      summary: 'No same-day House roll calls were posted in the live feed.',
       latestAction: null,
       actions: [],
     };
@@ -482,7 +552,7 @@ function buildSenateStatus({ senateMeetings, dailyRecord }) {
   if (dailyRecord.issueDateUsed) {
     return {
       status: 'No Same-Day Floor Issue',
-      summary: `Latest Congressional Record issue: ${formatEtDateLabel(dailyRecord.issueDateUsed) || 'recent issue'}.`,
+      summary: 'No same-day Senate floor issue was published in this feed window.',
       latestAction: null,
       actions: [],
     };
@@ -498,30 +568,57 @@ function buildSenateStatus({ senateMeetings, dailyRecord }) {
 
 function buildSummary({ houseStatus, senateStatus, houseMeetings, senateMeetings, houseVotes, dailyRecord }) {
   const totalMeetings = houseMeetings.count + senateMeetings.count;
+  const allMeetings = [...houseMeetings.meetings, ...senateMeetings.meetings].sort(byDateTimeAsc);
+  const spotlight = allMeetings.slice(0, 3).map((meeting) => {
+    const time = meeting.time || 'Time TBA';
+    return `${time} ${meeting.committee}: ${meeting.focus}.`;
+  });
+  const closedCount = allMeetings.filter((meeting) => meeting.isClosed).length;
+  const totalBillRefs = allMeetings.reduce((sum, meeting) => sum + (meeting.relatedBillCount || 0), 0);
+  const totalNominationRefs = allMeetings.reduce((sum, meeting) => sum + (meeting.relatedNominationCount || 0), 0);
 
-  const bullets = [
-    `House: ${houseStatus.summary}`,
-    `Senate: ${senateStatus.summary}`,
-    `Committees: ${totalMeetings} meeting${totalMeetings === 1 ? '' : 's'} listed today (${houseMeetings.count} House, ${senateMeetings.count} Senate).`,
-  ];
+  const bullets = [];
+  bullets.push(
+    houseVotes.countToday > 0
+      ? `Power center: floor votes plus committees. House has ${houseVotes.countToday} published roll call vote${houseVotes.countToday === 1 ? '' : 's'}.`
+      : 'Power center: committees, not floor votes. House roll-call feed is quiet for today.'
+  );
 
-  if (houseVotes.countToday > 0) {
-    bullets.push(`Votes: House has ${houseVotes.countToday} recorded roll call vote${houseVotes.countToday === 1 ? '' : 's'} today.`);
-  } else {
-    bullets.push('Votes: No House roll call votes published for today in the Congress.gov House vote feed.');
+  if (spotlight.length > 0) {
+    bullets.push(`Top agenda items: ${spotlight.join(' ')}`);
+  }
+
+  bullets.push(
+    `Policy load: ${totalMeetings} committee meeting${totalMeetings === 1 ? '' : 's'} posted (${houseMeetings.count} House, ${senateMeetings.count} Senate), referencing ${totalBillRefs} bill${totalBillRefs === 1 ? '' : 's'} and ${totalNominationRefs} nomination item${totalNominationRefs === 1 ? '' : 's'}.`
+  );
+
+  if (closedCount > 0) {
+    bullets.push(
+      `Transparency meter: ${closedCount} meeting${closedCount === 1 ? '' : 's'} listed as closed session${closedCount === 1 ? '' : 's'} (official details are intentionally limited).`
+    );
   }
 
   if (dailyRecord.issueDateUsed) {
     bullets.push(
-      `Congressional Record: latest published issue is ${formatEtDateLabel(dailyRecord.issueDateUsed) || dailyRecord.issueDateUsed}.`
+      `Paper trail note: latest Congressional Record issue currently available is ${formatEtDateLabel(dailyRecord.issueDateUsed) || dailyRecord.issueDateUsed}.`
     );
   }
 
+  const headline =
+    houseVotes.countToday > 0
+      ? `House votes are active and committees are stacked, with ${totalMeetings} posted meeting${totalMeetings === 1 ? '' : 's'} across both chambers.`
+      : totalMeetings > 0
+      ? `No same-day House roll-call fireworks; committees are carrying the workload with ${totalMeetings} posted meeting${totalMeetings === 1 ? '' : 's'}.`
+      : 'Floor and committee feeds are quiet so far, pending later updates.';
+
+  const deck =
+    totalMeetings > 0
+      ? `Satire desk: Congress managed ${totalMeetings} committee meeting${totalMeetings === 1 ? '' : 's'} while the House vote board stayed on standby mode.`
+      : 'Satire desk: the legislative engines are idling, but paperwork never sleeps.';
+
   return {
-    headline:
-      totalMeetings > 0
-        ? `${totalMeetings} committee meeting${totalMeetings === 1 ? '' : 's'} are listed in Congress.gov data for today.`
-        : 'No committee meetings are listed in current Congress.gov data for today.',
+    headline,
+    deck,
     bullets,
   };
 }
@@ -620,8 +717,18 @@ export async function buildTodayData({ apiKey, now = new Date() }) {
         subcommittee: meeting.subcommittee,
         title: meeting.title,
         type: meeting.type,
+        status: meeting.status,
+        focus: meeting.focus,
         time: meeting.time,
         location: meeting.location,
+        isClosed: meeting.isClosed,
+        relatedBillCount: meeting.relatedBillCount,
+        relatedNominationCount: meeting.relatedNominationCount,
+        relatedBills: meeting.relatedBills,
+        relatedNominations: meeting.relatedNominations,
+        witnessCount: meeting.witnessCount,
+        videoCount: meeting.videoCount,
+        meetingDocumentCount: meeting.meetingDocumentCount,
       })),
     },
     votes: {
