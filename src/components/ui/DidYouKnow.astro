@@ -46,15 +46,3 @@ for (let i = 0; i < count; i++) {
     ))}
   </ul>
 </aside>
-
-<style>
-  /* Dark mode: bg-cream-50 has no variable swap — override to dark */
-  :global(html.dark) aside {
-    background-color: rgba(15, 26, 46, 0.85) !important;
-    border-color: #B8860B !important;
-  }
-  :global(html[data-theme="solarized-dark"]) aside {
-    background-color: rgba(7, 54, 66, 0.85) !important;
-    border-color: #B58900 !important;
-  }
-</style>

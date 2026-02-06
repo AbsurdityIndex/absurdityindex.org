@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>K8s Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            surface: { DEFAULT: '#0f172a', light: '#1e293b', lighter: '#334155' },
+          },
+          fontFamily: { mono: ['JetBrains Mono', 'Fira Code', 'monospace'] },
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse-highlight {
+      0%, 100% { background-color: transparent; }
+      50% { background-color: rgba(234, 179, 8, 0.15); }
+    }
+    .highlight-pulse {
+      animation: pulse-highlight 0.6s ease-in-out 3;
+    }
+    body { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .alert-expand { max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; }
+    .alert-expand.open { max-height: 400px; transition: max-height 0.3s ease-in; }
+    .chevron { transition: transform 0.2s; }
+    .chevron.open { transform: rotate(90deg); }
+  </style>
+</head>
+<body class="bg-surface text-slate-200 min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-slate-700/50 px-6 py-4">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">&#9096;</span>
+        <h1 class="text-lg font-bold tracking-tight">K8s Monitor</h1>
+      </div>
+      <div id="last-check" class="text-xs text-slate-500">—</div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-6 space-y-6">
+
+    <!-- Health bar -->
+    <div id="health-bar" class="flex gap-3">
+      <button onclick="setFilter('critical')" class="health-badge flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-light border border-slate-700/50 hover:border-red-500/50 transition-colors cursor-pointer">
+        <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+        <span class="text-sm">Critical</span>
+        <span id="count-critical" class="text-sm font-bold text-red-400">0</span>
+      </button>
+      <button onclick="setFilter('warning')" class="health-badge flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-light border border-slate-700/50 hover:border-yellow-500/50 transition-colors cursor-pointer">
+        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+        <span class="text-sm">Warning</span>
+        <span id="count-warning" class="text-sm font-bold text-yellow-400">0</span>
+      </button>
+      <button onclick="setFilter('info')" class="health-badge flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-light border border-slate-700/50 hover:border-blue-500/50 transition-colors cursor-pointer">
+        <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+        <span class="text-sm">Info</span>
+        <span id="count-info" class="text-sm font-bold text-blue-400">0</span>
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex items-center gap-3">
+      <div class="flex rounded-lg overflow-hidden border border-slate-700/50">
+        <button onclick="setFilter('')" id="filter-all" class="filter-tab px-4 py-1.5 text-xs font-medium bg-surface-lighter text-white">All</button>
+        <button onclick="setFilter('critical')" id="filter-critical" class="filter-tab px-4 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition-colors">Critical</button>
+        <button onclick="setFilter('warning')" id="filter-warning" class="filter-tab px-4 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition-colors">Warning</button>
+        <button onclick="setFilter('info')" id="filter-info" class="filter-tab px-4 py-1.5 text-xs font-medium text-slate-400 hover:text-white transition-colors">Info</button>
+      </div>
+      <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer ml-auto">
+        <input type="checkbox" id="show-resolved" onchange="refresh()" class="accent-slate-500">
+        Show resolved
+      </label>
+    </div>
+
+    <!-- Alert list -->
+    <div id="alert-list" class="space-y-1">
+      <div class="text-sm text-slate-500 py-12 text-center">Loading...</div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden text-center py-16">
+      <div class="text-4xl mb-3">&#10003;</div>
+      <div class="text-slate-400">No active alerts</div>
+      <div class="text-xs text-slate-600 mt-1">Monitoring is running. Alerts will appear here.</div>
+    </div>
+  </main>
+
+<script>
+  let currentFilter = '';
+  let expandedIds = new Set();
+  let deepLinkId = null;
+
+  const severityColors = {
+    critical: { dot: 'bg-red-500', text: 'text-red-400', border: 'border-red-500/30', bg: 'bg-red-500/10' },
+    warning:  { dot: 'bg-yellow-500', text: 'text-yellow-400', border: 'border-yellow-500/30', bg: 'bg-yellow-500/10' },
+    info:     { dot: 'bg-blue-500', text: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/10' },
+  };
+
+  // Parse deep-link hash
+  function parseHash() {
+    const m = location.hash.match(/^#alert-(\d+)$/);
+    return m ? parseInt(m[1]) : null;
+  }
+
+  function timeAgo(ts) {
+    const diff = (Date.now() / 1000) - ts;
+    if (diff < 60) return `${Math.floor(diff)}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function setFilter(severity) {
+    currentFilter = severity;
+    // Update filter tab styles
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+      btn.classList.remove('bg-surface-lighter', 'text-white');
+      btn.classList.add('text-slate-400');
+    });
+    const activeId = severity ? `filter-${severity}` : 'filter-all';
+    const active = document.getElementById(activeId);
+    if (active) {
+      active.classList.add('bg-surface-lighter', 'text-white');
+      active.classList.remove('text-slate-400');
+    }
+    refresh();
+  }
+
+  function toggleExpand(id) {
+    if (expandedIds.has(id)) expandedIds.delete(id);
+    else expandedIds.add(id);
+
+    const detail = document.getElementById(`detail-${id}`);
+    const chevron = document.getElementById(`chevron-${id}`);
+    if (detail) detail.classList.toggle('open');
+    if (chevron) chevron.classList.toggle('open');
+  }
+
+  function renderAlert(a) {
+    const c = severityColors[a.severity] || severityColors.info;
+    const isExpanded = expandedIds.has(a.id);
+    const isResolved = a.resolved === 1;
+
+    return `
+      <div id="alert-${a.id}" class="group rounded-lg border ${isResolved ? 'border-slate-700/30 opacity-60' : c.border} bg-surface-light hover:bg-surface-lighter/50 transition-colors">
+        <div class="flex items-center gap-3 px-4 py-3 cursor-pointer select-none" onclick="toggleExpand(${a.id})">
+          <span id="chevron-${a.id}" class="chevron text-slate-500 text-xs ${isExpanded ? 'open' : ''}">&#9654;</span>
+          <span class="w-2 h-2 rounded-full ${c.dot} flex-shrink-0"></span>
+          <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.bg} ${c.text}">${a.severity}</span>
+          <span class="text-sm flex-1 truncate">${esc(a.title)}</span>
+          ${a.occurrence_count > 1 ? `<span class="text-xs text-slate-500">&times;${a.occurrence_count}</span>` : ''}
+          <span class="text-xs text-slate-500 flex-shrink-0">${timeAgo(a.last_seen)}</span>
+          ${isResolved ? '<span class="text-[10px] text-green-600 font-medium">RESOLVED</span>' : ''}
+        </div>
+        <div id="detail-${a.id}" class="alert-expand ${isExpanded ? 'open' : ''}">
+          <div class="px-4 pb-4 pl-14 space-y-2 text-xs">
+            <div class="text-slate-300 whitespace-pre-wrap leading-relaxed">${esc(a.message)}</div>
+            <div class="flex flex-wrap gap-x-6 gap-y-1 text-slate-500 pt-1">
+              ${a.namespace ? `<span>ns: <span class="text-slate-400">${esc(a.namespace)}</span></span>` : ''}
+              ${a.resource ? `<span>resource: <span class="text-slate-400">${esc(a.resource)}</span></span>` : ''}
+              <span>first: <span class="text-slate-400">${new Date(a.first_seen * 1000).toLocaleTimeString()}</span></span>
+              <span>last: <span class="text-slate-400">${new Date(a.last_seen * 1000).toLocaleTimeString()}</span></span>
+              <span>count: <span class="text-slate-400">${a.occurrence_count}</span></span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function esc(s) {
+    const el = document.createElement('span');
+    el.textContent = s;
+    return el.innerHTML;
+  }
+
+  async function refresh() {
+    try {
+      // Fetch health
+      const health = await fetch('/api/health').then(r => r.json());
+      document.getElementById('count-critical').textContent = health.critical;
+      document.getElementById('count-warning').textContent = health.warning;
+      document.getElementById('count-info').textContent = health.info;
+
+      if (health.last_check > 0) {
+        document.getElementById('last-check').textContent = `Last check: ${timeAgo(health.last_check)}`;
+      }
+
+      // Fetch alerts
+      const resolved = document.getElementById('show-resolved')?.checked ? 1 : 0;
+      const params = new URLSearchParams({ resolved, limit: 200 });
+      if (currentFilter) params.set('severity', currentFilter);
+
+      const data = await fetch(`/api/alerts?${params}`).then(r => r.json());
+      const list = document.getElementById('alert-list');
+      const empty = document.getElementById('empty-state');
+
+      if (data.alerts.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+      } else {
+        empty.classList.add('hidden');
+        list.innerHTML = data.alerts.map(renderAlert).join('');
+      }
+
+      // Deep-link highlight
+      if (deepLinkId) {
+        const el = document.getElementById(`alert-${deepLinkId}`);
+        if (el) {
+          expandedIds.add(deepLinkId);
+          const detail = document.getElementById(`detail-${deepLinkId}`);
+          const chevron = document.getElementById(`chevron-${deepLinkId}`);
+          if (detail) detail.classList.add('open');
+          if (chevron) chevron.classList.add('open');
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('highlight-pulse');
+          deepLinkId = null; // only highlight once
+        }
+      }
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    }
+  }
+
+  // Init
+  deepLinkId = parseHash();
+  if (deepLinkId) {
+    // If deep-linked to a specific alert, also show resolved in case it's resolved
+    const cb = document.getElementById('show-resolved');
+    if (cb) cb.checked = true;
+  }
+  refresh();
+  setInterval(refresh, 5000);
+
+  // Handle hash changes (e.g. user navigates to a new #alert-N)
+  window.addEventListener('hashchange', () => {
+    deepLinkId = parseHash();
+    if (deepLinkId) refresh();
+  });
+</script>
+
+</body>
+</html>

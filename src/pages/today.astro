@@ -23,7 +23,7 @@ const recentBills = allBills
       </p>
     </header>
 
-    <section class="today-panel rounded-xl border-2 border-gold-300 bg-white/90 p-5 shadow-sm md:p-7">
+    <section class="rounded-xl border-2 border-gold-300 bg-cream-100/90 p-5 shadow-sm md:p-7">
       <p id="today-live-date" class="font-serif text-xl text-navy-800">Loading current day data...</p>
 
       <div id="today-live-loading" class="mt-4 rounded-lg bg-cream-200 p-3 font-sans text-sm text-navy-700">
@@ -102,32 +102,6 @@ const recentBills = allBills
     </section>
   </div>
 </BaseLayout>
-
-<style>
-  /* Dark mode: main panel — bg-white/90 not caught by global .bg-white override */
-  :global(html.dark) .today-panel {
-    background-color: rgba(15, 26, 46, 0.92) !important;
-    border-color: #B8860B !important;
-  }
-
-  /* Dark mode: error message text readability */
-  :global(html.dark) #today-live-error {
-    color: #FCA5A5 !important;
-    border-color: rgba(239, 68, 68, 0.4) !important;
-    background-color: rgba(239, 68, 68, 0.12) !important;
-  }
-
-  /* Solarized dark equivalents */
-  :global(html[data-theme="solarized-dark"]) .today-panel {
-    background-color: rgba(7, 54, 66, 0.92) !important;
-    border-color: #B58900 !important;
-  }
-  :global(html[data-theme="solarized-dark"]) #today-live-error {
-    color: #FCA5A5 !important;
-    border-color: rgba(239, 68, 68, 0.4) !important;
-    background-color: rgba(239, 68, 68, 0.12) !important;
-  }
-</style>
 
 <script>
   const dateEl = document.getElementById('today-live-date');

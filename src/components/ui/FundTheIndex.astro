@@ -18,6 +18,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
 <button
   id="fund-tab"
   class="fund-tab"
+  data-theme-fixed
   aria-label="Fund the Absurdity Index"
   title="Fund the Index"
 >
@@ -38,7 +39,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
   aria-hidden="true"
 >
   <!-- Drawer header -->
-  <header class="fund-drawer-header">
+  <header class="fund-drawer-header" data-theme-fixed>
     <div class="fund-header-title">
       <Icon name="landmark" size={20} />
       <h2>Fund the Index</h2>
@@ -184,7 +185,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
   </div>
 
   <!-- Drawer footer -->
-  <footer class="fund-drawer-footer">
+  <footer class="fund-drawer-footer" data-theme-fixed>
     <a
       href={DONATE_URL}
       target="_blank"
@@ -226,23 +227,6 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
     background: var(--color-navy-800);
     padding-right: 10px;
     box-shadow: 4px 2px 14px rgba(0, 0, 0, 0.35);
-  }
-
-  :global(html.dark) .fund-tab {
-    background: #0A1628;
-    border-color: #E8B85A;
-    color: #F0C86A;
-  }
-  :global(html.dark) .fund-tab:hover {
-    background: #121F36;
-  }
-  :global(html[data-theme="solarized-dark"]) .fund-tab {
-    background: #002B36;
-    border-color: #CB9B00;
-    color: #DBA800;
-  }
-  :global(html[data-theme="solarized-dark"]) .fund-tab:hover {
-    background: #073642;
   }
 
   /* Hide tab when drawer is open */
@@ -673,12 +657,12 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
      DARK MODE
      ======================== */
   :global(html.dark) .fund-drawer {
-    background: #1a2535;
+    background: var(--color-cream-200);
     border-right-color: var(--color-gold-600);
   }
 
   :global(html.dark) .fund-drawer-content {
-    background: #1a2535;
+    background: var(--color-cream-300);
   }
 
   :global(html.dark) .fund-clauses p {
@@ -694,12 +678,12 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
   }
 
   :global(html.dark) .fund-comparison {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--color-cream-300);
     border-color: var(--color-gold-600);
   }
 
   :global(html.dark) .fund-comparison-card {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--color-cream-400);
     border-color: var(--color-gold-700);
   }
 
@@ -708,7 +692,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
   }
 
   :global(html.dark) .fund-tier {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--color-cream-300);
     border-color: var(--color-gold-600);
   }
 

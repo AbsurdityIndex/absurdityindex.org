@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.k8s-monitor</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/coreysteinwand/Developer/Source/not-congress.io/k8s-monitor/monitor.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/coreysteinwand/Developer/Source/not-congress.io/k8s-monitor</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/k8s-monitor.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/k8s-monitor.err</string>
+</dict>
+</plist>

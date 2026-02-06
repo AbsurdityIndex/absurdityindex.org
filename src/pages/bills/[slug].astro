@@ -220,7 +220,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
     {/* Bill Evolution Modal (if evolution data exists) */}
     {hasBillEvolution && (
-      <div class="mb-8 p-5 bg-gradient-to-r from-navy-800 to-navy-900 rounded-lg border border-gold-500">
+      <div class="mb-8 p-5 bg-gradient-to-r from-navy-800 to-navy-900 rounded-lg border border-gold-500" data-theme-fixed>
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 class="text-sm font-sans font-semibold text-gold-400 uppercase tracking-wide mb-1">
@@ -361,7 +361,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     )}
 
     {/* Action bar */}
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-navy-800 rounded-lg mb-8">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-navy-800 rounded-lg mb-8" data-theme-fixed>
       {/* Share buttons */}
       <div class="flex items-center gap-3">
         <span class="text-xs font-sans font-medium text-gold-400 uppercase tracking-wide">Share</span>

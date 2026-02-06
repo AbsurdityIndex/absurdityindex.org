@@ -72,7 +72,30 @@ API endpoints in `src/pages/api/` return JSON for bills, stats, etc.
 - `functions/_middleware.js` restricts access to US visitors only
 - Search powered by **Pagefind** (indexed at build time)
 
-#### Deploy to Production
+#### Automated CI/CD (Push to Deploy)
+
+Pushing to `main` triggers an automatic build and deploy within ~60 seconds. The pipeline runs on a self-hosted Kubernetes cluster using **Argo Workflows**, triggered by a polling CronJob.
+
+**How it works:**
+1. `absurdity-index-poller` CronJob (runs every 60s in `argo` namespace) polls the GitHub API for new commits on `main`
+2. On new commit, it submits an Argo Workflow using the `deploy-absurdity-index` WorkflowTemplate
+3. The workflow runs three steps: `clone-repo` → `build` (`npm ci && npm run build`) → `deploy` (`wrangler pages deploy`)
+4. Commit SHA state is tracked in the `absurdity-index-poller-state` ConfigMap to avoid duplicate deploys
+
+**K8s resources (all in `argo` namespace on `172.16.10.54`):**
+| Resource | Name | Purpose |
+|----------|------|---------|
+| CronJob | `absurdity-index-poller` | Polls GitHub API every minute for new commits |
+| WorkflowTemplate | `deploy-absurdity-index` | 3-step clone → build → deploy workflow |
+| ConfigMap | `absurdity-index-poller-state` | Stores last-seen commit SHA |
+| Secret | `github-pat` | GitHub token for repo access |
+| Secret | `cloudflare-api-token` | Cloudflare Pages deploy token (`woodpecker-ci-pages-deploy`) |
+
+**Cloudflare account ID** is hardcoded in the WorkflowTemplate: `cfceabac156f51a56346c036fc7754ee`
+
+**No public DNS or webhooks required** — the poller makes outbound-only calls to GitHub API (polling) and Cloudflare API (deploying). The entire CI infrastructure stays behind the firewall.
+
+#### Manual Deploy to Production
 ```bash
 npm run build                                          # Build site + Pagefind index
 npx wrangler pages deploy dist --project-name=absurdity-index   # Deploy to Cloudflare

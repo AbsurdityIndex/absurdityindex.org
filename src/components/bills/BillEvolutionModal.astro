@@ -237,13 +237,14 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
 <div
   id={modalId}
   class="evolution-modal"
+  data-theme-dynamic
   role="dialog"
   aria-modal="true"
   aria-labelledby={`${modalId}-title`}
   aria-hidden="true"
 >
   <!-- Header -->
-  <header class="modal-header">
+  <header class="modal-header" data-theme-fixed>
     <div class="header-content">
       <div class="flex items-center gap-2">
         <Icon name="history" size={20} class="text-gold-400" />
@@ -1097,7 +1098,7 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
   .pork-meter-modal.tier-6 .bacon-modal-strip.active { background: #b91c1c; }
 
   :global(html.dark) .pork-meter-modal {
-    background: linear-gradient(180deg, rgba(15, 26, 46, 0.9) 0%, rgba(10, 22, 40, 0.95) 100%);
+    background: linear-gradient(180deg, var(--color-cream-200) 0%, var(--color-cream-100) 100%);
     border-color: var(--color-gold-600);
   }
 
@@ -1121,18 +1122,18 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
      DARK MODE
      ======================== */
   :global(html.dark) .evolution-modal {
-    background: #0f1a2e;
+    background: var(--color-cream-100);
     border-left-color: var(--color-gold-600);
   }
 
   :global(html.dark) .timeline-sidebar,
   :global(html.dark) .meter-sidebar {
-    background: rgba(10, 18, 32, 0.8);
-    border-color: rgba(197, 165, 114, 0.2);
+    background: var(--color-cream-200);
+    border-color: var(--color-gold-700);
   }
 
   :global(html.dark) .stage-content {
-    background: #1a2535;
+    background: var(--color-cream-300);
   }
 
   :global(html.dark) .stage-header {
@@ -1146,8 +1147,8 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
 
   :global(html.dark) .pork-count,
   :global(html.dark) .amendment-badge {
-    background: rgba(0, 0, 0, 0.3);
-    border-color: rgba(197, 165, 114, 0.2);
+    background: var(--color-cream-400);
+    border-color: var(--color-gold-700);
   }
 
   /* ========================

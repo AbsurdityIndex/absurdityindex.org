@@ -119,7 +119,7 @@ const keyTerms = [
   aria-hidden="true"
 >
   <!-- Drawer Header -->
-  <header class="drawer-header">
+  <header class="drawer-header" data-theme-fixed>
     <div class="header-title">
       <Icon name="book-open" size={20} />
       <h2>Legislative Glossary</h2>
@@ -268,7 +268,7 @@ const keyTerms = [
   </div>
 
   <!-- Drawer Footer -->
-  <footer class="drawer-footer">
+  <footer class="drawer-footer" data-theme-fixed>
     <a href="https://www.congress.gov/help/learn-about-the-legislative-process" target="_blank" rel="noopener noreferrer" class="learn-more-link">
       <span>Learn more at Congress.gov</span>
       <Icon name="external-link" size={12} />
@@ -705,12 +705,12 @@ const keyTerms = [
      DARK MODE
      ======================== */
   :global(html.dark) .glossary-drawer {
-    background: #1a2535;
+    background: var(--color-cream-200);
     border-left-color: var(--color-navy-500);
   }
 
   :global(html.dark) .drawer-content {
-    background: #1a2535;
+    background: var(--color-cream-300);
   }
 
   :global(html.dark) .intro-text,

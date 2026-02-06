@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+
+const lastUpdated = 'February 6, 2026';
+---
+
+<BaseLayout title="Privacy Policy" description="Privacy policy for Absurdity Index, including what data we collect, what we do not collect, and how local browser storage is used.">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <OfficialSeal size="160" />
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Privacy</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Privacy Policy</h1>
+      <p class="text-navy-600 font-serif italic mt-3">
+        Last updated: {lastUpdated}
+      </p>
+    </div>
+
+    <div class="gold-rule"></div>
+
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mt-8">
+      <div class="bill-content">
+        <p>
+          AbsurdityIndex.org is a satirical editorial website, not a government service. We keep data collection minimal by design.
+        </p>
+
+        <h2>What We Collect</h2>
+        <ul>
+          <li><strong>No user accounts</strong> - We do not ask you to create an account to browse the site.</li>
+          <li><strong>No ad trackers</strong> - We do not run ad-tech or behavioral tracking scripts.</li>
+          <li><strong>Standard hosting request data</strong> - Like most websites, our hosting providers may process technical request data (for example IP address, browser metadata, and request timing) to deliver and secure the site.</li>
+          <li><strong>Local browser storage for site preferences</strong> - We store a small set of settings in your browser so your experience is consistent across visits.</li>
+        </ul>
+
+        <h2>Local Storage Keys We Use</h2>
+        <ul>
+          <li><code>theme</code> - Saves your selected color theme.</li>
+          <li><code>font-pairing</code> - Saves your selected font pairing.</li>
+          <li><code>filibuster-best</code> - Saves your best score in the Filibuster Simulator.</li>
+          <li><code>absurdity.perf</code> - Optional debug flag for client-side performance logging.</li>
+        </ul>
+        <p>
+          These values are stored in your browser and are not used for advertising profiles.
+        </p>
+
+        <h2>Cookies</h2>
+        <p>
+          As of {lastUpdated}, Absurdity Index does not set first-party analytics or advertising cookies in site code. Infrastructure providers may use strictly necessary cookies or similar mechanisms for security and platform operations.
+        </p>
+
+        <h2>Third-Party Services</h2>
+        <ul>
+          <li><strong>Google Fonts</strong> - We load fonts from Google-hosted font endpoints.</li>
+          <li><strong>Cloudflare Pages</strong> - Hosts and serves the site and may process request metadata for performance and security.</li>
+          <li><strong>External links</strong> - If you click links to sites like Congress.gov, social networks, or GoFundMe, those sites apply their own privacy practices.</li>
+        </ul>
+
+        <h2>Your Choices</h2>
+        <ul>
+          <li>Clear local storage in your browser settings to remove saved preferences and game stats.</li>
+          <li>Block third-party resources (such as remote fonts) with browser settings or extensions.</li>
+          <li>Use private browsing mode if you prefer not to persist local settings.</li>
+        </ul>
+
+        <h2>Policy Updates</h2>
+        <p>
+          We may update this policy as features change. Material updates will be reflected by changing the "Last updated" date at the top of this page.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+          For questions, complaints, or constitutional crises, please contact your local representative.
+          If they are in recess (they are), file a strongly worded memo via
+          <a href="https://github.com/absurdityindex/absurdityindex.org/issues" target="_blank" rel="noopener noreferrer">GitHub</a>
+          or our <a href="/submit">submission form</a>.
+        </p>
+      </div>
+    </div>
+
+    <Divider withSeal={true} />
+  </div>
+</BaseLayout>

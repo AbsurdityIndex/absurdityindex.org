@@ -2,13 +2,21 @@
 
 @theme {
   /* Government Parody Colors */
+  --color-navy-50: #EEF3FA;
+  --color-navy-100: #DCE7F5;
+  --color-navy-200: #C2D3E8;
+  --color-navy-300: #98B3D3;
   --color-navy-900: #0A1628;
   --color-navy-800: #121F36;
   --color-navy-700: #1A2D4D;
   --color-navy-600: #2D5986;
   --color-navy-500: #3A6FA0;
   --color-navy-400: #5A8FBF;
+  --color-navy-950: #060F1E;
 
+  --color-gold-50: #FDF9EF;
+  --color-gold-800: #6D562A;
+  --color-gold-700: #8A6E36;
   --color-gold-600: #A88B4A;
   --color-gold-500: #C5A572;
   --color-gold-400: #D4BB8A;
@@ -16,6 +24,9 @@
   --color-gold-200: #F0E4CA;
   --color-gold-100: #F7EFE0;
 
+  --color-cream-50: #FEFCF7;
+  --color-cream-500: #B4A894;
+  --color-cream-400: #CFC4B2;
   --color-cream-100: #FAF7F0;
   --color-cream-200: #F0EBE0;
   --color-cream-300: #E0D8C8;
@@ -169,20 +180,31 @@ body {
 /* Dark mode overrides - comprehensive theme swap */
 html.dark {
   /* Background colors - invert light to dark */
+  --color-cream-50: #070F1B;
   --color-cream-100: #0A1220;
   --color-cream-200: #0D1626;
   --color-cream-300: #121C30;
+  --color-cream-400: #17243C;
+  --color-cream-500: #1D2C48;
   --color-parchment: #0F1A2E;
 
   /* Text colors - navy becomes light for readability */
+  --color-navy-50: #46423D;
+  --color-navy-100: #59564F;
+  --color-navy-200: #716D66;
+  --color-navy-300: #89857D;
   --color-navy-900: #F5F0E8;
   --color-navy-800: #EDE9E1;
   --color-navy-700: #E0DCD5;
   --color-navy-600: #D4D0C8;
   --color-navy-500: #BDB9B1;
   --color-navy-400: #A09C94;
+  --color-navy-950: #060F1E;
 
   /* Gold stays warm but slightly brighter for dark bg */
+  --color-gold-50: #FFFDF5;
+  --color-gold-800: #946A2A;
+  --color-gold-700: #B98436;
   --color-gold-600: #D4A04A;
   --color-gold-500: #E8B85A;
   --color-gold-400: #F0C86A;
@@ -315,33 +337,44 @@ html.dark tr:hover {
    in components still fire — these overrides layer on top.
    ============================== */
 html[data-theme="solarized-dark"] {
-  /* Backgrounds — Solarized base03, base02, base01 */
+  /* Backgrounds — Solarized base03/base02 with stepped surfaces */
+  --color-cream-50: #001F27;
   --color-cream-100: #002B36;
   --color-cream-200: #073642;
-  --color-cream-300: #0A3D49;
+  --color-cream-300: #0F4351;
+  --color-cream-400: #1F535F;
+  --color-cream-500: #2B626D;
   --color-parchment: #073642;
 
-  /* Text — Solarized base tones, brightened for readability */
+  /* Text — Solarized base tones */
+  --color-navy-50: #324A52;
+  --color-navy-100: #3F5962;
+  --color-navy-200: #586E75;
+  --color-navy-300: #657B83;
   --color-navy-900: #EEE8D5;
-  --color-navy-800: #E0DAC8;
-  --color-navy-700: #C8D0D0;
-  --color-navy-600: #B0BABA;
+  --color-navy-800: #DCD6C4;
+  --color-navy-700: #C9C3B3;
+  --color-navy-600: #B8B29F;
   --color-navy-500: #93A1A1;
   --color-navy-400: #839496;
+  --color-navy-950: #001A22;
 
-  /* Gold → Solarized yellow accent */
-  --color-gold-600: #B58900;
-  --color-gold-500: #CB9B00;
-  --color-gold-400: #DBA800;
-  --color-gold-300: #E8BD30;
-  --color-gold-200: #F0D060;
-  --color-gold-100: #FFF8E0;
+  /* Gold — Solarized yellow ramp */
+  --color-gold-50: #FEF8E6;
+  --color-gold-800: #665000;
+  --color-gold-700: #806300;
+  --color-gold-600: #9A7800;
+  --color-gold-500: #B58900;
+  --color-gold-400: #CFA530;
+  --color-gold-300: #DDBE63;
+  --color-gold-200: #EADAA5;
+  --color-gold-100: #F5EAC8;
 
   /* Semantic colors — Solarized red/green */
   --color-red-700: #DC322F;
-  --color-red-600: #F05050;
-  --color-green-700: #2AA198;
-  --color-green-600: #40BFAA;
+  --color-red-600: #E1645E;
+  --color-green-700: #859900;
+  --color-green-600: #9CB312;
 }
 
 html[data-theme="solarized-dark"] body {
@@ -394,32 +427,43 @@ html[data-theme="solarized-dark"] tr:hover {
    ============================== */
 html[data-theme="solarized-light"] {
   /* Backgrounds — Solarized base3, base2 */
+  --color-cream-50: #FEFDF8;
   --color-cream-100: #FDF6E3;
   --color-cream-200: #EEE8D5;
   --color-cream-300: #DDD6C3;
+  --color-cream-400: #CFC7B3;
+  --color-cream-500: #B8B19D;
   --color-parchment: #EEE8D5;
 
   /* Text — Solarized base00, base01, base02, base03 */
+  --color-navy-50: #DFE5E5;
+  --color-navy-100: #CED6D6;
+  --color-navy-200: #BCC7C7;
+  --color-navy-300: #AAB7B8;
   --color-navy-900: #002B36;
   --color-navy-800: #073642;
   --color-navy-700: #586E75;
   --color-navy-600: #657B83;
   --color-navy-500: #839496;
   --color-navy-400: #93A1A1;
+  --color-navy-950: #001F27;
 
-  /* Gold → Solarized yellow accent */
+  /* Gold — Solarized yellow ramp */
+  --color-gold-50: #FFF7E2;
+  --color-gold-800: #665000;
+  --color-gold-700: #806300;
   --color-gold-600: #9A7800;
   --color-gold-500: #B58900;
   --color-gold-400: #C49500;
   --color-gold-300: #D4A820;
-  --color-gold-200: #E0C060;
+  --color-gold-200: #E7D69D;
   --color-gold-100: #F5EAC8;
 
   /* Semantic colors */
   --color-red-700: #CB4B16;
   --color-red-600: #DC322F;
-  --color-green-700: #2AA198;
-  --color-green-600: #40BFAA;
+  --color-green-700: #859900;
+  --color-green-600: #9CB312;
 }
 
 /* ==============================
@@ -430,35 +474,132 @@ html[data-theme="solarized-light"] {
    elements so every Tailwind utility inside them resolves correctly.
    ============================== */
 html.dark [data-theme-fixed],
+html.dark #mobile-menu-backdrop,
 html.dark #mobile-menu-panel,
 html.dark .settings-dial-panel,
 html.dark .settings-dial-fab {
+  --color-navy-50: #EEF3FA;
+  --color-navy-100: #DCE7F5;
+  --color-navy-200: #C2D3E8;
+  --color-navy-300: #98B3D3;
   --color-navy-900: #0A1628;
   --color-navy-800: #121F36;
   --color-navy-700: #1A2D4D;
   --color-navy-600: #2D5986;
   --color-navy-500: #3A6FA0;
   --color-navy-400: #5A8FBF;
+  --color-navy-950: #060F1E;
+  --color-cream-50: #FEFCF7;
   --color-cream-100: #FAF7F0;
   --color-cream-200: #F0EBE0;
   --color-cream-300: #E0D8C8;
+  --color-cream-400: #CFC4B2;
+  --color-cream-500: #B4A894;
+  --color-gold-50: #FDF9EF;
+  --color-gold-100: #F7EFE0;
+  --color-gold-200: #F0E4CA;
+  --color-gold-300: #E8D5B0;
+  --color-gold-400: #D4BB8A;
+  --color-gold-500: #C5A572;
+  --color-gold-600: #A88B4A;
+  --color-gold-800: #6D562A;
+  --color-gold-700: #8A6E36;
   --color-parchment: #F5F0E1;
 }
 
 html[data-theme="solarized-dark"] [data-theme-fixed],
+html[data-theme="solarized-dark"] #mobile-menu-backdrop,
 html[data-theme="solarized-dark"] #mobile-menu-panel,
 html[data-theme="solarized-dark"] .settings-dial-panel,
 html[data-theme="solarized-dark"] .settings-dial-fab {
+  --color-navy-50: #DFE5E5;
+  --color-navy-100: #CED6D6;
+  --color-navy-200: #BCC7C7;
+  --color-navy-300: #AAB7B8;
   --color-navy-900: #002B36;
   --color-navy-800: #073642;
-  --color-navy-700: #0A3D49;
-  --color-navy-600: #586E75;
-  --color-navy-500: #657B83;
-  --color-navy-400: #839496;
+  --color-navy-700: #586E75;
+  --color-navy-600: #657B83;
+  --color-navy-500: #839496;
+  --color-navy-400: #93A1A1;
+  --color-navy-950: #001F27;
+  --color-cream-50: #FEFDF8;
   --color-cream-100: #FDF6E3;
   --color-cream-200: #EEE8D5;
   --color-cream-300: #DDD6C3;
+  --color-cream-400: #CFC7B3;
+  --color-cream-500: #B8B19D;
+  --color-gold-50: #FFF7E2;
+  --color-gold-100: #F5EAC8;
+  --color-gold-200: #E7D69D;
+  --color-gold-300: #D4A820;
+  --color-gold-400: #C49500;
+  --color-gold-500: #B58900;
+  --color-gold-600: #9A7800;
+  --color-gold-800: #665000;
+  --color-gold-700: #806300;
   --color-parchment: #EEE8D5;
+}
+
+/* Dynamic scope to restore active theme variables inside a fixed theme region. */
+html.dark [data-theme-dynamic] {
+  --color-cream-50: #070F1B;
+  --color-cream-100: #0A1220;
+  --color-cream-200: #0D1626;
+  --color-cream-300: #121C30;
+  --color-cream-400: #17243C;
+  --color-cream-500: #1D2C48;
+  --color-parchment: #0F1A2E;
+  --color-navy-50: #46423D;
+  --color-navy-100: #59564F;
+  --color-navy-200: #716D66;
+  --color-navy-300: #89857D;
+  --color-navy-900: #F5F0E8;
+  --color-navy-800: #EDE9E1;
+  --color-navy-700: #E0DCD5;
+  --color-navy-600: #D4D0C8;
+  --color-navy-500: #BDB9B1;
+  --color-navy-400: #A09C94;
+  --color-navy-950: #060F1E;
+  --color-gold-50: #FFFDF5;
+  --color-gold-800: #946A2A;
+  --color-gold-700: #B98436;
+  --color-gold-600: #D4A04A;
+  --color-gold-500: #E8B85A;
+  --color-gold-400: #F0C86A;
+  --color-gold-300: #F8D87A;
+  --color-gold-200: #FFF0C0;
+  --color-gold-100: #FFF8E8;
+}
+
+html[data-theme="solarized-dark"] [data-theme-dynamic] {
+  --color-cream-50: #001F27;
+  --color-cream-100: #002B36;
+  --color-cream-200: #073642;
+  --color-cream-300: #0F4351;
+  --color-cream-400: #1F535F;
+  --color-cream-500: #2B626D;
+  --color-parchment: #073642;
+  --color-navy-50: #324A52;
+  --color-navy-100: #3F5962;
+  --color-navy-200: #586E75;
+  --color-navy-300: #657B83;
+  --color-navy-900: #EEE8D5;
+  --color-navy-800: #DCD6C4;
+  --color-navy-700: #C9C3B3;
+  --color-navy-600: #B8B29F;
+  --color-navy-500: #93A1A1;
+  --color-navy-400: #839496;
+  --color-navy-950: #001A22;
+  --color-gold-50: #FEF8E6;
+  --color-gold-800: #665000;
+  --color-gold-700: #806300;
+  --color-gold-600: #9A7800;
+  --color-gold-500: #B58900;
+  --color-gold-400: #CFA530;
+  --color-gold-300: #DDBE63;
+  --color-gold-200: #EADAA5;
+  --color-gold-100: #F5EAC8;
 }
 
 /* Hide scrollbars while preserving swipe scroll on mobile chip rows */

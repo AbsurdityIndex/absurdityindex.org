@@ -19,7 +19,7 @@ import Icon from './Icon.astro';
   aria-hidden="true"
 >
   <!-- Drawer Header -->
-  <header class="drawer-header">
+  <header class="drawer-header" data-theme-fixed>
     <div class="header-title">
       <Icon name="zap" size={20} />
       <h2>Absurdity Index</h2>
@@ -139,7 +139,7 @@ import Icon from './Icon.astro';
   </div>
 
   <!-- Drawer Footer -->
-  <footer class="drawer-footer">
+  <footer class="drawer-footer" data-theme-fixed>
     <a href="/how-we-score" class="full-methodology-link">
       <span>Full methodology</span>
       <Icon name="arrow-right" size={12} />
@@ -463,12 +463,12 @@ import Icon from './Icon.astro';
      DARK MODE
      ======================== */
   :global(html.dark) .absurdity-help-drawer {
-    background: #1a2535;
+    background: var(--color-cream-200);
     border-left-color: var(--color-gold-600);
   }
 
   :global(html.dark) .drawer-content {
-    background: #1a2535;
+    background: var(--color-cream-300);
   }
 
   :global(html.dark) .intro-text,

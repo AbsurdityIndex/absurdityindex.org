@@ -20,7 +20,7 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
 >
   <main class="bg-parchment min-h-screen">
     <!-- Hero Section -->
-    <section class="bg-navy-900 py-16">
+    <section class="bg-navy-900 py-16" data-theme-fixed>
       <div class="max-w-5xl mx-auto px-4 text-center">
         <OfficialSeal size="100" />
         <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-6 mb-2">The Legislative Sausage Factory</p>
@@ -105,7 +105,7 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
                 href={`/omnibus/${bill.id}`}
                 class="block bg-white rounded-lg border-2 border-gold-300 shadow-lg overflow-hidden hover:shadow-xl hover:border-gold-500 transition-all group"
               >
-                <div class="bg-navy-800 px-6 py-3 flex items-center justify-between">
+                <div class="bg-navy-800 px-6 py-3 flex items-center justify-between" data-theme-fixed>
                   <div class="flex items-center gap-3">
                     <span class="font-mono text-gold-400">{d.billNumber}</span>
                     <span class="px-2 py-0.5 bg-red-700 text-cream-100 text-xs font-mono rounded">OMNIBUS</span>

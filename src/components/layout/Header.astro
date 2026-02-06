@@ -108,10 +108,10 @@ function isActivePath(href: string) {
         <button
           id="tools-menu-button"
           class:list={[
-            'font-sans text-sm tracking-wide uppercase transition-colors flex items-center gap-1',
+            'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-sans text-sm font-semibold tracking-wide uppercase transition-all focus:outline-none focus:ring-2 focus:ring-gold-400',
             toolsDropdown.some((item) => isActivePath(item.href))
-              ? 'text-gold-200'
-              : 'text-gold-400 hover:text-gold-300',
+              ? 'border-gold-500/60 bg-navy-800 text-gold-200'
+              : 'border-transparent text-gold-400 hover:border-gold-500/40 hover:bg-navy-800 hover:text-gold-300',
           ]}
           aria-haspopup="true"
           aria-expanded="false"
@@ -124,10 +124,13 @@ function isActivePath(href: string) {
         </button>
         <ul
           id="tools-menu"
-          class="absolute top-full right-0 mt-2 w-48 bg-navy-800 border border-navy-600 rounded-lg shadow-xl hidden py-2 z-50"
+          class="absolute top-full right-0 mt-0 z-50 hidden w-64 overflow-hidden rounded-xl border border-gold-500/30 bg-navy-900/95 p-2 shadow-2xl backdrop-blur-sm"
           role="menu"
           aria-labelledby="tools-menu-button"
         >
+          <li role="presentation" class="px-3 pb-2 pt-1 text-[10px] font-sans font-semibold uppercase tracking-[0.18em] text-gold-500/80">
+            Tools
+          </li>
           {toolsDropdown.map(({ href, label }) => (
             <li>
               <a
@@ -135,13 +138,23 @@ function isActivePath(href: string) {
                 role="menuitem"
                 aria-current={isActivePath(href) ? 'page' : undefined}
                 class:list={[
-                  'block px-4 py-2 text-sm transition-colors',
+                  'group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-sans transition-colors',
                   isActivePath(href)
-                    ? 'bg-navy-700 text-gold-200'
-                    : 'text-gold-300 hover:bg-navy-700 hover:text-gold-200',
+                    ? 'border border-gold-500/40 bg-gold-500/20 text-gold-200'
+                    : 'border border-transparent text-gold-300 hover:border-gold-500/30 hover:bg-navy-800 hover:text-gold-200',
                 ]}
               >
-                {label}
+                <span>{label}</span>
+                <svg
+                  class="h-3.5 w-3.5 text-gold-500/60 transition-transform group-hover:translate-x-0.5"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 5l5 5-5 5" />
+                </svg>
               </a>
             </li>
           ))}
@@ -213,6 +226,19 @@ function isActivePath(href: string) {
   const toolsMenuItems = toolsMenu
     ? Array.from(toolsMenu.querySelectorAll('a[role=\"menuitem\"]'))
     : [];
+  let toolsCloseTimeoutId = null;
+
+  function clearToolsCloseTimeout() {
+    if (toolsCloseTimeoutId !== null) {
+      window.clearTimeout(toolsCloseTimeoutId);
+      toolsCloseTimeoutId = null;
+    }
+  }
+
+  function scheduleToolsMenuClose(delay = 140) {
+    clearToolsCloseTimeout();
+    toolsCloseTimeoutId = window.setTimeout(() => closeToolsMenu(), delay);
+  }
 
   function isToolsMenuOpen() {
     return !!toolsMenu && !toolsMenu.classList.contains('hidden');
@@ -220,6 +246,7 @@ function isActivePath(href: string) {
 
   function openToolsMenu(focusFirstItem = false) {
     if (!toolsMenu || !toolsMenuButton) return;
+    clearToolsCloseTimeout();
     toolsMenu.classList.remove('hidden');
     toolsMenuButton.setAttribute('aria-expanded', 'true');
     toolsMenuChevron?.classList.add('rotate-180');
@@ -230,6 +257,7 @@ function isActivePath(href: string) {
 
   function closeToolsMenu(focusButton = false) {
     if (!toolsMenu || !toolsMenuButton) return;
+    clearToolsCloseTimeout();
     toolsMenu.classList.add('hidden');
     toolsMenuButton.setAttribute('aria-expanded', 'false');
     toolsMenuChevron?.classList.remove('rotate-180');
@@ -306,8 +334,13 @@ function isActivePath(href: string) {
   });
 
   if (window.matchMedia('(hover: hover)').matches) {
-    toolsMenuContainer?.addEventListener('mouseenter', () => openToolsMenu());
-    toolsMenuContainer?.addEventListener('mouseleave', () => closeToolsMenu());
+    toolsMenuContainer?.addEventListener('mouseenter', () => {
+      clearToolsCloseTimeout();
+      openToolsMenu();
+    });
+    toolsMenuContainer?.addEventListener('mouseleave', () => {
+      scheduleToolsMenuClose(160);
+    });
   }
 
   const mobileMenuToggle = document.getElementById('mobile-menu-toggle');

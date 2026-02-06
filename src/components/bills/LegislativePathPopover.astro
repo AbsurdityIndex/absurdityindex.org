@@ -96,7 +96,7 @@ const timelineStages = currentPathInfo.stages.map((label, i) => ({
 
   <div class={`leg-panel ${currentPathInfo.accentClass}`} role="dialog" aria-label="Legislative Path Information" data-popover-panel>
     {/* Header */}
-    <header class="leg-header">
+    <header class="leg-header" data-theme-fixed>
       <div class="leg-header-content">
         <span class="leg-type-prefix">{billType?.prefix || billNumber}</span>
         <span class="leg-type-name">{billType?.displayName || 'Bill'}</span>
@@ -456,66 +456,76 @@ const timelineStages = currentPathInfo.stages.map((label, i) => ({
 
   /* Dark mode */
   :global(html.dark) .leg-panel {
-    background: var(--color-navy-800);
-    border-color: var(--color-navy-600);
+    background: var(--color-cream-200);
+    border-color: var(--color-cream-400);
   }
 
   :global(html.dark) .leg-active-path {
-    background: linear-gradient(135deg, rgba(0,0,0,0.2) 0%, transparent 100%);
-    border-bottom-color: var(--color-navy-700);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent) 16%, var(--color-cream-200)) 0%,
+      var(--color-cream-300) 100%
+    );
+    border-bottom-color: var(--color-cream-400);
   }
 
   :global(html.dark) .leg-path-name {
-    color: var(--color-cream-100);
+    color: var(--color-navy-900);
   }
 
 
   :global(html.dark) .leg-path-desc {
-    color: var(--color-cream-200);
+    color: var(--color-navy-700);
   }
 
   :global(html.dark) .leg-path-note {
-    color: var(--color-cream-500);
+    color: var(--color-navy-500);
+  }
+
+  :global(html.dark) .leg-active-tag {
+    background: var(--color-cream-100);
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
   }
 
   :global(html.dark) .leg-comparison-header {
-    color: var(--color-cream-500);
+    color: var(--color-navy-500);
   }
 
   :global(html.dark) .leg-comparison-item {
-    background: var(--color-navy-700);
-    border-color: var(--color-navy-600);
+    background: var(--color-cream-300);
+    border-color: var(--color-cream-400);
   }
 
   :global(html.dark) .leg-comparison-item.is-current {
-    background: rgba(0,0,0,0.3);
+    background: color-mix(in srgb, var(--accent) 18%, var(--color-cream-300));
   }
 
   :global(html.dark) .leg-comparison-title {
-    color: var(--color-cream-200);
+    color: var(--color-navy-700);
   }
 
   :global(html.dark) .leg-chip {
-    background: var(--color-navy-600);
-    border-color: var(--color-navy-500);
-    color: var(--color-cream-300);
+    background: var(--color-cream-400);
+    border-color: var(--color-cream-500);
+    color: var(--color-navy-700);
   }
 
   :global(html.dark) .leg-footer {
-    background: var(--color-navy-700);
-    border-top-color: var(--color-navy-600);
+    background: var(--color-cream-300);
+    border-top-color: var(--color-cream-400);
   }
 
   :global(html.dark) .leg-glossary-btn {
-    background: var(--color-navy-600);
-    border-color: var(--color-navy-500);
-    color: var(--color-cream-300);
+    background: var(--color-cream-400);
+    border-color: var(--color-cream-500);
+    color: var(--color-navy-700);
   }
 
   :global(html.dark) .leg-glossary-btn:hover {
     background: var(--accent);
     border-color: var(--accent);
-    color: white;
+    color: var(--color-navy-950);
   }
 
   /* Responsive */
