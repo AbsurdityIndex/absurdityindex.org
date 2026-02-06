@@ -7,10 +7,10 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python3</string>
-        <string>/Users/coreysteinwand/Developer/Source/not-congress.io/k8s-monitor/monitor.py</string>
+        <string>/path/to/absurdity-index/k8s-monitor/monitor.py</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/coreysteinwand/Developer/Source/not-congress.io/k8s-monitor</string>
+    <string>/path/to/absurdity-index/k8s-monitor</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>

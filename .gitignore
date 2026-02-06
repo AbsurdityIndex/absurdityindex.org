@@ -34,3 +34,13 @@ cli/data/.browser-state/
 
 # research notes
 research/
+
+# CLI database files (local state)
+cli/data/*.db
+cli/data/*.db-shm
+cli/data/*.db-wal
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo

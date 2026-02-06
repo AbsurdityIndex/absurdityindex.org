@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import signal
 import subprocess
 import sys
@@ -24,7 +25,7 @@ from web import DEFAULT_PORT, start_server
 
 log = logging.getLogger("k8s-monitor")
 
-DEFAULT_HOST = "corey@172.16.10.54"
+DEFAULT_HOST = os.environ.get("K8S_HOST", "user@your-k8s-host")
 DEFAULT_INTERVAL = 60
 
 

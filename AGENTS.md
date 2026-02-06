@@ -82,16 +82,16 @@ Pushing to `main` triggers an automatic build and deploy within ~60 seconds. The
 3. The workflow runs three steps: `clone-repo` → `build` (`npm ci && npm run build`) → `deploy` (`wrangler pages deploy`)
 4. Commit SHA state is tracked in the `absurdity-index-poller-state` ConfigMap to avoid duplicate deploys
 
-**K8s resources (all in `argo` namespace on `172.16.10.54`):**
+**K8s resources (all in `argo` namespace on host defined by `K8S_HOST` in `.env`):**
 | Resource | Name | Purpose |
 |----------|------|---------|
 | CronJob | `absurdity-index-poller` | Polls GitHub API every minute for new commits |
 | WorkflowTemplate | `deploy-absurdity-index` | 3-step clone → build → deploy workflow |
 | ConfigMap | `absurdity-index-poller-state` | Stores last-seen commit SHA |
 | Secret | `github-pat` | GitHub token for repo access |
-| Secret | `cloudflare-api-token` | Cloudflare Pages deploy token (`woodpecker-ci-pages-deploy`) |
+| Secret | `cloudflare-api-token` | Cloudflare Pages deploy token |
 
-**Cloudflare account ID** is hardcoded in the WorkflowTemplate: `cfceabac156f51a56346c036fc7754ee`
+**Cloudflare account ID** is configured via `CLOUDFLARE_ACCOUNT_ID` in `.env` and referenced in the WorkflowTemplate.
 
 **No public DNS or webhooks required** — the poller makes outbound-only calls to GitHub API (polling) and Cloudflare API (deploying). The entire CI infrastructure stays behind the firewall.
 

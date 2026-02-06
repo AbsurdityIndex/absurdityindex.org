@@ -37,12 +37,12 @@ cd k8s-monitor
 python3 monitor.py
 ```
 
-That's it. It connects to `corey@172.16.10.54` via SSH, runs checks every 60 seconds, pops macOS notifications for any issues, and opens a dashboard at [http://localhost:9876](http://localhost:9876).
+That's it. It connects to your K8s host via SSH (reads `K8S_HOST` from `.env` or pass `--host`), runs checks every 60 seconds, pops macOS notifications for any issues, and opens a dashboard at [http://localhost:9876](http://localhost:9876).
 
 ### Options
 
 ```
---host USER@HOST   SSH target (default: corey@172.16.10.54)
+--host USER@HOST   SSH target (default: $K8S_HOST env var)
 --interval N       Seconds between checks (default: 60)
 --port N           Dashboard port (default: 9876)
 --no-web           Disable the web dashboard

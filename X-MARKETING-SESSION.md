@@ -232,6 +232,6 @@ Congress can't fund DHS for more than 2 weeks but passed bills to mint a $2.50 c
 
 ## Files Reference
 
-- Site codebase: `/Users/coreysteinwand/Developer/Source/not-congress.io/` (renamed to Absurdity Index)
+- Site codebase: This repository (renamed to Absurdity Index)
 - Bills data: `src/data/bills/` (MDX files)
 - This doc: `X-MARKETING-SESSION.md`

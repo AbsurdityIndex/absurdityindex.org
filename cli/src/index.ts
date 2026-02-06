@@ -9,6 +9,7 @@ import { registerAutoCommand } from './commands/auto.js';
 import { registerAnalyticsCommand } from './commands/analytics.js';
 import { registerScheduleCommand } from './commands/schedule.js';
 import { registerLoginCommand } from './commands/login.js';
+import { registerStatusCommand } from './commands/status.js';
 
 const program = new Command();
 
@@ -28,6 +29,7 @@ registerAutoCommand(program);
 registerAnalyticsCommand(program);
 registerScheduleCommand(program);
 registerLoginCommand(program);
+registerStatusCommand(program);
 
 export function run(): void {
   program.parse();
