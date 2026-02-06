@@ -8,6 +8,7 @@ import DidYouKnow from '../components/ui/DidYouKnow.astro';
 import RunningTicker from '../components/satirical/RunningTicker.astro';
 import QuorumCounter from '../components/satirical/QuorumCounter.astro';
 import NewsletterForm from '../components/ui/NewsletterForm.astro';
+import TodayFrontAndCenter from '../components/ui/TodayFrontAndCenter.astro';
 import { getCollection } from 'astro:content';
 
 const allBills = await getCollection('bills');
@@ -35,6 +36,7 @@ const showcaseNotBills = featuredNotBills.length > 0 ? featuredNotBills : recent
 
 <BaseLayout title="Real Bills. Real Absurdity. Satirical Common Sense." description="Where the bills make sense and the laws don't. Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.">
   <RunningTicker />
+  <TodayFrontAndCenter />
   <HeroBanner />
   <BillOfTheDay />
 
@@ -103,7 +105,7 @@ const showcaseNotBills = featuredNotBills.length > 0 ? featuredNotBills : recent
     </div>
   </section>
 
-  <section class="mt-10 bg-navy-900 py-12 min-[430px]:mt-12 min-[430px]:py-16">
+  <section class="mt-10 bg-navy-900 py-12 min-[430px]:mt-12 min-[430px]:py-16" data-theme-fixed>
     <div class="mx-auto max-w-2xl px-3 min-[375px]:px-4">
       <NewsletterForm />
     </div>

@@ -1,0 +1,220 @@
+<section class="mx-auto max-w-6xl px-3 pt-6 min-[375px]:px-4 min-[430px]:pt-8">
+  <div class="rounded-xl border-2 border-gold-300 bg-white/90 p-4 shadow-sm min-[430px]:p-6">
+    <div class="flex flex-col gap-3 min-[520px]:flex-row min-[520px]:items-end min-[520px]:justify-between">
+      <div>
+        <p class="font-mono text-[11px] uppercase tracking-[0.2em] text-gold-600 min-[375px]:text-xs">
+          Live Public Sources
+        </p>
+        <h2 class="font-serif text-2xl font-bold text-navy-900 min-[375px]:text-3xl">
+          Today in Congress
+        </h2>
+        <p id="today-front-date" class="mt-1 font-sans text-sm text-navy-600">
+          Loading current-day chamber activity...
+        </p>
+      </div>
+      <a
+        href="/today"
+        class="inline-flex items-center justify-center rounded border border-navy-700 bg-navy-800 px-4 py-2 font-sans text-sm font-semibold text-white transition-colors hover:bg-navy-700"
+      >
+        Full Daily Dispatch
+      </a>
+    </div>
+
+    <div id="today-front-loading" class="mt-4 rounded-lg bg-cream-200 p-3 font-sans text-sm text-navy-700">
+      Fetching House floor, Senate floor, and committee schedules.
+    </div>
+
+    <div id="today-front-error" class="mt-4 hidden rounded-lg border border-red-600/40 bg-red-600/10 p-3 font-sans text-sm text-red-700">
+      Unable to load live congressional data right now.
+      <a href="/today" class="underline">Open the Today page</a> for retry and source links.
+    </div>
+
+    <div id="today-front-content" class="mt-5 hidden space-y-5">
+      <div class="grid grid-cols-1 gap-3 min-[520px]:grid-cols-2">
+        <article class="rounded-lg border border-gold-200 bg-cream-100 p-3">
+          <p class="font-mono text-[11px] uppercase tracking-[0.18em] text-gold-700">House</p>
+          <p id="today-front-house-status" class="mt-1 font-serif text-xl font-bold text-navy-900">-</p>
+          <p id="today-front-house-line" class="mt-1 font-sans text-sm text-navy-700">-</p>
+        </article>
+        <article class="rounded-lg border border-gold-200 bg-cream-100 p-3">
+          <p class="font-mono text-[11px] uppercase tracking-[0.18em] text-gold-700">Senate</p>
+          <p id="today-front-senate-status" class="mt-1 font-serif text-xl font-bold text-navy-900">-</p>
+          <p id="today-front-senate-line" class="mt-1 font-sans text-sm text-navy-700">-</p>
+        </article>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div>
+          <h3 class="font-serif text-lg font-bold text-navy-900">At a Glance</h3>
+          <ul id="today-front-bullets" class="mt-2 space-y-1 font-sans text-sm text-navy-700"></ul>
+        </div>
+        <div>
+          <h3 class="font-serif text-lg font-bold text-navy-900">Today&apos;s Meetings</h3>
+          <ul id="today-front-meetings" class="mt-2 space-y-1 font-sans text-sm text-navy-700"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Dark mode: main container — bg-white/90 not caught by global .bg-white override */
+  :global(html.dark) section > div {
+    background-color: rgba(15, 26, 46, 0.92) !important;
+    border-color: #B8860B !important;
+  }
+
+  /* Dark mode: "Full Daily Dispatch" button — bg-navy-800 flips to cream */
+  :global(html.dark) section a[href="/today"] {
+    background-color: #121F36 !important;
+    border-color: #1A2D4D !important;
+  }
+  :global(html.dark) section a[href="/today"]:hover {
+    background-color: #1A2D4D !important;
+  }
+
+  /* Dark mode: error message text readability */
+  :global(html.dark) #today-front-error {
+    color: #FCA5A5 !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    background-color: rgba(239, 68, 68, 0.12) !important;
+  }
+  :global(html.dark) #today-front-error a {
+    color: #FCA5A5 !important;
+  }
+
+  /* Solarized dark equivalents */
+  :global(html[data-theme="solarized-dark"]) section > div {
+    background-color: rgba(7, 54, 66, 0.92) !important;
+    border-color: #B58900 !important;
+  }
+  :global(html[data-theme="solarized-dark"]) section a[href="/today"] {
+    background-color: #073642 !important;
+    border-color: #586E75 !important;
+  }
+  :global(html[data-theme="solarized-dark"]) section a[href="/today"]:hover {
+    background-color: #0A3D49 !important;
+  }
+  :global(html[data-theme="solarized-dark"]) #today-front-error {
+    color: #FCA5A5 !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    background-color: rgba(239, 68, 68, 0.12) !important;
+  }
+  :global(html[data-theme="solarized-dark"]) #today-front-error a {
+    color: #FCA5A5 !important;
+  }
+</style>
+
+<script>
+  const dateEl = document.getElementById('today-front-date');
+  const loadingEl = document.getElementById('today-front-loading');
+  const errorEl = document.getElementById('today-front-error');
+  const contentEl = document.getElementById('today-front-content');
+  const houseStatusEl = document.getElementById('today-front-house-status');
+  const houseLineEl = document.getElementById('today-front-house-line');
+  const senateStatusEl = document.getElementById('today-front-senate-status');
+  const senateLineEl = document.getElementById('today-front-senate-line');
+  const bulletsEl = document.getElementById('today-front-bullets');
+  const meetingsEl = document.getElementById('today-front-meetings');
+
+  function truncate(text, max = 170) {
+    if (!text || text.length <= max) return text || '';
+    return `${text.slice(0, max - 1).trim()}...`;
+  }
+
+  function statusColor(status) {
+    if (/adjourned/i.test(status || '')) return 'text-red-700';
+    if (/session/i.test(status || '')) return 'text-green-700';
+    return 'text-navy-900';
+  }
+
+  function appendListItems(target, items) {
+    target.innerHTML = '';
+    items.forEach((item) => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      target.appendChild(li);
+    });
+  }
+
+  async function requestTodayData() {
+    const endpoints = ['/api/today.json', '/api/today-fallback.json'];
+    let lastError;
+
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) {
+          lastError = new Error(`${endpoint} returned HTTP ${response.status}`);
+          continue;
+        }
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error('Unable to load today data from available endpoints.');
+  }
+
+  async function loadTodayFront() {
+    try {
+      const data = await requestTodayData();
+      dateEl.textContent = data?.today?.label || 'Today';
+
+      const house = data?.chambers?.house || {};
+      houseStatusEl.textContent = house.status || 'No update';
+      houseStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(house.status)}`;
+
+      const houseLine =
+        house.latestAction?.time && house.latestAction?.text
+          ? `${house.latestAction.time}: ${house.latestAction.text}`
+          : house.nextConvene
+          ? `Next House meeting: ${house.nextConvene}`
+          : 'No House floor action posted yet.';
+      houseLineEl.textContent = truncate(houseLine);
+
+      const senate = data?.chambers?.senate || {};
+      senateStatusEl.textContent = senate.status || 'No update';
+      senateStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(senate.status)}`;
+
+      const senateLine =
+        senate.previousSummary ||
+        (senate.nextConvene ? `Next Senate meeting: ${senate.nextConvene}` : 'No Senate floor summary posted yet.');
+      senateLineEl.textContent = truncate(senateLine);
+
+      const bullets = Array.isArray(data?.summary?.bullets)
+        ? data.summary.bullets.slice(0, 3)
+        : ['No summary available yet.'];
+      appendListItems(bulletsEl, bullets);
+
+      const meetings = Array.isArray(data?.committees?.meetings) ? data.committees.meetings.slice(0, 4) : [];
+      if (meetings.length === 0) {
+        appendListItems(meetingsEl, ['No House or Senate committee meetings listed today.']);
+      } else {
+        appendListItems(
+          meetingsEl,
+          meetings.map((meeting) => {
+            const chamber = meeting.chamber || 'Committee';
+            const time = meeting.time ? `${meeting.time} - ` : '';
+            const title = meeting.committee || meeting.title || 'Committee meeting';
+            return `${time}${chamber}: ${truncate(title, 90)}`;
+          })
+        );
+      }
+
+      loadingEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      contentEl.classList.remove('hidden');
+    } catch (_error) {
+      loadingEl.classList.add('hidden');
+      contentEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+    }
+  }
+
+  loadTodayFront();
+</script>
