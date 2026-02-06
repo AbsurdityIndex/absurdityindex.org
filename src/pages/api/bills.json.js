@@ -102,7 +102,7 @@ export async function GET({ request }) {
         _footer: {
           rateLimit: "Please don't DDOS us. We're a satire site, not the actual government.",
           contact: "Questions? File a Freedom of Information Request (just kidding, email us).",
-          sponsoredBy: "Big Satire™️",
+          sponsoredBy: "Big Satire™",
         },
       },
       null,

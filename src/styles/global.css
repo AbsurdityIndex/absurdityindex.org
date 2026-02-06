@@ -93,6 +93,14 @@ body {
   margin-bottom: 0.75rem;
 }
 
+.bill-content h4 {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
 .bill-content p {
   margin-bottom: 1rem;
   text-align: justify;
@@ -114,6 +122,145 @@ body {
   margin: 1.5rem 0;
   font-style: italic;
   color: var(--color-navy-700);
+}
+
+/* Tables in bill/PRD content */
+.bill-content .table-wrapper {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bill-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  margin: 1.5rem 0;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 768px) {
+  .bill-content table {
+    display: table;
+    overflow-x: visible;
+  }
+}
+
+.bill-content th {
+  background-color: var(--color-navy-800);
+  color: var(--color-cream-100);
+  font-weight: 700;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.bill-content td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--color-gold-300);
+  vertical-align: top;
+}
+
+.bill-content tbody tr:nth-child(even) {
+  background-color: var(--color-cream-200);
+}
+
+.bill-content tbody tr:hover {
+  background-color: var(--color-gold-100);
+}
+
+/* Code blocks in bill/PRD content */
+.bill-content pre {
+  background-color: var(--color-navy-800);
+  color: var(--color-cream-100);
+  padding: 1rem 1.25rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.bill-content code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background-color: var(--color-cream-300);
+  padding: 0.15em 0.35em;
+  border-radius: 0.25rem;
+}
+
+.bill-content pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Horizontal rules in bill/PRD content */
+.bill-content hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-gold-500) 20%,
+    var(--color-gold-500) 80%,
+    transparent
+  );
+  margin: 2.5rem 0;
+}
+
+/* VoteChain four-question cards */
+.votechain-question-card {
+  background-color: var(--color-cream-50);
+}
+
+html.dark .votechain-question-card {
+  background-color: #17243C;
+}
+
+html[data-theme="solarized-dark"] .votechain-question-card {
+  background-color: #0F4351;
+}
+
+/* Suppress drop cap on PRD-style content (not a bill) */
+.bill-content.prd-content > p:first-of-type::first-letter {
+  font-size: inherit;
+  float: none;
+  line-height: inherit;
+  padding: 0;
+  font-weight: inherit;
+  color: inherit;
+}
+
+/* H1 inside bill-content (PRD has a top-level title) */
+.bill-content h1 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-gold-500);
+}
+
+/* Inline links in bill/PRD content */
+.bill-content a {
+  color: var(--color-navy-600);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+
+.bill-content a:hover {
+  color: var(--color-gold-600);
 }
 
 /* Drop cap for first paragraph of bill text */

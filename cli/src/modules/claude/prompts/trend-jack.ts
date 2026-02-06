@@ -10,12 +10,14 @@ TRENDING TOPIC: ${context.trendTopic ?? 'N/A'}
 TREND CONTEXT: ${context.additionalContext ?? 'No additional context'}
 ${context.bill ? `RELEVANT BILL: ${context.bill.billNumber} — "${context.bill.title}"` : ''}
 ${context.siteUrl ? `LINK: ${context.siteUrl}` : ''}
+${context.sourceLinks?.length ? `SOURCE LINKS (include these as proof):\n${context.sourceLinks.map((l, i) => `${i + 1}. ${l}`).join('\n')}` : ''}
 
 Rules:
 - Connect the trend to Congress, legislation, or government absurdity
 - If you can't find a genuinely funny angle, respond with exactly "SKIP" — don't force it
 - Don't just mention the trend; make a sharp observation about how Congress relates to it
 - Include the trending topic or its hashtag naturally in the tweet
+- EVERY factual claim MUST be backed by a source link. If source links are provided above, include them. If making a claim without a source, do NOT make the claim.
 
 Respond with ONLY the tweet text (or "SKIP"), nothing else.`,
   };

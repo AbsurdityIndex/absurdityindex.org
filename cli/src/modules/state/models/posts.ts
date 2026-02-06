@@ -19,6 +19,10 @@ export interface Post {
   created_at: string;
   posted_at: string | null;
   error: string | null;
+  media_url: string | null;
+  media_type: string | null;
+  meme_strategy: string | null;
+  meme_template: string | null;
 }
 
 export interface CreatePostInput {
@@ -31,12 +35,16 @@ export interface CreatePostInput {
   engagement_score?: number;
   status?: PostStatus;
   parent_tweet_id?: string;
+  media_url?: string;
+  media_type?: string;
+  meme_strategy?: string;
+  meme_template?: string;
 }
 
 export function createPostModel(db: Database.Database) {
   const insert = db.prepare(`
-    INSERT INTO posts (content, prompt_type, bill_slug, trend_topic, safety_score, safety_verdict, engagement_score, status, parent_tweet_id)
-    VALUES (@content, @prompt_type, @bill_slug, @trend_topic, @safety_score, @safety_verdict, @engagement_score, @status, @parent_tweet_id)
+    INSERT INTO posts (content, prompt_type, bill_slug, trend_topic, safety_score, safety_verdict, engagement_score, status, parent_tweet_id, media_url, media_type, meme_strategy, meme_template)
+    VALUES (@content, @prompt_type, @bill_slug, @trend_topic, @safety_score, @safety_verdict, @engagement_score, @status, @parent_tweet_id, @media_url, @media_type, @meme_strategy, @meme_template)
   `);
 
   const updateStatus = db.prepare('UPDATE posts SET status = ?, error = ? WHERE id = ?');
@@ -54,6 +62,10 @@ export function createPostModel(db: Database.Database) {
         engagement_score: input.engagement_score ?? 0,
         status: input.status ?? 'draft',
         parent_tweet_id: input.parent_tweet_id ?? null,
+        media_url: input.media_url ?? null,
+        media_type: input.media_type ?? null,
+        meme_strategy: input.meme_strategy ?? null,
+        meme_template: input.meme_template ?? null,
       });
       return db.prepare('SELECT * FROM posts WHERE id = ?').get(info.lastInsertRowid) as Post;
     },
@@ -87,6 +99,18 @@ export function createPostModel(db: Database.Database) {
 
     getRecent(limit = 20): Post[] {
       return db.prepare('SELECT * FROM posts ORDER BY created_at DESC LIMIT ?').all(limit) as Post[];
+    },
+
+    updateMedia(id: number, fields: { media_url?: string; media_type?: string; meme_strategy?: string; meme_template?: string }): void {
+      db.prepare(
+        'UPDATE posts SET media_url = ?, media_type = ?, meme_strategy = ?, meme_template = ? WHERE id = ?'
+      ).run(
+        fields.media_url ?? null,
+        fields.media_type ?? null,
+        fields.meme_strategy ?? null,
+        fields.meme_template ?? null,
+        id,
+      );
     },
   };
 }

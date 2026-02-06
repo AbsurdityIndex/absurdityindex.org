@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Divider from '../components/ui/Divider.astro';
+import Icon from '../components/ui/Icon.astro';
 import { getCollection } from 'astro:content';
 
 // Get actual bill count from collection
@@ -213,7 +214,7 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
         </h3>
         <div class="space-y-6">
           <div class="flex items-center gap-4 bg-navy-800 rounded-lg p-4">
-            <div class="text-4xl shrink-0">🎬</div>
+            <Icon name="tv" size={40} class="text-gold-300 shrink-0" />
             <div class="flex-1">
               <p class="text-gold-300 font-sans">
                 Watch the <span class="text-gold-400 font-bold">entire Lord of the Rings extended edition</span>
@@ -224,7 +225,7 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
             </div>
           </div>
           <div class="flex items-center gap-4 bg-navy-800 rounded-lg p-4">
-            <div class="text-4xl shrink-0">🚗</div>
+            <Icon name="car" size={40} class="text-gold-300 shrink-0" />
             <div class="flex-1">
               <p class="text-gold-300 font-sans">
                 Drive to the <span class="text-gold-400 font-bold">Moon and back</span>
@@ -235,7 +236,7 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
             </div>
           </div>
           <div class="flex items-center gap-4 bg-navy-800 rounded-lg p-4">
-            <div class="text-4xl shrink-0">🎵</div>
+            <Icon name="music" size={40} class="text-gold-300 shrink-0" />
             <div class="flex-1">
               <p class="text-gold-300 font-sans">
                 Listen to <span class="text-gold-400 font-bold">every Beatles song ever recorded</span>

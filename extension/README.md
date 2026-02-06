@@ -30,16 +30,12 @@ For permanent Firefox installation, the extension would need to be signed and pu
 
 ## Setup: Icons
 
-Before loading the extension, you need to create the icon files:
+Icon files are now included in this folder:
 
-1. Open `/public/favicon.svg` from the main site
-2. Export as PNG at two sizes:
-   - `icon-48.png` (48x48 pixels)
-   - `icon-128.png` (128x128 pixels)
-3. Save both files in this `extension` folder
-4. Delete the placeholder `.txt` files
+- `icon-48.png`
+- `icon-128.png`
 
-You can use any image editor that supports SVG (Figma, Illustrator, Inkscape, or online converters).
+If you want to regenerate them, export `/public/favicon.svg` to those two PNG sizes.
 
 ## How It Works
 
@@ -68,10 +64,7 @@ The extension fetches data from:
 
 ## Firefox Compatibility
 
-This extension uses Manifest V3 which is supported by both Chrome and Firefox. However, Firefox has some differences:
-
-- Use `browser.runtime.getURL()` instead of `chrome.runtime.getURL()` for full compatibility
-- Consider using a polyfill like [webextension-polyfill](https://github.com/AztecProtocol/webextension-polyfill) for cross-browser support
+This extension uses Manifest V3 which is supported by both Chrome and Firefox. The content script uses runtime API detection (`browser` when available, otherwise `chrome`) for icon URL resolution.
 
 ## License
 

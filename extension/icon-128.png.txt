@@ -1,7 +1,0 @@
-PLACEHOLDER: Export icon-128.png from the main site's favicon.svg
-
-To create this icon:
-1. Open /public/favicon.svg in an image editor (e.g., Figma, Illustrator, Inkscape)
-2. Export as PNG at 128x128 pixels
-3. Save as icon-128.png in this directory
-4. Delete this placeholder file

@@ -14,7 +14,7 @@ export async function checkPartisanLean(
   claude: ClaudeClient,
 ): Promise<PartisanLeanResult> {
   try {
-    const response = await claude.analyzeSafety(content, `Analyze this satirical tweet for partisan lean.
+    const result = await claude.analyzeSafety(content, `Analyze this satirical tweet for partisan lean.
 
 Rate on a scale from -1.0 (strongly favors left/Democrats) to +1.0 (strongly favors right/Republicans). 0.0 is perfectly balanced.
 
@@ -27,8 +27,8 @@ Respond in this exact format:
 LEAN: [number between -1.0 and 1.0]
 EXPLANATION: [one sentence explanation]`);
 
-    const leanMatch = response.match(/LEAN:\s*([-\d.]+)/);
-    const explMatch = response.match(/EXPLANATION:\s*(.+)/);
+    const leanMatch = result.text.match(/LEAN:\s*([-\d.]+)/);
+    const explMatch = result.text.match(/EXPLANATION:\s*(.+)/);
 
     const lean = leanMatch ? parseFloat(leanMatch[1]!) : 0;
     const explanation = explMatch?.[1] ?? 'Unable to determine';

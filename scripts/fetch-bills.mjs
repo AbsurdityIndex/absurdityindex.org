@@ -61,20 +61,85 @@ const BILL_LIST = [
   { congress: 119, type: 's', number: 1, absurdityIndex: 4, category: 'Common Sense' },
 ];
 
-// Parse --bill argument
-const billArg = process.argv.find(a => a.startsWith('--bill='));
-if (billArg) {
-  const parts = billArg.split('=')[1].split('/');
-  if (parts.length === 3) {
-    BILL_LIST.length = 0;
-    BILL_LIST.push({
-      congress: parseInt(parts[0]),
-      type: parts[1].toLowerCase(),
-      number: parseInt(parts[2]),
-      absurdityIndex: 5,
-      category: 'Uncategorized',
-    });
+const VALID_BILL_TYPES = new Set([
+  'hr',
+  's',
+  'hres',
+  'sres',
+  'hjres',
+  'sjres',
+  'hconres',
+  'sconres',
+]);
+
+const CONGRESS_GOV_PATH_BY_TYPE = {
+  hr: 'house-bill',
+  s: 'senate-bill',
+  hres: 'house-resolution',
+  sres: 'senate-resolution',
+  hjres: 'house-joint-resolution',
+  sjres: 'senate-joint-resolution',
+  hconres: 'house-concurrent-resolution',
+  sconres: 'senate-concurrent-resolution',
+};
+
+function parseBillSelectorArg(args) {
+  const inlineArg = args.find((arg) => arg.startsWith('--bill='));
+  if (inlineArg) {
+    const value = inlineArg.slice('--bill='.length).trim();
+    if (!value) {
+      return { error: 'Error: --bill requires a value (example: --bill=119/hr/25).' };
+    }
+    return { value };
   }
+
+  const billArgIndex = args.indexOf('--bill');
+  if (billArgIndex !== -1) {
+    const nextValue = args[billArgIndex + 1];
+    if (!nextValue || nextValue.startsWith('--')) {
+      return { error: 'Error: --bill requires a value (example: --bill 119/hr/25).' };
+    }
+    return { value: nextValue.trim() };
+  }
+
+  return { value: null };
+}
+
+// Parse --bill argument (supports both --bill=119/hr/25 and --bill 119/hr/25)
+const { value: billSelector, error: billSelectorError } = parseBillSelectorArg(process.argv.slice(2));
+if (billSelectorError) {
+  console.error(billSelectorError);
+  process.exit(1);
+}
+
+if (billSelector) {
+  const parts = billSelector.split('/');
+  const congress = Number.parseInt(parts[0], 10);
+  const type = parts[1]?.toLowerCase();
+  const number = Number.parseInt(parts[2], 10);
+
+  if (
+    parts.length !== 3 ||
+    Number.isNaN(congress) ||
+    congress <= 0 ||
+    !type ||
+    !VALID_BILL_TYPES.has(type) ||
+    Number.isNaN(number) ||
+    number <= 0
+  ) {
+    console.error('Error: --bill must be in format <congress>/<type>/<number> (example: 119/hr/25).');
+    console.error(`Supported bill types: ${Array.from(VALID_BILL_TYPES).join(', ')}`);
+    process.exit(1);
+  }
+
+  BILL_LIST.length = 0;
+  BILL_LIST.push({
+    congress,
+    type,
+    number,
+    absurdityIndex: 5,
+    category: 'Uncategorized',
+  });
 }
 
 function sleep(ms) {
@@ -101,6 +166,10 @@ function slugify(congress, type, number) {
 function formatBillNumber(type, number) {
   const prefix = type === 'hr' ? 'H.R.' : type === 's' ? 'S.' : type.toUpperCase() + '.';
   return `${prefix} ${number}`;
+}
+
+function congressGovPathSegment(type) {
+  return CONGRESS_GOV_PATH_BY_TYPE[type] || null;
 }
 
 function escapeMdx(text) {
@@ -417,7 +486,7 @@ Respond in this exact JSON format (no markdown, just JSON):
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://absurdity-index.io',
+          'HTTP-Referer': 'https://absurdityindex.org',
           'X-Title': 'Absurdity Index Bill Fetcher',
         },
         body: JSON.stringify({
@@ -499,7 +568,11 @@ function generateMdx(data, meta, aiSummary, aiMilestones) {
   const dateUpdated = latestAction?.actionDate || null;
 
   // Congress.gov URL
-  const congressUrl = `https://www.congress.gov/bill/${meta.congress}th-congress/${meta.type === 'hr' ? 'house-bill' : 'senate-bill'}/${meta.number}`;
+  const congressTypePath = congressGovPathSegment(meta.type);
+  if (!congressTypePath) {
+    throw new Error(`Unsupported bill type for Congress.gov URL mapping: ${meta.type}`);
+  }
+  const congressUrl = `https://www.congress.gov/bill/${meta.congress}th-congress/${congressTypePath}/${meta.number}`;
 
   // CRS Summary
   const crsSummary = data.summaries.length > 0

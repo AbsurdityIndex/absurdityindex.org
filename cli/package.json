@@ -1,8 +1,22 @@
 {
   "name": "absurdity-index-cli",
+  "private": true,
   "version": "0.1.0",
   "description": "Auto-post satirical congressional content to X",
   "type": "module",
+  "license": "MIT",
+  "homepage": "https://absurdityindex.org",
+  "bugs": {
+    "url": "https://github.com/absurdityindex/absurdityindex.org/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/absurdityindex/absurdityindex.org.git"
+  },
+  "engines": {
+    "node": ">=20 <23",
+    "npm": ">=10"
+  },
   "bin": {
     "absurdity-index": "./bin/absurdity-index.mjs"
   },

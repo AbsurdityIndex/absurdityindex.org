@@ -39,6 +39,10 @@ export interface PromptContext {
   quoteTweetAuthor?: string;
   additionalContext?: string;
   siteUrl?: string;
+  /** Proof links for factual claims — every claim must be backed by a URL */
+  sourceLinks?: string[];
+  /** Pre-formatted legislative overlap context injected by overlap detection */
+  overlapContext?: string;
 }
 
 type PromptBuilder = (context: PromptContext) => { system: string; user: string };

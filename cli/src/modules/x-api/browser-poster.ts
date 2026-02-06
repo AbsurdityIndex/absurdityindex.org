@@ -7,6 +7,7 @@ import type { Config } from '../../config.js';
 const COMPOSE_SELECTOR = '[data-testid="tweetTextarea_0"]';
 const POST_BUTTON_SELECTOR = '[data-testid="tweetButton"]';
 const REPLY_BUTTON_SELECTOR = '[data-testid="tweetButtonInline"]';
+const FILE_INPUT_SELECTOR = 'input[data-testid="fileInput"]';
 
 export interface PostResult {
   success: boolean;
@@ -101,7 +102,35 @@ export class BrowserPoster {
     return true;
   }
 
-  async postTweet(text: string): Promise<PostResult> {
+  private async attachMedia(page: Page, mediaPath: string): Promise<boolean> {
+    try {
+      // X's compose area has a hidden file input we can use directly
+      const fileInput = page.locator(FILE_INPUT_SELECTOR);
+      await fileInput.setInputFiles(mediaPath);
+
+      // Wait for media preview to appear (thumbnail loads)
+      await page.waitForSelector('[data-testid="attachments"]', { timeout: 10000 });
+      this.log.info({ mediaPath }, 'Media attached via browser');
+      return true;
+    } catch (err) {
+      // Fallback: use filechooser event if the hidden input selector changed
+      try {
+        const [fileChooser] = await Promise.all([
+          page.waitForEvent('filechooser', { timeout: 5000 }),
+          page.locator('[data-testid="fileInput"]').click(),
+        ]);
+        await fileChooser.setFiles(mediaPath);
+        await page.waitForSelector('[data-testid="attachments"]', { timeout: 10000 });
+        this.log.info({ mediaPath }, 'Media attached via filechooser fallback');
+        return true;
+      } catch {
+        this.log.warn({ err, mediaPath }, 'Failed to attach media in browser — posting text-only');
+        return false;
+      }
+    }
+  }
+
+  async postTweet(text: string, opts?: { mediaPath?: string }): Promise<PostResult> {
     if (this.config.dryRun) {
       this.log.info({ text: text.slice(0, 80) }, '[DRY RUN] Would post tweet via browser');
       return { success: true };
@@ -118,6 +147,12 @@ export class BrowserPoster {
 
       // Click compose area
       await page.click(COMPOSE_SELECTOR, { timeout: 10000 });
+
+      // Attach media before typing text (if provided)
+      if (opts?.mediaPath) {
+        await this.attachMedia(page, opts.mediaPath);
+      }
+
       await page.keyboard.type(text, { delay: 15 });
 
       // Small delay to let X process the input

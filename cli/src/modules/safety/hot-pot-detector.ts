@@ -78,7 +78,7 @@ export async function runHotPotDetector(options: HotPotOptions): Promise<SafetyR
 
   // Layer 4: Toxicity Check (0-25 points, Claude-powered)
   try {
-    const toxResponse = await claude.analyzeSafety(content, `Rate this satirical tweet's toxicity on a scale of 0-25.
+    const toxResult = await claude.analyzeSafety(content, `Rate this satirical tweet's toxicity on a scale of 0-25.
 
 Consider:
 - Personal attacks (0-10): Does it attack a person rather than a system?
@@ -89,8 +89,8 @@ Respond in this exact format:
 SCORE: [number 0-25]
 REASON: [one sentence if score > 5, "Clean" if score <= 5]`);
 
-    const scoreMatch = toxResponse.match(/SCORE:\s*(\d+)/);
-    const reasonMatch = toxResponse.match(/REASON:\s*(.+)/);
+    const scoreMatch = toxResult.text.match(/SCORE:\s*(\d+)/);
+    const reasonMatch = toxResult.text.match(/REASON:\s*(.+)/);
     layers.toxicity = scoreMatch ? Math.min(parseInt(scoreMatch[1]!, 10), 25) : 0;
     if (layers.toxicity > 5) {
       reasons.push(`Toxicity: ${reasonMatch?.[1] ?? 'Elevated'}`);

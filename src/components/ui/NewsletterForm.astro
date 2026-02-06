@@ -1,4 +1,5 @@
 ---
+import Icon from './Icon.astro';
 ---
 
 <section class="bg-parchment border border-gold-300 rounded p-6 md:p-8 text-center max-w-xl mx-auto">
@@ -30,13 +31,15 @@
   id="newsletter-modal"
   class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden"
 >
-  <div id="newsletter-modal-backdrop" class="absolute inset-0 bg-navy-900/60"></div>
-  <div class="relative bg-parchment border-2 border-gold-400 rounded-lg shadow-xl max-w-md w-full p-8 text-center">
-    <p class="text-4xl mb-4">📬</p>
-    <h3 class="font-serif text-2xl font-bold text-navy-900 mb-3">Just Kidding.</h3>
-    <p class="font-sans text-sm text-navy-700 leading-relaxed mb-4">
-      You think Congress reads their mail? Neither do we. This feature is currently in committee &mdash; which means it'll be ready sometime between now and never.
-    </p>
+	  <div id="newsletter-modal-backdrop" class="absolute inset-0 bg-navy-900/60"></div>
+	  <div class="relative bg-parchment border-2 border-gold-400 rounded-lg shadow-xl max-w-md w-full p-8 text-center">
+	    <div class="flex justify-center mb-4">
+	      <Icon name="mail" size={48} class="text-gold-600" />
+	    </div>
+	    <h3 class="font-serif text-2xl font-bold text-navy-900 mb-3">Just Kidding.</h3>
+	    <p class="font-sans text-sm text-navy-700 leading-relaxed mb-4">
+	      You think Congress reads their mail? Neither do we. This feature is currently in committee &mdash; which means it'll be ready sometime between now and never.
+	    </p>
     <p class="font-sans text-xs text-navy-500 italic mb-6">
       In the meantime, bookmark us. We'll be here &mdash; unlike your representatives.
     </p>

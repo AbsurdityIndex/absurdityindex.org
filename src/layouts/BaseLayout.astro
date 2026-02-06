@@ -14,6 +14,7 @@ interface Props {
   description?: string;
   ogImage?: string;
   ogType?: string;
+  robots?: string;
   article?: {
     publishedTime?: string;
     modifiedTime?: string;
@@ -28,11 +29,12 @@ const {
   description = 'Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.',
   ogImage,
   ogType = 'website',
+  robots = 'index, follow, max-image-preview:large, max-snippet:-1',
   article,
 } = Astro.props;
 
 const fullTitle = `${title} | Absurdity Index`;
-const siteUrl = Astro.url.origin;
+const siteUrl = Astro.site?.origin ?? Astro.url.origin;
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
 const resolvedOgImage = ogImage ? new URL(ogImage, siteUrl).href : `${siteUrl}/og-image.svg`;
 
@@ -40,12 +42,12 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Absurdity Index',
-  url: 'https://absurdityindex.org',
+  url: siteUrl,
   description: 'Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.',
   publisher: {
     '@type': 'Organization',
     name: 'Absurdity Index',
-    url: 'https://absurdityindex.org',
+    url: siteUrl,
   },
 };
 ---
@@ -99,7 +101,7 @@ const jsonLd = {
     <meta name="description" content={description} />
 
     <!-- Robots -->
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="robots" content={robots} />
 
     <!-- Author/Publisher -->
     <meta name="author" content="Absurdity Index" />

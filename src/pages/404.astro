@@ -3,7 +3,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
 ---
 
-<BaseLayout title="404 — This Bill Died in Committee" description="The page you're looking for was referred to the Subcommittee on Missing Pages, where it will remain indefinitely.">
+<BaseLayout
+  title="404 — This Bill Died in Committee"
+  description="The page you're looking for was referred to the Subcommittee on Missing Pages, where it will remain indefinitely."
+  robots="noindex, follow"
+>
   <div class="min-h-[60vh] flex items-center justify-center px-4 py-16">
     <div class="text-center max-w-2xl">
       <OfficialSeal size="140" />

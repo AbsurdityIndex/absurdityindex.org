@@ -10,6 +10,7 @@ import { registerAnalyticsCommand } from './commands/analytics.js';
 import { registerScheduleCommand } from './commands/schedule.js';
 import { registerLoginCommand } from './commands/login.js';
 import { registerStatusCommand } from './commands/status.js';
+import { registerDiscoverCommand } from './commands/discover.js';
 
 const program = new Command();
 
@@ -30,6 +31,7 @@ registerAnalyticsCommand(program);
 registerScheduleCommand(program);
 registerLoginCommand(program);
 registerStatusCommand(program);
+registerDiscoverCommand(program);
 
 export function run(): void {
   program.parse();

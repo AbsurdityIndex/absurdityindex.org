@@ -17,6 +17,23 @@ import yaml from 'js-yaml';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BILLS_DIR = path.join(__dirname, '../src/data/bills');
 
+const STRICT_WARNINGS = process.argv.includes('--strict-warnings');
+
+function parseMaxWarningsArg() {
+  const raw = process.argv.find((arg) => arg.startsWith('--max-warnings='));
+  if (!raw) return null;
+
+  const value = Number.parseInt(raw.slice('--max-warnings='.length), 10);
+  if (Number.isNaN(value) || value < 0) {
+    console.error("Error: --max-warnings must be a non-negative integer.");
+    process.exit(1);
+  }
+
+  return value;
+}
+
+const MAX_WARNINGS = parseMaxWarningsArg();
+
 // ANSI color codes for terminal output
 const colors = {
   red: '\x1b[31m',
@@ -309,10 +326,10 @@ function validateVotes(votes, filename) {
 
     // Check passed status matches vote counts
     // Note: Senate cloture requires 60 votes, not simple majority
-    if (votes.passed === true && votes.yeas <= votes.nays) {
+    if (total > 0 && votes.passed === true && votes.yeas <= votes.nays) {
       warnings.push(`Bill marked as passed but yeas (${votes.yeas}) <= nays (${votes.nays})`);
     }
-    if (votes.passed === false && votes.yeas > votes.nays) {
+    if (total > 0 && votes.passed === false && votes.yeas > votes.nays) {
       // This might be valid for Senate cloture votes (60 needed)
       if (votes.chamber !== 'senate' || votes.yeas >= 60) {
         warnings.push(`Bill marked as failed but yeas (${votes.yeas}) > nays (${votes.nays}) - if Senate cloture vote, 60 needed`);
@@ -392,9 +409,14 @@ function validateSponsorData(data, filename) {
       }
     });
 
-    // Check cosponsorCount matches actual cosponsors (only for real bills where this matters)
-    if (data.billType === 'real' && data.cosponsorCount !== undefined && data.cosponsors.length !== data.cosponsorCount) {
-      warnings.push(`cosponsorCount (${data.cosponsorCount}) doesn't match cosponsors array length (${data.cosponsors.length})`);
+    // Real bills often store a truncated cosponsors list plus full cosponsorCount.
+    // Only warn when the array exceeds cosponsorCount, which is inconsistent.
+    if (
+      data.billType === 'real' &&
+      data.cosponsorCount !== undefined &&
+      data.cosponsors.length > data.cosponsorCount
+    ) {
+      warnings.push(`cosponsorCount (${data.cosponsorCount}) is less than cosponsors array length (${data.cosponsors.length})`);
     }
   }
 
@@ -662,6 +684,14 @@ function validateBill(filepath) {
 function main() {
   console.log(`\n${colors.bold}${colors.cyan}Bill Content Validator${colors.reset}\n`);
   console.log(`${colors.dim}Scanning: ${BILLS_DIR}${colors.reset}\n`);
+  if (STRICT_WARNINGS) {
+    console.log(`${colors.dim}Warning mode: strict (any warning fails validation)${colors.reset}`);
+  } else if (MAX_WARNINGS !== null) {
+    console.log(`${colors.dim}Warning mode: max ${MAX_WARNINGS}${colors.reset}`);
+  }
+  if (STRICT_WARNINGS || MAX_WARNINGS !== null) {
+    console.log();
+  }
 
   // Get all MDX files (excluding templates)
   const files = fs.readdirSync(BILLS_DIR)
@@ -725,6 +755,14 @@ function main() {
 
   if (totalErrors > 0) {
     console.log(`${colors.red}${colors.bold}Validation FAILED${colors.reset} - fix errors before deploying\n`);
+    process.exit(1);
+  } else if (STRICT_WARNINGS && totalWarnings > 0) {
+    console.log(`${colors.red}${colors.bold}Validation FAILED${colors.reset} - warnings are treated as errors in strict mode\n`);
+    process.exit(1);
+  } else if (MAX_WARNINGS !== null && totalWarnings > MAX_WARNINGS) {
+    console.log(
+      `${colors.red}${colors.bold}Validation FAILED${colors.reset} - warnings (${totalWarnings}) exceed allowed max (${MAX_WARNINGS})\n`
+    );
     process.exit(1);
   } else if (totalWarnings > 0) {
     console.log(`${colors.yellow}${colors.bold}Validation PASSED with warnings${colors.reset}\n`);

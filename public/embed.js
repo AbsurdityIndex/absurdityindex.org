@@ -2,10 +2,35 @@
   'use strict';
 
   var script = document.currentScript;
+  if (!script || !script.parentNode) {
+    return;
+  }
   var billId = script.getAttribute('data-bill');
   var theme = script.getAttribute('data-theme') || 'light';
   var container = document.createElement('div');
   container.className = 'absurdity-index-embed';
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function safeUrl(value) {
+    try {
+      var parsed = new URL(String(value));
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return parsed.href;
+      }
+    } catch (_error) {
+      // Fall through to inert URL.
+    }
+
+    return '#';
+  }
 
   // Base styles
   var baseStyles = {
@@ -64,20 +89,25 @@
       if (!bill) {
         container.innerHTML =
           '<p style="color: #DC2626; font-family: sans-serif; font-size: 14px;">Bill not found: ' +
-          billId +
+          escapeHtml(billId) +
           '</p>';
         return;
       }
 
+      var safeBillNumber = escapeHtml(bill.billNumber);
+      var safeTitle = escapeHtml(bill.title);
+      var safeSummary = escapeHtml(bill.summary);
+      var safeBillUrl = safeUrl(bill.url);
       var absurdityBadge = '';
-      if (bill.absurdityIndex) {
+      var absurdityValue = Number(bill.absurdityIndex);
+      if (Number.isFinite(absurdityValue) && absurdityValue > 0) {
         absurdityBadge =
           '<span style="background: ' +
           colors.accent +
           '; color: ' +
           colors.text +
           '; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: sans-serif;">Absurdity: ' +
-          bill.absurdityIndex +
+          absurdityValue +
           '/10</span>';
       }
 
@@ -118,7 +148,7 @@
         '<span style="font-family: monospace; font-weight: bold; color: ' +
         colors.text +
         ';">' +
-        bill.billNumber +
+        safeBillNumber +
         '</span>' +
         absurdityBadge +
         billTypeBadge +
@@ -126,16 +156,16 @@
         '<h3 style="margin: 0 0 8px 0; font-size: 18px; color: ' +
         colors.text +
         '; font-weight: bold;">' +
-        bill.title +
+        safeTitle +
         '</h3>' +
         '<p style="margin: 0 0 12px 0; font-size: 14px; color: ' +
         colors.textSecondary +
         '; line-height: 1.5;">' +
-        bill.summary +
+        safeSummary +
         '</p>' +
         '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">' +
         '<a href="' +
-        bill.url +
+        safeBillUrl +
         '" target="_blank" rel="noopener" style="color: ' +
         colors.accent +
         '; font-size: 12px; text-decoration: none; font-family: sans-serif;">View on Absurdity Index &rarr;</a>' +

@@ -106,6 +106,91 @@ const MIGRATIONS = [
   CREATE INDEX IF NOT EXISTS idx_opportunities_tweet_id ON opportunities(tweet_id);
   CREATE INDEX IF NOT EXISTS idx_engagement_cooldowns_last ON engagement_cooldowns(last_engaged);
   `,
+  // Migration 003: Cost tracking, overlap cache, batch API
+  `
+  CREATE TABLE IF NOT EXISTS generations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER REFERENCES posts(id),
+    purpose TEXT NOT NULL,
+    model TEXT NOT NULL,
+    input_tokens INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    cost_cents REAL NOT NULL DEFAULT 0,
+    batch_id TEXT,
+    bill_slug TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_gen_post ON generations(post_id);
+  CREATE INDEX IF NOT EXISTS idx_gen_date ON generations(created_at);
+
+  CREATE TABLE IF NOT EXISTS overlap_cache (
+    target_slug TEXT NOT NULL,
+    candidate_slug TEXT NOT NULL,
+    similarity_pct INTEGER NOT NULL,
+    relationship TEXT NOT NULL,
+    shared_provisions TEXT,
+    analyzed_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (target_slug, candidate_slug)
+  );
+
+  CREATE TABLE IF NOT EXISTS batches (
+    id TEXT PRIMARY KEY,
+    request_count INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'submitted',
+    requests_json TEXT NOT NULL,
+    submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT
+  );
+  `,
+  // Migration 004: Discovery pipeline
+  `
+  CREATE TABLE IF NOT EXISTS discovered_bills (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    congress INTEGER NOT NULL,
+    bill_type TEXT NOT NULL,
+    bill_number INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    sponsor TEXT,
+    sponsor_party TEXT,
+    sponsor_state TEXT,
+    policy_area TEXT,
+    subjects_json TEXT,
+    latest_action_text TEXT,
+    latest_action_date TEXT,
+    cosponsor_count INTEGER DEFAULT 0,
+    summary_text TEXT,
+
+    prefilter_score INTEGER NOT NULL DEFAULT 0,
+    prefilter_signals TEXT,
+    prefilter_passed INTEGER NOT NULL DEFAULT 0,
+
+    ai_score INTEGER,
+    ai_explanation TEXT,
+    ai_category TEXT,
+    ai_angle TEXT,
+    ai_scored_at TEXT,
+
+    status TEXT NOT NULL DEFAULT 'discovered',
+    ingested_slug TEXT,
+    congress_gov_url TEXT,
+    discovered_at TEXT NOT NULL DEFAULT (datetime('now')),
+
+    UNIQUE(congress, bill_type, bill_number)
+  );
+  CREATE INDEX IF NOT EXISTS idx_disc_status ON discovered_bills(status);
+  CREATE INDEX IF NOT EXISTS idx_disc_score ON discovered_bills(ai_score DESC);
+  `,
+  // Migration 005: Archetype column for bill classification
+  `
+  ALTER TABLE discovered_bills ADD COLUMN archetype TEXT;
+  `,
+  // Migration 006: Meme metadata on posts
+  `
+  ALTER TABLE posts ADD COLUMN media_url TEXT;
+  ALTER TABLE posts ADD COLUMN media_type TEXT;
+  ALTER TABLE posts ADD COLUMN meme_strategy TEXT;
+  ALTER TABLE posts ADD COLUMN meme_template TEXT;
+  `,
 ];
 
 export function getDb(dbPath: string): Database.Database {

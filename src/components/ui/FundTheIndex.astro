@@ -724,26 +724,34 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
     }
   }
 
-  /* Very narrow devices: avoid covering content and controls */
+  /* Narrow devices: full-width bar below header */
   @media (max-width: 430px) {
     .fund-tab {
-      top: auto;
-      bottom: 5.75rem;
+      top: var(--fund-tab-top, 5.5rem);
+      bottom: auto;
+      left: 0;
+      right: 0;
+      width: 100%;
+      max-width: none;
       transform: none;
       writing-mode: horizontal-tb;
-      border-radius: 0 8px 8px 0;
-      padding: 6px 8px;
-      gap: 6px;
-      max-width: 108px;
+      border-radius: 0;
+      border: none;
+      border-bottom: 2px solid var(--color-gold-500);
+      padding: 6px 16px;
+      gap: 8px;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     .fund-tab:hover {
-      padding-right: 10px;
+      padding-right: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
     }
 
     .fund-tab-text {
-      font-size: 0.5rem;
-      letter-spacing: 0.08em;
+      font-size: 0.5625rem;
+      letter-spacing: 0.12em;
     }
   }
 
@@ -799,4 +807,20 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
       closeFundDrawer();
     }
   });
+
+  // Position fund tab below header on narrow viewports
+  function positionFundTab() {
+    if (!tab || window.innerWidth > 430) {
+      tab?.style.removeProperty('--fund-tab-top');
+      return;
+    }
+    const header = document.querySelector('header');
+    if (header) {
+      const bottom = Math.ceil(header.getBoundingClientRect().bottom);
+      tab.style.setProperty('--fund-tab-top', Math.max(bottom, 0) + 'px');
+    }
+  }
+  positionFundTab();
+  window.addEventListener('scroll', positionFundTab, { passive: true });
+  window.addEventListener('resize', positionFundTab);
 </script>

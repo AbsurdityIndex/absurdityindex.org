@@ -12,7 +12,7 @@ AI-powered congressional satire. We track real bills from Congress.gov, score th
 
 A static site built with Astro that catalogs real congressional legislation alongside satirical "not-bills." Each real bill gets an absurdity score, a plain-English summary, and a breakdown of what it actually does vs. what its name implies.
 
-- 37 bills tracked (27 real, 6 sensible satire, 4 absurd historical)
+- 39 bills tracked (29 real, 6 sensible satire, 4 absurd historical)
 - Full-text search via Pagefind
 - Embed widget and JSON API for developers
 - Dark mode, mobile-friendly, government-parody aesthetic
@@ -113,7 +113,20 @@ npx tsx src/index.ts analytics summary   # View performance metrics
 # From the project root
 CONGRESS_GOV_API_KEY=<key> npm run fetch-bills
 npm run fetch-bills -- --bill 119/hr/25  # Fetch a specific bill
+npm run fetch-bills -- --bill=119/hr/25  # Equivalent inline form
 npm run validate                          # Validate all bill MDX files
+npm run validate:ci                       # CI gate (warnings fail in strict mode)
+```
+
+### CI/Quality Commands
+
+```bash
+npm run verify
+npm run validate:ci
+npm run security:ci
+npm run build
+npm run build --prefix cli
+npm test --prefix cli
 ```
 
 ## Content
@@ -160,3 +173,12 @@ Verdicts: **SAFE** (0-20) posts automatically, **REVIEW** (20-40) goes to human 
 ## License
 
 [MIT](./LICENSE)
+
+## Community
+
+- [Contributing](./CONTRIBUTING.md)
+- [Support](./SUPPORT.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
+- [Security Policy](./SECURITY.md)
+- [Changelog](./CHANGELOG.md)
+- [Releasing](./RELEASING.md)

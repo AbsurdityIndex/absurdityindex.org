@@ -1,29 +1,57 @@
 # ---------------------------------------------------------------------------
 # Woodpecker CI — Build & Deploy to Cloudflare Pages
 # ---------------------------------------------------------------------------
-# Triggers on push to main. Builds Astro site + Pagefind index,
-# then deploys to Cloudflare Pages via wrangler.
+# Runs validation/build/test on push, pull request, and manual runs.
+# Deploys to Cloudflare Pages only for push/manual on main.
 # ---------------------------------------------------------------------------
 
 when:
-  - event: [push, manual]
-    branch: main
+  - event: [push, pull_request, manual]
 
 steps:
-  - name: install
+  - name: install-site
     image: node:22-alpine
     commands:
       - npm ci
 
-  - name: build
+  - name: install-cli
+    image: node:22-alpine
+    commands:
+      - npm ci --prefix cli
+
+  - name: security-audit
+    image: node:22-alpine
+    commands:
+      - npm run security:audit
+
+  - name: secret-scan
+    image: node:22-alpine
+    commands:
+      - npm run security:scan-secrets
+
+  - name: validate-content
+    image: node:22-alpine
+    commands:
+      - npm run validate:ci
+
+  - name: build-site
     image: node:22-alpine
     commands:
       - npm run build
+
+  - name: test-cli
+    image: node:22-alpine
+    commands:
+      - npm run build --prefix cli
+      - npm test --prefix cli
 
   - name: deploy
     image: node:22-alpine
     commands:
       - npx wrangler pages deploy dist/ --project-name absurdity-index --branch main --commit-hash ${CI_COMMIT_SHA}
+    when:
+      - event: [push, manual]
+        branch: main
     environment:
       CLOUDFLARE_API_TOKEN:
         from_secret: cloudflare_api_token

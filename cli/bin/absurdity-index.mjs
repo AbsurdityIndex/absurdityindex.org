@@ -4,6 +4,7 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distEntry = resolve(__dirname, '../dist/index.js');
@@ -14,9 +15,18 @@ if (existsSync(distEntry)) {
   run();
 } else {
   // Dev mode: use tsx
-  const { execSync } = await import('node:child_process');
-  execSync(`npx tsx ${srcEntry} ${process.argv.slice(2).join(' ')}`, {
+  const npxCommand = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+  const result = spawnSync(npxCommand, ['tsx', srcEntry, ...process.argv.slice(2)], {
     stdio: 'inherit',
     cwd: resolve(__dirname, '..'),
+    shell: false,
   });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (typeof result.status === 'number') {
+    process.exit(result.status);
+  }
 }

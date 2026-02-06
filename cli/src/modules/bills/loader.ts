@@ -6,11 +6,22 @@ import type { BillContext } from '../claude/prompts/index.js';
 
 const log = getLogger();
 
+export interface RelatedBill {
+  billNumber: string;
+  title?: string;
+  relationship: string;
+  congress?: number;
+  url?: string;
+}
+
 export interface LoadedBill extends BillContext {
   tags: string[];
   category: string;
   featured: boolean;
   dateIntroduced: Date;
+  sponsorParty?: string;
+  congressNumber?: number;
+  relatedBills?: RelatedBill[];
 }
 
 /**
@@ -52,6 +63,9 @@ export function loadBills(billsDir: string): LoadedBill[] {
         category: data.category ?? '',
         featured: data.featured ?? false,
         dateIntroduced: new Date(data.dateIntroduced),
+        sponsorParty: data.sponsorParty,
+        congressNumber: data.congressNumber,
+        relatedBills: data.relatedBills,
       });
     } catch (err) {
       log.debug({ file, err }, 'Failed to parse bill');
@@ -89,6 +103,9 @@ export function loadBill(billsDir: string, slug: string): LoadedBill | null {
       category: data.category ?? '',
       featured: data.featured ?? false,
       dateIntroduced: new Date(data.dateIntroduced),
+      sponsorParty: data.sponsorParty,
+      congressNumber: data.congressNumber,
+      relatedBills: data.relatedBills,
     };
   } catch (err) {
     log.warn({ slug, err }, 'Failed to load bill');

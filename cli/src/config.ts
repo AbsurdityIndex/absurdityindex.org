@@ -13,6 +13,12 @@ export interface Config {
   // X API (read-only, bearer token)
   xBearerToken: string;
 
+  // X API (OAuth 1.0a, read+write)
+  xApiKey: string;
+  xApiSecret: string;
+  xAccessToken: string;
+  xAccessSecret: string;
+
   // Browser automation
   browserStatePath: string;
   headless: boolean;
@@ -22,6 +28,13 @@ export interface Config {
 
   // Congress.gov
   congressApiKey: string;
+
+  // Imgflip (meme generation)
+  imgflipUsername: string;
+  imgflipPassword: string;
+
+  // Giphy (reaction GIFs)
+  giphyApiKey: string;
 
   // Site
   siteUrl: string;
@@ -102,11 +115,18 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
 
   return {
     xBearerToken: env('X_BEARER_TOKEN'),
+    xApiKey: env('X_API_KEY'),
+    xApiSecret: env('X_API_SECRET'),
+    xAccessToken: env('X_ACCESS_TOKEN'),
+    xAccessSecret: env('X_ACCESS_SECRET'),
     browserStatePath: env('BROWSER_STATE_PATH', path.resolve(CLI_ROOT, 'data/.browser-state')),
     headless: (process.env.BROWSER_HEADLESS ?? 'true') !== 'false',
     anthropicApiKey: env('ANTHROPIC_API_KEY'),
-    congressApiKey: env('CONGRESS_API_KEY'),
-    siteUrl: env('SITE_URL', 'https://absurdity-index.io'),
+    congressApiKey: env('CONGRESS_API_KEY') || env('CONGRESS_GOV_API_KEY'),
+    imgflipUsername: env('IMGFLIP_USERNAME'),
+    imgflipPassword: env('IMGFLIP_PASSWORD'),
+    giphyApiKey: env('GIPHY_API_KEY'),
+    siteUrl: env('SITE_URL', 'https://absurdityindex.org'),
 
     billsDir: path.resolve(PROJECT_ROOT, 'src/data/bills'),
     sessionStatusPath: path.resolve(PROJECT_ROOT, 'src/data/session-status.json'),

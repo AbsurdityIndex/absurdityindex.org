@@ -1,0 +1,10 @@
+# Default owner for all files.
+* @coreysteinwand
+
+# Area-specific ownership (kept explicit for future expansion).
+/cli/ @coreysteinwand
+/extension/ @coreysteinwand
+/functions/ @coreysteinwand
+/k8s-monitor/ @coreysteinwand
+/scripts/ @coreysteinwand
+/src/ @coreysteinwand

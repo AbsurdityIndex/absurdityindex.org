@@ -7,8 +7,11 @@ import { createPostModel } from '../modules/state/models/posts.js';
 import { createAnalyticsModel } from '../modules/state/models/analytics.js';
 import { createSafetyLogModel } from '../modules/state/models/safety-log.js';
 import { createOpportunityModel } from '../modules/state/models/opportunities.js';
+import { createGenerationModel } from '../modules/state/models/generations.js';
+import { createDiscoveredBillModel } from '../modules/state/models/discovered-bills.js';
 import { createQueue } from '../modules/scheduler/queue.js';
 import { loadBills } from '../modules/bills/loader.js';
+import { modelDisplayName } from '../utils/pricing.js';
 
 export function registerStatusCommand(program: Command): void {
   program
@@ -43,6 +46,9 @@ export function registerStatusCommand(program: Command): void {
       const safetyStats = safetyLog.getRejectRate(7);
       const oppStats = opportunities.getStats();
       const trackedOpps = opportunities.getTracked(5);
+      const generationsModel = createGenerationModel(db);
+      const costSummary = generationsModel.getCostSummary(7);
+      const batchSavings = generationsModel.getBatchSavings(30);
 
       // Prompt type distribution (last 20 posts)
       const promptTypeCounts: Record<string, number> = {};
@@ -122,6 +128,29 @@ export function registerStatusCommand(program: Command): void {
             highAbsurdityAvailable: highAbsurdityAvailable.length,
             recentlyUsed: [...recentBillSlugs],
           },
+          costs: {
+            last7Days: {
+              totalCents: costSummary.totalCostCents,
+              totalCalls: costSummary.totalCalls,
+              byModel: costSummary.byModel,
+              byPurpose: costSummary.byPurpose,
+            },
+            batchSavings: {
+              savedCents: batchSavings.savedCents,
+              batchCalls: batchSavings.batchCalls,
+            },
+          },
+          discovery: (() => {
+            const disc = createDiscoveredBillModel(db);
+            const s = disc.getStats();
+            return {
+              total: s.total,
+              candidates: s.byStatus['candidate'] ?? 0,
+              ingested: s.byStatus['ingested'] ?? 0,
+              avgAiScore: s.avgAiScore,
+              lastScanAt: s.lastScanAt,
+            };
+          })(),
         };
         console.log(JSON.stringify(data, null, 2));
         return;
@@ -206,6 +235,41 @@ export function registerStatusCommand(program: Command): void {
       console.log(`  Total:         ${chalk.cyan(String(bills.length))}`);
       console.log(`  Available:     ${chalk.green(String(availableBills.length))} (not recently used)`);
       console.log(`  High absurd:   ${chalk.yellow(String(highAbsurdityAvailable.length))} (score >= 6, available)`);
+
+      // API Costs
+      console.log(chalk.bold('\n  API Costs (7d)'));
+      console.log(`  Total spend:   ${chalk.cyan(`$${(costSummary.totalCostCents / 100).toFixed(4)}`)}`);
+      console.log(`  API calls:     ${chalk.dim(String(costSummary.totalCalls))}`);
+      if (Object.keys(costSummary.byModel).length > 0) {
+        for (const [model, data] of Object.entries(costSummary.byModel)) {
+          console.log(`    ${modelDisplayName(model).padEnd(8)} ${chalk.dim(`$${(data.costCents / 100).toFixed(4)}`)} (${data.calls} calls)`);
+        }
+      }
+      if (Object.keys(costSummary.byPurpose).length > 0) {
+        console.log(chalk.dim('  By purpose:'));
+        for (const [purpose, data] of Object.entries(costSummary.byPurpose)) {
+          console.log(`    ${purpose.padEnd(14)} ${chalk.dim(`$${(data.costCents / 100).toFixed(4)}`)} (${data.calls} calls)`);
+        }
+      }
+      if (batchSavings.batchCalls > 0) {
+        console.log(chalk.bold('\n  Batch Savings (30d)'));
+        console.log(`  Batch calls:   ${chalk.cyan(String(batchSavings.batchCalls))}`);
+        console.log(`  Batch cost:    ${chalk.green(`$${(batchSavings.batchCostCents / 100).toFixed(4)}`)}`);
+        console.log(`  Would've been: ${chalk.dim(`$${(batchSavings.standardCostCents / 100).toFixed(4)}`)}`);
+        console.log(`  Saved:         ${chalk.green(`$${(batchSavings.savedCents / 100).toFixed(4)}`)}`);
+      }
+
+      // Discovery pipeline
+      const discovery = createDiscoveredBillModel(db);
+      const discStats = discovery.getStats();
+      if (discStats.total > 0) {
+        console.log(chalk.bold('\n  Discovery Pipeline'));
+        console.log(`  Discovered:    ${chalk.cyan(String(discStats.total))}`);
+        console.log(`  Candidates:    ${chalk.yellow(String(discStats.byStatus['candidate'] ?? 0))}`);
+        console.log(`  Ingested:      ${chalk.green(String(discStats.byStatus['ingested'] ?? 0))}`);
+        console.log(`  Avg AI score:  ${chalk.cyan(discStats.avgAiScore.toFixed(1))}`);
+        console.log(`  Last scan:     ${chalk.dim(discStats.lastScanAt ?? 'Never')}`);
+      }
 
       console.log('');
     });
