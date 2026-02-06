@@ -306,7 +306,7 @@ async function fetchBillData(congress, type, number) {
 // AI SUMMARIZATION
 // ============================================================================
 
-async function aiSummarize(crsSummary, billTitle, billNumber, actions, absurdityIndex) {
+async function aiSummarize(crsSummary, billTitle, billNumber, actions, absurdityIndex, committees, textVersions) {
   if (!crsSummary && actions.length === 0) return null;
 
   // Build context from actions
@@ -332,6 +332,10 @@ ${crsSummary || '(Not available)'}
 RECENT ACTIONS:
 ${actionsSummary || '(None)'}
 
+BILL FACTS:
+- Committees referred to: ${(committees || []).length} (${(committees || []).map(c => c.name).filter(Boolean).join(', ') || 'None'})
+- Bill text available: ${(textVersions || []).length > 0 ? 'Yes' : 'No'} (${(textVersions || []).length} version(s))
+
 Write THREE things:
 
 1. THE_GIST: 2-3 sentences that hook the reader. What's the interesting, surprising, or absurd angle on this bill? Lead with what makes it noteworthy. Write like you're explaining it to a friend at a bar. Be witty but accurate — don't make things up.
@@ -344,6 +348,7 @@ TONE: Think John Oliver meets Wikipedia. Informative, accessible, dry wit. Never
 
 RULES:
 - Be factually accurate — only reference what's actually in the bill
+- Use the BILL FACTS section for exact numbers — do not infer counts from the actions list
 - No political hot takes or partisan framing
 - If the bill is boring, be honest about that in a funny way
 - Don't start with "This bill..." — be more creative
@@ -543,6 +548,29 @@ Respond in this exact JSON format (no markdown, just JSON):
 }
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Parse the primary committee from referral action text.
+ * Congress.gov always lists the primary committee first:
+ *   "Referred to the Committee on X, and in addition to..."
+ * Falls back to first committee from API if no referral pattern found.
+ */
+function parsePrimaryCommittee(statusText, committees) {
+  const match = statusText?.match(/Referred to the Committee on ([^,]+?)(?:,|\.)/i);
+  if (match) {
+    const parsed = match[1].trim();
+    // Find matching committee from API data, or use parsed name directly
+    const found = committees.find(c =>
+      c.name?.toLowerCase().includes(parsed.toLowerCase())
+    );
+    return found?.name || `Committee on ${parsed}`;
+  }
+  return committees[0]?.name || 'Not assigned';
+}
+
+// ============================================================================
 // GENERATE MDX
 // ============================================================================
 
@@ -589,8 +617,16 @@ function generateMdx(data, meta, aiSummary, aiMilestones) {
   const theGist = aiSummary?.theGist || '';
   const whyItMatters = aiSummary?.whyItMatters || '';
 
-  // Actions - format for YAML array
-  const actionsYaml = data.actions.slice(0, 50).map(a => {
+  // Actions - deduplicate by date+text, then format for YAML array
+  const seenActions = new Set();
+  const uniqueActions = data.actions.filter(a => {
+    const key = `${a.actionDate}|${a.text}`;
+    if (seenActions.has(key)) return false;
+    seenActions.add(key);
+    return true;
+  });
+
+  const actionsYaml = uniqueActions.slice(0, 50).map(a => {
     const actionText = (a.text || '').replace(/"/g, '\\"').replace(/\n/g, ' ');
     return `  - date: ${a.actionDate || '2000-01-01'}
     text: "${actionText}"
@@ -671,7 +707,7 @@ sponsorState: "${sponsorState}"
 cosponsorCount: ${data.cosponsors.length}
 ${cosponsorsYaml ? `cosponsors:\n${cosponsorsYaml}` : 'cosponsors: []'}
 
-committee: "${data.committees[0]?.name || 'Not assigned'}"
+committee: "${parsePrimaryCommittee(status, data.committees)}"
 ${committeesYaml ? `committees:\n${committeesYaml}` : ''}
 
 status: "${status.replace(/"/g, '\\"')}"
@@ -759,7 +795,7 @@ async function main() {
           ? stripHtml(data.summaries[data.summaries.length - 1].text)
           : '';
         console.log(`    🤖 AI summarizing...`);
-        aiResult = await aiSummarize(crsSummary, data.bill.title, formatBillNumber(meta.type, meta.number), data.actions, meta.absurdityIndex);
+        aiResult = await aiSummarize(crsSummary, data.bill.title, formatBillNumber(meta.type, meta.number), data.actions, meta.absurdityIndex, data.committees, data.textVersions);
 
         console.log(`    🎯 AI extracting milestones...`);
         aiMilestones = await aiExtractMilestones(data.actions, formatBillNumber(meta.type, meta.number), meta.type);
