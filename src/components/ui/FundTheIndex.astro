@@ -228,6 +228,23 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
     box-shadow: 4px 2px 14px rgba(0, 0, 0, 0.35);
   }
 
+  :global(html.dark) .fund-tab {
+    background: #0A1628;
+    border-color: #E8B85A;
+    color: #F0C86A;
+  }
+  :global(html.dark) .fund-tab:hover {
+    background: #121F36;
+  }
+  :global(html[data-theme="solarized-dark"]) .fund-tab {
+    background: #002B36;
+    border-color: #CB9B00;
+    color: #DBA800;
+  }
+  :global(html[data-theme="solarized-dark"]) .fund-tab:hover {
+    background: #073642;
+  }
+
   /* Hide tab when drawer is open */
   :global(.fund-tabs-hidden) .fund-tab {
     opacity: 0;

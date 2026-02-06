@@ -22,7 +22,7 @@ const config = {
   },
   real: {
     label: 'Real Bill',
-    classes: 'bg-navy-700/90 text-white border-navy-800',
+    classes: 'bill-type-real bg-navy-700/90 text-white border-navy-800',
     icon: 'landmark' as const,
   },
 };
@@ -54,6 +54,15 @@ const iconSize = size === 'sm' ? 12 : 14;
 </span>
 
 <style>
+  :global(html.dark) .bill-type-real {
+    background-color: rgba(26, 45, 77, 0.9);
+    border-color: #121F36;
+  }
+  :global(html[data-theme="solarized-dark"]) .bill-type-real {
+    background-color: rgba(10, 61, 73, 0.9);
+    border-color: #073642;
+  }
+
   .help-btn {
     display: inline-flex;
     align-items: center;

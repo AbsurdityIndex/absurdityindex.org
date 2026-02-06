@@ -16,9 +16,20 @@ const iconSize = size === 'sm' ? 12 : 14;
 ---
 
 <span class:list={[
-  'inline-flex items-center font-mono font-semibold bg-navy-800 text-gold-400 rounded-full tracking-wide',
+  'bill-number-badge inline-flex items-center font-mono font-semibold bg-navy-800 text-gold-400 rounded-full tracking-wide',
   sizeClasses
 ]}>
   <Icon name="file-text" size={iconSize} class="text-gold-500" strokeWidth={2.5} />
   {billNumber}
 </span>
+
+<style>
+  :global(html.dark) .bill-number-badge {
+    background-color: #121F36;
+    color: #F0C86A;
+  }
+  :global(html[data-theme="solarized-dark"]) .bill-number-badge {
+    background-color: #073642;
+    color: #DBA800;
+  }
+</style>

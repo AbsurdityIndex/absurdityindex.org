@@ -176,11 +176,11 @@ html.dark {
 
   /* Text colors - navy becomes light for readability */
   --color-navy-900: #F5F0E8;
-  --color-navy-800: #E8E4DC;
-  --color-navy-700: #D4D0C8;
-  --color-navy-600: #B8B4AC;
-  --color-navy-500: #9A968E;
-  --color-navy-400: #7C7870;
+  --color-navy-800: #EDE9E1;
+  --color-navy-700: #E0DCD5;
+  --color-navy-600: #D4D0C8;
+  --color-navy-500: #BDB9B1;
+  --color-navy-400: #A09C94;
 
   /* Gold stays warm but slightly brighter for dark bg */
   --color-gold-600: #D4A04A;
@@ -231,7 +231,7 @@ html.dark .border-gold-200 {
 
 /* Dark mode for bill content */
 html.dark .bill-content {
-  color: #E8E4DC;
+  color: #EDE9E1;
 }
 
 html.dark .bill-content h2 {
@@ -240,7 +240,34 @@ html.dark .bill-content h2 {
 
 html.dark .bill-content blockquote {
   border-left-color: #C5A572;
-  color: #B8B4AC;
+  color: #D4D0C8;
+}
+
+/* Dark mode for CTA buttons — bg-navy-800 flips to cream, text-gold-300 becomes dark gold = no contrast */
+html.dark a.bg-navy-800,
+html.dark button.bg-navy-800 {
+  background-color: #121F36;
+  border-color: #1A2D4D;
+  color: #F0C86A;
+}
+
+html.dark a.bg-navy-800:hover,
+html.dark button.bg-navy-800:hover,
+html.dark a.bg-navy-700:hover,
+html.dark button.bg-navy-700:hover {
+  background-color: #1A2D4D;
+}
+
+html[data-theme="solarized-dark"] a.bg-navy-800,
+html[data-theme="solarized-dark"] button.bg-navy-800 {
+  background-color: #073642;
+  border-color: #586E75;
+  color: #DBA800;
+}
+
+html[data-theme="solarized-dark"] a.bg-navy-800:hover,
+html[data-theme="solarized-dark"] button.bg-navy-800:hover {
+  background-color: #0A3D49;
 }
 
 /* Dark mode for inputs and forms */
@@ -294,13 +321,13 @@ html[data-theme="solarized-dark"] {
   --color-cream-300: #0A3D49;
   --color-parchment: #073642;
 
-  /* Text — Solarized base0, base1, base2 */
+  /* Text — Solarized base tones, brightened for readability */
   --color-navy-900: #EEE8D5;
   --color-navy-800: #E0DAC8;
-  --color-navy-700: #93A1A1;
-  --color-navy-600: #839496;
-  --color-navy-500: #657B83;
-  --color-navy-400: #586E75;
+  --color-navy-700: #C8D0D0;
+  --color-navy-600: #B0BABA;
+  --color-navy-500: #93A1A1;
+  --color-navy-400: #839496;
 
   /* Gold → Solarized yellow accent */
   --color-gold-600: #B58900;
@@ -402,8 +429,6 @@ html[data-theme="solarized-light"] {
    must keep dark backgrounds. Reset the variables within those
    elements so every Tailwind utility inside them resolves correctly.
    ============================== */
-html.dark header,
-html.dark footer,
 html.dark [data-theme-fixed],
 html.dark #mobile-menu-panel,
 html.dark .settings-dial-panel,
@@ -420,8 +445,6 @@ html.dark .settings-dial-fab {
   --color-parchment: #F5F0E1;
 }
 
-html[data-theme="solarized-dark"] header,
-html[data-theme="solarized-dark"] footer,
 html[data-theme="solarized-dark"] [data-theme-fixed],
 html[data-theme="solarized-dark"] #mobile-menu-panel,
 html[data-theme="solarized-dark"] .settings-dial-panel,

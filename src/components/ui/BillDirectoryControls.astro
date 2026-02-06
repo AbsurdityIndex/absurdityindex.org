@@ -201,6 +201,44 @@ function toCategorySlug(value: string) {
   )}
 </section>
 
+<style>
+  /* Dark mode: panel container — bg-white/75 is hardcoded and doesn't respond to variable swap */
+  :global(html.dark) #bill-directory-controls {
+    background-color: rgba(15, 26, 46, 0.85);
+    border-color: #1A2D4D;
+  }
+
+  /* Dark mode: tab nav container */
+  :global(html.dark) #bill-directory-controls nav[aria-label] {
+    background-color: #1A2D4D;
+    border-color: #2D5986;
+  }
+
+  /* Dark mode: active tab and active category chips — bg-navy-800 flips to cream */
+  :global(html.dark) #bill-directory-controls .bg-navy-800 {
+    background-color: #121F36;
+  }
+  :global(html.dark) #bill-directory-controls .border-navy-800 {
+    border-color: #121F36;
+  }
+
+  /* Solarized dark equivalents */
+  :global(html[data-theme="solarized-dark"]) #bill-directory-controls {
+    background-color: rgba(7, 54, 66, 0.85);
+    border-color: #586E75;
+  }
+  :global(html[data-theme="solarized-dark"]) #bill-directory-controls nav[aria-label] {
+    background-color: #0A3D49;
+    border-color: #586E75;
+  }
+  :global(html[data-theme="solarized-dark"]) #bill-directory-controls .bg-navy-800 {
+    background-color: #073642;
+  }
+  :global(html[data-theme="solarized-dark"]) #bill-directory-controls .border-navy-800 {
+    border-color: #073642;
+  }
+</style>
+
 <script>
   const controlsContainer = document.getElementById('bill-directory-controls');
   const searchInput = document.getElementById('bill-search') as HTMLInputElement | null;

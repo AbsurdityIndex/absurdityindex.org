@@ -10,7 +10,7 @@ const d = bill.data;
 const billUrl = d.billType === 'real' ? `/bills/${bill.id}/` : `/not-bills/${bill.id}/`;
 ---
 
-<section class="bg-navy-800 text-gold-300 py-8">
+<section class="bg-navy-800 text-gold-300 py-8" data-theme-fixed>
   <div class="max-w-4xl mx-auto px-4">
     <div class="flex items-center gap-2 mb-3">
       <span class="text-gold-500 font-mono text-xs uppercase tracking-widest">Bill of the Day</span>
