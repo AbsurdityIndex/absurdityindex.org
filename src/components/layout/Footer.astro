@@ -136,6 +136,8 @@ const toolLinks = [
     const footerModal = document.getElementById('footer-newsletter-modal');
     const footerBackdrop = document.getElementById('footer-newsletter-modal-backdrop');
     const footerCloseBtn = document.getElementById('footer-newsletter-modal-close');
+    const footerVisitorRow = document.getElementById('footer-visitor-counter');
+    const footerVisitorValue = document.getElementById('footer-visitor-count');
 
     function openFooterModal() {
       footerModal?.classList.remove('hidden');
@@ -160,6 +162,42 @@ const toolLinks = [
         closeFooterModal();
       }
     });
+
+    function formatVisitorCount(value) {
+      if (!Number.isFinite(value)) return '--';
+      return new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(value)));
+    }
+
+    async function loadVisitorCounter() {
+      if (!footerVisitorRow || !footerVisitorValue) return;
+
+      try {
+        let response = await fetch('/api/visitors.json', {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+        });
+
+        // If POST is blocked by an intermediary, fallback to read-only.
+        if (!response.ok) {
+          response = await fetch('/api/visitors.json', {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+          });
+        }
+
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        if (!payload?.enabled || typeof payload.totalViews !== 'number') return;
+
+        footerVisitorValue.textContent = formatVisitorCount(payload.totalViews);
+        footerVisitorRow.classList.remove('hidden');
+      } catch (_error) {
+        // Keep footer clean if counter is unavailable.
+      }
+    }
+
+    loadVisitorCounter();
   </script>
 
   <!-- Disclaimer -->
@@ -178,6 +216,10 @@ const toolLinks = [
       </p>
       <p class="mt-2 text-xs text-navy-500">
         <a href="/privacy" class="underline hover:text-gold-400 transition-colors">Privacy Policy</a>
+      </p>
+      <p id="footer-visitor-counter" class="mt-2 text-xs text-navy-500 hidden">
+        Public gallery attendance:
+        <span id="footer-visitor-count" class="font-mono text-gold-400">--</span>
       </p>
     </div>
   </div>
