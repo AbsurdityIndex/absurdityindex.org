@@ -625,12 +625,96 @@ function buildSummary({ houseStatus, senateStatus, houseMeetings, senateMeetings
 
 export async function buildTodayData({ apiKey, now = new Date() }) {
   if (!apiKey) {
+    const today = getEtDateParts(now);
     return {
       generatedAt: new Date().toISOString(),
       timezone: ET_TIME_ZONE,
-      today: getEtDateParts(now),
-      error: 'CONGRESS_GOV_API_KEY is required for the today data source.',
-      sources: [{ key: 'congressApiKey', status: 'error', error: 'Missing key' }],
+      dataSource: 'Static fallback',
+      congress: null,
+      session: null,
+      today: {
+        isoDate: today.isoDate,
+        label: today.label,
+      },
+      chambers: {
+        house: {
+          chamber: 'House',
+          status: 'No update',
+          convenedAt: null,
+          adjournedAt: null,
+          nextConvene: null,
+          latestAction: null,
+          actions: [],
+          source: 'Live House feed is not configured in this deployment.',
+        },
+        senate: {
+          chamber: 'Senate',
+          status: 'No update',
+          previousMeetingDate: null,
+          previousSummary: 'No Senate floor summary posted yet.',
+          convenedAt: null,
+          adjournedAt: null,
+          nextMeetingDate: null,
+          nextConveneTime: null,
+          nextConvene: null,
+          livestream: null,
+          scheduleLastUpdated: null,
+          source: 'Live Senate feed is not configured in this deployment.',
+        },
+      },
+      committees: {
+        totalToday: 0,
+        house: {
+          count: 0,
+          meetings: [],
+          source: 'Live House committee feed is not configured in this deployment.',
+        },
+        senate: {
+          count: 0,
+          meetings: [],
+          source: 'Live Senate committee feed is not configured in this deployment.',
+        },
+        meetings: [],
+      },
+      votes: {
+        house: {
+          countToday: 0,
+          votes: [],
+          source: 'Live House vote feed is not configured in this deployment.',
+        },
+        senate: {
+          countToday: null,
+          votes: [],
+          source: 'No Senate roll call endpoint is currently provided in the Congress.gov API v3 schema.',
+        },
+      },
+      dailyCongressionalRecord: {
+        issueDateUsed: null,
+        latestIssueDate: null,
+        sections: [],
+        source: 'Live Congressional Record feed is not configured in this deployment.',
+      },
+      houseWeekAgenda: {
+        weekOf: null,
+        sections: [],
+        source: 'House weekly agenda feed unavailable in this deployment.',
+      },
+      summary: {
+        headline: 'Live congressional feeds are temporarily unavailable on this deployment.',
+        deck: 'Satire desk fallback mode: monitoring resumes automatically when live data is configured.',
+        bullets: [
+          'House and Senate live feeds are not configured in this environment yet.',
+          'This page will show baseline status until live source credentials are deployed.',
+          'Editorial content and bill pages continue to work normally.',
+        ],
+      },
+      sources: [
+        {
+          key: 'officialLiveFeeds',
+          status: 'unavailable',
+          error: 'Not configured in this deployment.',
+        },
+      ],
     };
   }
 

@@ -242,12 +242,32 @@ const recentBills = allBills
       return;
     }
 
+    const sourceLabel = (key) => {
+      switch (key) {
+        case 'officialLiveFeeds':
+        case 'congressApiKey':
+          return 'Official live feeds';
+        default:
+          return key || 'Source';
+      }
+    };
+
+    const sourceStatus = (source) => {
+      const status = String(source?.status || '').toLowerCase();
+      const rawError = String(source?.error || '');
+      const safeError = /missing key/i.test(rawError)
+        ? 'Not configured in this deployment.'
+        : (rawError || 'Unknown issue.');
+
+      if (status === 'ok') return 'operational';
+      if (status === 'unavailable') return `unavailable (${safeError})`;
+      return `degraded (${safeError})`;
+    };
+
     listItems(
       sourcesEl,
       sources.map((source) => {
-        const key = source.key || 'source';
-        const status = source.status === 'ok' ? 'ok' : `error (${source.error || 'unknown'})`;
-        return `${key}: ${status}`;
+        return `${sourceLabel(source?.key)}: ${sourceStatus(source)}`;
       })
     );
   }
