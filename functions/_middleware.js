@@ -1,7 +1,31 @@
 /**
- * Cloudflare Pages middleware — restrict access to US visitors only.
- * Cloudflare automatically provides the visitor's country via request.cf.country.
+ * Cloudflare Pages middleware — restrict access to US visitors only
+ * and enforce security headers on every response.
+ *
+ * IMPORTANT: Security headers are set here (not in `public/_headers`) because
+ * the `_headers` file is unreliably applied when requests pass through Functions.
+ * This middleware is the authoritative layer for all response headers.
  */
+
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'X-Permitted-Cross-Domain-Policies': 'none',
+  'Content-Security-Policy':
+    "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; upgrade-insecure-requests",
+};
+
+function applySecurityHeaders(response) {
+  const patched = new Response(response.body, response);
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    patched.headers.set(key, value);
+  }
+  return patched;
+}
+
 export async function onRequest(context) {
   const url = new URL(context.request.url);
 
@@ -13,15 +37,7 @@ export async function onRequest(context) {
       status: 301,
       headers: {
         Location: url.toString(),
-        // Keep these in sync with `public/_headers` so scanners don't see a weaker redirect response.
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'X-Permitted-Cross-Domain-Policies': 'none',
-        'Content-Security-Policy':
-          "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; upgrade-insecure-requests",
+        ...SECURITY_HEADERS,
       },
     });
   }
@@ -30,7 +46,8 @@ export async function onRequest(context) {
 
   // Allow requests with no country info (local dev, health checks, bots)
   if (!country) {
-    return context.next();
+    const response = await context.next();
+    return applySecurityHeaders(response);
   }
 
   // Allow US and US territories
@@ -44,7 +61,8 @@ export async function onRequest(context) {
   ]);
 
   if (allowed.has(country)) {
-    return context.next();
+    const response = await context.next();
+    return applySecurityHeaders(response);
   }
 
   // Block with a 403 and a themed response
@@ -89,15 +107,7 @@ export async function onRequest(context) {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-store',
-        // Keep these in sync with `public/_headers` so scanners don't see a weaker 403 response.
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'Referrer-Policy': 'strict-origin-when-cross-origin',
-        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'X-Permitted-Cross-Domain-Policies': 'none',
-        'Content-Security-Policy':
-          "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; upgrade-insecure-requests",
+        ...SECURITY_HEADERS,
       },
     }
   );

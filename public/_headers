@@ -1,3 +1,6 @@
+# Security headers are authoritatively set by functions/_middleware.js.
+# This file acts as a defense-in-depth fallback for any static assets
+# that Cloudflare serves directly from the edge cache (bypassing Functions).
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
