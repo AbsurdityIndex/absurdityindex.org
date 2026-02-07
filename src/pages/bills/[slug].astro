@@ -378,6 +378,11 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       )}
     </div>
 
+    {/* MDX body content (editorial writeup, bill text excerpts, etc.) */}
+    <div class="bill-content mb-8">
+      <Content />
+    </div>
+
     {/* Paired bill callout */}
     {d.pairedBillId && (
       <div class="mb-8">
