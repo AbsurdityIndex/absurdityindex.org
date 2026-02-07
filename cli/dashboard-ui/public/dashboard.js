@@ -1,372 +1,3 @@
-export function getDashboardHtml(): string {
-  // Legacy inline UI. The maintained Astro UI lives in:
-  //   cli/dashboard-ui/
-  return /* html */ `<!DOCTYPE html>
-<html lang="en" class="bg-[#0A1628]">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Absurdity Index — Engagement Dashboard</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'><circle cx='32' cy='32' r='30' stroke='%23C5A572' stroke-width='3' fill='%230A1628'/><circle cx='32' cy='32' r='22' stroke='%23C5A572' stroke-width='1.5'/><text x='32' y='28' text-anchor='middle' font-size='12' font-weight='700' fill='%23C5A572' font-family='serif'>NOT</text><text x='32' y='42' text-anchor='middle' font-size='8' fill='%23C5A572' font-family='serif'>CONGRESS</text><circle cx='32' cy='5' r='2' fill='%23C5A572'/><circle cx='32' cy='59' r='2' fill='%23C5A572'/><circle cx='5' cy='32' r='2' fill='%23C5A572'/><circle cx='59' cy='32' r='2' fill='%23C5A572'/></svg>">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            navy: { 700: '#1A2D4D', 800: '#121F36', 900: '#0A1628', 950: '#060F1E' },
-            gold: { 400: '#D4BB8A', 500: '#C5A572' },
-            cream: { 100: '#FAF7F0', 200: '#F0EBE0' },
-          },
-          fontFamily: {
-            serif: ['Libre Caslon Text', 'Georgia', 'serif'],
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'Menlo', 'monospace'],
-          },
-        },
-      },
-    };
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Caslon+Text:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root { color-scheme: dark; }
-    body { font-family: 'Inter', system-ui, sans-serif; }
-
-    /* Ambient background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(900px 700px at 12% -10%, rgba(197, 165, 114, 0.18), transparent 55%),
-        radial-gradient(900px 700px at 90% 10%, rgba(59, 130, 246, 0.10), transparent 60%),
-        radial-gradient(900px 700px at 70% 110%, rgba(16, 185, 129, 0.08), transparent 58%);
-      opacity: 1;
-    }
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.06;
-      mix-blend-mode: overlay;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
-      background-repeat: repeat;
-    }
-
-    /* Reusable surfaces */
-    .surface {
-      background: rgba(18, 31, 54, 0.58);
-      border: 1px solid rgba(148, 163, 184, 0.10);
-      box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.04) inset,
-        0 20px 45px rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(10px);
-    }
-    .surface-2 {
-      background: rgba(10, 22, 40, 0.62);
-      border: 1px solid rgba(148, 163, 184, 0.08);
-      backdrop-filter: blur(10px);
-    }
-
-    /* Nav */
-    .tab-active { background: rgba(197, 165, 114, 0.12); border-color: rgba(197, 165, 114, 0.35); color: #FAF7F0; }
-
-    /* Small UI primitives */
-    .ghost-btn {
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      background: rgba(2, 6, 23, 0.25);
-      color: rgba(226, 232, 240, 0.78);
-      transition: all 0.15s ease;
-      border-radius: 10px;
-      padding: 6px 10px;
-      font-size: 12px;
-    }
-    .ghost-btn:hover { background: rgba(18, 31, 54, 0.6); border-color: rgba(197, 165, 114, 0.22); color: #FAF7F0; }
-    .ghost-btn:active { transform: translateY(1px); }
-    .kbd {
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      background: rgba(6, 15, 30, 0.55);
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: rgba(226, 232, 240, 0.85);
-    }
-    .chip {
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      background: rgba(2, 6, 23, 0.22);
-      color: rgba(148, 163, 184, 0.85);
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      transition: all 0.15s ease;
-      user-select: none;
-    }
-    .chip:hover { background: rgba(18, 31, 54, 0.6); color: rgba(226, 232, 240, 0.95); }
-    .chip-active { background: rgba(197, 165, 114, 0.12); border-color: rgba(197, 165, 114, 0.35); color: rgba(250, 247, 240, 0.95); }
-
-    .score-bar { transition: width 0.4s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.25s ease-out; }
-    @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .pulse-dot { animation: pulseDot 2s ease-in-out infinite; }
-    .detail-row { display: none; }
-    .detail-row.open { display: table-row; }
-    .row-clickable:hover { background: rgba(2, 6, 23, 0.3); }
-    .row-clickable { cursor: pointer; }
-    .tweet-embed { max-width: 550px; }
-    .loading-shimmer { background: linear-gradient(90deg, #121F36 25%, #1A2D4D 50%, #121F36 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
-    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    /* Custom scrollbar */
-    main::-webkit-scrollbar, .opp-scroll::-webkit-scrollbar { width: 6px; }
-    main::-webkit-scrollbar-track, .opp-scroll::-webkit-scrollbar-track { background: transparent; }
-    main::-webkit-scrollbar-thumb, .opp-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.22); border-radius: 6px; }
-    main::-webkit-scrollbar-thumb:hover, .opp-scroll::-webkit-scrollbar-thumb:hover { background: rgba(212, 187, 138, 0.32); }
-    .opp-scroll { scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.22) transparent; }
-    /* Range input styling */
-    input[type="range"] { -webkit-appearance: none; background: #1A2D4D; height: 4px; border-radius: 2px; outline: none; }
-    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #C5A572; cursor: pointer; }
-    /* Split pane */
-    .split-pane { display: flex; gap: 0; height: 100%; overflow: hidden; min-height: 0; min-width: 0; }
-    .opp-list { width: 100%; height: 100%; min-height: 0; min-width: 0; transition: width 0.25s ease; overflow-y: auto; overscroll-behavior: contain; }
-    .opp-list.split { width: 60%; border-right: 1px solid rgba(148, 163, 184, 0.10); }
-    .opp-detail { width: 0; height: 100%; min-height: 0; min-width: 0; overflow: hidden; transition: width 0.25s ease, opacity 0.2s ease; opacity: 0; }
-    .opp-detail.open { width: 40%; opacity: 1; overflow-y: auto; overscroll-behavior: contain; }
-    .split-pane.focus .opp-list.split { width: 42%; }
-    .split-pane.focus .opp-detail.open { width: 58%; }
-    @media (min-width: 1400px) { .opp-list.split { width: 55%; } .opp-detail.open { width: 45%; } }
-    @media (min-width: 1800px) { .opp-list.split { width: 50%; } .opp-detail.open { width: 50%; } }
-    @media (min-width: 1400px) { .split-pane.focus .opp-list.split { width: 40%; } .split-pane.focus .opp-detail.open { width: 60%; } }
-    @media (min-width: 1800px) { .split-pane.focus .opp-list.split { width: 38%; } .split-pane.focus .opp-detail.open { width: 62%; } }
-    @media (max-width: 1024px) {
-      .opp-list.split { width: 100%; }
-      .opp-detail.open {
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 60;
-        opacity: 1;
-        background: rgba(6, 15, 30, 0.92);
-        backdrop-filter: blur(12px);
-        border-left: none;
-      }
-    }
-    .opp-card { cursor: pointer; transition: all 0.15s ease; position: relative; }
-    .opp-card:hover { background: rgba(18, 31, 54, 0.75); border-color: rgba(148, 163, 184, 0.18); }
-    .opp-card.selected {
-      background: rgba(10, 22, 40, 0.85);
-      border-color: rgba(197, 165, 114, 0.35);
-      box-shadow: 0 0 0 1px rgba(197, 165, 114, 0.12), 0 12px 24px rgba(0, 0, 0, 0.35);
-    }
-    .opp-card.selected::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 12px;
-      bottom: 12px;
-      width: 3px;
-      border-radius: 999px;
-      background: #C5A572;
-    }
-    /* Tweet embed: keep scroll usable (embed is non-interactive by default) */
-    #tweet-embed-target { overflow: hidden; border-radius: 14px; background: rgba(2, 6, 23, 0.20); display: flex; justify-content: center; align-items: flex-start; position: relative; }
-    #tweet-embed-target iframe { display: block; width: 100%; max-width: 550px; margin: 0 auto; pointer-events: none; }
-    #tweet-embed-target.embed-interactive iframe { pointer-events: auto; }
-    #tweet-embed-shield {
-      position: absolute;
-      inset: 0;
-      border-radius: 14px;
-      border: 1px solid rgba(148, 163, 184, 0.08);
-      background: linear-gradient(180deg, rgba(2, 6, 23, 0.00) 0%, rgba(2, 6, 23, 0.34) 78%);
-      display: flex;
-      align-items: flex-end;
-      justify-content: flex-end;
-      padding: 10px;
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-    }
-    #tweet-embed-shield:hover { border-color: rgba(197, 165, 114, 0.25); background: linear-gradient(180deg, rgba(2, 6, 23, 0.00) 0%, rgba(2, 6, 23, 0.46) 78%); }
-    #tweet-embed-shield .pill {
-      border: 1px solid rgba(148, 163, 184, 0.14);
-      background: rgba(6, 15, 30, 0.68);
-      color: rgba(226, 232, 240, 0.88);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      padding: 4px 8px;
-      border-radius: 999px;
-    }
-    #tweet-embed-target.embed-interactive + #tweet-embed-shield { display: none; }
-    .tweet-frame { position: relative; border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 16px; background: linear-gradient(180deg, rgba(2, 6, 23, 0.30), rgba(2, 6, 23, 0.16)); padding: 10px; }
-    .tweet-frame::before { content: ''; position: absolute; inset: 0; border-radius: 16px; pointer-events: none; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset; }
-    .embed-overlay { position: absolute; inset: 10px; border-radius: 14px; pointer-events: none; opacity: 0; transition: opacity 0.15s ease; background: radial-gradient(500px 320px at 50% 0%, rgba(197,165,114,0.16), transparent 55%); }
-    .tweet-frame:hover .embed-overlay { opacity: 1; }
-    /* Pipeline steps */
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner { animation: spin 1s linear infinite; display: inline-block; }
-    /* Char counter */
-    .char-over { color: #ef4444 !important; }
-    /* Action toggle */
-    .action-btn { transition: all 0.15s ease; }
-    .action-btn.active { background: rgba(197, 165, 114, 0.15); color: #D4BB8A; border-color: rgba(197, 165, 114, 0.3); }
-
-    /* Toasts */
-    @keyframes toastIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-6px); } }
-    .toast { animation: toastIn 0.18s ease-out; }
-    .toast.toast-out { animation: toastOut 0.18s ease-in forwards; }
-  </style>
-</head>
-<body class="bg-navy-950 text-slate-200 h-screen overflow-hidden font-sans antialiased">
-	  <div class="h-full min-h-0 grid grid-rows-1 grid-cols-1 lg:grid-cols-[280px_1fr]">
-	    <!-- Sidebar -->
-	    <aside class="border-b lg:border-b-0 lg:border-r border-slate-700/25 px-5 py-4 flex flex-col gap-4 bg-navy-950/40 backdrop-blur min-h-0 overflow-y-auto">
-	      <div class="flex items-center gap-3">
-	        <svg viewBox="0 0 64 64" class="w-10 h-10 shrink-0" fill="none" aria-hidden="true">
-          <circle cx="32" cy="32" r="30" stroke="#C5A572" stroke-width="3" fill="#0A1628"/>
-          <circle cx="32" cy="32" r="22" stroke="#C5A572" stroke-width="1.5"/>
-          <text x="32" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#C5A572" font-family="'Libre Caslon Text', serif">NOT</text>
-          <text x="32" y="42" text-anchor="middle" font-size="8" fill="#C5A572" font-family="'Libre Caslon Text', serif">CONGRESS</text>
-          <circle cx="32" cy="5" r="2" fill="#C5A572"/>
-          <circle cx="32" cy="59" r="2" fill="#C5A572"/>
-          <circle cx="5" cy="32" r="2" fill="#C5A572"/>
-          <circle cx="59" cy="32" r="2" fill="#C5A572"/>
-        </svg>
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <h1 class="text-base font-serif font-bold text-cream-100 tracking-tight leading-none">Absurdity Index</h1>
-            <span id="mode-pill" class="hidden text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-slate-700/40 text-slate-400">--</span>
-          </div>
-          <div class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">Engagement Control Room</div>
-        </div>
-      </div>
-
-      <div class="surface rounded-xl p-3 flex items-center justify-between gap-3">
-        <div class="min-w-0">
-          <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Last update</div>
-          <div id="last-update" class="text-xs text-slate-200 font-mono tabular-nums truncate"></div>
-        </div>
-        <div id="live-indicator" class="flex items-center gap-2 shrink-0">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot"></span>
-          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Live</span>
-        </div>
-      </div>
-
-	      <nav class="flex-1 space-y-1">
-	        <button class="tab-btn tab-active w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="cycles">
-	          <span>Cycles</span>
-	          <span id="badge-cycles" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
-	        </button>
-	        <button class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="opportunities">
-	          <span>Inbox</span>
-	          <span id="badge-opportunities" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
-	        </button>
-	        <button class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="posts">
-	          <span>Posts</span>
-	          <span id="badge-posts" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
-	        </button>
-	        <button class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="safety">
-	          <span>Safety</span>
-	          <span id="badge-safety" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
-	        </button>
-	        <button class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="costs">
-	          <span>Spend</span>
-	          <span id="badge-costs" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
-	        </button>
-	      </nav>
-	    </aside>
-
-    <!-- Main -->
-    <div class="min-w-0 min-h-0 flex flex-col">
-	      <header class="px-6 py-4 border-b border-slate-700/25 flex items-center justify-between bg-navy-950/30 backdrop-blur shrink-0">
-	        <div class="min-w-0">
-	          <div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Dashboard</div>
-	          <div id="page-title" class="text-lg font-serif font-bold text-cream-100 tracking-tight leading-tight truncate">Cycles</div>
-	        </div>
-	        <div class="flex items-center gap-2">
-	          <div id="capabilities-pill" class="hidden md:flex items-center gap-2 text-[10px] text-slate-400 font-mono"></div>
-	          <button class="ghost-btn" onclick="toggleHelp(true)" type="button" title="Keyboard shortcuts">Help</button>
-	          <button id="btn-refresh" class="ghost-btn" onclick="loadTab(currentTab)" title="Refresh">Refresh</button>
-	        </div>
-	      </header>
-
-      <!-- Stat Cards -->
-      <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 px-6 py-4 shrink-0">
-        <div class="surface rounded-xl p-3.5">
-          <div class="flex items-baseline justify-between">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Posts Today</span>
-            <span id="stat-posts-total" class="text-[10px] text-slate-500 font-mono"></span>
-          </div>
-          <div id="stat-posts" class="text-2xl font-bold text-cream-100 mt-1 font-mono tabular-nums">--</div>
-        </div>
-        <div class="surface rounded-xl p-3.5">
-          <div class="flex items-baseline justify-between">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Engagements</span>
-            <span id="stat-tracked" class="text-[10px] text-slate-500 font-mono"></span>
-          </div>
-          <div id="stat-engagements" class="text-2xl font-bold text-emerald-400 mt-1 font-mono tabular-nums">--</div>
-        </div>
-        <div class="surface rounded-xl p-3.5">
-          <div class="flex items-baseline justify-between">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Safety Reject</span>
-            <span id="stat-safety-detail" class="text-[10px] text-slate-500 font-mono"></span>
-          </div>
-          <div id="stat-safety" class="text-2xl font-bold text-amber-300 mt-1 font-mono tabular-nums">--</div>
-        </div>
-        <div class="surface rounded-xl p-3.5">
-          <div class="flex items-baseline justify-between">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Cost Today</span>
-            <span id="stat-cost-week" class="text-[10px] text-slate-500 font-mono"></span>
-          </div>
-          <div id="stat-cost" class="text-2xl font-bold text-gold-400 mt-1 font-mono tabular-nums">--</div>
-        </div>
-      </section>
-
-      <!-- Tab Content -->
-      <main class="px-6 pb-6 flex-1 min-h-0 overflow-hidden">
-        <div id="tab-cycles" class="tab-content overflow-y-auto h-full"></div>
-        <div id="tab-opportunities" class="tab-content hidden h-full"></div>
-        <div id="tab-posts" class="tab-content overflow-y-auto h-full hidden"></div>
-        <div id="tab-safety" class="tab-content overflow-y-auto h-full hidden"></div>
-        <div id="tab-costs" class="tab-content overflow-y-auto h-full hidden"></div>
-      </main>
-
-	      <!-- Footer -->
-	      <footer class="border-t border-slate-700/20 px-6 py-2 text-[10px] text-slate-500 font-mono flex justify-between shrink-0 bg-navy-950/20 backdrop-blur">
-	        <span class="text-slate-600">absurdityindex.org</span>
-	        <span class="hidden md:inline">Press <span class="kbd">?</span> for shortcuts &middot; <span class="kbd">Esc</span> closes panel</span>
-	        <span class="md:hidden">Esc closes panel</span>
-	      </footer>
-    </div>
-  </div>
-
-  <div id="toast-root" class="fixed top-4 right-4 z-50 space-y-2"></div>
-
-  <div id="help-overlay" class="fixed inset-0 hidden items-end sm:items-center justify-center p-4 z-50">
-    <div class="absolute inset-0 bg-black/70" onclick="toggleHelp(false)"></div>
-    <div class="relative surface rounded-xl w-full sm:w-[560px] p-4">
-      <div class="flex items-center justify-between mb-2">
-        <div class="text-sm font-semibold text-cream-100">Keyboard</div>
-        <button class="ghost-btn" onclick="toggleHelp(false)" type="button">Close</button>
-      </div>
-      <div class="grid grid-cols-2 gap-2 text-xs text-slate-200">
-        <div><span class="kbd">1-5</span> switch tabs</div>
-        <div><span class="kbd">Esc</span> close panel</div>
-        <div><span class="kbd">J/K</span> move selection</div>
-        <div><span class="kbd">Enter</span> open selected</div>
-        <div><span class="kbd">G</span> generate draft</div>
-        <div><span class="kbd">P</span> post (or dry run)</div>
-      </div>
-      <div class="mt-3 text-[10px] text-slate-400 font-mono">
-        Tip: use filters to keep the inbox focused on high-score, tracked items.
-      </div>
-    </div>
-  </div>
-
-<script>
 // ── State ──
 let currentTab = 'cycles';
 let tabLoading = {};
@@ -375,6 +6,7 @@ let capabilities = {
   canGenerate: false,
   canWrite: false,
   canRefreshMetrics: false,
+  canStartDaemon: false,
   canPost: false,
   dryRun: false,
   siteUrl: 'https://absurdityindex.org',
@@ -386,15 +18,26 @@ let selectedAction = 'quote';
 let generateES = null; // active EventSource for generate-draft
 let oppData = []; // cached opportunity list
 let oppFilters = loadOppFilters();
+let feedData = []; // cached feed items
+let feedFilters = loadFeedFilters();
 let tweetEmbedResizeHandler = null;
 let embedInteractive = false;
+let daemonState = { running: false, startedAt: null, stoppedAt: null, lastError: null, options: null };
+let ctxMenu = { open: false, idx: null, x: 0, y: 0 };
+let cyclesRefreshTimer = null;
+let lastCyclesRenderKey = null;
+let cyclesShowUnfinished = (() => {
+  try { return localStorage.getItem('ai-dashboard-cycles-show-unfinished') === '1'; } catch { return false; }
+})();
 
 const TAB_META = {
   cycles: { title: 'Cycles' },
   opportunities: { title: 'Inbox' },
+  feed: { title: 'Feed' },
   posts: { title: 'Posts' },
   safety: { title: 'Safety' },
   costs: { title: 'Spend' },
+  intel: { title: 'Intel' },
 };
 
 function isTextInput(el) {
@@ -406,12 +49,44 @@ function isHelpOpen() {
   return el && !el.classList.contains('hidden');
 }
 
+function isComposeOpen() {
+  const el = document.getElementById('compose-overlay');
+  return el && !el.classList.contains('hidden');
+}
+
 function toggleHelp(show) {
   const el = document.getElementById('help-overlay');
   if (!el) return;
   const shouldShow = typeof show === 'boolean' ? show : el.classList.contains('hidden');
   if (shouldShow) { el.classList.remove('hidden'); el.classList.add('flex'); }
   else { el.classList.add('hidden'); el.classList.remove('flex'); }
+}
+
+function toggleCompose(show) {
+  const el = document.getElementById('compose-overlay');
+  if (!el) return;
+  const shouldShow = typeof show === 'boolean' ? show : el.classList.contains('hidden');
+  if (shouldShow) {
+    el.classList.remove('hidden'); el.classList.add('flex');
+    const banner = document.getElementById('compose-banner');
+    if (banner) { banner.classList.add('hidden'); banner.textContent = ''; }
+    const ta = document.getElementById('compose-text');
+    const target = document.getElementById('compose-target');
+    if (ta) ta.value = '';
+    if (target) target.value = '';
+    setupComposeUi();
+    setTimeout(() => document.getElementById('compose-text')?.focus(), 0);
+  } else {
+    el.classList.add('hidden'); el.classList.remove('flex');
+  }
+}
+
+function toggleCyclesUnfinished() {
+  cyclesShowUnfinished = !cyclesShowUnfinished;
+  try { localStorage.setItem('ai-dashboard-cycles-show-unfinished', cyclesShowUnfinished ? '1' : '0'); } catch {}
+  // Force a rerender even if data hasn't changed.
+  lastCyclesRenderKey = null;
+  if (currentTab === 'cycles') renderCycles().catch(() => {});
 }
 
 function toast(msg, kind) {
@@ -450,6 +125,10 @@ function applyCapabilities(c) {
       pillDot(capabilities.canGenerate, 'Generate') +
       pillDot(capabilities.canPost, capabilities.dryRun ? 'Post (dry)' : 'Post');
   }
+
+  // Compose controls depend on dry-run + write/post capability.
+  updateComposeButtons();
+  updateDaemonControls();
 }
 
 function pillDot(ok, label) {
@@ -461,11 +140,166 @@ function pillDot(ok, label) {
   '</span>';
 }
 
+function updateComposeButtons() {
+  const btn = document.getElementById('btn-compose-post');
+  if (btn) {
+    const label = capabilities.dryRun ? 'Save draft' : 'Post';
+    btn.textContent = label;
+    btn.disabled = !capabilities.canPost;
+    btn.classList.toggle('opacity-50', !capabilities.canPost);
+    btn.classList.toggle('cursor-not-allowed', !capabilities.canPost);
+  }
+
+  const hint = document.getElementById('compose-hint');
+  if (hint) {
+    hint.textContent = capabilities.dryRun
+      ? 'Dry run saves locally (no post to X)'
+      : (capabilities.canPost ? '' : 'Posting disabled (configure X write credentials)');
+  }
+}
+
+function setupComposeUi() {
+  updateComposeButtons();
+
+  const mode = document.getElementById('compose-mode');
+  const wrap = document.getElementById('compose-target-wrap');
+  const ta = document.getElementById('compose-text');
+  const target = document.getElementById('compose-target');
+
+  function syncModeUi() {
+    const v = mode?.value || 'tweet';
+    const needsTarget = (v === 'reply' || v === 'quote');
+    if (wrap) wrap.classList.toggle('hidden', !needsTarget);
+    updateComposeCount();
+  }
+
+  if (mode && !mode.dataset.bound) {
+    mode.dataset.bound = '1';
+    mode.addEventListener('change', syncModeUi);
+  }
+
+  if (ta && !ta.dataset.bound) {
+    ta.dataset.bound = '1';
+    ta.addEventListener('input', updateComposeCount);
+  }
+
+  if (target && !target.dataset.bound) {
+    target.dataset.bound = '1';
+    target.addEventListener('input', updateComposeCount);
+  }
+
+  syncModeUi();
+  updateComposeCount();
+}
+
+function extractTweetId(raw) {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  const m = s.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/);
+  return m?.[1] || s;
+}
+
+function updateComposeCount() {
+  const mode = document.getElementById('compose-mode')?.value || 'tweet';
+  const max = mode === 'quote' ? 256 : 280;
+  const ta = document.getElementById('compose-text');
+  const countEl = document.getElementById('compose-count');
+  const btn = document.getElementById('btn-compose-post');
+  if (!ta || !countEl) return;
+  const len = ta.value.length;
+  countEl.textContent = len + '/' + max;
+  const tooLong = len > max;
+  countEl.classList.toggle('char-over', tooLong);
+  if (btn) btn.disabled = tooLong || !ta.value.trim() || !capabilities.canPost;
+}
+
+function showComposeBanner(msg, color) {
+  const el = document.getElementById('compose-banner');
+  if (!el) return;
+  const colors = {
+    green: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-200',
+    red: 'bg-red-500/10 border border-red-500/20 text-red-200',
+    yellow: 'bg-amber-500/10 border border-amber-500/20 text-amber-200',
+  };
+  el.className = 'rounded-xl px-3 py-2 text-xs mb-3 ' + (colors[color] || colors.yellow);
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+async function submitCompose() {
+  const mode = document.getElementById('compose-mode')?.value || 'tweet';
+  const ta = document.getElementById('compose-text');
+  const targetRaw = document.getElementById('compose-target')?.value || '';
+  const btn = document.getElementById('btn-compose-post');
+  if (!ta) return;
+
+  const content = ta.value.trim();
+  const targetTweetId = (mode === 'reply' || mode === 'quote') ? extractTweetId(targetRaw) : '';
+  if (!content) { showComposeBanner('Content is required', 'yellow'); return; }
+  if ((mode === 'reply' || mode === 'quote') && !targetTweetId) { showComposeBanner('Target tweet is required', 'yellow'); return; }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = capabilities.dryRun ? 'Saving...' : 'Posting...';
+  }
+
+  try {
+    const r = await fetch('/api/post-compose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode, content, targetTweetId }),
+    });
+    const data = await r.json().catch(() => ({}));
+
+    if (data.safetyRejected) {
+      showComposeBanner('Safety rejected: ' + (data.safetyReason || 'Unknown'), 'red');
+      toast('Safety rejected', 'error');
+      return;
+    }
+
+    if (!r.ok || !data.success) {
+      showComposeBanner(data.error || 'Failed to post', 'red');
+      toast('Compose failed', 'error');
+      return;
+    }
+
+    if (data.dryRun) {
+      toast('Draft saved', 'success');
+      showComposeBanner('Dry run saved a draft locally. Nothing was posted to X.', 'green');
+    } else {
+      toast('Posted to X', 'success');
+      showComposeBanner(data.tweetUrl ? ('Posted: ' + data.tweetUrl) : 'Posted', 'green');
+    }
+
+    // Refresh posts tab and overview immediately
+    loadTab('posts');
+    loadTab(currentTab);
+    setTimeout(() => toggleCompose(false), 900);
+  } catch (err) {
+    showComposeBanner('Network error: ' + (err?.message || 'unknown'), 'red');
+    toast('Network error', 'error');
+  } finally {
+    updateComposeButtons();
+    updateComposeCount();
+  }
+}
+
 // Load capabilities on boot
 fetch('/api/capabilities')
   .then(r => r.ok ? r.json() : null)
   .then(c => applyCapabilities(c))
   .catch(() => {});
+
+async function loadDaemonStatus() {
+  const data = await fetchJson('/api/daemon-status');
+  if (!data) return;
+  daemonState = { ...daemonState, ...(data || {}) };
+  updateDaemonControls();
+}
+
+// Daemon status on boot + polling (kept light; state changes are relatively rare)
+loadDaemonStatus();
+setInterval(loadDaemonStatus, 5000);
 
 // ── Tab switching ──
 function switchTab(tab) {
@@ -488,13 +322,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 	document.addEventListener('keydown', (e) => {
 	  if (isTextInput(e.target)) return;
 	  if (e.key === '?') { toggleHelp(true); return; }
+	  if (e.key === 'c' || e.key === 'C') { toggleCompose(true); return; }
 	  if (e.key === 'Escape') {
 	    if (isHelpOpen()) { toggleHelp(false); return; }
+	    if (isComposeOpen()) { toggleCompose(false); return; }
+	    if (isContextMenuOpen()) { closeContextMenu(); return; }
 	    closeDetailPanel();
 	    return;
 	  }
   if (e.key === 'r' || e.key === 'R') { loadTab(currentTab); return; }
-  const tabs = ['cycles', 'opportunities', 'posts', 'safety', 'costs'];
+  const tabs = ['cycles', 'opportunities', 'feed', 'posts', 'safety', 'costs', 'intel'];
   const idx = parseInt(e.key) - 1;
   if (idx >= 0 && idx < tabs.length) switchTab(tabs[idx]);
 
@@ -517,6 +354,7 @@ function connectSSE() {
   es.addEventListener('new-cycle', () => { if (currentTab === 'cycles') loadTab('cycles'); });
   es.addEventListener('new-post', () => { if (currentTab === 'posts') loadTab('posts'); });
   es.addEventListener('new-opportunity', () => { if (currentTab === 'opportunities') loadTab('opportunities'); });
+  es.addEventListener('new-feed', () => { if (currentTab === 'feed') loadTab('feed'); });
   es.onerror = () => {
     setLive(false);
     setTimeout(() => setLive(true), 6000);
@@ -529,6 +367,51 @@ function setLive(live) {
   const label = document.querySelector('#live-indicator span:last-child');
   if (live) { dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot'; label.textContent = 'Live'; }
   else { dot.className = 'w-1.5 h-1.5 rounded-full bg-red-400'; label.textContent = 'Reconnecting'; }
+}
+
+function updateDaemonControls() {
+  const statusEl = document.getElementById('daemon-status');
+  const btn = document.getElementById('btn-daemon-toggle');
+  if (statusEl) {
+    const running = !!daemonState.running;
+    const label = running
+      ? ('Running · ' + ((daemonState.options && daemonState.options.interval) ? (daemonState.options.interval + 'm') : ''))
+      : 'Stopped';
+    statusEl.textContent = label.trim().replace(/ · $/, '');
+  }
+  if (btn) {
+    const running = !!daemonState.running;
+    const can = !!capabilities.canStartDaemon;
+    btn.textContent = running ? 'Stop' : 'Start';
+    btn.disabled = !can && !running;
+    btn.classList.toggle('opacity-50', (!can && !running));
+    btn.classList.toggle('cursor-not-allowed', (!can && !running));
+  }
+}
+
+async function toggleDaemon() {
+  const running = !!daemonState.running;
+  if (!running && !capabilities.canStartDaemon) {
+    toast('Daemon not available (configure Tweets + Generate, and enable writes)', 'warning');
+    return;
+  }
+
+  try {
+    const url = running ? '/api/daemon-stop' : '/api/daemon-start';
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || data.success === false) {
+      toast(data.error || 'Daemon action failed', 'error');
+      return;
+    }
+    daemonState = data.status || daemonState;
+    updateDaemonControls();
+    toast(running ? 'Daemon stopped' : 'Daemon started', 'success');
+    // Refresh cycles immediately
+    if (currentTab === 'cycles') loadTab('cycles');
+  } catch (err) {
+    toast('Daemon error: ' + (err?.message || 'network'), 'error');
+  }
 }
 
 // Polling fallback — also auto-refreshes active tab
@@ -557,9 +440,15 @@ function updateOverview(d) {
   if (d.counts) {
     setText('badge-cycles', d.counts.cycles || '0');
     setText('badge-opportunities', d.counts.opportunities || '0');
+    if (document.getElementById('badge-feed')) {
+      setText('badge-feed', d.counts.feed || '0');
+    }
     setText('badge-posts', d.counts.posts || '0');
     setText('badge-safety', d.counts.safety || '0');
     setText('badge-costs', d.counts.generations || '0');
+    if (document.getElementById('badge-intel')) {
+      setText('badge-intel', d.counts.trends != null ? String(d.counts.trends) : '0');
+    }
   }
 }
 
@@ -572,9 +461,11 @@ async function loadTab(tab) {
     switch (tab) {
       case 'cycles': await renderCycles(); break;
       case 'opportunities': await renderOpportunities(); break;
+      case 'feed': await renderFeed(); break;
       case 'posts': await renderPosts(); break;
       case 'safety': await renderSafety(); break;
       case 'costs': await renderCosts(); break;
+      case 'intel': await renderIntel(); break;
     }
   } finally {
     tabLoading[tab] = false;
@@ -589,38 +480,189 @@ async function renderCycles() {
   if (!data || data.length === 0) {
     el.innerHTML = emptyState('No daemon cycles recorded yet',
       'Start the watch daemon to begin recording cycle data:<br>' +
-      '<code class="text-xs bg-navy-950 px-2 py-1 rounded mt-2 inline-block text-gold-400">absurdity-index engage watch</code>');
+      '<div class="mt-3 flex items-center justify-center gap-2">' +
+        '<button class="ghost-btn" type="button" onclick="toggleDaemon()">Start daemon</button>' +
+        '<span class="text-[10px] text-slate-600 font-mono">or run</span>' +
+        '<code class="text-xs bg-navy-950 px-2 py-1 rounded inline-block text-gold-400">absurdity-index engage watch</code>' +
+      '</div>');
     return;
   }
-  el.innerHTML = '<div class="space-y-2">' + data.map(c => {
-    const badge = typeBadge(c.cycle_type);
-    const dur = c.duration_ms != null ? (c.duration_ms / 1000).toFixed(1) + 's' : '<span class="loading-shimmer rounded px-3 py-0.5 text-transparent text-xs">run</span>';
-    const err = c.error ? '<div class="mt-2 text-xs text-red-400/90 font-mono bg-red-500/10 rounded px-2.5 py-1.5 leading-relaxed">' + esc(c.error) + '</div>' : '';
-    let body;
-    if (c.cycle_type === 'original') {
-      body = '<div class="flex items-center gap-3 text-sm mt-1">' +
-        (c.topic ? '<span class="text-gray-400">Topic: <span class="text-fuchsia-300">' + esc(c.topic) + '</span></span>' : '<span class="text-gray-600">No topic</span>') +
-        (c.posted ? '<span class="bg-emerald-500/15 text-emerald-400 text-xs px-1.5 py-0.5 rounded">Posted</span>' : '<span class="text-gray-600 text-xs">Not posted</span>') +
-      '</div>';
-    } else {
-      body = '<div class="flex gap-5 text-sm mt-1">' +
-        stat('Scanned', c.scanned, 'text-cyan-400') +
-        stat('Engaged', c.engaged, 'text-emerald-400') +
-        stat('Tracked', c.tracked, 'text-yellow-400') +
-        stat('Expired', c.expired, 'text-gray-500') +
-      '</div>';
-    }
-    return '<div class="bg-navy-800/60 rounded-lg px-4 py-3 border border-gray-700/20 fade-in">' +
-      '<div class="flex items-center gap-2.5">' +
-        '<span class="font-mono text-xs text-gray-500">#' + c.cycle_index + '</span>' +
-        badge +
-        '<span class="text-xs text-gray-500 font-mono">' + dur + '</span>' +
-        (c.error ? '<span class="bg-red-500/15 text-red-400 text-[10px] px-1.5 py-0.5 rounded uppercase font-medium">Error</span>' : '') +
-        '<span class="ml-auto text-xs text-gray-600" title="' + (c.started_at || '') + '">' + ago(c.started_at) + '</span>' +
+
+  const daemonRunning = !!daemonState.running;
+  const unfinished = data.filter(c => !c.completed_at && !c.error);
+  const current = daemonRunning ? (unfinished[0] || null) : null;
+
+  // Fast refresh only while the daemon is running and we expect phases/counters to change.
+  if (cyclesRefreshTimer) { clearTimeout(cyclesRefreshTimer); cyclesRefreshTimer = null; }
+  if (currentTab === 'cycles' && daemonRunning && current) {
+    cyclesRefreshTimer = setTimeout(() => {
+      if (currentTab === 'cycles') renderCycles().catch(() => {});
+    }, 1600);
+  }
+
+  // Prevent "flashing" from polling by skipping DOM writes when nothing changed.
+  const renderKey = JSON.stringify({
+    daemonRunning,
+    currentId: current ? current.id : null,
+    showUnfinished: cyclesShowUnfinished,
+    cycles: data.map(c => [
+      c.id, c.cycle_index, c.cycle_type,
+      c.phase || '',
+      c.scanned || 0, c.engaged || 0, c.tracked || 0, c.expired || 0, c.posted || 0,
+      c.topic || '', c.error || '',
+      c.started_at || '', c.completed_at || '', c.duration_ms || 0,
+    ]),
+  });
+  if (renderKey === lastCyclesRenderKey) return;
+  lastCyclesRenderKey = renderKey;
+
+  const daemonDot = daemonRunning
+    ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot"></span>'
+    : '<span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>';
+  const daemonLabel = daemonRunning ? 'Running' : 'Stopped';
+  const daemonMeta = daemonState.options && daemonState.options.interval ? (daemonState.options.interval + 'm interval') : '';
+
+  const unfinishedCount = daemonRunning ? Math.max(0, unfinished.length - (current ? 1 : 0)) : unfinished.length;
+  const toggleBtn = unfinishedCount > 0
+    ? ('<button class="ghost-btn" type="button" onclick="toggleCyclesUnfinished()">' +
+        esc(cyclesShowUnfinished ? ('Hide unfinished (' + unfinishedCount + ')') : ('Show unfinished (' + unfinishedCount + ')')) +
+      '</button>')
+    : '';
+
+  const currentLine = (() => {
+    if (!daemonRunning || !current) return '';
+    const badge = typeBadge(current.cycle_type);
+    const phase = current.phase ? phaseLabel(current.phase) : 'Starting';
+    return (
+      '<div class="mt-3 pt-3 border-t border-slate-700/20">' +
+        '<div class="flex flex-wrap items-center gap-2">' +
+          '<span class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Current</span>' +
+          '<span class="font-serif font-semibold text-cream-100 tracking-tight">Cycle ' + esc(String(current.id)) + '</span>' +
+          '<span class="font-mono text-[10px] text-slate-600">#' + esc(String(current.cycle_index)) + '</span>' +
+          badge +
+          cycleStatusPill('running') +
+          '<span class="text-[10px] text-slate-500 font-mono">Phase: <span class="text-slate-300">' + esc(phase) + '</span></span>' +
+          '<span class="ml-auto text-[10px] text-slate-600 font-mono">' + esc(cycleTiming(current)) + '</span>' +
+        '</div>' +
+      '</div>'
+    );
+  })();
+
+  const lastCompleted = (!daemonRunning || !current)
+    ? (data.find(c => !!c.completed_at || !!c.error) || null)
+    : null;
+  const lastLine = (() => {
+    if (daemonRunning) return '';
+    if (!lastCompleted) return '';
+    const badge = typeBadge(lastCompleted.cycle_type);
+    const status = lastCompleted.error ? cycleStatusPill('error') : cycleStatusPill('complete');
+    return (
+      '<div class="mt-3 pt-3 border-t border-slate-700/20">' +
+        '<div class="flex flex-wrap items-center gap-2">' +
+          '<span class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Last</span>' +
+          '<span class="font-serif font-semibold text-cream-100 tracking-tight">Cycle ' + esc(String(lastCompleted.id)) + '</span>' +
+          '<span class="font-mono text-[10px] text-slate-600">#' + esc(String(lastCompleted.cycle_index)) + '</span>' +
+          badge +
+          status +
+          '<span class="ml-auto text-[10px] text-slate-600 font-mono">' + esc(cycleTiming(lastCompleted)) + '</span>' +
+        '</div>' +
+      '</div>'
+    );
+  })();
+
+  const summary =
+    '<div class="surface rounded-xl p-4 mb-3">' +
+      '<div class="flex items-start justify-between gap-4">' +
+        '<div class="min-w-0">' +
+          '<div class="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Cycles</div>' +
+          '<div class="mt-1 flex flex-wrap items-center gap-2">' +
+            daemonDot +
+            '<span class="text-sm font-semibold text-cream-100">Daemon ' + esc(daemonLabel) + '</span>' +
+            (daemonMeta ? '<span class="text-[10px] text-slate-500 font-mono">' + esc(daemonMeta) + '</span>' : '') +
+            (daemonState.lastError ? '<span class="text-[10px] text-red-300 font-mono">last error: ' + esc(daemonState.lastError) + '</span>' : '') +
+          '</div>' +
+          ((!daemonRunning && unfinishedCount > 0)
+            ? '<div class="mt-2 text-xs text-amber-200/80">Unfinished cycles detected (likely an interrupted run). They are hidden by default.</div>'
+            : '') +
+        '</div>' +
+        toggleBtn +
       '</div>' +
-      body + err +
+      currentLine +
+      lastLine +
     '</div>';
-  }).join('') + '</div>';
+
+  const cycleCard = (c) => {
+    const status = c.error ? 'error' : (c.completed_at ? 'complete' : (daemonRunning ? 'running' : 'unfinished'));
+    const badge = typeBadge(c.cycle_type);
+    const statusPill = cycleStatusPill(status);
+    const phaseText =
+      (status === 'running')
+        ? (c.phase ? phaseLabel(c.phase) : 'Starting')
+        : ((status === 'unfinished')
+          ? (c.phase ? phaseLabel(c.phase) : 'No phase recorded')
+          : '');
+    const phaseHtml = phaseText
+      ? ('<span class="text-[10px] text-slate-500 font-mono">Phase: <span class="text-slate-300">' + esc(phaseText) + '</span></span>')
+      : '';
+    const timing = cycleTiming(c);
+    const err = c.error
+      ? '<div class="mt-3 text-xs text-red-300/90 font-mono bg-red-500/10 rounded-lg px-3 py-2 leading-relaxed border border-red-500/15">' + esc(c.error) + '</div>'
+      : '';
+
+    let body = '';
+    if (c.cycle_type === 'original') {
+      body =
+        '<div class="mt-2 flex flex-wrap items-center gap-3 text-sm">' +
+          (c.topic ? '<span class="text-slate-400">Topic: <span class="text-fuchsia-300">' + esc(c.topic) + '</span></span>' : '<span class="text-slate-500">No topic</span>') +
+          (c.posted ? '<span class="bg-emerald-500/15 text-emerald-300 text-xs px-2 py-0.5 rounded-full border border-emerald-500/25">Posted</span>' : '<span class="text-slate-500 text-xs">Not posted</span>') +
+        '</div>';
+    } else {
+      const noMatches = !c.error && c.completed_at && Number(c.scanned || 0) === 0;
+      body =
+        '<div class="mt-2 flex flex-wrap gap-5 text-sm">' +
+          stat('Scanned', c.scanned, 'text-cyan-400') +
+          stat('Engaged', c.engaged, 'text-emerald-400') +
+          stat('Tracked', c.tracked, 'text-yellow-400') +
+          stat('Expired', c.expired, 'text-slate-500') +
+        '</div>' +
+        (noMatches ? '<div class="mt-2 text-xs text-slate-500">No tweets matched your scan queries this cycle.</div>' : '');
+    }
+
+    return (
+      '<div class="surface rounded-xl px-4 py-3">' +
+        '<div class="flex items-start gap-3">' +
+          '<div class="min-w-0 flex-1">' +
+            '<div class="flex items-center gap-2 flex-wrap">' +
+              '<span class="font-serif font-semibold text-cream-100 tracking-tight">Cycle ' + esc(String(c.id)) + '</span>' +
+              '<span class="font-mono text-[10px] text-slate-600">#' + esc(String(c.cycle_index)) + '</span>' +
+              badge +
+              statusPill +
+              phaseHtml +
+            '</div>' +
+            body +
+            (status === 'unfinished' ? '<div class="mt-2 text-xs text-amber-200/70">Daemon is stopped. This cycle never recorded completion.</div>' : '') +
+            err +
+          '</div>' +
+          '<div class="text-right text-[10px] text-slate-600 font-mono shrink-0">' +
+            '<div title="' + esc(String(c.started_at || '')) + '">' + esc(ago(c.started_at)) + '</div>' +
+            '<div class="mt-0.5 text-slate-500">' + esc(timing) + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  };
+
+  const list = data.filter(c => {
+    if (daemonRunning && current && c.id === current.id) return false; // already shown in summary
+    if (!daemonRunning && !cyclesShowUnfinished && !c.completed_at && !c.error) return false; // hide unfinished by default
+    return true;
+  });
+
+  const listHtml = (list.length > 0)
+    ? ('<div class="space-y-2">' + list.map(cycleCard).join('') + '</div>')
+    : emptyState('No completed cycles yet', daemonRunning ? 'The daemon is running. A cycle will appear here when it completes.' : 'Start the daemon from the left sidebar to begin.');
+
+  el.innerHTML = summary + listHtml;
 }
 
 // ── Opportunities (split-pane) ──
@@ -628,16 +670,17 @@ let oppFilterTimeout;
 function loadOppFilters() {
   try {
     const raw = localStorage.getItem('ai-dashboard-opp-filters');
-    if (!raw) return { status: 'all', minScore: 0, q: '', sort: 'score' };
+    if (!raw) return { status: 'all', minScore: 0, q: '', sort: 'score', starredOnly: false };
     const parsed = JSON.parse(raw);
     return {
       status: parsed.status || 'all',
       minScore: Number.isFinite(parsed.minScore) ? parsed.minScore : 0,
       q: typeof parsed.q === 'string' ? parsed.q : '',
       sort: parsed.sort || 'score',
+      starredOnly: !!parsed.starredOnly,
     };
   } catch {
-    return { status: 'all', minScore: 0, q: '', sort: 'score' };
+    return { status: 'all', minScore: 0, q: '', sort: 'score', starredOnly: false };
   }
 }
 
@@ -656,31 +699,39 @@ function applyOppFiltersToUi() {
   const score = document.getElementById('opp-score');
   const sort = document.getElementById('opp-sort');
   const scoreVal = document.getElementById('opp-score-val');
+  const starOnly = document.getElementById('opp-star-only');
+  const statusSel = document.getElementById('opp-status');
 
   if (q) q.value = oppFilters.q || '';
   if (score) score.value = String(oppFilters.minScore || 0);
   if (scoreVal) scoreVal.textContent = String(oppFilters.minScore || 0);
   if (sort) sort.value = oppFilters.sort || 'score';
-
-  document.querySelectorAll('[data-opp-status]').forEach(btn => {
-    const s = btn.getAttribute('data-opp-status');
-    btn.classList.toggle('chip-active', s === (oppFilters.status || 'all'));
-  });
+  if (statusSel) statusSel.value = oppFilters.status || 'all';
+  if (starOnly) starOnly.checked = !!oppFilters.starredOnly;
 }
 
 async function renderOpportunities() {
   const el = document.getElementById('tab-opportunities');
   if (!el.querySelector('#opp-root')) {
     el.innerHTML =
-      '<div id="opp-root" class="h-full flex flex-col gap-3">' +
+        '<div id="opp-root" class="h-full flex flex-col gap-3">' +
         '<div class="surface rounded-xl p-3">' +
           '<div class="flex flex-col lg:flex-row gap-3 lg:items-center">' +
-            '<div class="flex flex-wrap gap-1.5">' +
-              chipHtml('all', 'All') +
-              chipHtml('tracked', 'Tracked') +
-              chipHtml('engaged', 'Engaged') +
-              chipHtml('skipped', 'Skipped') +
-              chipHtml('expired', 'Expired') +
+            '<div class="flex flex-wrap items-center gap-2">' +
+              '<label class="text-xs text-slate-400 flex items-center gap-2">' +
+                '<span class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Status</span>' +
+                '<select id="opp-status" class="bg-navy-950/40 border border-slate-700/30 rounded-lg px-2.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-gold-500/40">' +
+                  '<option value="all">All</option>' +
+                  '<option value="tracked">Tracked</option>' +
+                  '<option value="engaged">Engaged</option>' +
+                  '<option value="skipped">Discarded</option>' +
+                  '<option value="expired">Expired</option>' +
+                '</select>' +
+              '</label>' +
+              '<label class="text-xs text-slate-400 inline-flex items-center gap-2 bg-navy-950/20 border border-slate-700/30 rounded-lg px-2.5 py-2">' +
+                '<input id="opp-star-only" type="checkbox" class="accent-gold-500" />' +
+                '<span class="inline-flex items-center gap-1.5">' + lucide('star', 'w-3 h-3') + 'Starred only</span>' +
+              '</label>' +
             '</div>' +
             '<div class="flex-1 flex items-center gap-2 min-w-0">' +
               '<div class="relative flex-1 min-w-[180px]">' +
@@ -690,7 +741,7 @@ async function renderOpportunities() {
               '<select id="opp-sort" class="bg-navy-950/40 border border-slate-700/30 rounded-lg px-2.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-gold-500/40">' +
                 '<option value="score">Sort: Score</option>' +
                 '<option value="recent">Sort: Recent</option>' +
-                '<option value="impressions">Sort: Impressions</option>' +
+                '<option value="quotes">Sort: Quotes</option>' +
               '</select>' +
               '<button id="opp-clear" class="ghost-btn" type="button" title="Clear search">' + lucide('x', 'w-4 h-4') + '</button>' +
             '</div>' +
@@ -712,9 +763,11 @@ async function renderOpportunities() {
         '</div>' +
       '</div>';
 
-    document.querySelectorAll('[data-opp-status]').forEach(btn => {
-      btn.addEventListener('click', () => setOppFilter({ status: btn.getAttribute('data-opp-status') || 'all' }));
-    });
+    const statusSel = document.getElementById('opp-status');
+    if (statusSel) statusSel.addEventListener('change', () => setOppFilter({ status: statusSel.value || 'all' }));
+
+    const starOnly = document.getElementById('opp-star-only');
+    if (starOnly) starOnly.addEventListener('change', () => setOppFilter({ starredOnly: !!starOnly.checked }));
 
     const q = document.getElementById('opp-q');
     if (q) q.addEventListener('input', () => {
@@ -741,20 +794,17 @@ async function renderOpportunities() {
   await renderOppList();
 }
 
-function chipHtml(status, label) {
-  const active = (oppFilters.status || 'all') === status;
-  return '<button type="button" class="chip ' + (active ? 'chip-active' : '') + '" data-opp-status="' + status + '">' + esc(label) + '</button>';
-}
-
 async function renderOppList() {
   applyOppFiltersToUi();
   const status = oppFilters.status || 'all';
   const minScore = parseInt(String(oppFilters.minScore || 0), 10) || 0;
   const q = String(oppFilters.q || '').trim().toLowerCase();
   const sort = oppFilters.sort || 'score';
+  const starredOnly = !!oppFilters.starredOnly;
 
   const data = await fetchJson('/api/opportunities?limit=150&status=' + encodeURIComponent(status));
   oppData = (data || [])
+    .filter(o => (!starredOnly) || (o.starred === 1 || o.starred === true))
     .filter(o => (o.score || 0) >= minScore)
     .filter(o => {
       if (!q) return true;
@@ -769,8 +819,8 @@ async function renderOppList() {
 
   if (sort === 'recent') {
     oppData.sort((a, b) => (parseSqliteTimeToMs(b.first_seen) ?? 0) - (parseSqliteTimeToMs(a.first_seen) ?? 0));
-  } else if (sort === 'impressions') {
-    oppData.sort((a, b) => (b.impressions || 0) - (a.impressions || 0));
+  } else if (sort === 'quotes') {
+    oppData.sort((a, b) => (b.quotes || 0) - (a.quotes || 0));
   } else {
     oppData.sort((a, b) => (b.score || 0) - (a.score || 0));
   }
@@ -787,26 +837,37 @@ async function renderOppList() {
   list.innerHTML = '<div class="space-y-2">' + oppData.map((o, i) => {
     const sc = o.score >= 70 ? 'text-emerald-300' : o.score >= 40 ? 'text-amber-300' : 'text-slate-400';
     const sel = selectedId && selectedId === o.tweet_id ? ' selected' : '';
+    const starred = (o.starred === 1 || o.starred === true);
     const reco = recommendedBadge(o.recommended_action);
     const author = esc(o.author_username || o.author_id || 'unknown');
     const text = esc(o.text || '');
     const bill = o.matched_bill_slug ? '<span class="text-fuchsia-300 truncate" title="' + esc(o.matched_bill_slug) + '">' + esc(o.matched_bill_slug) + '</span>' : '';
-    return '<div class="opp-card rounded-xl px-3.5 py-3 border border-slate-700/15 bg-navy-950/10' + sel + '" data-idx="' + i + '" onclick="selectOpportunity(' + i + ')">' +
+    const starIcon = starred ? '<span class="text-gold-400" title="Starred">' + lucide('star', 'w-3.5 h-3.5') + '</span>' : '';
+    const menuBtn =
+      '<button type="button" class="p-1.5 rounded-lg border border-slate-700/25 bg-navy-950/20 text-slate-400 hover:text-cream-100 hover:bg-navy-800/40" ' +
+        'onclick="openOppMenuFromBtn(event,' + i + ')" title="Actions">' +
+        lucide('more-vertical', 'w-4 h-4') +
+      '</button>';
+    return '<div class="opp-card rounded-xl px-3.5 py-3 border ' + (starred ? 'border-gold-500/25 bg-gold-500/5' : 'border-slate-700/15 bg-navy-950/10') + sel + '" data-idx="' + i + '" onclick="selectOpportunity(' + i + ')" oncontextmenu="openOppContext(event,' + i + ')">' +
       '<div class="flex items-center gap-3">' +
         '<div class="w-10 h-10 rounded-lg surface-2 flex items-center justify-center font-mono font-bold tabular-nums ' + sc + '">' + (o.score ?? 0) + '</div>' +
         '<div class="min-w-0 flex-1">' +
           '<div class="flex items-center gap-2 min-w-0">' +
             '<span class="text-sm font-semibold text-slate-200 truncate">@' + author + '</span>' +
+            starIcon +
             statusBadge(o.status) +
             reco +
-            '<span class="ml-auto text-[10px] text-slate-500 font-mono shrink-0">' + ago(o.first_seen) + '</span>' +
+            '<div class="ml-auto flex items-center gap-2 shrink-0">' +
+              '<span class="text-[10px] text-slate-500 font-mono">' + ago(o.first_seen) + '</span>' +
+              menuBtn +
+            '</div>' +
           '</div>' +
           '<div class="text-xs text-slate-300/90 leading-relaxed mt-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + text + '</div>' +
           '<div class="flex items-center gap-3 mt-2 text-[10px] text-slate-400 font-mono">' +
             '<span title="Likes" class="inline-flex items-center gap-1">' + lucide('heart', 'w-3 h-3') + fmtK(o.likes) + '</span>' +
             '<span title="Retweets" class="inline-flex items-center gap-1">' + lucide('repeat-2', 'w-3 h-3') + fmtK(o.retweets) + '</span>' +
             '<span title="Replies" class="inline-flex items-center gap-1">' + lucide('message-circle', 'w-3 h-3') + fmtK(o.replies) + '</span>' +
-            (o.impressions != null ? '<span title="Impressions" class="inline-flex items-center gap-1">' + lucide('bar-chart-3', 'w-3 h-3') + fmtK(o.impressions) + '</span>' : '') +
+            '<span title="Quotes" class="inline-flex items-center gap-1">' + lucide('message-square', 'w-3 h-3') + fmtK(o.quotes || 0) + '</span>' +
             bill +
           '</div>' +
         '</div>' +
@@ -868,6 +929,7 @@ function renderDetailPanel(opp) {
   const canPost = !!capabilities.canPost;
   const canWrite = !!capabilities.canWrite;
   const canRefresh = !!capabilities.canRefreshMetrics;
+  const isStarred = (opp.starred === 1 || opp.starred === true);
 
   const genTitle = canGen ? 'Generate Draft' : 'Configure API keys to enable generation';
   const postLabel = capabilities.dryRun ? 'Save Draft (Dry Run)' : 'Post to X';
@@ -892,8 +954,9 @@ function renderDetailPanel(opp) {
           (opp.tweet_id ? '<a href="https://x.com/i/status/' + opp.tweet_id + '" target="_blank" rel="noopener" class="ghost-btn inline-flex items-center gap-1.5" title="Open on X">' + lucide('external-link', 'w-4 h-4') + 'Open</a>' : '') +
           (opp.tweet_id ? '<button class="ghost-btn inline-flex items-center gap-1.5" onclick="copyOppLink()" type="button" title="Copy link">' + lucide('copy', 'w-4 h-4') + 'Copy</button>' : '') +
           '<button class="ghost-btn inline-flex items-center gap-1.5' + (canRefresh ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="refreshOppMetrics()" type="button" ' + (canRefresh ? '' : 'disabled') + ' title="Refresh metrics">' + lucide('refresh-cw', 'w-4 h-4') + 'Refresh</button>' +
-          '<button class="ghost-btn inline-flex items-center gap-1.5' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="setOppStatus(\\'tracked\\')" type="button" ' + (canWrite ? '' : 'disabled') + ' title="Mark tracked">' + lucide('bookmark', 'w-4 h-4') + 'Track</button>' +
-          '<button class="ghost-btn inline-flex items-center gap-1.5' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="setOppStatus(\\'skipped\\')" type="button" ' + (canWrite ? '' : 'disabled') + ' title="Mark skipped">' + lucide('ban', 'w-4 h-4') + 'Skip</button>' +
+          '<button class="ghost-btn inline-flex items-center gap-1.5' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="setOppStar(' + (!isStarred) + ')" type="button" ' + (canWrite ? '' : 'disabled') + ' title="' + (isStarred ? 'Unstar' : 'Star') + '">' + lucide('star', 'w-4 h-4') + (isStarred ? 'Starred' : 'Star') + '</button>' +
+          '<button class="ghost-btn inline-flex items-center gap-1.5' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="setOppStatus(\'tracked\')" type="button" ' + (canWrite ? '' : 'disabled') + ' title="Mark tracked">' + lucide('bookmark', 'w-4 h-4') + 'Track</button>' +
+          '<button class="ghost-btn inline-flex items-center gap-1.5' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="setOppStatus(\'skipped\')" type="button" ' + (canWrite ? '' : 'disabled') + ' title="Discard from inbox">' + lucide('ban', 'w-4 h-4') + 'Discard</button>' +
           '<button class="ghost-btn" onclick="closeDetailPanel()" type="button" title="Close">' + lucide('x', 'w-4 h-4') + '</button>' +
         '</div>' +
       '</div>' +
@@ -953,7 +1016,7 @@ function renderDetailPanel(opp) {
               '<span><span id="detail-likes" class="text-slate-200 tabular-nums">' + fmtK(opp.likes) + '</span> likes</span>' +
               '<span><span id="detail-retweets" class="text-slate-200 tabular-nums">' + fmtK(opp.retweets) + '</span> RTs</span>' +
               '<span><span id="detail-replies" class="text-slate-200 tabular-nums">' + fmtK(opp.replies) + '</span> replies</span>' +
-              '<span><span id="detail-impressions" class="text-slate-200 tabular-nums">' + fmtK(opp.impressions) + '</span> impr</span>' +
+              '<span><span id="detail-quotes" class="text-slate-200 tabular-nums">' + fmtK(opp.quotes || 0) + '</span> quotes</span>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -968,8 +1031,8 @@ function renderDetailPanel(opp) {
         '</div>' +
         '<div class="flex flex-wrap items-center gap-2">' +
           '<div class="flex rounded-lg overflow-hidden border border-slate-700/30 shrink-0">' +
-            '<button class="action-btn text-xs px-3 py-1.5 inline-flex items-center gap-1' + (selectedAction === 'quote' ? ' active' : '') + '" onclick="setAction(\\'quote\\')" type="button">' + lucide('message-square', 'w-3 h-3') + 'Quote</button>' +
-            '<button class="action-btn text-xs px-3 py-1.5 inline-flex items-center gap-1' + (selectedAction === 'reply' ? ' active' : '') + '" onclick="setAction(\\'reply\\')" type="button">' + lucide('reply', 'w-3 h-3') + 'Reply</button>' +
+            '<button class="action-btn text-xs px-3 py-1.5 inline-flex items-center gap-1' + (selectedAction === 'quote' ? ' active' : '') + '" onclick="setAction(\'quote\')" type="button">' + lucide('message-square', 'w-3 h-3') + 'Quote</button>' +
+            '<button class="action-btn text-xs px-3 py-1.5 inline-flex items-center gap-1' + (selectedAction === 'reply' ? ' active' : '') + '" onclick="setAction(\'reply\')" type="button">' + lucide('reply', 'w-3 h-3') + 'Reply</button>' +
           '</div>' +
           '<button id="btn-generate" onclick="startGenerate()" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 ' +
             (canGen ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30 hover:bg-gold-500/25' : 'bg-slate-700/15 text-slate-500 border border-slate-700/20 cursor-not-allowed') +
@@ -1106,30 +1169,179 @@ async function copyDraft() {
   }
 }
 
-async function setOppStatus(status) {
-  if (!selectedOpp) return;
+async function setOppStatus(status, tweetId) {
+  const id = tweetId || selectedOpp?.tweet_id;
+  if (!id) return;
   if (!capabilities.canWrite) { toast('Writes disabled', 'warning'); return; }
   try {
     const r = await fetch('/api/opportunity-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tweetId: selectedOpp.tweet_id, status }),
+      body: JSON.stringify({ tweetId: id, status }),
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok || !data.success) {
       toast(data.error || 'Failed to update status', 'error');
       return;
     }
-    selectedOpp.status = status;
-    const badgeEl = document.getElementById('detail-status-badge');
-    if (badgeEl) badgeEl.innerHTML = statusBadge(status);
+    // Update cached rows
+    const row = oppData.find(o => o.tweet_id === id);
+    if (row) row.status = status;
+    if (selectedOpp && selectedOpp.tweet_id === id) {
+      selectedOpp.status = status;
+      const badgeEl = document.getElementById('detail-status-badge');
+      if (badgeEl) badgeEl.innerHTML = statusBadge(status);
+    }
     toast('Marked ' + status, 'success');
     await renderOppList();
     // If it dropped out of the filtered list, close panel.
-    if (!oppData.find(o => o.tweet_id === selectedOpp.tweet_id)) closeDetailPanel();
+    if (selectedOpp && !oppData.find(o => o.tweet_id === selectedOpp.tweet_id)) closeDetailPanel();
   } catch (err) {
     toast('Failed: ' + (err?.message || 'network'), 'error');
   }
+}
+
+async function setOppStar(starred, tweetId) {
+  const id = tweetId || selectedOpp?.tweet_id;
+  if (!id) return;
+  if (!capabilities.canWrite) { toast('Writes disabled', 'warning'); return; }
+  try {
+    const r = await fetch('/api/opportunity-star', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tweetId: id, starred: !!starred }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Failed to update star', 'error');
+      return;
+    }
+    const row = oppData.find(o => o.tweet_id === id);
+    if (row) row.starred = starred ? 1 : 0;
+    if (selectedOpp && selectedOpp.tweet_id === id) selectedOpp.starred = starred ? 1 : 0;
+    toast(starred ? 'Starred' : 'Unstarred', 'success');
+    await renderOppList();
+    // Re-render detail panel header state
+    if (selectedOpp && selectedOpp.tweet_id === id) renderDetailPanel(selectedOpp);
+  } catch (err) {
+    toast('Failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+function isContextMenuOpen() {
+  const el = document.getElementById('context-menu');
+  return !!ctxMenu.open && !!el && !el.classList.contains('hidden');
+}
+
+function closeContextMenu() {
+  const el = document.getElementById('context-menu');
+  if (!el) return;
+  el.classList.add('hidden');
+  ctxMenu.open = false;
+  ctxMenu.idx = null;
+}
+
+function openOppContext(e, idx) {
+  try { e.preventDefault(); } catch {}
+  openContextMenuForOpp(idx, e.clientX, e.clientY);
+  return false;
+}
+
+function openOppMenuFromBtn(e, idx) {
+  try { e.preventDefault(); e.stopPropagation(); } catch {}
+  openContextMenuForOpp(idx, e.clientX, e.clientY);
+}
+
+function openContextMenuForOpp(idx, x, y) {
+  const opp = oppData?.[idx];
+  if (!opp) return;
+
+  const el = document.getElementById('context-menu');
+  if (!el) return;
+
+  ctxMenu.open = true;
+  ctxMenu.idx = idx;
+  ctxMenu.x = x;
+  ctxMenu.y = y;
+
+  // Bind once
+  if (!el.dataset.bound) {
+    el.dataset.bound = '1';
+    document.addEventListener('click', () => { if (isContextMenuOpen()) closeContextMenu(); });
+    window.addEventListener('resize', () => closeContextMenu());
+    document.addEventListener('scroll', () => closeContextMenu(), true);
+
+    const btnStar = document.getElementById('ctx-star');
+    const btnTrack = document.getElementById('ctx-track');
+    const btnDiscard = document.getElementById('ctx-discard');
+    const btnRefresh = document.getElementById('ctx-refresh');
+    const btnCopy = document.getElementById('ctx-copy');
+    const btnOpen = document.getElementById('ctx-open');
+
+    if (btnStar) btnStar.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const o = oppData?.[ctxMenu.idx];
+      if (o) await setOppStar(!(o.starred === 1 || o.starred === true), o.tweet_id);
+      closeContextMenu();
+    });
+    if (btnTrack) btnTrack.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const o = oppData?.[ctxMenu.idx];
+      if (o) await setOppStatus('tracked', o.tweet_id);
+      closeContextMenu();
+    });
+    if (btnDiscard) btnDiscard.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const o = oppData?.[ctxMenu.idx];
+      if (o) await setOppStatus('skipped', o.tweet_id);
+      closeContextMenu();
+    });
+    if (btnRefresh) btnRefresh.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const o = oppData?.[ctxMenu.idx];
+      if (o) {
+        // Temporarily treat as selected for refresh UI updates
+        const prev = selectedOpp;
+        selectedOpp = o;
+        await refreshOppMetrics();
+        selectedOpp = prev;
+      }
+      closeContextMenu();
+    });
+    if (btnCopy) btnCopy.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const o = oppData?.[ctxMenu.idx];
+      if (o?.tweet_id) {
+        try { await navigator.clipboard.writeText(oppUrl(o.tweet_id)); toast('Copied link', 'success'); }
+        catch { toast('Copy failed', 'error'); }
+      }
+      closeContextMenu();
+    });
+    if (btnOpen) btnOpen.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const o = oppData?.[ctxMenu.idx];
+      if (o?.tweet_id) window.open(oppUrl(o.tweet_id), '_blank', 'noopener');
+      closeContextMenu();
+    });
+  }
+
+  // Update labels based on current opp
+  const isStarred = (opp.starred === 1 || opp.starred === true);
+  const btnStar = document.getElementById('ctx-star');
+  if (btnStar) btnStar.textContent = isStarred ? 'Unstar' : 'Star';
+
+  // Position within viewport
+  el.classList.remove('hidden');
+  const pad = 10;
+  const rect = el.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  let left = x;
+  let top = y;
+  if (left + rect.width + pad > vw) left = Math.max(pad, vw - rect.width - pad);
+  if (top + rect.height + pad > vh) top = Math.max(pad, vh - rect.height - pad);
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
 }
 
 async function refreshOppMetrics() {
@@ -1150,11 +1362,11 @@ async function refreshOppMetrics() {
     selectedOpp.likes = m.likes ?? selectedOpp.likes;
     selectedOpp.retweets = m.retweets ?? selectedOpp.retweets;
     selectedOpp.replies = m.replies ?? selectedOpp.replies;
-    selectedOpp.impressions = m.impressions ?? selectedOpp.impressions;
+    selectedOpp.quotes = m.quotes ?? selectedOpp.quotes;
     setText('detail-likes', fmtK(selectedOpp.likes));
     setText('detail-retweets', fmtK(selectedOpp.retweets));
     setText('detail-replies', fmtK(selectedOpp.replies));
-    setText('detail-impressions', fmtK(selectedOpp.impressions));
+    setText('detail-quotes', fmtK(selectedOpp.quotes || 0));
     toast('Metrics refreshed', 'success');
     await renderOppList();
   } catch (err) {
@@ -1237,8 +1449,8 @@ function toggleEmbedInteract() {
 
 function linkify(text) {
   return text
-    .replace(/(https?:\\/\\/\\S+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">$1</a>')
-    .replace(/@(\\w+)/g, '<a href="https://x.com/$1" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">@$1</a>');
+    .replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">$1</a>')
+    .replace(/@(\w+)/g, '<a href="https://x.com/$1" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">@$1</a>');
 }
 
 async function fetchLiveTweetContext(tweetId) {
@@ -1511,6 +1723,272 @@ function showBanner(id, msg, color) {
   el.classList.remove('hidden');
 }
 
+// ── Feed (X Mentions/Notifications) ──
+let feedFilterTimeout;
+function loadFeedFilters() {
+  try {
+    const raw = localStorage.getItem('ai-dashboard-feed-filters');
+    if (!raw) return { status: 'new', q: '', kind: 'all', starredOnly: false };
+    const parsed = JSON.parse(raw);
+    return {
+      status: parsed.status || 'new',
+      q: typeof parsed.q === 'string' ? parsed.q : '',
+      kind: parsed.kind || 'all',
+      starredOnly: !!parsed.starredOnly,
+    };
+  } catch {
+    return { status: 'new', q: '', kind: 'all', starredOnly: false };
+  }
+}
+
+function saveFeedFilters() {
+  try { localStorage.setItem('ai-dashboard-feed-filters', JSON.stringify(feedFilters)); } catch {}
+}
+
+function setFeedFilter(next) {
+  feedFilters = { ...feedFilters, ...next };
+  saveFeedFilters();
+  renderFeedList();
+}
+
+function applyFeedFiltersToUi() {
+  const q = document.getElementById('feed-q');
+  const status = document.getElementById('feed-status');
+  const kind = document.getElementById('feed-kind');
+  const starOnly = document.getElementById('feed-star-only');
+  if (q) q.value = feedFilters.q || '';
+  if (status) status.value = feedFilters.status || 'new';
+  if (kind) kind.value = feedFilters.kind || 'all';
+  if (starOnly) starOnly.checked = !!feedFilters.starredOnly;
+}
+
+function openComposeFor(mode, tweetId) {
+  toggleCompose(true);
+  const modeSel = document.getElementById('compose-mode');
+  if (modeSel) modeSel.value = mode;
+  setupComposeUi();
+  const target = document.getElementById('compose-target');
+  if (target) target.value = tweetId || '';
+  updateComposeCount();
+  setTimeout(() => document.getElementById('compose-text')?.focus(), 0);
+}
+
+async function refreshFeed() {
+  if (!capabilities.canFetchTweets || !capabilities.canWrite) {
+    toast('Feed refresh requires Tweets + Writes', 'warning');
+    return;
+  }
+  toast('Refreshing feed...', 'info');
+  try {
+    const r = await fetch('/api/feed-refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Feed refresh failed', 'error');
+      return;
+    }
+    toast('Feed refreshed (' + (data.upserted ?? 0) + ')', 'success');
+    if (currentTab === 'feed') await renderFeedList();
+    // Pull new badge counts
+    loadTab(currentTab);
+  } catch (err) {
+    toast('Feed refresh failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+async function renderFeed() {
+  const el = document.getElementById('tab-feed');
+  if (!el) return;
+
+  if (!el.querySelector('#feed-root')) {
+    el.innerHTML =
+      '<div id="feed-root" class="h-full flex flex-col gap-3">' +
+        '<div class="surface rounded-xl p-3">' +
+          '<div class="flex flex-col lg:flex-row gap-3 lg:items-center">' +
+            '<div class="flex flex-wrap items-center gap-2">' +
+              '<label class="text-xs text-slate-400 flex items-center gap-2">' +
+                '<span class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Kind</span>' +
+                '<select id="feed-kind" class="bg-navy-950/40 border border-slate-700/30 rounded-lg px-2.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-gold-500/40">' +
+                  '<option value="all">All</option>' +
+                  '<option value="mention">Mentions</option>' +
+                  '<option value="reply">Replies</option>' +
+                  '<option value="quote">Quotes</option>' +
+                '</select>' +
+              '</label>' +
+              '<label class="text-xs text-slate-400 flex items-center gap-2">' +
+                '<span class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Status</span>' +
+                '<select id="feed-status" class="bg-navy-950/40 border border-slate-700/30 rounded-lg px-2.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-gold-500/40">' +
+                  '<option value="new">New</option>' +
+                  '<option value="archived">Archived</option>' +
+                  '<option value="replied">Replied</option>' +
+                  '<option value="discarded">Discarded</option>' +
+                  '<option value="all">All</option>' +
+                '</select>' +
+              '</label>' +
+              '<label class="text-xs text-slate-400 inline-flex items-center gap-2 bg-navy-950/20 border border-slate-700/30 rounded-lg px-2.5 py-2">' +
+                '<input id="feed-star-only" type="checkbox" class="accent-gold-500" />' +
+                '<span class="inline-flex items-center gap-1.5">' + lucide('star', 'w-3 h-3') + 'Starred only</span>' +
+              '</label>' +
+            '</div>' +
+            '<div class="flex-1 flex items-center gap-2 min-w-0">' +
+              '<div class="relative flex-1 min-w-[220px]">' +
+                '<div class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500">' + lucide('search', 'w-4 h-4') + '</div>' +
+                '<input id="feed-q" type="text" class="w-full bg-navy-950/40 border border-slate-700/30 rounded-lg pl-8 pr-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-gold-500/40" placeholder="Search author or text..." />' +
+              '</div>' +
+              '<button class="ghost-btn" type="button" onclick="refreshFeed()" title="Pull latest mentions from X">Refresh</button>' +
+              '<button id="feed-clear" class="ghost-btn" type="button" title="Clear search">' + lucide('x', 'w-4 h-4') + '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mt-2 flex items-center justify-between text-[10px] text-slate-400 font-mono">' +
+            '<span id="feed-count">--</span>' +
+            '<span class="text-slate-600">Tip: Reply/Quote without opening X</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="surface rounded-xl flex-1 min-h-0 overflow-hidden">' +
+          '<div id="feed-list" class="opp-scroll p-3 h-full overflow-y-auto"></div>' +
+        '</div>' +
+      '</div>';
+
+    const kind = document.getElementById('feed-kind');
+    if (kind) kind.addEventListener('change', () => setFeedFilter({ kind: kind.value || 'all' }));
+    const status = document.getElementById('feed-status');
+    if (status) status.addEventListener('change', () => setFeedFilter({ status: status.value || 'new' }));
+    const starOnly = document.getElementById('feed-star-only');
+    if (starOnly) starOnly.addEventListener('change', () => setFeedFilter({ starredOnly: !!starOnly.checked }));
+    const q = document.getElementById('feed-q');
+    if (q) q.addEventListener('input', () => {
+      clearTimeout(feedFilterTimeout);
+      feedFilterTimeout = setTimeout(() => setFeedFilter({ q: q.value }), 120);
+    });
+    const clearBtn = document.getElementById('feed-clear');
+    if (clearBtn) clearBtn.addEventListener('click', () => setFeedFilter({ q: '' }));
+
+    applyFeedFiltersToUi();
+  }
+
+  await renderFeedList();
+}
+
+function feedKindBadge(kind) {
+  const map = {
+    mention: 'bg-blue-500/10 text-blue-200 border-blue-500/25',
+    reply: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/25',
+    quote: 'bg-fuchsia-500/10 text-fuchsia-200 border-fuchsia-500/25',
+  };
+  const cls = map[kind] || 'bg-slate-500/10 text-slate-300 border-slate-500/15';
+  return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ' + cls + '">' + esc(kind || '') + '</span>';
+}
+
+async function setFeedStar(tweetId, starred) {
+  try {
+    const r = await fetch('/api/feed-item-star', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tweetId, starred: !!starred }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Star failed', 'error');
+      return;
+    }
+    toast(starred ? 'Starred' : 'Unstarred', 'success');
+    await renderFeedList();
+    loadTab(currentTab);
+  } catch (err) {
+    toast('Star failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+async function discardFeedItem(tweetId) {
+  try {
+    const r = await fetch('/api/feed-item-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tweetId, discarded: true }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Discard failed', 'error');
+      return;
+    }
+    toast('Discarded', 'success');
+    await renderFeedList();
+    loadTab(currentTab);
+  } catch (err) {
+    toast('Discard failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+async function renderFeedList() {
+  applyFeedFiltersToUi();
+  const status = feedFilters.status || 'new';
+  const kind = feedFilters.kind || 'all';
+  const q = String(feedFilters.q || '').trim().toLowerCase();
+  const starredOnly = !!feedFilters.starredOnly;
+
+  const includeDiscarded = status === 'discarded';
+  const url =
+    '/api/feed?limit=200' +
+    '&kind=' + encodeURIComponent(kind) +
+    '&status=' + encodeURIComponent(status) +
+    '&includeDiscarded=' + (includeDiscarded ? '1' : '0');
+
+  const data = await fetchJson(url);
+  feedData = (data || [])
+    .filter(i => (!starredOnly) || (i.starred === 1 || i.starred === true))
+    .filter(i => {
+      if (!q) return true;
+      const hay = [
+        i.author_username || i.author_id || '',
+        i.text || '',
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+
+  const list = document.getElementById('feed-list');
+  if (!list) return;
+
+  setText('feed-count', feedData.length + ' item' + (feedData.length === 1 ? '' : 's'));
+
+  if (feedData.length === 0) {
+    list.innerHTML = emptyState('Nothing here (yet)', 'Click Refresh to pull mentions. Ensure X_USERNAME is set in cli/.env.');
+    return;
+  }
+
+  list.innerHTML = '<div class="space-y-2">' + feedData.map((i) => {
+    const author = esc(i.author_username || i.author_id || 'unknown');
+    const starred = (i.starred === 1 || i.starred === true);
+    const starBtn = '<button class="ghost-btn" type="button" onclick="setFeedStar(\'' + i.tweet_id + '\',' + (!starred) + ')" title="' + (starred ? 'Unstar' : 'Star') + '">' + lucide('star', 'w-4 h-4') + '</button>';
+    const discardBtn = '<button class="ghost-btn" type="button" onclick="discardFeedItem(\'' + i.tweet_id + '\')" title="Discard">' + lucide('ban', 'w-4 h-4') + '</button>';
+    const replyBtn = '<button class="ghost-btn" type="button" onclick="openComposeFor(\'reply\',\'' + i.tweet_id + '\')" title="Reply">' + lucide('reply', 'w-4 h-4') + '</button>';
+    const quoteBtn = '<button class="ghost-btn" type="button" onclick="openComposeFor(\'quote\',\'' + i.tweet_id + '\')" title="Quote">' + lucide('message-square', 'w-4 h-4') + '</button>';
+    return '<div class="opp-card rounded-xl px-3.5 py-3 border ' + (starred ? 'border-gold-500/25 bg-gold-500/5' : 'border-slate-700/15 bg-navy-950/10') + '">' +
+      '<div class="flex items-start gap-3">' +
+        '<div class="min-w-0 flex-1">' +
+          '<div class="flex items-center gap-2 min-w-0">' +
+            '<span class="text-sm font-semibold text-slate-200 truncate">@' + author + '</span>' +
+            feedKindBadge(i.kind) +
+            (i.status ? statusBadge(i.status) : '') +
+            '<span class="ml-auto text-[10px] text-slate-500 font-mono shrink-0">' + ago(i.created_at || i.last_seen) + '</span>' +
+          '</div>' +
+          '<div class="text-xs text-slate-300/90 leading-relaxed mt-1 whitespace-pre-wrap">' + linkify(esc(i.text || '')) + '</div>' +
+          '<div class="flex items-center gap-3 mt-2 text-[10px] text-slate-400 font-mono">' +
+            '<span title="Likes" class="inline-flex items-center gap-1">' + lucide('heart', 'w-3 h-3') + fmtK(i.likes || 0) + '</span>' +
+            '<span title="Retweets" class="inline-flex items-center gap-1">' + lucide('repeat-2', 'w-3 h-3') + fmtK(i.retweets || 0) + '</span>' +
+            '<span title="Replies" class="inline-flex items-center gap-1">' + lucide('message-circle', 'w-3 h-3') + fmtK(i.replies || 0) + '</span>' +
+            '<span title="Quotes" class="inline-flex items-center gap-1">' + lucide('message-square', 'w-3 h-3') + fmtK(i.quotes || 0) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flex items-center gap-1 shrink-0">' +
+          replyBtn +
+          quoteBtn +
+          starBtn +
+          discardBtn +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+
 // ── Posts ──
 async function renderPosts() {
   const el = document.getElementById('tab-posts');
@@ -1519,16 +1997,28 @@ async function renderPosts() {
     el.innerHTML = emptyState('No posts generated yet', 'Posts appear here after the daemon generates content.');
     return;
   }
-  el.innerHTML = '<table class="w-full text-sm"><thead><tr class="text-left text-[10px] text-gray-500 uppercase tracking-wider border-b border-gray-700/30">' +
-    '<th class="pb-2 pr-2 w-16">Status</th><th class="pb-2 pr-2 w-24">Type</th><th class="pb-2 pr-2">Content</th>' +
+
+  const canRefresh = !!capabilities.canRefreshMetrics;
+  const header =
+    '<div class="flex items-center justify-between mb-3">' +
+      '<div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Recent posts</div>' +
+      '<div class="flex items-center gap-2">' +
+        '<button class="ghost-btn' + (canRefresh ? '' : ' opacity-50 cursor-not-allowed') + '" type="button" onclick="refreshPostMetrics()" ' + (canRefresh ? '' : 'disabled') + ' title="Fetch latest metrics from X">Refresh metrics</button>' +
+      '</div>' +
+    '</div>';
+
+  el.innerHTML = header + '<table class="w-full text-sm"><thead><tr class="text-left text-[10px] text-gray-500 uppercase tracking-wider border-b border-gray-700/30">' +
+    '<th class="pb-2 pr-2 w-16">Status</th><th class="pb-2 pr-2 w-24">Kind</th><th class="pb-2 pr-2">Content</th>' +
     '<th class="pb-2 pr-2 w-20">Safety</th><th class="pb-2 w-16 text-right">When</th>' +
   '</tr></thead><tbody>' + data.map((p, i) => {
     const sb = statusBadge(p.status);
     const vb = verdictBadge(p.safety_verdict);
+    const kind = (p.x_post_type === 'quote') ? 'quote' : (p.x_post_type === 'reply') ? 'reply' : 'original';
+    const kindCell = typeBadge(kind) + '<div class="text-[10px] text-gray-600 font-mono mt-1 truncate">' + esc(p.prompt_type) + '</div>';
     const rid = 'post-' + i;
-    return '<tr class="row-clickable border-b border-gray-700/15" onclick="toggle(\\'' + rid + '\\')">' +
+    return '<tr class="row-clickable border-b border-gray-700/15" onclick="toggle(\'' + rid + '\')">' +
       '<td class="py-2 pr-2">' + sb + '</td>' +
-      '<td class="py-2 pr-2 text-xs text-gray-500 font-mono">' + esc(p.prompt_type) + '</td>' +
+      '<td class="py-2 pr-2 text-xs text-gray-500">' + kindCell + '</td>' +
       '<td class="py-2 pr-2 text-gray-400 text-xs"><div class="truncate max-w-lg">' + esc(p.content || '') + '</div></td>' +
       '<td class="py-2 pr-2"><span class="font-mono text-xs text-gray-500 mr-1">' + p.safety_score + '</span>' + vb + '</td>' +
       '<td class="py-2 text-right text-xs text-gray-600" title="' + (p.created_at || '') + '">' + ago(p.created_at) + '</td>' +
@@ -1545,6 +2035,27 @@ async function renderPosts() {
       '</div>' +
     '</div></td></tr>';
   }).join('') + '</tbody></table>';
+}
+
+async function refreshPostMetrics() {
+  if (!capabilities.canRefreshMetrics) { toast('Metrics refresh disabled', 'warning'); return; }
+  toast('Refreshing post metrics...', 'info');
+  try {
+    const r = await fetch('/api/posts-refresh-metrics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: 60 }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Metrics refresh failed', 'error');
+      return;
+    }
+    toast('Metrics updated (' + data.updated + '/' + data.scanned + ')', 'success');
+    if (currentTab === 'posts') await renderPosts();
+  } catch (err) {
+    toast('Metrics refresh failed: ' + (err?.message || 'network'), 'error');
+  }
 }
 
 // ── Safety ──
@@ -1584,8 +2095,8 @@ async function renderCosts() {
   const summaryHtml = '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">' +
     statCard('Total (7d)', formatCost(data.totalCostCents), 'text-gold-400') +
     statCard('API Calls', data.totalCalls, 'text-cyan-400') +
-    statCard('Batch Savings', formatCost(data.batchSavings.savedCents), 'text-emerald-400') +
-    statCard('Batch Calls', data.batchSavings.batchCalls, 'text-blue-400') +
+    statCard('Batch Cost', formatCost(data.batch?.batchCostCents || 0), 'text-emerald-400') +
+    statCard('Batch Calls', data.batch?.batchCalls || 0, 'text-blue-400') +
   '</div>';
 
   const modelHtml = Object.entries(data.byModel || {}).sort((a,b) => b[1].costCents - a[1].costCents).map(([m, v]) =>
@@ -1620,6 +2131,105 @@ async function renderCosts() {
     '<div class="space-y-1">' + recentHtml + '</div>';
 }
 
+// ── Intel (Trends + Hot Users) ──
+async function renderIntel() {
+  const el = document.getElementById('tab-intel');
+  if (!el) return;
+
+  const [trends, hot] = await Promise.all([
+    fetchJson('/api/trends?limit=25'),
+    fetchJson('/api/hot-users?limit=25'),
+  ]);
+
+  const hasTrends = Array.isArray(trends) && trends.length > 0;
+  const hasHot = Array.isArray(hot) && hot.length > 0;
+
+  const trendsHeader =
+    '<div class="flex items-center justify-between mb-2">' +
+      '<h3 class="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Trends</h3>' +
+      '<button class="ghost-btn" type="button" onclick="refreshTrends()">Refresh</button>' +
+    '</div>';
+
+  const trendsList = hasTrends
+    ? '<div class="space-y-2">' + trends.slice(0, 20).map(t => {
+        const vol = t.volume != null ? fmtK(t.volume) : '0';
+        const score = (t.relevance_score != null) ? Number(t.relevance_score).toFixed(0) : '0';
+        const src = esc(t.source || '');
+        const topic = esc(t.topic || '');
+        const when = t.last_seen ? ago(t.last_seen) : '';
+        return '<div class="bg-navy-800/60 rounded-lg px-4 py-3 border border-gray-700/20 fade-in">' +
+          '<div class="flex items-center gap-3">' +
+            '<span class="font-mono text-xs text-slate-500 w-10 text-right tabular-nums">' + score + '</span>' +
+            '<div class="min-w-0 flex-1">' +
+              '<div class="text-sm text-slate-200 truncate">' + topic + '</div>' +
+              '<div class="text-[10px] text-slate-500 font-mono mt-1">' + esc(src) + ' · vol ' + esc(vol) + (when ? (' · ' + esc(when)) : '') + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('') + '</div>'
+    : emptyState('No trends yet', 'Run a trend refresh to pull current topics from X and other sources.');
+
+  const hotHeader =
+    '<div class="flex items-center justify-between mb-2 mt-6">' +
+      '<h3 class="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Hot Users (7d)</h3>' +
+      '<div class="text-[10px] text-slate-600 font-mono">based on inbox engagement</div>' +
+    '</div>';
+
+  const hotList = hasHot
+    ? '<div class="space-y-2">' + hot.slice(0, 20).map(u => {
+        const user = esc(u.author_username || u.author_id || 'unknown');
+        const url = 'https://x.com/' + user.replace(/^@/, '');
+        const heat = (u.heat != null) ? Number(u.heat).toFixed(0) : '0';
+        return '<div class="bg-navy-800/60 rounded-lg px-4 py-3 border border-gray-700/20 fade-in">' +
+          '<div class="flex items-center gap-3">' +
+            '<span class="font-mono text-xs text-slate-500 w-10 text-right tabular-nums">' + heat + '</span>' +
+            '<div class="min-w-0 flex-1">' +
+              '<div class="flex items-center gap-2">' +
+                '<a href="' + url + '" target="_blank" rel="noopener" class="text-sm font-semibold text-slate-200 hover:underline truncate">@' + user + '</a>' +
+                '<span class="text-[10px] text-slate-500 font-mono">' + (u.opportunities ?? 0) + ' opps</span>' +
+              '</div>' +
+              '<div class="text-[10px] text-slate-500 font-mono mt-1">' +
+                fmtK(u.likes || 0) + ' likes · ' +
+                fmtK(u.retweets || 0) + ' RT · ' +
+                fmtK(u.replies || 0) + ' replies · ' +
+                fmtK(u.quotes || 0) + ' quotes' +
+              '</div>' +
+            '</div>' +
+            '<span class="text-[10px] text-slate-600 font-mono shrink-0">' + (u.last_seen ? ago(u.last_seen) : '') + '</span>' +
+          '</div>' +
+        '</div>';
+      }).join('') + '</div>'
+    : emptyState('No hot users yet', 'Hot users appear after the inbox has data.');
+
+  el.innerHTML =
+    '<div class="surface rounded-xl p-4 fade-in">' +
+      trendsHeader +
+      trendsList +
+      hotHeader +
+      hotList +
+    '</div>';
+}
+
+async function refreshTrends() {
+  if (!capabilities.canFetchTweets || !capabilities.canWrite) {
+    toast('Trends refresh requires Tweets + Writes', 'warning');
+    return;
+  }
+  toast('Refreshing trends...', 'info');
+  try {
+    const r = await fetch('/api/trends-refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Trend refresh failed', 'error');
+      return;
+    }
+    toast('Trends refreshed', 'success');
+    if (currentTab === 'intel') await renderIntel();
+  } catch (err) {
+    toast('Trend refresh failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
 // ── Lucide Icons ──
 function lucide(name, cls) {
   const p = {
@@ -1634,6 +2244,9 @@ function lucide(name, cls) {
     'ban': '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
     'bar-chart-3': '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
     'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    'alert-triangle': '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    'more-vertical': '<path d="M12 12h.01"/><path d="M12 5h.01"/><path d="M12 19h.01"/>',
+    'star': '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.1 4.251a.59.59 0 0 0 .444.323l4.69.682a.53.53 0 0 1 .294.904l-3.394 3.307a.59.59 0 0 0-.17.522l.801 4.671a.53.53 0 0 1-.77.56l-4.2-2.208a.59.59 0 0 0-.54 0l-4.2 2.208a.53.53 0 0 1-.77-.56l.801-4.671a.59.59 0 0 0-.17-.522L2.197 8.455a.53.53 0 0 1 .294-.904l4.69-.682a.59.59 0 0 0 .444-.323z"/>',
     'zap': '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
     'send': '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
     'circle': '<circle cx="12" cy="12" r="10"/>',
@@ -1725,6 +2338,89 @@ function typeBadge(type) {
   return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ' + cls + '">' + esc((type || '').toUpperCase()) + '</span>';
 }
 
+function phaseLabel(phase) {
+  const map = {
+    starting: 'Starting',
+    compose: 'Composing',
+    scan: 'Scanning tweets',
+    score: 'Scoring opportunities',
+    upsert: 'Updating inbox',
+    engage: 'Engaging',
+    reevaluate: 'Re-evaluating tracked',
+    expire: 'Expiring tracked',
+    cleanup: 'Cleanup',
+    complete: 'Complete',
+    error: 'Error',
+  };
+  if (!phase) return '';
+  return map[phase] || String(phase);
+}
+
+function cycleStatusPill(status) {
+  if (status === 'error') {
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border bg-red-500/10 text-red-200 border-red-500/25">' +
+      '<span class="-ml-0.5">' + lucide('x', 'w-3 h-3') + '</span>' +
+      '<span>Error</span>' +
+    '</span>';
+  }
+  if (status === 'running') {
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border bg-gold-500/10 text-gold-300 border-gold-500/25">' +
+      '<span class="-ml-0.5">' + lucide('loader-2', 'w-3 h-3 spinner') + '</span>' +
+      '<span>In progress</span>' +
+    '</span>';
+  }
+  if (status === 'unfinished') {
+    return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border bg-amber-500/10 text-amber-200 border-amber-500/25">' +
+      '<span class="-ml-0.5">' + lucide('alert-triangle', 'w-3 h-3') + '</span>' +
+      '<span>Unfinished</span>' +
+    '</span>';
+  }
+  return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border bg-emerald-500/10 text-emerald-200 border-emerald-500/25">' +
+    '<span class="-ml-0.5">' + lucide('check', 'w-3 h-3') + '</span>' +
+    '<span>Completed</span>' +
+  '</span>';
+}
+
+function parseIsoish(iso) {
+  if (!iso) return null;
+  try {
+    const raw = String(iso);
+    const norm = raw.includes('T') ? raw : raw.replace(' ', 'T');
+    const withZone = (norm.includes('Z') || norm.includes('+')) ? norm : (norm + 'Z');
+    const t = new Date(withZone).getTime();
+    return Number.isFinite(t) ? t : null;
+  } catch {
+    return null;
+  }
+}
+
+function fmtDurationMs(ms) {
+  if (ms == null) return '--';
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n < 0) return '--';
+  const s = n / 1000;
+  if (s < 60) return (s < 10 ? s.toFixed(1) : s.toFixed(0)) + 's';
+  const m = Math.floor(s / 60);
+  const rs = Math.round(s % 60);
+  if (m < 60) return m + 'm ' + rs + 's';
+  const h = Math.floor(m / 60);
+  const rm = Math.round(m % 60);
+  return h + 'h ' + rm + 'm';
+}
+
+function cycleTiming(c) {
+  if (!c) return '--';
+  if (c.duration_ms != null) return 'Duration ' + fmtDurationMs(c.duration_ms);
+  const started = parseIsoish(c.started_at);
+  if (c.completed_at) {
+    const completed = parseIsoish(c.completed_at);
+    if (started != null && completed != null) return 'Duration ' + fmtDurationMs(completed - started);
+    return 'Completed';
+  }
+  if (started != null) return 'Elapsed ' + fmtDurationMs(Date.now() - started);
+  return 'In progress';
+}
+
 function statusBadge(status) {
   const map = {
     posted: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/25',
@@ -1795,7 +2491,13 @@ function renderLayers(layersStr) {
 
 function metricsLine(p) {
   if (p.analytics_likes == null) return '';
-  return '<span>Metrics: <span class="text-slate-200">' + fmtK(p.analytics_likes) + ' likes / ' + fmtK(p.analytics_retweets) + ' RTs / ' + fmtK(p.analytics_replies) + ' replies</span></span>';
+  const q = (p.analytics_quotes != null) ? (' / ' + fmtK(p.analytics_quotes) + ' quotes') : '';
+  return '<span>Metrics: <span class="text-slate-200">' +
+    fmtK(p.analytics_likes) + ' likes / ' +
+    fmtK(p.analytics_retweets) + ' RTs / ' +
+    fmtK(p.analytics_replies) + ' replies' +
+    q +
+  '</span></span>';
 }
 
 function statCard(label, value, color) {
@@ -1822,7 +2524,3 @@ function emptyState(title, desc) {
   const initial = (saved && TAB_META[saved]) ? saved : 'cycles';
   switchTab(initial);
 })();
-</script>
-</body>
-</html>`;
-}

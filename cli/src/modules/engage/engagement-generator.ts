@@ -27,7 +27,7 @@ interface GenerateOptions {
   bills: LoadedBill[];
   claude: ClaudeClient;
   xReader: XReadClient;
-  xWriter: XWriteClient;
+  xWriter?: XWriteClient;
   config: Config;
   dryRun: boolean;
   preferredAction?: 'quote' | 'reply';
@@ -201,6 +201,17 @@ export async function executeEngagement(options: GenerateOptions): Promise<Engag
   if (dryRun) {
     log.info({ action, content: content.slice(0, 80) }, '[DRY RUN] Would post engagement');
     return { success: true, content, action, safetyResult, skipReason: null };
+  }
+
+  if (!xWriter) {
+    log.warn({ tweetId: opportunity.tweet_id, action }, 'X writer not configured — cannot post engagement');
+    return {
+      success: false,
+      content,
+      action,
+      safetyResult,
+      skipReason: 'X writer not configured',
+    };
   }
 
   try {

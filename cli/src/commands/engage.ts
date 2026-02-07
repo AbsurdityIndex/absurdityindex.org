@@ -346,15 +346,15 @@ export function registerEngageCommand(program: Command): void {
       const port = parseInt(opts.port, 10) || 3847;
       const dryRun = opts.dryRun ?? false;
 
-      // Read-only DB for queries
-      const Database = (await import('better-sqlite3')).default;
-      const readDb = new Database(config.dbPath, { readonly: true });
-      readDb.pragma('journal_mode = WAL');
-
       // Write DB for posting engagements (only if not read-only mode)
       // We still allow DB writes in dry-run mode (draft recording, triage actions),
       // but we never post to X when dryRun=true.
       const writeDb = getDb(config.dbPath);
+
+      // Read-only DB for queries (opened after migrations so new columns are visible)
+      const Database = (await import('better-sqlite3')).default;
+      const readDb = new Database(config.dbPath, { readonly: true });
+      readDb.pragma('journal_mode = WAL');
 
       // Initialize API clients (gracefully degrade if keys missing)
       let xReader: XReadClient | undefined;

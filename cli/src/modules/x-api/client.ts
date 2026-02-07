@@ -95,7 +95,7 @@ export class XReadClient {
     }
   }
 
-  async getTweetMetrics(tweetId: string): Promise<{ likes: number; retweets: number; replies: number; impressions: number } | null> {
+  async getTweetMetrics(tweetId: string): Promise<{ likes: number; retweets: number; replies: number; quotes: number; impressions?: number } | null> {
     await readLimiter.acquire();
     try {
       const tweet = await this.client.v2.singleTweet(tweetId, {
@@ -106,7 +106,8 @@ export class XReadClient {
         likes: m.like_count,
         retweets: m.retweet_count,
         replies: m.reply_count,
-        impressions: m.impression_count ?? 0,
+        quotes: m.quote_count ?? 0,
+        impressions: (m as any).impression_count,
       } : null;
     } catch (err) {
       this.log.warn({ err, tweetId }, 'Failed to get tweet metrics');

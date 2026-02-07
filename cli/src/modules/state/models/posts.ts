@@ -2,13 +2,24 @@ import type Database from 'better-sqlite3';
 
 export type PostStatus = 'draft' | 'queued' | 'review' | 'posted' | 'rejected' | 'failed';
 export type SafetyVerdict = 'SAFE' | 'REVIEW' | 'REJECT';
-export type PromptType = 'bill-roast' | 'trend-jack' | 'quote-dunk' | 'cspan-after-dark' | 'pork-barrel-report' | 'floor-speech' | 'reply-dunk' | 'engagement-evaluate';
+export type XPostType = 'tweet' | 'reply' | 'quote';
+export type PromptType =
+  | 'bill-roast'
+  | 'trend-jack'
+  | 'quote-dunk'
+  | 'cspan-after-dark'
+  | 'pork-barrel-report'
+  | 'floor-speech'
+  | 'reply-dunk'
+  | 'engagement-evaluate'
+  | 'manual';
 
 export interface Post {
   id: number;
   tweet_id: string | null;
   content: string;
   prompt_type: PromptType;
+  x_post_type: XPostType | null;
   bill_slug: string | null;
   trend_topic: string | null;
   safety_score: number;
@@ -29,6 +40,7 @@ export interface Post {
 export interface CreatePostInput {
   content: string;
   prompt_type: PromptType;
+  x_post_type?: XPostType;
   bill_slug?: string;
   trend_topic?: string;
   safety_score: number;
@@ -44,8 +56,8 @@ export interface CreatePostInput {
 
 export function createPostModel(db: Database.Database) {
   const insert = db.prepare(`
-    INSERT INTO posts (content, prompt_type, bill_slug, trend_topic, safety_score, safety_verdict, engagement_score, status, parent_tweet_id, media_url, media_type, meme_strategy, meme_template)
-    VALUES (@content, @prompt_type, @bill_slug, @trend_topic, @safety_score, @safety_verdict, @engagement_score, @status, @parent_tweet_id, @media_url, @media_type, @meme_strategy, @meme_template)
+    INSERT INTO posts (content, prompt_type, x_post_type, bill_slug, trend_topic, safety_score, safety_verdict, engagement_score, status, parent_tweet_id, media_url, media_type, meme_strategy, meme_template)
+    VALUES (@content, @prompt_type, @x_post_type, @bill_slug, @trend_topic, @safety_score, @safety_verdict, @engagement_score, @status, @parent_tweet_id, @media_url, @media_type, @meme_strategy, @meme_template)
   `);
 
   const updateStatus = db.prepare('UPDATE posts SET status = ?, error = ? WHERE id = ?');
@@ -54,9 +66,16 @@ export function createPostModel(db: Database.Database) {
 
   return {
     create(input: CreatePostInput): Post {
+      const derivedType: XPostType =
+        input.x_post_type ??
+        (input.prompt_type.includes('quote') ? 'quote'
+          : input.prompt_type.includes('reply') ? 'reply'
+            : (input.parent_tweet_id ? 'reply' : 'tweet'));
+
       const info = insert.run({
         content: input.content,
         prompt_type: input.prompt_type,
+        x_post_type: derivedType,
         bill_slug: input.bill_slug ?? null,
         trend_topic: input.trend_topic ?? null,
         safety_score: input.safety_score,

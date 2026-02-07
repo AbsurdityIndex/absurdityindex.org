@@ -13,7 +13,9 @@ export interface Opportunity {
   likes: number;
   retweets: number;
   replies: number;
+  quotes: number;
   impressions: number;
+  starred: number;
   score: number;
   viral_score: number;
   relevance_score: number;
@@ -38,6 +40,7 @@ export interface UpsertOpportunityInput {
   likes?: number;
   retweets?: number;
   replies?: number;
+  quotes?: number;
   impressions?: number;
   score?: number;
   viral_score?: number;
@@ -54,12 +57,12 @@ export function createOpportunityModel(db: Database.Database) {
   const upsertStmt = db.prepare(`
     INSERT INTO opportunities (
       tweet_id, author_id, author_username, text, conversation_id,
-      likes, retweets, replies, impressions,
+      likes, retweets, replies, quotes, impressions,
       score, viral_score, relevance_score, timing_score, engageability_score,
       recommended_action, matched_bill_slug, matched_keywords, tweet_created_at
     ) VALUES (
       @tweet_id, @author_id, @author_username, @text, @conversation_id,
-      @likes, @retweets, @replies, @impressions,
+      @likes, @retweets, @replies, @quotes, @impressions,
       @score, @viral_score, @relevance_score, @timing_score, @engageability_score,
       @recommended_action, @matched_bill_slug, @matched_keywords, @tweet_created_at
     )
@@ -67,7 +70,8 @@ export function createOpportunityModel(db: Database.Database) {
       likes = @likes,
       retweets = @retweets,
       replies = @replies,
-      impressions = @impressions,
+      quotes = @quotes,
+      impressions = COALESCE(@impressions, impressions),
       score = @score,
       viral_score = @viral_score,
       relevance_score = @relevance_score,
@@ -90,7 +94,8 @@ export function createOpportunityModel(db: Database.Database) {
         likes: input.likes ?? 0,
         retweets: input.retweets ?? 0,
         replies: input.replies ?? 0,
-        impressions: input.impressions ?? 0,
+        quotes: input.quotes ?? 0,
+        impressions: (input.impressions == null) ? null : input.impressions,
         score: input.score ?? 0,
         viral_score: input.viral_score ?? 0,
         relevance_score: input.relevance_score ?? 0,
@@ -130,13 +135,13 @@ export function createOpportunityModel(db: Database.Database) {
       db.prepare("UPDATE opportunities SET status = 'skipped' WHERE tweet_id = ?").run(tweetId);
     },
 
-    updateMetrics(tweetId: string, metrics: { likes: number; retweets: number; replies: number; impressions: number }): void {
+    updateMetrics(tweetId: string, metrics: { likes: number; retweets: number; replies: number; quotes: number; impressions?: number }): void {
       db.prepare(`
         UPDATE opportunities SET
-          likes = ?, retweets = ?, replies = ?, impressions = ?,
+          likes = ?, retweets = ?, replies = ?, quotes = ?, impressions = COALESCE(?, impressions),
           last_evaluated = datetime('now')
         WHERE tweet_id = ?
-      `).run(metrics.likes, metrics.retweets, metrics.replies, metrics.impressions, tweetId);
+      `).run(metrics.likes, metrics.retweets, metrics.replies, metrics.quotes, (metrics.impressions == null ? null : metrics.impressions), tweetId);
     },
 
     updateScore(tweetId: string, scores: {

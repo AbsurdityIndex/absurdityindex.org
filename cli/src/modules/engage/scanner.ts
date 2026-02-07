@@ -39,7 +39,8 @@ export interface ScannedTweet {
   likes: number;
   retweets: number;
   replies: number;
-  impressions: number;
+  quotes: number;
+  impressions?: number;
   createdAt: string | null;
 }
 
@@ -92,7 +93,8 @@ export async function scanForTweets(
           likes: metrics?.like_count ?? 0,
           retweets: metrics?.retweet_count ?? 0,
           replies: metrics?.reply_count ?? 0,
-          impressions: metrics?.impression_count ?? 0,
+          quotes: metrics?.quote_count ?? 0,
+          impressions: (metrics as any)?.impression_count,
           createdAt: tweet.created_at ?? null,
         });
       }

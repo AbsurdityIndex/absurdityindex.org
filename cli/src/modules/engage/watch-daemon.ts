@@ -31,10 +31,21 @@ export interface WatchOptions {
   dryRun: boolean;
 }
 
+type CycleUpdate = (patch: {
+  phase?: string;
+  scanned?: number;
+  engaged?: number;
+  tracked?: number;
+  expired?: number;
+  posted?: number;
+  topic?: string;
+  error?: string;
+}) => void;
+
 interface WatchDeps {
   db: Database.Database;
   xClient: XReadClient;
-  xWriter: XWriteClient;
+  xWriter?: XWriteClient;
   claude: ClaudeClient;
   config: Config;
 }
@@ -47,6 +58,7 @@ export async function runWatchCycle(
   options: WatchOptions,
   cycleIndex: number,
   engageAction: 'quote' | 'reply' = 'quote',
+  updateCycle?: CycleUpdate,
 ): Promise<{ scanned: number; engaged: number; tracked: number; expired: number }> {
   const { db, xClient, xWriter, claude, config } = deps;
   // Override config thresholds with watch options so the scorer respects CLI flags
@@ -63,8 +75,10 @@ export async function runWatchCycle(
   const stats = { scanned: 0, engaged: 0, tracked: 0, expired: 0 };
 
   // Phase 1: Scan for tweets
+  updateCycle?.({ phase: 'scan' });
   const tweets = await scanForTweets(xClient, cycleIndex);
   stats.scanned = tweets.length;
+  updateCycle?.({ phase: 'score', scanned: stats.scanned });
 
   // Phase 2: Filter already-seen tweets and score new ones
   const newTweets: Array<{ tweet: ScannedTweet; score: ReturnType<typeof scoreOpportunity> }> = [];
@@ -86,6 +100,7 @@ export async function runWatchCycle(
         likes: tweet.likes,
         retweets: tweet.retweets,
         replies: tweet.replies,
+        quotes: tweet.quotes,
         impressions: tweet.impressions,
       });
       opportunities.updateScore(tweet.id, {
@@ -102,6 +117,7 @@ export async function runWatchCycle(
   }
 
   // Phase 3: Upsert new opportunities and decide actions
+  updateCycle?.({ phase: 'upsert' });
   const engageCandidates: Array<{ tweet: ScannedTweet; action: RecommendedAction; billSlug: string | null }> = [];
 
   for (const { tweet, score } of newTweets) {
@@ -114,6 +130,7 @@ export async function runWatchCycle(
       likes: tweet.likes,
       retweets: tweet.retweets,
       replies: tweet.replies,
+      quotes: tweet.quotes,
       impressions: tweet.impressions,
       score: score.total,
       viral_score: score.viral,
@@ -138,6 +155,7 @@ export async function runWatchCycle(
   }
 
   // Phase 4: Execute engagements (respect daily cap and cooldowns)
+  updateCycle?.({ phase: 'engage', tracked: stats.tracked });
   const engagedToday = opportunities.countEngagedToday();
   let remainingBudget = options.maxEngagementsPerDay - engagedToday;
 
@@ -191,6 +209,7 @@ export async function runWatchCycle(
       cooldowns.record(candidate.tweet.authorId);
       remainingBudget--;
       stats.engaged++;
+      updateCycle?.({ engaged: stats.engaged });
 
       log.info({
         action: result.action,
@@ -204,15 +223,19 @@ export async function runWatchCycle(
   }
 
   // Phase 5: Re-evaluate tracked tweets (metrics may have grown)
+  updateCycle?.({ phase: 'reevaluate' });
   await reEvaluateTracked(deps, options, bills);
 
   // Phase 6: Expire old tracked tweets
+  updateCycle?.({ phase: 'expire' });
   stats.expired = opportunities.expireOld(24);
+  updateCycle?.({ expired: stats.expired });
   if (stats.expired > 0) {
     log.info({ expired: stats.expired }, 'Expired stale opportunities');
   }
 
   // Cleanup expired cooldowns
+  updateCycle?.({ phase: 'cleanup' });
   cooldowns.clearExpired(48);
 
   return stats;
@@ -252,7 +275,8 @@ async function reEvaluateTracked(
       likes: metrics?.likes ?? opp.likes,
       retweets: metrics?.retweets ?? opp.retweets,
       replies: metrics?.replies ?? opp.replies,
-      impressions: metrics?.impressions ?? opp.impressions,
+      quotes: metrics?.quotes ?? opp.quotes,
+      impressions: metrics?.impressions ?? (opp as any).impressions,
       createdAt: opp.tweet_created_at,
     };
 
@@ -416,6 +440,12 @@ async function generateOriginalPost(
     return { posted: true, topic };
   }
 
+  if (!xWriter) {
+    log.error({ topic }, 'X writer not configured — cannot post original tweet');
+    posts.markFailed(post.id, 'X writer not configured');
+    return { posted: false, topic };
+  }
+
   const postResult = await xWriter.tweet(content);
   if (postResult.success && postResult.tweetId) {
     posts.markPosted(post.id, postResult.tweetId);
@@ -436,6 +466,14 @@ export function startWatchDaemon(
   options: WatchOptions,
 ): { stop: () => void } {
   let cycleIndex = 0;
+  try {
+    const row = deps.db.prepare('SELECT MAX(cycle_index) as m FROM daemon_cycles').get() as { m: number | null } | undefined;
+    if (row && typeof row.m === 'number' && Number.isFinite(row.m)) {
+      cycleIndex = row.m + 1;
+    }
+  } catch {
+    // ignore (table may not exist yet)
+  }
   let running = false;
   let stopped = false;
 
@@ -454,8 +492,11 @@ export function startWatchDaemon(
     const cycleType = CYCLE_PATTERN[cycleNum % CYCLE_PATTERN.length]!;
 
     const cycles = createDaemonCycleModel(deps.db);
-    const cycle = cycles.start(cycleNum, cycleType);
+    const cycle = cycles.start(cycleNum, cycleType, cycleType === 'original' ? 'compose' : 'scan');
     const startMs = Date.now();
+    const safeUpdate: CycleUpdate = (patch) => {
+      try { cycles.update(cycle.id, patch); } catch {}
+    };
 
     try {
       if (cycleType === 'original') {
@@ -472,7 +513,7 @@ export function startWatchDaemon(
             : chalk.dim(` — No post (topic: ${result.topic ?? 'none'})`))
         );
       } else {
-        const stats = await runWatchCycle(deps, options, cycleNum, cycleType);
+        const stats = await runWatchCycle(deps, options, cycleNum, cycleType, safeUpdate);
         cycles.complete(cycle.id, stats, Date.now() - startMs);
         console.log(
           chalk.dim(`[Cycle ${cycleNum}]`) +

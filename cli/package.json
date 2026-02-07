@@ -21,9 +21,13 @@
     "absurdity-index": "./bin/absurdity-index.mjs"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run dashboard-ui:build && tsc",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
+    "dashboard-ui:build": "astro build --root dashboard-ui",
+    "dashboard-ui:dev": "astro dev --root dashboard-ui --port 4322",
+    "dashboard:app": "electron ./electron/main.cjs",
+    "dashboard:app:live": "DASHBOARD_DRY_RUN=false electron ./electron/main.cjs -- --live",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -43,9 +47,13 @@
     "twitter-api-v2": "^1.19.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.12.0",
     "@types/node-cron": "^3.0.11",
+    "astro": "^5.17.1",
+    "electron": "^37.4.0",
+    "tailwindcss": "^4.1.18",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.4"

@@ -13,6 +13,10 @@ export interface Config {
   // X API (read-only, bearer token)
   xBearerToken: string;
 
+  // X account (for feed management)
+  // Use without '@' (e.g. "absurdityindex").
+  xUsername: string;
+
   // X API (OAuth 1.0a, read+write)
   xApiKey: string;
   xApiSecret: string;
@@ -115,6 +119,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
 
   return {
     xBearerToken: env('X_BEARER_TOKEN'),
+    xUsername: env('X_USERNAME'),
     xApiKey: env('X_API_KEY'),
     xApiSecret: env('X_API_SECRET'),
     xAccessToken: env('X_ACCESS_TOKEN'),

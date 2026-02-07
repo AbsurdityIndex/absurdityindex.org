@@ -82,87 +82,30 @@ const toolLinks = [
         </ul>
       </div>
 
-      <!-- Column 4: Newsletter -->
+      <!-- Column 4: About -->
       <div>
         <h3 class="font-sans text-xs uppercase tracking-widest text-gold-500 mb-3">
-          Congressional Record
+          Follow the Index
         </h3>
-        <p class="text-sm text-gold-300/80 mb-3">
-          Get the latest bills delivered to your inbox. Unsubscribe any time &mdash; unlike real legislation.
+        <p class="text-sm text-gold-300/80 leading-relaxed mb-4">
+          Real bills. Satirical commentary. No lobbyists were consulted in the making of this site.
         </p>
-        <form id="footer-newsletter-form" class="flex flex-col gap-2 min-[430px]:flex-row">
-          <label for="footer-email" class="sr-only">Email address</label>
-          <input
-            id="footer-email"
-            type="email"
-            placeholder="senator@example.gov"
-            class="w-full flex-1 min-w-0 bg-navy-800 border border-navy-600 rounded px-3 py-2 text-sm text-gold-200 placeholder:text-navy-500 focus:outline-none focus:border-gold-500 transition-colors"
-          />
-          <button
-            type="submit"
-            class="bg-gold-500 hover:bg-gold-400 text-navy-900 font-sans font-semibold text-sm px-4 py-2 rounded transition-colors shrink-0 w-full min-[430px]:w-auto"
-          >
-            Subscribe
-          </button>
-        </form>
+        <a
+          href="https://x.com/AbsuroIndex"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-sm text-gold-300 hover:text-gold-200 transition-colors"
+        >
+          <Icon name="twitter" size={16} />
+          @AbsuroIndex
+        </a>
       </div>
-    </div>
-  </div>
-
-  <!-- Footer Newsletter Modal -->
-  <div
-    id="footer-newsletter-modal"
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden"
-  >
-    <div id="footer-newsletter-modal-backdrop" class="absolute inset-0 bg-navy-900/60"></div>
-    <div class="relative bg-parchment border-2 border-gold-400 rounded-lg shadow-xl max-w-sm w-full p-8 text-center">
-      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gold-100 text-gold-600">
-        <Icon name="inbox" size={22} />
-      </div>
-      <h3 class="font-serif text-2xl font-bold text-navy-900 mb-3">Nice Try.</h3>
-      <p class="font-sans text-sm text-navy-700 leading-relaxed mb-6">
-        Our newsletter is in committee. The committee meets every other leap year during a full moon.
-      </p>
-      <button
-        id="footer-newsletter-modal-close"
-        class="font-sans font-semibold text-sm bg-gold-500 text-navy-900 px-6 py-2.5 rounded hover:bg-gold-400 transition-colors"
-      >
-        Understood
-      </button>
     </div>
   </div>
 
   <script>
-    const footerForm = document.getElementById('footer-newsletter-form');
-    const footerModal = document.getElementById('footer-newsletter-modal');
-    const footerBackdrop = document.getElementById('footer-newsletter-modal-backdrop');
-    const footerCloseBtn = document.getElementById('footer-newsletter-modal-close');
     const footerVisitorRow = document.getElementById('footer-visitor-counter');
     const footerVisitorValue = document.getElementById('footer-visitor-count');
-
-    function openFooterModal() {
-      footerModal?.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeFooterModal() {
-      footerModal?.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-
-    footerForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      openFooterModal();
-    });
-
-    footerBackdrop?.addEventListener('click', closeFooterModal);
-    footerCloseBtn?.addEventListener('click', closeFooterModal);
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !footerModal?.classList.contains('hidden')) {
-        closeFooterModal();
-      }
-    });
 
     function formatVisitorCount(value) {
       if (!Number.isFinite(value)) return '--';
@@ -209,7 +152,6 @@ const toolLinks = [
     <div class="max-w-7xl mx-auto text-center">
       <p class="text-xs text-navy-400 leading-relaxed max-w-3xl mx-auto">
         Any resemblance to functioning governance is purely coincidental.
-        AbsurdityIndex.org is a satirical and editorial commentary website.
         No actual legislation was harmed in the making of this site.
       </p>
       <p class="mt-3 text-xs text-navy-500">

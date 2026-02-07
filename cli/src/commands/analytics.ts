@@ -23,7 +23,7 @@ export function registerAnalyticsCommand(program: Command): void {
       const posts = createPostModel(db);
       const safetyLog = createSafetyLogModel(db);
 
-      console.log(chalk.bold('\n📊 Absurdity Index Analytics\n'));
+      console.log(chalk.bold('\nAbsurdity Index Analytics\n'));
 
       // Summary stats
       const summary = analyticsModel.getSummary();
@@ -32,6 +32,7 @@ export function registerAnalyticsCommand(program: Command): void {
       console.log(`  Total likes: ${chalk.cyan(summary.totalLikes)}`);
       console.log(`  Total retweets: ${chalk.cyan(summary.totalRetweets)}`);
       console.log(`  Total replies: ${chalk.cyan(summary.totalReplies)}`);
+      console.log(`  Total quotes: ${chalk.cyan(summary.totalQuotes)}`);
       console.log(`  Avg engagement: ${chalk.cyan(summary.avgEngagement.toFixed(1))}`);
 
       // Safety stats
@@ -46,7 +47,7 @@ export function registerAnalyticsCommand(program: Command): void {
       if (topPosts.length > 0) {
         console.log(chalk.bold('\nTop Posts:'));
         for (const post of topPosts) {
-          console.log(`  ❤️ ${post.likes} 🔁 ${post.retweets} 💬 ${post.replies} — ${post.content.slice(0, 80)}...`);
+          console.log(`  L ${post.likes} RT ${post.retweets} R ${post.replies} Q ${post.quotes} - ${post.content.slice(0, 80)}...`);
         }
       }
 
@@ -55,8 +56,8 @@ export function registerAnalyticsCommand(program: Command): void {
       if (recent.length > 0) {
         console.log(chalk.bold('\nRecent Posts:'));
         for (const post of recent) {
-          const statusIcon = post.status === 'posted' ? '✅' : post.status === 'rejected' ? '⛔' : '📝';
-          console.log(`  ${statusIcon} [${post.prompt_type}] ${post.content.slice(0, 80)}...`);
+          const statusTag = post.status === 'posted' ? 'POSTED' : post.status === 'rejected' ? 'REJECTED' : 'DRAFT';
+          console.log(`  [${statusTag}] [${post.prompt_type}] ${post.content.slice(0, 80)}...`);
         }
       }
     });

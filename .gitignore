@@ -40,6 +40,15 @@ cli/data/*.db
 cli/data/*.db-shm
 cli/data/*.db-wal
 
+# CLI dashboard runtime artifacts
+cli/data/*.log
+cli/data/*.pid
+cli/data/*.png
+cli/data/dashboard-electron-main.log
+
+# CLI pnpm lockfile (repo uses npm package-lock.json)
+cli/pnpm-lock.yaml
+
 # Python bytecode
 __pycache__/
 *.pyc

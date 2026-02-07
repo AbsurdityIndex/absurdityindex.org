@@ -9,11 +9,22 @@ import { cleanContent, billUrl } from '../../utils/format.js';
 import { runHotPotDetector } from '../safety/hot-pot-detector.js';
 import { createPostModel } from '../state/models/posts.js';
 import { createOpportunityModel } from '../state/models/opportunities.js';
+import { createAnalyticsModel } from '../state/models/analytics.js';
+import { createTrendModel } from '../state/models/trends.js';
+import { createXInboxModel } from '../state/models/x-inbox.js';
+import { fetchXTrends } from '../trending/x-trends.js';
+import { fetchCongressActions } from '../trending/congress-watch.js';
+import { fetchRssFeeds } from '../trending/rss-feeds.js';
+import { aggregateTrends } from '../trending/aggregator.js';
+import { scoreTrend } from '../scoring/composite-scorer.js';
+import type { DashboardDaemonManager } from './daemon-manager.js';
+import type { WatchOptions } from '../engage/watch-daemon.js';
 import type { PromptType, PromptContext } from '../claude/prompts/index.js';
 
 export interface ApiDeps {
   db: Database.Database;
   config?: Config;
+  daemon?: DashboardDaemonManager;
 }
 
 export interface FullApiDeps {
@@ -25,6 +36,7 @@ export interface FullApiDeps {
   config?: Config;
   bills: LoadedBill[];
   dryRun: boolean;
+  daemon?: DashboardDaemonManager;
 }
 
 export function handleApi(deps: ApiDeps, pathname: string, url: URL, _req: IncomingMessage, res: ServerResponse): void {
@@ -44,11 +56,28 @@ export function handleApi(deps: ApiDeps, pathname: string, url: URL, _req: Incom
       case '/api/opportunities':
         json(res, getOpportunities(db, intParam(url, 'limit', 100), url.searchParams.get('status') ?? 'all'));
         break;
+      case '/api/feed': {
+        const limit = intParam(url, 'limit', 100);
+        const kind = (url.searchParams.get('kind') ?? 'all') as any;
+        const status = (url.searchParams.get('status') ?? 'all') as any;
+        const includeDiscarded = (url.searchParams.get('includeDiscarded') ?? '0') === '1';
+        json(res, getFeed(db, { limit, kind, status, includeDiscarded }));
+        break;
+      }
+      case '/api/hot-users':
+        json(res, getHotUsers(db, intParam(url, 'limit', 20)));
+        break;
+      case '/api/trends':
+        json(res, getTrends(db, intParam(url, 'limit', 20)));
+        break;
       case '/api/safety':
         json(res, getSafety(db, intParam(url, 'limit', 50)));
         break;
       case '/api/costs':
         json(res, getCosts(db, intParam(url, 'days', 7)));
+        break;
+      case '/api/daemon-status':
+        json(res, deps.daemon ? deps.daemon.status() : { running: false, startedAt: null, stoppedAt: null, lastError: null, options: null });
         break;
       case '/api/author-stats': {
         const authorId = url.searchParams.get('authorId') ?? '';
@@ -80,12 +109,14 @@ export function handleSSE(deps: ApiDeps, _req: IncomingMessage, res: ServerRespo
   let lastPostCount = 0;
   let lastOppCount = 0;
   let lastCycleCount = 0;
+  let lastFeedCount = 0;
 
   // Initialize counts
   try {
     lastPostCount = safeCount(deps.db, 'posts');
     lastOppCount = safeCount(deps.db, 'opportunities');
     lastCycleCount = safeCount(deps.db, 'daemon_cycles');
+    lastFeedCount = safeCount(deps.db, 'x_inbox_items');
   } catch {
     // Tables may not exist yet
   }
@@ -116,6 +147,12 @@ export function handleSSE(deps: ApiDeps, _req: IncomingMessage, res: ServerRespo
       if (oppCount > lastOppCount) {
         send('new-opportunity', { count: oppCount - lastOppCount });
         lastOppCount = oppCount;
+      }
+
+      const feedCount = safeCount(deps.db, 'x_inbox_items');
+      if (feedCount > lastFeedCount) {
+        send('new-feed', { count: feedCount - lastFeedCount });
+        lastFeedCount = feedCount;
       }
 
       const cycleCount = safeCount(deps.db, 'daemon_cycles');
@@ -150,11 +187,38 @@ export async function handlePostApi(deps: FullApiDeps, pathname: string, req: In
       case '/api/opportunity-status':
         await handleOpportunityStatus(deps, req, res);
         break;
+      case '/api/opportunity-star':
+        await handleOpportunityStar(deps, req, res);
+        break;
       case '/api/opportunity-refresh-metrics':
         await handleOpportunityRefreshMetrics(deps, req, res);
         break;
+      case '/api/feed-refresh':
+        await handleFeedRefresh(deps, req, res);
+        break;
+      case '/api/feed-item-star':
+        await handleFeedItemStar(deps, req, res);
+        break;
+      case '/api/feed-item-status':
+        await handleFeedItemStatus(deps, req, res);
+        break;
       case '/api/post-engagement':
         await handlePostEngagement(deps, req, res);
+        break;
+      case '/api/post-compose':
+        await handlePostCompose(deps, req, res);
+        break;
+      case '/api/posts-refresh-metrics':
+        await handlePostsRefreshMetrics(deps, req, res);
+        break;
+      case '/api/trends-refresh':
+        await handleTrendsRefresh(deps, req, res);
+        break;
+      case '/api/daemon-start':
+        await handleDaemonStart(deps, req, res);
+        break;
+      case '/api/daemon-stop':
+        await handleDaemonStop(deps, req, res);
         break;
       default:
         res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -548,6 +612,37 @@ async function handleOpportunityStatus(deps: FullApiDeps, req: IncomingMessage, 
   json(res, { success: true, opportunity: updated });
 }
 
+// ── POST /api/opportunity-star ───────────────────────
+
+async function handleOpportunityStar(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+
+  const body = await parseBody<{ tweetId: string; starred: boolean }>(req);
+  if (!body.tweetId || typeof body.starred !== 'boolean') {
+    json(res, { error: 'tweetId and starred are required' }, 400);
+    return;
+  }
+
+  try {
+    const info = deps.writeDb.prepare(
+      'UPDATE opportunities SET starred = ? WHERE tweet_id = ?'
+    ).run(body.starred ? 1 : 0, body.tweetId);
+
+    if (info.changes === 0) {
+      json(res, { error: 'Opportunity not found' }, 404);
+      return;
+    }
+
+    const updated = deps.writeDb.prepare('SELECT * FROM opportunities WHERE tweet_id = ?').get(body.tweetId);
+    json(res, { success: true, opportunity: updated });
+  } catch (err) {
+    json(res, { error: err instanceof Error ? err.message : String(err) }, 500);
+  }
+}
+
 // ── POST /api/opportunity-refresh-metrics ────────────
 
 async function handleOpportunityRefreshMetrics(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -576,6 +671,310 @@ async function handleOpportunityRefreshMetrics(deps: FullApiDeps, req: IncomingM
   opportunities.updateMetrics(body.tweetId, metrics);
 
   json(res, { success: true, metrics });
+}
+
+// ── POST /api/feed-refresh ───────────────────────────
+
+async function handleFeedRefresh(deps: FullApiDeps, _req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.xReader) {
+    json(res, { error: 'X API reader not configured' }, 503);
+    return;
+  }
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+  const usernameRaw = deps.config?.xUsername ?? '';
+  const username = usernameRaw.replace(/^@/, '').trim();
+  if (!username) {
+    json(res, { error: 'X_USERNAME is required to refresh your feed' }, 400);
+    return;
+  }
+
+  // Basic feed: mentions of your account (excluding your own tweets).
+  const query = `@${username} -from:${username} -is:retweet`;
+  const { tweets, authors } = await deps.xReader.searchTweetsExpanded(query, 50);
+
+  const inbox = createXInboxModel(deps.writeDb);
+  let upserted = 0;
+  for (const t of tweets) {
+    const m = t.public_metrics;
+    inbox.upsert({
+      kind: 'mention',
+      tweet_id: t.id,
+      author_id: t.author_id ?? 'unknown',
+      author_username: authors.get(t.author_id ?? '') ?? undefined,
+      text: t.text,
+      conversation_id: (t as any).conversation_id ?? undefined,
+      created_at: t.created_at ?? undefined,
+      likes: m?.like_count ?? 0,
+      retweets: m?.retweet_count ?? 0,
+      replies: m?.reply_count ?? 0,
+      quotes: m?.quote_count ?? 0,
+    });
+    upserted++;
+  }
+
+  json(res, { success: true, query, scanned: tweets.length, upserted });
+}
+
+// ── POST /api/feed-item-star ─────────────────────────
+
+async function handleFeedItemStar(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+  const body = await parseBody<{ tweetId: string; starred: boolean }>(req);
+  if (!body.tweetId) {
+    json(res, { error: 'tweetId is required' }, 400);
+    return;
+  }
+
+  const inbox = createXInboxModel(deps.writeDb);
+  const changes = inbox.setStarred(body.tweetId, !!body.starred);
+  if (changes === 0) {
+    json(res, { error: 'Feed item not found' }, 404);
+    return;
+  }
+  const updated = deps.writeDb.prepare('SELECT * FROM x_inbox_items WHERE tweet_id = ?').get(body.tweetId);
+  json(res, { success: true, item: updated });
+}
+
+// ── POST /api/feed-item-status ───────────────────────
+
+async function handleFeedItemStatus(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+  const body = await parseBody<{ tweetId: string; status?: string; discarded?: boolean }>(req);
+  if (!body.tweetId) {
+    json(res, { error: 'tweetId is required' }, 400);
+    return;
+  }
+
+  const inbox = createXInboxModel(deps.writeDb);
+  let changes = 0;
+
+  if (typeof body.discarded === 'boolean') {
+    changes = inbox.setDiscarded(body.tweetId, body.discarded);
+  } else if (body.status) {
+    const allowed = new Set(['new', 'archived', 'replied', 'discarded']);
+    if (!allowed.has(body.status)) {
+      json(res, { error: 'Invalid status' }, 400);
+      return;
+    }
+    changes = inbox.setStatus(body.tweetId, body.status as any);
+  } else {
+    json(res, { error: 'status or discarded is required' }, 400);
+    return;
+  }
+
+  if (changes === 0) {
+    json(res, { error: 'Feed item not found' }, 404);
+    return;
+  }
+  const updated = deps.writeDb.prepare('SELECT * FROM x_inbox_items WHERE tweet_id = ?').get(body.tweetId);
+  json(res, { success: true, item: updated });
+}
+
+// ── POST /api/post-compose ───────────────────────────
+
+async function handlePostCompose(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const { writeDb, xWriter, claude, config } = deps;
+
+  const body = await parseBody<{ mode: 'tweet' | 'reply' | 'quote'; content: string; targetTweetId?: string }>(req);
+  const mode = body.mode;
+  const content = (body.content ?? '').trim();
+  const target = (body.targetTweetId ?? '').trim();
+
+  if (mode !== 'tweet' && mode !== 'reply' && mode !== 'quote') {
+    json(res, { error: 'mode must be tweet, reply, or quote' }, 400);
+    return;
+  }
+  if (!content) {
+    json(res, { error: 'content is required' }, 400);
+    return;
+  }
+  if ((mode === 'reply' || mode === 'quote') && !target) {
+    json(res, { error: 'targetTweetId is required for reply/quote' }, 400);
+    return;
+  }
+  if (!writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+
+  // Safety check (optional but recommended)
+  let safetyScore = 0;
+  let safetyVerdict: 'SAFE' | 'REVIEW' | 'REJECT' = 'SAFE';
+  if (claude && config) {
+    const safety = await runHotPotDetector({ content, claude, config });
+    safetyScore = safety.score;
+    safetyVerdict = safety.verdict;
+    if (safety.verdict === 'REJECT') {
+      json(res, {
+        success: false,
+        safetyRejected: true,
+        safetyReason: safety.reasons.join(', '),
+        safetyScore: safety.score,
+      });
+      return;
+    }
+  }
+
+  const posts = createPostModel(writeDb);
+
+  // Dry run: record locally only.
+  if (deps.dryRun) {
+    const post = posts.create({
+      content,
+      prompt_type: 'manual',
+      x_post_type: mode,
+      safety_score: safetyScore,
+      safety_verdict: safetyVerdict,
+      status: 'draft',
+      parent_tweet_id: (mode === 'tweet') ? undefined : target,
+    });
+    json(res, { success: true, dryRun: true, postId: post.id, tweetUrl: null, tweetId: null });
+    return;
+  }
+
+  if (!xWriter) {
+    json(res, { error: 'X writer not configured' }, 503);
+    return;
+  }
+
+  const post = posts.create({
+    content,
+    prompt_type: 'manual',
+    x_post_type: mode,
+    safety_score: safetyScore,
+    safety_verdict: safetyVerdict,
+    status: 'queued',
+    parent_tweet_id: (mode === 'tweet') ? undefined : target,
+  });
+
+  const result = mode === 'tweet'
+    ? await xWriter.tweet(content)
+    : mode === 'quote'
+      ? await xWriter.quote(content, target)
+      : await xWriter.reply(content, target);
+
+  if (!result.success) {
+    posts.markFailed(post.id, 'X posting failed');
+    json(res, { success: false, error: 'Failed to post to X' });
+    return;
+  }
+
+  if (result.tweetId) {
+    writeDb.prepare('UPDATE posts SET tweet_id = ?, posted_at = datetime(?) WHERE id = ?')
+      .run(result.tweetId, new Date().toISOString(), post.id);
+    writeDb.prepare('UPDATE posts SET status = ? WHERE id = ?').run('posted', post.id);
+  } else {
+    // Shouldn't happen, but keep DB consistent.
+    writeDb.prepare('UPDATE posts SET status = ? WHERE id = ?').run('posted', post.id);
+  }
+
+  json(res, { success: true, dryRun: false, postId: post.id, tweetUrl: result.tweetUrl ?? null, tweetId: result.tweetId ?? null });
+}
+
+// ── POST /api/posts-refresh-metrics ──────────────────
+
+async function handlePostsRefreshMetrics(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+  if (!deps.xReader) {
+    json(res, { error: 'X API reader not configured' }, 503);
+    return;
+  }
+
+  const body = await parseBody<{ limit?: number }>(req).catch(() => ({} as any));
+  const limit = Math.max(1, Math.min(200, Number(body.limit ?? 50) || 50));
+
+  const posts = createPostModel(deps.writeDb);
+  const analytics = createAnalyticsModel(deps.writeDb);
+
+  const posted = posts.getByStatus('posted', limit).filter(p => !!p.tweet_id);
+  let updated = 0;
+
+  for (const p of posted) {
+    if (!p.tweet_id) continue;
+    const metrics = await deps.xReader.getTweetMetrics(p.tweet_id);
+    if (metrics) {
+      analytics.record(p.id, metrics);
+      updated++;
+    }
+  }
+
+  json(res, { success: true, scanned: posted.length, updated });
+}
+
+// ── POST /api/trends-refresh ─────────────────────────
+
+async function handleTrendsRefresh(deps: FullApiDeps, _req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+  if (!deps.xReader) {
+    json(res, { error: 'X API reader not configured' }, 503);
+    return;
+  }
+  if (!deps.config) {
+    json(res, { error: 'Config not available' }, 503);
+    return;
+  }
+
+  const [xTrends, congressTrends, rssTrends] = await Promise.all([
+    fetchXTrends(deps.xReader),
+    fetchCongressActions(deps.config),
+    fetchRssFeeds(deps.config.dataDir),
+  ]);
+  const aggregated = aggregateTrends(xTrends, congressTrends, rssTrends);
+  const scored = aggregated.map(t => ({ ...t, score: scoreTrend(t, deps.config!) }));
+  scored.sort((a, b) => b.score - a.score);
+
+  const trendModel = createTrendModel(deps.writeDb);
+  for (const t of scored.slice(0, 50)) {
+    trendModel.upsert(t.topic, t.sources.join(','), t.totalVolume, t.score);
+  }
+
+  json(res, { success: true, trends: scored.slice(0, 20) });
+}
+
+// ── POST /api/daemon-start ───────────────────────────
+
+async function handleDaemonStart(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.daemon) {
+    json(res, { error: 'Daemon manager not available' }, 503);
+    return;
+  }
+  const body = await parseBody<Partial<WatchOptions>>(req).catch(() => ({} as any));
+  const result = deps.daemon.start(body);
+  if (!result.ok) {
+    json(res, { success: false, error: result.error, status: result.status }, 400);
+    return;
+  }
+  json(res, { success: true, status: result.status });
+}
+
+// ── POST /api/daemon-stop ────────────────────────────
+
+async function handleDaemonStop(deps: FullApiDeps, _req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.daemon) {
+    json(res, { error: 'Daemon manager not available' }, 503);
+    return;
+  }
+  const result = deps.daemon.stop();
+  if (!result.ok) {
+    json(res, { success: false, error: result.error, status: result.status }, 400);
+    return;
+  }
+  json(res, { success: true, status: result.status });
 }
 
 // ── parseBody helper ─────────────────────────────────
@@ -669,6 +1068,9 @@ function getOverview(db: Database.Database) {
   `).get() as { tracked: number; engaged: number; expired: number; skipped: number; total: number };
 
   const cycleCount = safeCount(db, 'daemon_cycles');
+  const feedNew = tableExists(db, 'x_inbox_items')
+    ? (db.prepare("SELECT COUNT(*) as c FROM x_inbox_items WHERE discarded = 0 AND status = 'new'").get() as { c: number }).c
+    : 0;
 
   return {
     postsToday,
@@ -684,9 +1086,11 @@ function getOverview(db: Database.Database) {
     counts: {
       cycles: cycleCount,
       opportunities: oppStats.total,
+      feed: feedNew,
       posts: postsTotal,
       safety: safetyStats.total,
       generations: safeCount(db, 'generations'),
+      trends: safeCount(db, 'trends'),
     },
   };
 }
@@ -751,11 +1155,12 @@ function getPosts(db: Database.Database, limit: number) {
       a.likes as analytics_likes,
       a.retweets as analytics_retweets,
       a.replies as analytics_replies,
+      a.quotes as analytics_quotes,
       a.impressions as analytics_impressions
     FROM posts p
     LEFT JOIN safety_log sl ON sl.content = p.content
     LEFT JOIN (
-      SELECT post_id, likes, retweets, replies, impressions
+      SELECT post_id, likes, retweets, replies, quotes, impressions
       FROM analytics
       WHERE id IN (SELECT MAX(id) FROM analytics GROUP BY post_id)
     ) a ON a.post_id = p.id
@@ -772,6 +1177,60 @@ function getOpportunities(db: Database.Database, limit: number, status: string) 
   return db.prepare(
     'SELECT * FROM opportunities WHERE status = ? ORDER BY score DESC, first_seen DESC LIMIT ?'
   ).all(status, limit);
+}
+
+function getFeed(
+  db: Database.Database,
+  opts: { limit: number; kind: string; status: string; includeDiscarded: boolean },
+) {
+  if (!tableExists(db, 'x_inbox_items')) return [];
+  const inbox = createXInboxModel(db);
+  return inbox.list({
+    limit: opts.limit,
+    kind: opts.kind as any,
+    status: opts.status as any,
+    includeDiscarded: opts.includeDiscarded,
+  });
+}
+
+function getHotUsers(db: Database.Database, limit: number) {
+  if (!tableExists(db, 'opportunities')) return [];
+  const rows = db.prepare(`
+    SELECT
+      author_id,
+      COALESCE(author_username, author_id) as author_username,
+      COUNT(*) as opportunities,
+      COALESCE(SUM(likes), 0) as likes,
+      COALESCE(SUM(retweets), 0) as retweets,
+      COALESCE(SUM(replies), 0) as replies,
+      COALESCE(SUM(quotes), 0) as quotes,
+      COALESCE(MAX(score), 0) as max_score,
+      MAX(first_seen) as last_seen
+    FROM opportunities
+    WHERE first_seen >= datetime('now', '-7 days')
+    GROUP BY author_id
+    ORDER BY (COALESCE(SUM(likes), 0) + COALESCE(SUM(retweets), 0) * 2 + COALESCE(SUM(replies), 0) * 3 + COALESCE(SUM(quotes), 0) * 2 + COALESCE(MAX(score), 0) * 4) DESC
+    LIMIT ?
+  `).all(limit * 3) as Array<any>;
+
+  const scored = rows.map(r => {
+    const heat =
+      (r.replies || 0) * 3 +
+      (r.retweets || 0) * 2 +
+      (r.quotes || 0) * 2 +
+      (r.likes || 0) +
+      (r.max_score || 0) * 4;
+    return { ...r, heat };
+  }).sort((a, b) => b.heat - a.heat);
+
+  return scored.slice(0, limit);
+}
+
+function getTrends(db: Database.Database, limit: number) {
+  if (!tableExists(db, 'trends')) return [];
+  return db.prepare(
+    'SELECT * FROM trends ORDER BY relevance_score DESC, volume DESC, last_seen DESC LIMIT ?'
+  ).all(limit);
 }
 
 function getSafety(db: Database.Database, limit: number) {
@@ -811,10 +1270,8 @@ function getCosts(db: Database.Database, days: number) {
     totalCalls: rows.length,
     byModel,
     byPurpose,
-    batchSavings: {
+    batch: {
       batchCostCents,
-      standardCostCents: batchCostCents * 2,
-      savedCents: batchCostCents,
       batchCalls: batchRows.length,
     },
     recent: rows.slice(0, 20),

@@ -1,0 +1,282 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout>
+  <div class="h-full min-h-0 grid grid-rows-1 grid-cols-1 lg:grid-cols-[280px_1fr]">
+    <!-- Sidebar -->
+    <aside class="border-b lg:border-b-0 lg:border-r border-slate-700/25 px-5 py-4 flex flex-col gap-4 bg-navy-950/40 backdrop-blur min-h-0 overflow-y-auto">
+      <div class="flex items-center gap-3">
+        <svg viewBox="0 0 64 64" class="w-10 h-10 shrink-0" fill="none" aria-hidden="true">
+          <circle cx="32" cy="32" r="30" stroke="#C5A572" stroke-width="3" fill="#0A1628"/>
+          <circle cx="32" cy="32" r="22" stroke="#C5A572" stroke-width="1.5"/>
+          <text x="32" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#C5A572" font-family="'Libre Caslon Text', serif">NOT</text>
+          <text x="32" y="42" text-anchor="middle" font-size="8" fill="#C5A572" font-family="'Libre Caslon Text', serif">CONGRESS</text>
+          <circle cx="32" cy="5" r="2" fill="#C5A572"/>
+          <circle cx="32" cy="59" r="2" fill="#C5A572"/>
+          <circle cx="5" cy="32" r="2" fill="#C5A572"/>
+          <circle cx="59" cy="32" r="2" fill="#C5A572"/>
+        </svg>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-serif font-bold text-cream-100 tracking-tight leading-none">Absurdity Index</h1>
+            <span id="mode-pill" class="hidden text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-slate-700/40 text-slate-400">--</span>
+          </div>
+          <div class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">Engagement Control Room</div>
+        </div>
+      </div>
+
+      <div class="surface rounded-xl p-3 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Last update</div>
+          <div id="last-update" class="text-xs text-slate-200 font-mono tabular-nums truncate"></div>
+        </div>
+        <div id="live-indicator" class="flex items-center gap-2 shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot"></span>
+          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Live</span>
+        </div>
+      </div>
+
+      <div class="surface rounded-xl p-3 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Daemon</div>
+          <div id="daemon-status" class="text-xs text-slate-200 font-mono tabular-nums truncate">--</div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="btn-daemon-toggle" class="ghost-btn" onclick="toggleDaemon()" type="button" title="Start/stop watch daemon">--</button>
+        </div>
+      </div>
+
+      <div id="capabilities-pill" class="hidden flex flex-wrap items-center gap-2 text-[10px] text-slate-400 font-mono"></div>
+
+      <nav class="flex-1 space-y-1">
+        <button
+          class="tab-btn tab-active w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium hover:text-cream-100 hover:bg-navy-800/40 transition-colors"
+          data-tab="cycles"
+        >
+          <span>Cycles</span>
+          <span
+            id="badge-cycles"
+            class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center"
+          >
+            --
+          </span>
+        </button>
+        <button
+          class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors"
+          data-tab="opportunities"
+        >
+          <span>Inbox</span>
+          <span
+            id="badge-opportunities"
+            class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center"
+          >
+            --
+          </span>
+        </button>
+        <button
+          class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors"
+          data-tab="feed"
+        >
+          <span>Feed</span>
+          <span
+            id="badge-feed"
+            class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center"
+          >
+            --
+          </span>
+        </button>
+        <button
+          class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors"
+          data-tab="posts"
+        >
+          <span>Posts</span>
+          <span
+            id="badge-posts"
+            class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center"
+          >
+            --
+          </span>
+        </button>
+        <button
+          class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors"
+          data-tab="safety"
+        >
+          <span>Safety</span>
+          <span
+            id="badge-safety"
+            class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center"
+          >
+            --
+          </span>
+        </button>
+        <button
+          class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors"
+          data-tab="costs"
+        >
+          <span>Spend</span>
+          <span
+            id="badge-costs"
+            class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center"
+          >
+            --
+          </span>
+        </button>
+        <button
+          class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors"
+          data-tab="intel"
+        >
+          <span>Intel</span>
+          <span
+            id="badge-intel"
+            class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center"
+          >
+            --
+          </span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="min-w-0 min-h-0 flex flex-col">
+      <header class="px-8 py-4 border-b border-slate-700/25 flex items-center justify-between bg-navy-950/30 backdrop-blur shrink-0">
+        <div class="min-w-0">
+          <div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Dashboard</div>
+          <div id="page-title" class="text-lg font-serif font-bold text-cream-100 tracking-tight leading-tight truncate">Cycles</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="ghost-btn" onclick="toggleCompose(true)" type="button" title="Compose a post">Compose</button>
+          <button class="ghost-btn" onclick="toggleHelp(true)" type="button" title="Keyboard shortcuts">Help</button>
+          <button id="btn-refresh" class="ghost-btn" onclick="loadTab(currentTab)" title="Refresh">Refresh</button>
+        </div>
+      </header>
+
+      <!-- Stat Cards -->
+      <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 px-8 py-4 shrink-0">
+        <div class="surface rounded-xl p-3.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Posts Today</span>
+            <span id="stat-posts-total" class="text-[10px] text-slate-500 font-mono"></span>
+          </div>
+          <div id="stat-posts" class="text-2xl font-bold text-cream-100 mt-1 font-mono tabular-nums">--</div>
+        </div>
+        <div class="surface rounded-xl p-3.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Engagements</span>
+            <span id="stat-tracked" class="text-[10px] text-slate-500 font-mono"></span>
+          </div>
+          <div id="stat-engagements" class="text-2xl font-bold text-emerald-400 mt-1 font-mono tabular-nums">--</div>
+        </div>
+        <div class="surface rounded-xl p-3.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Safety Reject</span>
+            <span id="stat-safety-detail" class="text-[10px] text-slate-500 font-mono"></span>
+          </div>
+          <div id="stat-safety" class="text-2xl font-bold text-amber-300 mt-1 font-mono tabular-nums">--</div>
+        </div>
+        <div class="surface rounded-xl p-3.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Cost Today</span>
+            <span id="stat-cost-week" class="text-[10px] text-slate-500 font-mono"></span>
+          </div>
+          <div id="stat-cost" class="text-2xl font-bold text-gold-400 mt-1 font-mono tabular-nums">--</div>
+        </div>
+      </section>
+
+      <!-- Tab Content -->
+      <main class="px-8 pb-6 flex-1 min-h-0 overflow-hidden">
+        <div id="tab-cycles" class="tab-content overflow-y-auto h-full"></div>
+        <div id="tab-opportunities" class="tab-content hidden h-full"></div>
+        <div id="tab-feed" class="tab-content overflow-y-auto h-full hidden"></div>
+        <div id="tab-posts" class="tab-content overflow-y-auto h-full hidden"></div>
+        <div id="tab-safety" class="tab-content overflow-y-auto h-full hidden"></div>
+        <div id="tab-costs" class="tab-content overflow-y-auto h-full hidden"></div>
+        <div id="tab-intel" class="tab-content overflow-y-auto h-full hidden"></div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="border-t border-slate-700/20 px-8 py-2 text-[10px] text-slate-500 font-mono flex justify-between shrink-0 bg-navy-950/20 backdrop-blur">
+        <span class="text-slate-600">absurdityindex.org</span>
+        <span class="text-slate-600">Engagement Control Room</span>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast-root" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <div id="context-menu" class="fixed z-50 hidden">
+    <div class="surface rounded-xl border border-slate-700/25 overflow-hidden shadow-xl min-w-[200px]">
+      <button id="ctx-star" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-navy-800/40 flex items-center gap-2" type="button">Star</button>
+      <button id="ctx-track" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-navy-800/40 flex items-center gap-2" type="button">Track</button>
+      <button id="ctx-discard" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-navy-800/40 flex items-center gap-2" type="button">Discard</button>
+      <div class="h-px bg-slate-700/25"></div>
+      <button id="ctx-refresh" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-navy-800/40 flex items-center gap-2" type="button">Refresh metrics</button>
+      <button id="ctx-copy" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-navy-800/40 flex items-center gap-2" type="button">Copy link</button>
+      <button id="ctx-open" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-navy-800/40 flex items-center gap-2" type="button">Open on X</button>
+    </div>
+  </div>
+
+  <div id="help-overlay" class="fixed inset-0 hidden items-end sm:items-center justify-center p-4 z-50">
+    <div class="absolute inset-0 bg-black/70" onclick="toggleHelp(false)"></div>
+    <div class="relative surface rounded-xl w-full sm:w-[560px] p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold text-cream-100">Keyboard</div>
+        <button class="ghost-btn" onclick="toggleHelp(false)" type="button">Close</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs text-slate-200">
+        <div><span class="kbd">1-7</span> switch tabs</div>
+        <div><span class="kbd">Esc</span> close panel</div>
+        <div><span class="kbd">J/K</span> move selection</div>
+        <div><span class="kbd">Enter</span> open selected</div>
+        <div><span class="kbd">G</span> generate draft</div>
+        <div><span class="kbd">P</span> post (or dry run)</div>
+        <div><span class="kbd">C</span> compose</div>
+        <div><span class="kbd">S</span> discard</div>
+      </div>
+      <div class="mt-3 text-[10px] text-slate-400 font-mono">
+        Tip: use filters to keep the inbox focused on high-score, tracked items.
+      </div>
+    </div>
+  </div>
+
+  <div id="compose-overlay" class="fixed inset-0 hidden items-end sm:items-center justify-center p-4 z-50">
+    <div class="absolute inset-0 bg-black/70" onclick="toggleCompose(false)"></div>
+    <div class="relative surface rounded-xl w-full sm:w-[720px] p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold text-cream-100">Compose</div>
+        <button class="ghost-btn" onclick="toggleCompose(false)" type="button">Close</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+        <label class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">
+          Mode
+          <select id="compose-mode" class="mt-1 w-full bg-navy-950/40 border border-slate-700/30 rounded-lg px-2.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-gold-500/40">
+            <option value="tweet">New post</option>
+            <option value="reply">Reply</option>
+            <option value="quote">Quote</option>
+          </select>
+        </label>
+        <label id="compose-target-wrap" class="text-[10px] text-slate-400 font-mono uppercase tracking-wider sm:col-span-2 hidden">
+          Target tweet (URL or ID)
+          <input id="compose-target" type="text" class="mt-1 w-full bg-navy-950/40 border border-slate-700/30 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-gold-500/40" placeholder="https://x.com/user/status/123..." />
+        </label>
+      </div>
+
+      <div class="mb-2">
+        <textarea id="compose-text" rows="5" class="w-full bg-navy-950/40 border border-slate-700/30 rounded-xl px-3 py-2 text-sm text-slate-200 resize-y focus:border-gold-500/40 focus:outline-none font-sans leading-relaxed" placeholder="Write your post..."></textarea>
+        <div class="flex justify-between mt-1">
+          <div id="compose-hint" class="text-[10px] text-slate-500 font-mono truncate max-w-[70%]"></div>
+          <span id="compose-count" class="text-[10px] font-mono text-slate-400">0/280</span>
+        </div>
+      </div>
+
+      <div id="compose-banner" class="hidden rounded-xl px-3 py-2 text-xs mb-3"></div>
+
+      <div class="flex items-center justify-end gap-2">
+        <button class="ghost-btn" onclick="toggleCompose(false)" type="button">Cancel</button>
+        <button id="btn-compose-post" class="ghost-btn border border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20" onclick="submitCompose()" type="button">Post</button>
+      </div>
+    </div>
+  </div>
+
+</BaseLayout>

@@ -214,6 +214,63 @@ const MIGRATIONS = [
   `
   ALTER TABLE posts ADD COLUMN reply_tweet_id TEXT;
   `,
+  // Migration 009: Starred opportunities (inbox triage)
+  `
+  ALTER TABLE opportunities ADD COLUMN starred INTEGER NOT NULL DEFAULT 0;
+  `,
+  // Migration 010: Quote counts for post analytics snapshots
+  `
+  ALTER TABLE analytics ADD COLUMN quotes INTEGER DEFAULT 0;
+  `,
+  // Migration 011: Quote counts for opportunity metrics
+  `
+  ALTER TABLE opportunities ADD COLUMN quotes INTEGER DEFAULT 0;
+  `,
+  // Migration 012: Explicit post type for feed management (tweet/reply/quote)
+  `
+  ALTER TABLE posts ADD COLUMN x_post_type TEXT;
+  UPDATE posts
+  SET x_post_type = CASE
+    WHEN prompt_type LIKE '%quote%' THEN 'quote'
+    WHEN prompt_type LIKE '%reply%' THEN 'reply'
+    WHEN parent_tweet_id IS NOT NULL THEN 'reply'
+    ELSE 'tweet'
+  END
+  WHERE x_post_type IS NULL;
+  `,
+  // Migration 013: X inbox items (mentions/replies/quotes to manage feed without X.com)
+  `
+  CREATE TABLE IF NOT EXISTS x_inbox_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    tweet_id TEXT UNIQUE NOT NULL,
+    author_id TEXT NOT NULL,
+    author_username TEXT,
+    text TEXT NOT NULL,
+    conversation_id TEXT,
+    created_at TEXT,
+    in_reply_to_tweet_id TEXT,
+    quoted_tweet_id TEXT,
+    likes INTEGER DEFAULT 0,
+    retweets INTEGER DEFAULT 0,
+    replies INTEGER DEFAULT 0,
+    quotes INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'new',
+    starred INTEGER NOT NULL DEFAULT 0,
+    discarded INTEGER NOT NULL DEFAULT 0,
+    first_seen TEXT NOT NULL DEFAULT (datetime('now')),
+    last_seen TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_x_inbox_kind ON x_inbox_items(kind);
+  CREATE INDEX IF NOT EXISTS idx_x_inbox_status ON x_inbox_items(status);
+  CREATE INDEX IF NOT EXISTS idx_x_inbox_starred ON x_inbox_items(starred);
+  CREATE INDEX IF NOT EXISTS idx_x_inbox_last_seen ON x_inbox_items(last_seen);
+  `,
+  // Migration 014: Track daemon cycle phase for explainable "what is it doing" UI
+  `
+  ALTER TABLE daemon_cycles ADD COLUMN phase TEXT;
+  `,
 ];
 
 export function getDb(dbPath: string): Database.Database {
