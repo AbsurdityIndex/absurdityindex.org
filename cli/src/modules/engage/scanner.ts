@@ -78,6 +78,8 @@ export async function scanForTweets(
 
       for (const tweet of tweets) {
         if (seen.has(tweet.id)) continue;
+        // Skip retweets — engaging with them is confusing and off-target
+        if (tweet.text.startsWith('RT @')) continue;
         seen.add(tweet.id);
 
         const metrics = tweet.public_metrics;

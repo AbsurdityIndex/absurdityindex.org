@@ -16,14 +16,12 @@ SUMMARY: ${bill.summary}
 ${bill.totalPork ? `PORK: $${bill.totalPork.toLocaleString()} in pork spending` : ''}
 ${bill.absurdityIndex ? `ABSURDITY INDEX: ${bill.absurdityIndex}/10` : ''}
 ${bill.theGist ? `THE GIST: ${bill.theGist}` : ''}
-${context.siteUrl ? `LINK: ${context.siteUrl}` : ''}
-${context.sourceLinks?.length ? `SOURCE LINKS (include these as proof):\n${context.sourceLinks.map((l, i) => `${i + 1}. ${l}`).join('\n')}` : ''}
 ${context.overlapContext ? `\n${context.overlapContext}` : ''}
 
 Style: "Congress actually proposed a bill to [absurd thing]..." or similar opener.
-The tweet should make someone stop scrolling, laugh, and click the link.
-Include the link at the end if provided.
-EVERY factual claim MUST be backed by a source link. No unsourced claims.
+The tweet should make someone stop scrolling and laugh.
+Do NOT include any URLs in your tweet — links are added in a follow-up reply automatically.
+Every factual claim must be grounded in verifiable information. No unsourced claims.
 
 Respond with ONLY the tweet text, nothing else.`,
   };

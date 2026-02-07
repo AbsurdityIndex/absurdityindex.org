@@ -1,13 +1,11 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { loadConfig, type Config } from '../config.js';
+import { loadConfig } from '../config.js';
 import { createLogger } from '../utils/logger.js';
 import { ClaudeClient } from '../modules/claude/client.js';
-import { BrowserPoster } from '../modules/x-api/browser-poster.js';
-import { XWriteClient, type TweetResult } from '../modules/x-api/write-client.js';
 import { loadBill } from '../modules/bills/loader.js';
-import { formatTweet, formatThread, billUrl, cleanContent } from '../utils/format.js';
+import { billUrl, cleanContent } from '../utils/format.js';
 import { getDb } from '../modules/state/db.js';
 import { createPostModel } from '../modules/state/models/posts.js';
 import { createGenerationModel } from '../modules/state/models/generations.js';
@@ -15,37 +13,9 @@ import { runHotPotDetector } from '../modules/safety/hot-pot-detector.js';
 import { createCooldownManager } from '../modules/scheduler/cooldown.js';
 import { calculateCostCents, modelDisplayName } from '../utils/pricing.js';
 import { MemeService, type MemeAttachment } from '../modules/memes/meme-service.js';
-import type { PromptType, PromptContext } from '../modules/claude/prompts/index.js';
-
-/**
- * Post a tweet using the API client, falling back to browser automation.
- */
-async function postWithFallback(
-  content: string,
-  config: Config,
-  opts?: { mediaPath?: string },
-): Promise<{ success: boolean; method: string }> {
-  // Try API first if credentials are available
-  if (config.xApiKey && config.xAccessToken) {
-    try {
-      const api = new XWriteClient(config);
-      const result = await api.postTweet(content, opts?.mediaPath ? { mediaPath: opts.mediaPath } : undefined);
-      if (result.success) return { success: true, method: 'api' };
-      console.log(chalk.yellow(`API post failed: ${result.error} — falling back to browser`));
-    } catch {
-      console.log(chalk.yellow('API client unavailable — falling back to browser'));
-    }
-  }
-
-  // Fallback to browser
-  const poster = new BrowserPoster(config);
-  try {
-    const result = await poster.postTweet(content, opts?.mediaPath ? { mediaPath: opts.mediaPath } : undefined);
-    return { success: result.success, method: 'browser' };
-  } finally {
-    await poster.close();
-  }
-}
+import { generateCard, type CardResult } from '../modules/cards/card-generator.js';
+import { postWithReply } from '../modules/posting/post-with-reply.js';
+import type { PromptType } from '../modules/claude/prompts/index.js';
 
 export function registerPostCommand(program: Command): void {
   const post = program.command('post').description('Generate and post to X');
@@ -79,11 +49,13 @@ export function registerPostCommand(program: Command): void {
         return;
       }
 
-      // Generate content
+      const siteUrl = billUrl(bill.slug, config.siteUrl);
+
+      // Generate content (siteUrl still in context for research grounding, but NOT injected into tweet)
       const spinner = ora('Generating content...').start();
       const genResult = await claude.generate(opts.type as PromptType, {
         bill,
-        siteUrl: billUrl(bill.slug, config.siteUrl),
+        siteUrl,
       });
       const content = cleanContent(genResult.content);
       spinner.succeed('Content generated');
@@ -126,8 +98,10 @@ export function registerPostCommand(program: Command): void {
       console.log(content);
       console.log(chalk.cyan('━'.repeat(50)));
 
-      // Meme generation (non-fatal: if it fails, we continue text-only)
+      // Media: meme takes priority over card
       let memeAttachment: MemeAttachment | null = null;
+      let cardResult: CardResult | null = null;
+
       if (opts.meme) {
         const memeSpinner = ora('Generating meme...').start();
         try {
@@ -162,6 +136,27 @@ export function registerPostCommand(program: Command): void {
         }
       }
 
+      // Generate branded card if no meme
+      if (!memeAttachment) {
+        const cardSpinner = ora('Generating branded card...').start();
+        try {
+          cardResult = await generateCard({
+            bill: {
+              billNumber: bill.billNumber,
+              title: bill.title,
+              absurdityIndex: bill.absurdityIndex,
+              totalPork: bill.totalPork,
+            },
+          });
+          cardSpinner.succeed('Card generated');
+        } catch (err) {
+          cardSpinner.warn('Card generation failed — posting text-only');
+          console.log(chalk.dim(`  Error: ${err instanceof Error ? err.message : String(err)}`));
+        }
+      }
+
+      const mediaPath = memeAttachment?.filePath ?? cardResult?.filePath;
+
       // Save post
       const post = posts.create({
         content,
@@ -171,7 +166,7 @@ export function registerPostCommand(program: Command): void {
         safety_verdict: safety.verdict,
         status: config.dryRun ? 'draft' : 'queued',
         media_url: memeAttachment?.sourceUrl,
-        media_type: memeAttachment?.mimeType,
+        media_type: memeAttachment?.mimeType ?? (cardResult ? 'image/png' : undefined),
         meme_strategy: memeAttachment?.strategy,
         meme_template: memeAttachment?.templateName,
       });
@@ -188,18 +183,29 @@ export function registerPostCommand(program: Command): void {
 
       if (config.dryRun) {
         console.log(chalk.yellow('[DRY RUN] Would post this tweet'));
+        if (mediaPath) console.log(chalk.dim(`  Media: ${mediaPath}`));
+        console.log(chalk.dim(`  Reply CTA would link to: ${siteUrl}`));
         memeAttachment?.cleanup();
+        cardResult?.cleanup();
         return;
       }
 
-      // Post to X (API first, browser fallback)
+      // Post to X with CTA reply
       const postSpinner = ora('Posting to X...').start();
       try {
-        const result = await postWithFallback(content, config, { mediaPath: memeAttachment?.filePath });
+        const result = await postWithReply({
+          content,
+          config,
+          mediaPath,
+          siteUrl,
+          billSlug: opts.slug,
+        });
         if (result.success) {
-          posts.markPosted(post.id, result.method);
+          posts.markPosted(post.id, result.tweetId ?? result.method, result.replyTweetId);
           cooldowns.recordPost(opts.slug);
           postSpinner.succeed(`Posted via ${result.method}!`);
+          if (result.tweetUrl) console.log(chalk.dim(`  ${result.tweetUrl}`));
+          if (result.replyTweetId) console.log(chalk.dim(`  CTA reply posted`));
         } else {
           postSpinner.fail('Failed to post');
           posts.markFailed(post.id, 'Posting failed');
@@ -210,6 +216,7 @@ export function registerPostCommand(program: Command): void {
         console.error(err);
       } finally {
         memeAttachment?.cleanup();
+        cardResult?.cleanup();
       }
     });
 
@@ -250,8 +257,10 @@ export function registerPostCommand(program: Command): void {
           return;
         }
 
-        // Meme generation (non-fatal)
+        // Media: meme takes priority over card
         let memeAttachment: MemeAttachment | null = null;
+        let cardResult: CardResult | null = null;
+
         if (opts.meme) {
           const memeSpinner = ora('Generating meme...').start();
           try {
@@ -277,10 +286,23 @@ export function registerPostCommand(program: Command): void {
                 memeSpinner.info(`Meme: ${memeResult.decision.reasoning ?? 'none selected'}`);
               }
             }
-          } catch (err) {
+          } catch {
             memeSpinner.warn('Meme generation failed — posting text-only');
           }
         }
+
+        // Generate branded card if no meme
+        if (!memeAttachment) {
+          const cardSpinner = ora('Generating branded card...').start();
+          try {
+            cardResult = await generateCard({ headline: opts.topic });
+            cardSpinner.succeed('Card generated');
+          } catch {
+            cardSpinner.warn('Card generation failed — posting text-only');
+          }
+        }
+
+        const mediaPath = memeAttachment?.filePath ?? cardResult?.filePath;
 
         const post = posts.create({
           content,
@@ -290,19 +312,27 @@ export function registerPostCommand(program: Command): void {
           safety_verdict: safety.verdict,
           status: 'queued',
           media_url: memeAttachment?.sourceUrl,
-          media_type: memeAttachment?.mimeType,
+          media_type: memeAttachment?.mimeType ?? (cardResult ? 'image/png' : undefined),
           meme_strategy: memeAttachment?.strategy,
           meme_template: memeAttachment?.templateName,
         });
 
         try {
-          const postResult = await postWithFallback(content, config, { mediaPath: memeAttachment?.filePath });
+          const postResult = await postWithReply({
+            content,
+            config,
+            mediaPath,
+            siteUrl: config.siteUrl,
+          });
           if (postResult.success) {
-            posts.markPosted(post.id, postResult.method);
+            posts.markPosted(post.id, postResult.tweetId ?? postResult.method, postResult.replyTweetId);
             console.log(chalk.green(`Posted via ${postResult.method}!`));
+            if (postResult.tweetUrl) console.log(chalk.dim(`  ${postResult.tweetUrl}`));
+            if (postResult.replyTweetId) console.log(chalk.dim(`  CTA reply posted`));
           }
         } finally {
           memeAttachment?.cleanup();
+          cardResult?.cleanup();
         }
       }
     });
@@ -346,10 +376,20 @@ export function registerPostCommand(program: Command): void {
         return;
       }
 
-      const result = await postWithFallback(post.content, config, { mediaPath });
+      const siteUrl = post.bill_slug ? billUrl(post.bill_slug, config.siteUrl) : undefined;
+
+      const result = await postWithReply({
+        content: post.content,
+        config,
+        mediaPath,
+        siteUrl,
+        billSlug: post.bill_slug ?? undefined,
+      });
       if (result.success) {
-        posts.markPosted(post.id, result.method);
+        posts.markPosted(post.id, result.tweetId ?? result.method, result.replyTweetId);
         console.log(chalk.green(`Posted via ${result.method}!`));
+        if (result.tweetUrl) console.log(chalk.dim(`  ${result.tweetUrl}`));
+        if (result.replyTweetId) console.log(chalk.dim(`  CTA reply posted`));
       }
     });
 }

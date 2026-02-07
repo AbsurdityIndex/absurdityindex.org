@@ -1,4 +1,4 @@
-import { TwitterApi, type TweetV2 } from 'twitter-api-v2';
+import { TwitterApi, type TweetV2, type TweetV2SingleResult } from 'twitter-api-v2';
 import { getLogger } from '../../utils/logger.js';
 import { readLimiter } from './rate-limiter.js';
 import type { Config } from '../../config.js';
@@ -80,6 +80,21 @@ export class XReadClient {
     }
   }
 
+  async singleTweet(tweetId: string): Promise<TweetV2SingleResult | null> {
+    await readLimiter.acquire();
+    try {
+      const res = await this.client.v2.singleTweet(tweetId, {
+        'tweet.fields': ['public_metrics', 'created_at', 'author_id', 'text', 'conversation_id', 'referenced_tweets'],
+        expansions: ['author_id', 'referenced_tweets.id', 'referenced_tweets.id.author_id'],
+        'user.fields': ['username', 'name', 'public_metrics', 'verified', 'verified_type'],
+      });
+      return res ?? null;
+    } catch (err) {
+      this.log.warn({ err, tweetId }, 'Failed to fetch single tweet');
+      return null;
+    }
+  }
+
   async getTweetMetrics(tweetId: string): Promise<{ likes: number; retweets: number; replies: number; impressions: number } | null> {
     await readLimiter.acquire();
     try {
@@ -96,6 +111,75 @@ export class XReadClient {
     } catch (err) {
       this.log.warn({ err, tweetId }, 'Failed to get tweet metrics');
       return null;
+    }
+  }
+}
+
+export interface PostResult {
+  success: boolean;
+  tweetId?: string;
+  tweetUrl?: string;
+}
+
+/**
+ * Write-capable X API client using OAuth 1.0a (user context).
+ * Used for posting tweets, replies, and quote tweets via the API.
+ */
+export class XWriteClient {
+  private client: TwitterApi;
+  private log = getLogger();
+
+  constructor(config: Config) {
+    this.client = new TwitterApi({
+      appKey: config.xApiKey,
+      appSecret: config.xApiSecret,
+      accessToken: config.xAccessToken,
+      accessSecret: config.xAccessSecret,
+    });
+  }
+
+  async reply(text: string, toTweetId: string): Promise<PostResult> {
+    try {
+      const result = await this.client.v2.reply(text, toTweetId);
+      const tweetId = result.data.id;
+      return {
+        success: true,
+        tweetId,
+        tweetUrl: `https://x.com/i/status/${tweetId}`,
+      };
+    } catch (err) {
+      this.log.error({ err, toTweetId }, 'Failed to post reply via API');
+      return { success: false };
+    }
+  }
+
+  async quote(text: string, quotedTweetId: string): Promise<PostResult> {
+    try {
+      const result = await this.client.v2.quote(text, quotedTweetId);
+      const tweetId = result.data.id;
+      return {
+        success: true,
+        tweetId,
+        tweetUrl: `https://x.com/i/status/${tweetId}`,
+      };
+    } catch (err) {
+      this.log.error({ err, quotedTweetId }, 'Failed to post quote tweet via API');
+      return { success: false };
+    }
+  }
+
+  async tweet(text: string): Promise<PostResult> {
+    try {
+      const result = await this.client.v2.tweet(text);
+      const tweetId = result.data.id;
+      return {
+        success: true,
+        tweetId,
+        tweetUrl: `https://x.com/i/status/${tweetId}`,
+      };
+    } catch (err) {
+      this.log.error({ err }, 'Failed to post tweet via API');
+      return { success: false };
     }
   }
 }

@@ -9,7 +9,6 @@ export function buildCspanAfterDark(context: PromptContext): { system: string; u
 TOPIC: ${context.topic ?? context.trendTopic ?? 'General congressional absurdity'}
 ${context.bill ? `BILL: ${context.bill.billNumber} — "${context.bill.title}"` : ''}
 ${context.additionalContext ? `CONTEXT: ${context.additionalContext}` : ''}
-${context.siteUrl ? `LINK: ${context.siteUrl}` : ''}
 
 Format: Start with "BREAKING:" or "C-SPAN AFTER DARK:" or "🔔 CONGRESSIONAL ALERT:"
 Style: Deadpan delivery of absurd congressional news, as if a very tired C-SPAN anchor is reporting it at 2 AM.

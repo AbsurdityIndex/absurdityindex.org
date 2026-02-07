@@ -46,5 +46,8 @@
     "pagefind": "^1.4.0",
     "rehype-external-links": "^3.0.0",
     "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0"
   }
 }

@@ -168,6 +168,7 @@ export async function runWatchCycle(
       opportunity: opp,
       bills,
       claude,
+      xReader: xClient,
       xWriter,
       config,
       dryRun: options.dryRun,

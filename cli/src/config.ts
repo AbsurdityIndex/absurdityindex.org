@@ -141,7 +141,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     peakHoursStart: num('peakHoursStart', 'PEAK_HOURS_START', 9),
     peakHoursEnd: num('peakHoursEnd', 'PEAK_HOURS_END', 21),
 
-    maxEngagementsPerDay: num('maxEngagementsPerDay', 'ENGAGE_MAX_PER_DAY', 6),
+    maxEngagementsPerDay: num('maxEngagementsPerDay', 'ENGAGE_MAX_PER_DAY', 100),
     engageScanIntervalMinutes: num('engageScanIntervalMinutes', 'ENGAGE_SCAN_INTERVAL', 10),
     engageMinScore: num('engageMinScore', 'ENGAGE_MIN_SCORE', 70),
     engageTrackThreshold: num('engageTrackThreshold', 'ENGAGE_TRACK_THRESHOLD', 30),

@@ -20,10 +20,9 @@ export function scoreEngagement(content: string): number {
   // "BREAKING" or alert-style openers
   if (/^(BREAKING|🔔|🐷|C-SPAN)/i.test(content)) score += 10;
 
-  // Hashtags (1-2 is optimal)
+  // Penalize hashtags — we don't use them
   const hashtagCount = (content.match(/#\w+/g) ?? []).length;
-  if (hashtagCount === 1 || hashtagCount === 2) score += 5;
-  if (hashtagCount > 3) score -= 10;
+  if (hashtagCount > 0) score -= 5;
 
   // URL presence (drives traffic)
   if (/https?:\/\//.test(content)) score += 5;

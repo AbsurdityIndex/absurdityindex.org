@@ -6,6 +6,8 @@ import { buildPorkBarrelReport } from './pork-barrel-report.js';
 import { buildFloorSpeech } from './floor-speech.js';
 import { buildReplyDunk } from './reply-dunk.js';
 import { buildEngagementEvaluate } from './engagement-evaluate.js';
+import type { TweetContext } from '../../x-api/tweet-context.js';
+import type { ResearchResult } from './research.js';
 
 export type PromptType =
   | 'bill-roast'
@@ -43,6 +45,10 @@ export interface PromptContext {
   sourceLinks?: string[];
   /** Pre-formatted legislative overlap context injected by overlap detection */
   overlapContext?: string;
+  /** Full tweet context (tweet + quoted/replied-to tweets + authors) */
+  tweetContext?: TweetContext;
+  /** Research output from Sonnet pre-analysis */
+  researchResult?: ResearchResult;
 }
 
 type PromptBuilder = (context: PromptContext) => { system: string; user: string };

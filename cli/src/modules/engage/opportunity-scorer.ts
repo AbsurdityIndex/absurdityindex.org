@@ -11,11 +11,26 @@ const log = getLogger();
  * Pre-filter before wasting Claude tokens.
  */
 const TRAGEDY_KEYWORDS = [
+  // Violence & crisis
   'shooting', 'massacre', 'killed', 'died', 'death toll', 'victims',
-  'tornado', 'hurricane', 'earthquake', 'wildfire', 'flood',
   'terrorist', 'terrorism', 'attack on', 'bomber',
+  'hostage', 'stabbing', 'gunman',
+  // Natural disasters
+  'tornado', 'hurricane', 'earthquake', 'wildfire', 'flood', 'tsunami',
+  // Death & mourning
   'RIP', 'rest in peace', 'thoughts and prayers', 'condolences',
-  'suicide', 'overdose', 'passed away', 'mourning',
+  'suicide', 'overdose', 'passed away', 'mourning', 'funeral',
+  // Health & medical — never dunk on someone's health crisis
+  'premature baby', 'preemie', 'NICU', 'miscarriage', 'stillborn',
+  'cancer', 'diagnosis', 'terminal', 'hospice', 'life support',
+  'heart attack', 'stroke', 'seizure', 'hospitalized',
+  'child abuse', 'abuse victim', 'domestic violence',
+  // Children & vulnerable people
+  'missing child', 'amber alert', 'child died', 'baby died',
+  'foster care', 'orphan', 'homeless child',
+  // War & conflict
+  'war crime', 'genocide', 'refugee', 'ethnic cleansing', 'airstrike',
+  'civilian casualties', 'displacement',
 ];
 
 /**

@@ -1,7 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { getLogger } from '../../utils/logger.js';
 import type { Config } from '../../config.js';
-import { getPrompt, type PromptType, type PromptContext } from './prompts/index.js';
+import { getPrompt, type PromptType, type PromptContext, type BillContext } from './prompts/index.js';
+import type { TweetContext } from '../x-api/tweet-context.js';
+import { RESEARCH_SYSTEM, buildResearchPrompt, type ResearchResult } from './prompts/research.js';
+import { FACT_CHECK_SYSTEM, buildFactCheckPrompt, type FactCheckResult } from './prompts/fact-check.js';
 
 export interface GenerationResult {
   content: string;
@@ -98,6 +101,90 @@ export class ClaudeClient {
     const textBlock = response.content.find(b => b.type === 'text');
     return {
       text: textBlock?.text ?? '',
+      model: this.utilityModel,
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+    };
+  }
+
+  /**
+   * Sonnet: Research a tweet context before content generation.
+   * Produces verified facts, an avoid-list, and a suggested satirical angle.
+   */
+  async research(tweetContext: TweetContext, billContext?: BillContext): Promise<{
+    result: ResearchResult;
+    inputTokens: number;
+    outputTokens: number;
+    model: string;
+  }> {
+    const userPrompt = buildResearchPrompt(tweetContext, billContext);
+
+    this.log.debug({ tweetId: tweetContext.tweet.id }, 'Running research step');
+
+    const response = await this.client.messages.create({
+      model: this.utilityModel,
+      max_tokens: 1024,
+      system: RESEARCH_SYSTEM,
+      messages: [{ role: 'user', content: userPrompt }],
+    });
+
+    const textBlock = response.content.find(b => b.type === 'text');
+    const raw = (textBlock?.text ?? '').trim()
+      .replace(/^```json?\s*/i, '')
+      .replace(/```\s*$/, '')
+      .trim();
+
+    const result = JSON.parse(raw) as ResearchResult;
+
+    this.log.info(
+      { tweetId: tweetContext.tweet.id, shouldEngage: result.shouldEngage, factsCount: result.verifiableFacts.length },
+      'Research complete'
+    );
+
+    return {
+      result,
+      model: this.utilityModel,
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+    };
+  }
+
+  /**
+   * Sonnet: Fact-check generated content against research output.
+   * Catches unsourced claims, loose associations, and fabrications before posting.
+   */
+  async factCheck(content: string, tweetContext: TweetContext, research: ResearchResult): Promise<{
+    result: FactCheckResult;
+    inputTokens: number;
+    outputTokens: number;
+    model: string;
+  }> {
+    const userPrompt = buildFactCheckPrompt(content, tweetContext, research);
+
+    this.log.debug({ contentLength: content.length }, 'Running fact-check step');
+
+    const response = await this.client.messages.create({
+      model: this.utilityModel,
+      max_tokens: 1024,
+      system: FACT_CHECK_SYSTEM,
+      messages: [{ role: 'user', content: userPrompt }],
+    });
+
+    const textBlock = response.content.find(b => b.type === 'text');
+    const raw = (textBlock?.text ?? '').trim()
+      .replace(/^```json?\s*/i, '')
+      .replace(/```\s*$/, '')
+      .trim();
+
+    const result = JSON.parse(raw) as FactCheckResult;
+
+    this.log.info(
+      { verdict: result.verdict, issueCount: result.issues.length },
+      'Fact-check complete'
+    );
+
+    return {
+      result,
       model: this.utilityModel,
       inputTokens: response.usage.input_tokens,
       outputTokens: response.usage.output_tokens,

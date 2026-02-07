@@ -210,6 +210,10 @@ const MIGRATIONS = [
   );
   CREATE INDEX IF NOT EXISTS idx_cycles_started ON daemon_cycles(started_at);
   `,
+  // Migration 008: Reply tweet tracking for post-with-reply flow
+  `
+  ALTER TABLE posts ADD COLUMN reply_tweet_id TEXT;
+  `,
 ];
 
 export function getDb(dbPath: string): Database.Database {

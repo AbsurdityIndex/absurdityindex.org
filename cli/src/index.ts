@@ -11,6 +11,7 @@ import { registerScheduleCommand } from './commands/schedule.js';
 import { registerLoginCommand } from './commands/login.js';
 import { registerStatusCommand } from './commands/status.js';
 import { registerDiscoverCommand } from './commands/discover.js';
+import { registerMemeCommand } from './commands/meme.js';
 
 const program = new Command();
 
@@ -32,6 +33,7 @@ registerScheduleCommand(program);
 registerLoginCommand(program);
 registerStatusCommand(program);
 registerDiscoverCommand(program);
+registerMemeCommand(program);
 
 export function run(): void {
   program.parse();

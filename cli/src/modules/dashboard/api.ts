@@ -1,8 +1,29 @@
 import type Database from 'better-sqlite3';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { XReadClient, XWriteClient } from '../x-api/client.js';
+import type { ClaudeClient } from '../claude/client.js';
+import type { Config } from '../../config.js';
+import type { LoadedBill } from '../bills/loader.js';
+import { fetchTweetContext } from '../x-api/tweet-context.js';
+import { cleanContent, billUrl } from '../../utils/format.js';
+import { runHotPotDetector } from '../safety/hot-pot-detector.js';
+import { createPostModel } from '../state/models/posts.js';
+import { createOpportunityModel } from '../state/models/opportunities.js';
+import type { PromptType, PromptContext } from '../claude/prompts/index.js';
 
 export interface ApiDeps {
   db: Database.Database;
+}
+
+export interface FullApiDeps {
+  db: Database.Database;
+  writeDb?: Database.Database;
+  xReader?: XReadClient;
+  xWriter?: XWriteClient;
+  claude?: ClaudeClient;
+  config?: Config;
+  bills: LoadedBill[];
+  dryRun: boolean;
 }
 
 export function handleApi(deps: ApiDeps, pathname: string, url: URL, _req: IncomingMessage, res: ServerResponse): void {
@@ -52,9 +73,9 @@ export function handleSSE(deps: ApiDeps, _req: IncomingMessage, res: ServerRespo
 
   // Initialize counts
   try {
-    lastPostCount = countRows(deps.db, 'posts');
-    lastOppCount = countRows(deps.db, 'opportunities');
-    lastCycleCount = countRows(deps.db, 'daemon_cycles');
+    lastPostCount = safeCount(deps.db, 'posts');
+    lastOppCount = safeCount(deps.db, 'opportunities');
+    lastCycleCount = safeCount(deps.db, 'daemon_cycles');
   } catch {
     // Tables may not exist yet
   }
@@ -75,27 +96,21 @@ export function handleSSE(deps: ApiDeps, _req: IncomingMessage, res: ServerRespo
       const overview = getOverview(deps.db);
       send('overview', overview);
 
-      const postCount = countRows(deps.db, 'posts');
+      const postCount = safeCount(deps.db, 'posts');
       if (postCount > lastPostCount) {
-        const newPosts = deps.db.prepare(
-          'SELECT * FROM posts ORDER BY created_at DESC LIMIT ?'
-        ).all(postCount - lastPostCount);
-        send('new-post', newPosts);
+        send('new-post', { count: postCount - lastPostCount });
         lastPostCount = postCount;
       }
 
-      const oppCount = countRows(deps.db, 'opportunities');
+      const oppCount = safeCount(deps.db, 'opportunities');
       if (oppCount > lastOppCount) {
         send('new-opportunity', { count: oppCount - lastOppCount });
         lastOppCount = oppCount;
       }
 
-      const cycleCount = countRows(deps.db, 'daemon_cycles');
+      const cycleCount = safeCount(deps.db, 'daemon_cycles');
       if (cycleCount > lastCycleCount) {
-        const newCycles = deps.db.prepare(
-          'SELECT * FROM daemon_cycles ORDER BY started_at DESC LIMIT ?'
-        ).all(cycleCount - lastCycleCount);
-        send('new-cycle', newCycles);
+        send('new-cycle', { count: cycleCount - lastCycleCount });
         lastCycleCount = cycleCount;
       }
     } catch {
@@ -114,10 +129,362 @@ export function handleSSE(deps: ApiDeps, _req: IncomingMessage, res: ServerRespo
   });
 }
 
+// ── POST API handler ─────────────────────────────────
+
+export async function handlePostApi(deps: FullApiDeps, pathname: string, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  try {
+    switch (pathname) {
+      case '/api/tweet-context':
+        await handleTweetContext(deps, req, res);
+        break;
+      case '/api/post-engagement':
+        await handlePostEngagement(deps, req, res);
+        break;
+      default:
+        res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ error: 'Not found' }));
+    }
+  } catch (err) {
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    }
+    res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+  }
+}
+
+// ── POST /api/tweet-context ──────────────────────────
+
+async function handleTweetContext(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.xReader) {
+    json(res, { error: 'X API reader not configured' }, 503);
+    return;
+  }
+
+  const body = await parseBody<{ tweetId: string }>(req);
+  if (!body.tweetId) {
+    json(res, { error: 'tweetId is required' }, 400);
+    return;
+  }
+
+  const context = await fetchTweetContext(deps.xReader, body.tweetId);
+  if (!context) {
+    json(res, { error: 'Tweet not found or unavailable' }, 404);
+    return;
+  }
+
+  json(res, context);
+}
+
+// ── GET /api/generate-draft (SSE) ───────────────────
+
+export function handleGenerateSSE(deps: FullApiDeps, url: URL, _req: IncomingMessage, res: ServerResponse): void {
+  const tweetId = url.searchParams.get('tweetId');
+  const action = (url.searchParams.get('action') ?? 'quote') as 'quote' | 'reply';
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+  });
+
+  const send = (event: string, data: unknown) => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  if (!tweetId) {
+    send('error', { message: 'tweetId query parameter is required' });
+    res.end();
+    return;
+  }
+
+  if (!deps.claude) {
+    send('error', { message: 'Claude client not configured' });
+    res.end();
+    return;
+  }
+
+  // Run pipeline asynchronously
+  runGeneratePipeline(deps, tweetId, action, send)
+    .catch(err => {
+      send('error', { message: err instanceof Error ? err.message : String(err) });
+    })
+    .finally(() => {
+      res.end();
+    });
+}
+
+async function runGeneratePipeline(
+  deps: FullApiDeps,
+  tweetId: string,
+  action: 'quote' | 'reply',
+  send: (event: string, data: unknown) => void,
+): Promise<void> {
+  const { claude, xReader, config, bills } = deps;
+  if (!claude) throw new Error('Claude not configured');
+
+  const steps = ['fetch', 'research', 'generate', 'fact-check', 'safety'] as const;
+
+  const emitStep = (step: string, status: 'running' | 'complete' | 'failed' | 'skipped', detail?: string) => {
+    send('step', { step, status, detail });
+  };
+
+  // [0] FETCH
+  emitStep('fetch', 'running');
+  let tweetContext = null;
+  try {
+    if (xReader) {
+      tweetContext = await fetchTweetContext(xReader, tweetId);
+    }
+  } catch {
+    // Fallback to cached text from DB
+  }
+
+  // If no live fetch, build minimal context from DB
+  if (!tweetContext) {
+    const opp = deps.db.prepare('SELECT * FROM opportunities WHERE tweet_id = ?').get(tweetId) as Record<string, unknown> | undefined;
+    if (opp) {
+      tweetContext = {
+        tweet: {
+          id: tweetId,
+          text: opp.text as string,
+          author: {
+            id: (opp.author_id as string) ?? 'unknown',
+            username: (opp.author_username as string) ?? 'unknown',
+            name: (opp.author_username as string) ?? 'Unknown',
+          },
+        },
+        type: 'original' as const,
+      };
+      emitStep('fetch', 'complete', 'Using cached data from DB');
+    } else {
+      emitStep('fetch', 'failed', 'Tweet not found');
+      send('error', { message: 'Tweet not found in API or DB' });
+      return;
+    }
+  } else {
+    emitStep('fetch', 'complete', `@${tweetContext.tweet.author.username}`);
+  }
+
+  // [1] RESEARCH
+  emitStep('research', 'running');
+  let researchResult;
+  try {
+    // Find matching bill context
+    let billContext;
+    const opp = deps.db.prepare('SELECT matched_bill_slug FROM opportunities WHERE tweet_id = ?').get(tweetId) as { matched_bill_slug: string | null } | undefined;
+    if (opp?.matched_bill_slug) {
+      billContext = bills.find(b => b.slug === opp.matched_bill_slug);
+    }
+
+    const research = await claude.research(tweetContext, billContext);
+    researchResult = research.result;
+
+    if (!researchResult.shouldEngage) {
+      emitStep('research', 'failed', researchResult.skipReason ?? 'Not suitable');
+      send('result', {
+        content: null,
+        action,
+        skipReason: `Research: ${researchResult.skipReason ?? 'Not suitable for engagement'}`,
+      });
+      return;
+    }
+    emitStep('research', 'complete', `${researchResult.verifiableFacts.length} facts verified`);
+  } catch (err) {
+    emitStep('research', 'skipped', 'Research unavailable, proceeding without');
+  }
+
+  // [2] GENERATE
+  emitStep('generate', 'running');
+  const promptType: PromptType = action === 'quote' ? 'quote-dunk' : 'reply-dunk';
+  const promptContext: PromptContext = {
+    quoteTweetText: tweetContext.tweet.text,
+    quoteTweetAuthor: tweetContext.tweet.author.username,
+    tweetContext,
+    researchResult,
+  };
+
+  // Add bill context if matched
+  const oppRow = deps.db.prepare('SELECT matched_bill_slug FROM opportunities WHERE tweet_id = ?').get(tweetId) as { matched_bill_slug: string | null } | undefined;
+  if (oppRow?.matched_bill_slug) {
+    const bill = bills.find(b => b.slug === oppRow.matched_bill_slug);
+    if (bill && config) {
+      promptContext.bill = bill;
+      promptContext.siteUrl = billUrl(bill.slug, config.siteUrl);
+    }
+  }
+
+  const genResult = await claude.generate(promptType, promptContext);
+  let content = cleanContent(genResult.content);
+
+  if (content === 'SKIP' || content === 'skip') {
+    emitStep('generate', 'failed', 'Claude says SKIP');
+    send('result', { content: null, action, skipReason: 'Claude returned SKIP' });
+    return;
+  }
+  emitStep('generate', 'complete', `${content.length} chars`);
+
+  // [3] FACT-CHECK
+  let factCheckVerdict = 'PASS';
+  let factCheckIssues: Array<{ claim: string; problem: string; suggestion: string }> = [];
+  if (tweetContext && researchResult) {
+    emitStep('fact-check', 'running');
+    try {
+      const fc = await claude.factCheck(content, tweetContext, researchResult);
+      factCheckVerdict = fc.result.verdict;
+      factCheckIssues = fc.result.issues;
+
+      if (fc.result.verdict === 'REJECT') {
+        emitStep('fact-check', 'failed', `Rejected: ${fc.result.issues.map(i => i.claim).join('; ')}`);
+        send('result', {
+          content,
+          action,
+          factCheckVerdict: 'REJECT',
+          factCheckIssues: fc.result.issues,
+          skipReason: 'Fact-check rejected',
+        });
+        return;
+      }
+
+      if (fc.result.verdict === 'FLAG' && fc.result.cleanedContent) {
+        content = fc.result.cleanedContent;
+        emitStep('fact-check', 'complete', `Flagged ${fc.result.issues.length} issues — using cleaned version`);
+      } else {
+        emitStep('fact-check', 'complete', 'Passed');
+      }
+    } catch {
+      emitStep('fact-check', 'skipped', 'Fact-check unavailable');
+    }
+  } else {
+    emitStep('fact-check', 'skipped', 'No research to check against');
+  }
+
+  // [4] SAFETY
+  emitStep('safety', 'running');
+  let safetyResult = null;
+  if (config) {
+    safetyResult = await runHotPotDetector({ content, claude, config });
+    if (safetyResult.verdict === 'REJECT') {
+      emitStep('safety', 'failed', safetyResult.reasons.join(', '));
+    } else {
+      emitStep('safety', 'complete', `Score: ${safetyResult.score} — ${safetyResult.verdict}`);
+    }
+  } else {
+    emitStep('safety', 'skipped', 'Config not available');
+  }
+
+  send('result', {
+    content,
+    action,
+    safetyResult,
+    factCheckVerdict,
+    factCheckIssues,
+    researchSummary: researchResult?.summary ?? null,
+  });
+}
+
+// ── POST /api/post-engagement ────────────────────────
+
+async function handlePostEngagement(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const { writeDb, xWriter, claude, config } = deps;
+
+  if (!writeDb || !xWriter) {
+    json(res, { error: 'Write capabilities not configured' }, 503);
+    return;
+  }
+
+  const body = await parseBody<{ tweetId: string; content: string; action: 'quote' | 'reply' }>(req);
+  if (!body.tweetId || !body.content || !body.action) {
+    json(res, { error: 'tweetId, content, and action are required' }, 400);
+    return;
+  }
+
+  // Re-run safety check on final content (user may have edited)
+  if (claude && config) {
+    const safety = await runHotPotDetector({ content: body.content, claude, config });
+    if (safety.verdict === 'REJECT') {
+      json(res, {
+        success: false,
+        safetyRejected: true,
+        safetyReason: safety.reasons.join(', '),
+        safetyScore: safety.score,
+      });
+      return;
+    }
+  }
+
+  // Dry-run mode: don't actually post
+  if (deps.dryRun) {
+    json(res, {
+      success: true,
+      dryRun: true,
+      tweetUrl: null,
+      message: 'Dry run — content not posted',
+    });
+    return;
+  }
+
+  // Post via X API
+  const postResult = body.action === 'quote'
+    ? await xWriter.quote(body.content, body.tweetId)
+    : await xWriter.reply(body.content, body.tweetId);
+
+  if (!postResult.success) {
+    json(res, { success: false, error: 'Failed to post to X' });
+    return;
+  }
+
+  // Record in DB
+  const posts = createPostModel(writeDb);
+  const promptType = body.action === 'quote' ? 'quote-dunk' : 'reply-dunk';
+  const post = posts.create({
+    content: body.content,
+    prompt_type: promptType,
+    safety_score: 0,
+    safety_verdict: 'SAFE',
+    status: 'posted',
+    parent_tweet_id: body.tweetId,
+  });
+
+  // Update post with tweet ID
+  if (postResult.tweetId) {
+    writeDb.prepare('UPDATE posts SET tweet_id = ?, posted_at = datetime(?) WHERE id = ?')
+      .run(postResult.tweetId, new Date().toISOString(), post.id);
+  }
+
+  // Mark opportunity as engaged
+  const opportunities = createOpportunityModel(writeDb);
+  opportunities.markEngaged(body.tweetId, post.id);
+
+  json(res, {
+    success: true,
+    tweetUrl: postResult.tweetUrl,
+    tweetId: postResult.tweetId,
+  });
+}
+
+// ── parseBody helper ─────────────────────────────────
+
+async function parseBody<T>(req: IncomingMessage): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => {
+      try {
+        const raw = Buffer.concat(chunks).toString('utf-8');
+        resolve(JSON.parse(raw) as T);
+      } catch (err) {
+        reject(new Error('Invalid JSON body'));
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
 // ── Helpers ──────────────────────────────────────────
 
-function json(res: ServerResponse, data: unknown): void {
-  res.writeHead(200, {
+function json(res: ServerResponse, data: unknown, status = 200): void {
+  res.writeHead(status, {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache',
     'Access-Control-Allow-Origin': '*',
@@ -132,11 +499,16 @@ function intParam(url: URL, name: string, fallback: number): number {
   return isNaN(n) ? fallback : n;
 }
 
-function countRows(db: Database.Database, table: string): number {
-  // Only allow known table names to prevent injection
-  const allowed = ['posts', 'opportunities', 'daemon_cycles', 'safety_log', 'generations'];
-  if (!allowed.includes(table)) return 0;
-  const row = db.prepare(`SELECT COUNT(*) as c FROM ${table}`).get() as { c: number };
+function tableExists(db: Database.Database, name: string): boolean {
+  const row = db.prepare(
+    "SELECT COUNT(*) as c FROM sqlite_master WHERE type='table' AND name=?"
+  ).get(name) as { c: number };
+  return row.c > 0;
+}
+
+function safeCount(db: Database.Database, table: string): number {
+  if (!tableExists(db, table)) return 0;
+  const row = db.prepare(`SELECT COUNT(*) as c FROM "${table}"`).get() as { c: number };
   return row.c;
 }
 
@@ -147,6 +519,10 @@ function getOverview(db: Database.Database) {
     "SELECT COUNT(*) as c FROM posts WHERE status = 'posted' AND posted_at >= date('now')"
   ).get() as { c: number }).c;
 
+  const postsTotal = (db.prepare(
+    "SELECT COUNT(*) as c FROM posts"
+  ).get() as { c: number }).c;
+
   const engagementsToday = (db.prepare(
     "SELECT COUNT(*) as c FROM opportunities WHERE status = 'engaged' AND last_evaluated >= date('now')"
   ).get() as { c: number }).c;
@@ -154,8 +530,8 @@ function getOverview(db: Database.Database) {
   const safetyStats = db.prepare(`
     SELECT
       COUNT(*) as total,
-      SUM(CASE WHEN verdict = 'REJECT' THEN 1 ELSE 0 END) as rejected,
-      SUM(CASE WHEN verdict = 'REVIEW' THEN 1 ELSE 0 END) as review
+      COALESCE(SUM(CASE WHEN verdict = 'REJECT' THEN 1 ELSE 0 END), 0) as rejected,
+      COALESCE(SUM(CASE WHEN verdict = 'REVIEW' THEN 1 ELSE 0 END), 0) as review
     FROM safety_log WHERE created_at >= date('now', '-7 days')
   `).get() as { total: number; rejected: number; review: number };
 
@@ -169,34 +545,45 @@ function getOverview(db: Database.Database) {
 
   const oppStats = db.prepare(`
     SELECT
-      SUM(CASE WHEN status = 'tracked' THEN 1 ELSE 0 END) as tracked,
-      SUM(CASE WHEN status = 'engaged' THEN 1 ELSE 0 END) as engaged,
-      SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired,
-      SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) as skipped
+      COALESCE(SUM(CASE WHEN status = 'tracked' THEN 1 ELSE 0 END), 0) as tracked,
+      COALESCE(SUM(CASE WHEN status = 'engaged' THEN 1 ELSE 0 END), 0) as engaged,
+      COALESCE(SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END), 0) as expired,
+      COALESCE(SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END), 0) as skipped,
+      COUNT(*) as total
     FROM opportunities
-  `).get() as { tracked: number; engaged: number; expired: number; skipped: number };
+  `).get() as { tracked: number; engaged: number; expired: number; skipped: number; total: number };
+
+  const cycleCount = safeCount(db, 'daemon_cycles');
 
   return {
     postsToday,
+    postsTotal,
     engagementsToday,
     safetyRejectRate: safetyStats.total > 0 ? safetyStats.rejected / safetyStats.total : 0,
     safetyTotal: safetyStats.total,
     safetyRejected: safetyStats.rejected,
-    safetyReview: safetyStats.review ?? 0,
+    safetyReview: safetyStats.review,
     costTodayCents: costToday,
     costWeekCents: costWeek,
     opportunities: oppStats,
+    counts: {
+      cycles: cycleCount,
+      opportunities: oppStats.total,
+      posts: postsTotal,
+      safety: safetyStats.total,
+      generations: safeCount(db, 'generations'),
+    },
   };
 }
 
 function getCycles(db: Database.Database, limit: number) {
+  if (!tableExists(db, 'daemon_cycles')) return [];
   return db.prepare(
     'SELECT * FROM daemon_cycles ORDER BY started_at DESC LIMIT ?'
   ).all(limit);
 }
 
 function getPosts(db: Database.Database, limit: number) {
-  // Join with safety_log for layer details where available
   return db.prepare(`
     SELECT p.*,
       sl.layers as safety_layers,

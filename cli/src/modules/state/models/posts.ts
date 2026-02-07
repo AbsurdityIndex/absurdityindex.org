@@ -23,6 +23,7 @@ export interface Post {
   media_type: string | null;
   meme_strategy: string | null;
   meme_template: string | null;
+  reply_tweet_id: string | null;
 }
 
 export interface CreatePostInput {
@@ -49,6 +50,7 @@ export function createPostModel(db: Database.Database) {
 
   const updateStatus = db.prepare('UPDATE posts SET status = ?, error = ? WHERE id = ?');
   const updateTweetId = db.prepare('UPDATE posts SET tweet_id = ?, posted_at = datetime(\'now\'), status = \'posted\' WHERE id = ?');
+  const updateReply = db.prepare('UPDATE posts SET reply_tweet_id = ? WHERE id = ?');
 
   return {
     create(input: CreatePostInput): Post {
@@ -78,8 +80,15 @@ export function createPostModel(db: Database.Database) {
       return db.prepare('SELECT * FROM posts WHERE status = ? ORDER BY created_at DESC LIMIT ?').all(status, limit) as Post[];
     },
 
-    markPosted(id: number, tweetId: string): void {
+    markPosted(id: number, tweetId: string, replyTweetId?: string): void {
       updateTweetId.run(tweetId, id);
+      if (replyTweetId) {
+        updateReply.run(replyTweetId, id);
+      }
+    },
+
+    updateReplyTweetId(id: number, replyTweetId: string): void {
+      updateReply.run(replyTweetId, id);
     },
 
     markFailed(id: number, error: string): void {
