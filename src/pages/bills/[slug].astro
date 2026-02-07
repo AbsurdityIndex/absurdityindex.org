@@ -75,6 +75,18 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 >
   <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
 
+  {/* Site-wide satire banner */}
+  <div class="bg-navy-900 border-b-2 border-gold-500">
+    <div class="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-center gap-2">
+      <span class="text-gold-400 font-serif text-sm italic">
+        This is satire. Some of it's real. We'll let you figure out which.
+      </span>
+      <a href={d.congressDotGovUrl || "https://www.congress.gov"} target="_blank" rel="noopener noreferrer" class="text-gold-500 hover:text-gold-300 text-xs font-mono underline underline-offset-2 whitespace-nowrap">
+        Verify it yourself
+      </a>
+    </div>
+  </div>
+
   <div class="max-w-3xl mx-auto px-4 py-8 md:py-12">
 
     {/* Compact header bar */}
