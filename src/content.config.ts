@@ -214,6 +214,7 @@ const votesSchema = z.object({
   yeas: z.number(),
   nays: z.number(),
   notVoting: z.number().default(0),
+  present: z.number().default(0),
   passed: z.boolean(),
   chamber: z.enum(['house', 'senate']).optional(),
   method: z.string().optional(), // e.g., "unanimous consent"
