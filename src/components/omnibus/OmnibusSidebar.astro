@@ -25,6 +25,13 @@ interface Props {
 
 const { divisions, totalSpending, pageCount, absurdityIndex, hasRiders, hasTimeline, hasBillEvolution } = Astro.props;
 
+/** Format billions: >= 1000B → $X.XT, else $X.XB or $XB */
+function fmtB(b: number): string {
+  if (b >= 1000) return `$${(b / 1000).toFixed(1)}T`;
+  if (b % 1 !== 0) return `$${b}B`;
+  return `$${b}B`;
+}
+
 // Donut chart: top 4 by spending + "Other"
 const sorted = [...divisions]
   .map((d, i) => ({ ...d, index: i }))
@@ -88,7 +95,7 @@ const navSections = [
       </svg>
       <div class="absolute inset-0 flex items-center justify-center">
         <div class="text-center">
-          <div class="font-mono text-lg font-bold text-navy-900">${totalSpending}B</div>
+          <div class="font-mono text-lg font-bold text-navy-900">{fmtB(totalSpending)}</div>
           <div class="text-[10px] text-navy-500">total</div>
         </div>
       </div>
@@ -103,7 +110,7 @@ const navSections = [
             style={`background: ${donutColors[i % donutColors.length]}`}
           />
           <span class="text-navy-700 truncate flex-1">{label}</span>
-          <span class="font-mono text-navy-500 shrink-0">${donutValues[i]}B</span>
+          <span class="font-mono text-navy-500 shrink-0">{fmtB(donutValues[i])}</span>
         </div>
       ))}
     </div>

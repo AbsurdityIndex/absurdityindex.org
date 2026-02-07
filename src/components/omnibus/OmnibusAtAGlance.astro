@@ -37,14 +37,20 @@ const {
 } = Astro.props;
 
 const readingHours = Math.round((pageCount * 250) / (200 * 60));
-const wordsEstimate = (pageCount * 250).toLocaleString();
+
+/** Format billions: >= 1000B → $X.XT, else $X.XB or $XB */
+function fmtB(b: number): string {
+  if (b >= 1000) return `$${(b / 1000).toFixed(1)}T`;
+  if (b % 1 !== 0) return `$${b}B`;
+  return `$${b}B`;
+}
 ---
 
 <section class="bg-cream-100 border border-gold-300 rounded-lg overflow-hidden" data-section="overview">
   <!-- Stats grid -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-gold-200">
     <div class="bg-cream-100 p-4 text-center">
-      <div class="font-mono text-2xl font-bold text-navy-900">${totalSpending}B</div>
+      <div class="font-mono text-2xl font-bold text-navy-900">{fmtB(totalSpending)}</div>
       <div class="text-xs text-navy-500 mt-1">Total Spending</div>
     </div>
     <div class="bg-cream-100 p-4 text-center">

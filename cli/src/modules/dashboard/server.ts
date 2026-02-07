@@ -69,8 +69,13 @@ export function startDashboardServer(options: DashboardServerOptions): { server:
       const caps = {
         canFetchTweets: !!options.xReader,
         canGenerate: !!options.claude,
-        canPost: !!options.xWriter && !!options.writeDb,
+        canWrite: !!options.writeDb,
+        canRefreshMetrics: !!options.xReader && !!options.writeDb,
+        canPost: (options.dryRun ?? false) ? !!options.writeDb : (!!options.xWriter && !!options.writeDb),
         dryRun: options.dryRun ?? false,
+        siteUrl: options.config?.siteUrl ?? 'https://absurdityindex.org',
+        engageAuthorCooldownHours: options.config?.engageAuthorCooldownHours ?? 12,
+        maxEngagementsPerDay: options.config?.maxEngagementsPerDay ?? 100,
       };
       res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify(caps));
@@ -83,7 +88,7 @@ export function startDashboardServer(options: DashboardServerOptions): { server:
     }
 
     if (pathname.startsWith('/api/')) {
-      handleApi({ db }, pathname, url, req, res);
+      handleApi({ db, config: options.config }, pathname, url, req, res);
       return;
     }
 

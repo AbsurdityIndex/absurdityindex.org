@@ -13,11 +13,9 @@ import BillEvolutionModal from '../../components/bills/BillEvolutionModal.astro'
 import CommitteeStamp from '../../components/satirical/CommitteeStamp.astro';
 import Disclaimer from '../../components/ui/Disclaimer.astro';
 import ShareButtons from '../../components/ui/ShareButtons.astro';
-import BicameralTimeline from '../../components/bills/BicameralTimeline.astro';
 import ChamberBadge from '../../components/bills/ChamberBadge.astro';
 import Icon from '../../components/ui/Icon.astro';
 import { getCollection, render } from 'astro:content';
-import { parseBillType } from '../../utils/billParser';
 
 export async function getStaticPaths() {
   const bills = await getCollection('bills');
@@ -36,8 +34,9 @@ const omnibus = d.omnibusData!;
 
 // Detect origin chamber from bill number
 const originChamber = d.billNumber.startsWith('S.') ? 'senate' : 'house';
-const billType = parseBillType(d.billNumber);
-const isBicameral = billType?.needsBothChambers ?? false;
+
+// Sum of itemized divisions (may differ from totalSpending headline number)
+const divisionSum = omnibus.divisions.reduce((sum, div) => sum + div.spending, 0);
 
 // Build callout from timeline (if text release exists)
 const textRelease = omnibus.timeline?.find(e => e.event.toLowerCase().includes('released'));
@@ -119,18 +118,6 @@ const billSchema = {
           <p class="font-serif italic text-navy-600 mb-6">{d.subtitle}</p>
         )}
 
-        {/* Legislative Progress Timeline */}
-        {isBicameral ? (
-          <BicameralTimeline
-            billNumber={d.billNumber}
-            status={d.status}
-            dateIntroduced={d.dateIntroduced}
-            actions={d.actions}
-          />
-        ) : (
-          <div class="mb-6" />
-        )}
-
         {/* Satire notice */}
         {d.billEvolution && d.billEvolution.length > 0 && (
           <div class="flex items-start gap-3 bg-cream-200 border border-gold-300 rounded-lg p-3 mb-6">
@@ -161,7 +148,7 @@ const billSchema = {
         <div class="mb-8">
           <OmnibusSpendingBreakdown
             divisions={omnibus.divisions}
-            totalSpending={omnibus.totalSpending}
+            totalSpending={divisionSum}
           />
         </div>
 
@@ -183,8 +170,6 @@ const billSchema = {
               sponsorParty={d.sponsorParty}
               cosponsors={d.cosponsors}
               cosponsorCount={d.cosponsorCount}
-              billEvolution={d.billEvolution}
-              totalPork={d.totalPork}
             />
           </div>
         )}
@@ -210,7 +195,7 @@ const billSchema = {
                 title={div.title}
                 shortTitle={div.shortTitle}
                 spending={div.spending}
-                totalSpending={omnibus.totalSpending}
+                totalSpending={divisionSum}
                 description={div.description}
                 isExpanded={i === 0}
               />

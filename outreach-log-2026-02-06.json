@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-02-06T20:51:17.337Z",
+  "results": {
+    "posted": 15,
+    "failed": 0,
+    "skipped": 0
+  },
+  "log": [
+    {
+      "tweet": "2018735616586875359",
+      "author": "XFreeze",
+      "segment": "Election Integrity",
+      "reply": "This is exactly the kind of conversation that needs a concrete blueprint behind it, not just talking points.\n\nI published a 1,525-line technical spec for voter verification — covers threat models, audit mechanisms, cost projections.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018407466627731468",
+      "author": "RepBrandonGill",
+      "segment": "Voter ID / Verification",
+      "reply": "The voter ID debate always stalls on the same tradeoff: security vs access.\n\nWhat if there were a system that proves citizenship cryptographically — without requiring you to show ID every time you vote? No names stored. Just math.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018761794630590944",
+      "author": "MichelleRM68",
+      "segment": "SAVE Act / Legislation",
+      "reply": "Whether you support the SAVE Act or oppose it, the underlying question is the same: how do you verify eligibility without creating barriers?\n\nHere's a technical answer — ZK proofs, no personal data stored, open source:\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018850111380762759",
+      "author": "BraddrofliT",
+      "segment": "Voting Rights / Suppression",
+      "reply": "The system should make it easy to vote and hard to cheat. Those aren't opposing goals.\n\nI wrote a 1,525-line blueprint for voter verification that protects both — cryptographic proof, zero personal data stored, fully open source.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018784429645377853",
+      "author": "PinoAmericano",
+      "segment": "Election Reform / Policy",
+      "reply": "Everyone agrees something needs to change. Nobody publishes the technical spec.\n\nI did — 1,525 lines covering voter verification architecture, privacy guarantees, citizen-led audits, and a rollout plan.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018363840266703122",
+      "author": "Govt_Acct_Inst",
+      "segment": "Government Transparency",
+      "reply": "What if government systems were built in the open from day one?\n\nI published a full blueprint for voter verification: open source, citizen-audited, no single agency controls it.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018425598532624856",
+      "author": "SenatorDurbin",
+      "segment": "Trust in Elections",
+      "reply": "You can't tweet trust back into existence. You have to build it.\n\nHere's a 1,525-line blueprint: open source, citizen-audited, no party controls it, no personal data stored.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018173380982448508",
+      "author": "XTexchange",
+      "segment": "Zero-Knowledge / Cryptography",
+      "reply": "Applied ZK that isn't DeFi — published a voter verification blueprint using ZK proofs to confirm eligibility without storing any PII. 1,525 lines, fully open source.\n\nWould love feedback from anyone working in this space:\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018890442692046912",
+      "author": "Dr_Picoin",
+      "segment": "Blockchain / GovTech",
+      "reply": "The tech exists. What's been missing is a concrete, buildable blueprint that addresses the real objections — privacy, cost, trust, adoption.\n\nHere's 1,525 lines attempting exactly that:\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018647190135275907",
+      "author": "_Temidayomusa",
+      "segment": "Civic Tech / Democracy",
+      "reply": "This is exactly the kind of problem civic tech should tackle.\n\nI just published a full blueprint for voter verification — ZK proofs, open source, citizen audits, no personal data stored. 1,525 lines of buildable architecture.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2018365033932030162",
+      "author": "joekent16jan19",
+      "segment": "Election Integrity",
+      "reply": "This is exactly the kind of conversation that needs a concrete blueprint behind it, not just talking points.\n\nI published a 1,525-line technical spec for voter verification — covers threat models, audit mechanisms, cost projections.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2017510746041815398",
+      "author": "gman5180",
+      "segment": "Voter ID / Verification",
+      "reply": "The voter ID debate always stalls on the same tradeoff: security vs access.\n\nWhat if there were a system that proves citizenship cryptographically — without requiring you to show ID every time you vote? No names stored. Just math.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2019156327898243357",
+      "author": "RealLindellTV",
+      "segment": "SAVE Act / Legislation",
+      "reply": "The SAVE Act debate highlights a real gap: we're arguing about *whether* to verify, not *how* to do it technically.\n\nI published a 1,525-line blueprint that answers the how — without requiring ID at the polls.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2019174403888542135",
+      "author": "GovWhitmer",
+      "segment": "Voting Rights / Suppression",
+      "reply": "Protecting voting rights and ensuring election security shouldn't be mutually exclusive.\n\nI published a technical blueprint that verifies eligibility without storing personal data, costs voters nothing, and can't be controlled by any single party.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    },
+    {
+      "tweet": "2019546102383669271",
+      "author": "GRVlagos",
+      "segment": "Election Reform / Policy",
+      "reply": "Reform talk without technical specifics is where good ideas go to die in committee.\n\nHere's a full blueprint with actual architecture. Tear it apart. Make it better. That's the point.\n\nabsurdityindex.org/votechain",
+      "status": "dry-run"
+    }
+  ]
+}

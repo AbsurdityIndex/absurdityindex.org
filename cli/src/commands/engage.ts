@@ -352,7 +352,9 @@ export function registerEngageCommand(program: Command): void {
       readDb.pragma('journal_mode = WAL');
 
       // Write DB for posting engagements (only if not read-only mode)
-      const writeDb = dryRun ? undefined : getDb(config.dbPath);
+      // We still allow DB writes in dry-run mode (draft recording, triage actions),
+      // but we never post to X when dryRun=true.
+      const writeDb = getDb(config.dbPath);
 
       // Initialize API clients (gracefully degrade if keys missing)
       let xReader: XReadClient | undefined;

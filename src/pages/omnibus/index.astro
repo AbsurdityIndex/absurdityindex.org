@@ -13,6 +13,13 @@ const omnibusBills = bills
 // Calculate totals
 const totalSpending = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.totalSpending || 0), 0);
 const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pageCount || 0), 0);
+
+/** Format billions: >= 1000B → $X.XT, else $X.XB or $XB */
+function fmtB(b: number): string {
+  if (b >= 1000) return `$${(b / 1000).toFixed(1)}T`;
+  if (b % 1 !== 0) return `$${b}B`;
+  return `$${b}B`;
+}
 ---
 
 <BaseLayout
@@ -43,7 +50,7 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
             <div class="text-xs text-navy-600">Bills</div>
           </div>
           <div>
-            <div class="font-mono text-2xl font-bold text-navy-900">${totalSpending.toFixed(1)}T</div>
+            <div class="font-mono text-2xl font-bold text-navy-900">{fmtB(totalSpending)}</div>
             <div class="text-xs text-navy-600">Total Spending</div>
           </div>
           <div>
@@ -92,6 +99,7 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
             const formattedDate = d.dateIntroduced.toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
+              timeZone: 'UTC',
             });
 
             // Top 3 divisions by spending for mini bars
@@ -131,7 +139,7 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
                           <div class="flex-1 h-1.5 bg-cream-200 rounded-full overflow-hidden">
                             <div class="h-full bg-gold-500 rounded-full" style={`width: ${barWidth}%`} />
                           </div>
-                          <span class="text-[10px] font-mono text-navy-500 w-12 text-right">${div.spending}B</span>
+                          <span class="text-[10px] font-mono text-navy-500 w-12 text-right">{fmtB(div.spending)}</span>
                         </div>
                       );
                     })}
@@ -143,7 +151,7 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
                   {/* Bottom stats row */}
                   <div class="flex items-center justify-between pt-3 border-t border-gold-200">
                     <div class="flex items-center gap-4 text-xs">
-                      <span class="font-mono font-bold text-navy-900">${omnibus.totalSpending}B</span>
+                      <span class="font-mono font-bold text-navy-900">{fmtB(omnibus.totalSpending)}</span>
                       <span class="text-navy-500">{omnibus.pageCount.toLocaleString()} pages</span>
                       <span class="text-navy-500">{omnibus.divisions.length} div</span>
                     </div>

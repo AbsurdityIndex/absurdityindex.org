@@ -1,20 +1,20 @@
 export function getDashboardHtml(): string {
   return /* html */ `<!DOCTYPE html>
-<html lang="en" class="bg-[#0f172a]">
+<html lang="en" class="bg-[#0A1628]">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Absurdity Index — Engagement Dashboard</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127963;</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'><circle cx='32' cy='32' r='30' stroke='%23C5A572' stroke-width='3' fill='%230A1628'/><circle cx='32' cy='32' r='22' stroke='%23C5A572' stroke-width='1.5'/><text x='32' y='28' text-anchor='middle' font-size='12' font-weight='700' fill='%23C5A572' font-family='serif'>NOT</text><text x='32' y='42' text-anchor='middle' font-size='8' fill='%23C5A572' font-family='serif'>CONGRESS</text><circle cx='32' cy='5' r='2' fill='%23C5A572'/><circle cx='32' cy='59' r='2' fill='%23C5A572'/><circle cx='5' cy='32' r='2' fill='%23C5A572'/><circle cx='59' cy='32' r='2' fill='%23C5A572'/></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            navy: { 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' },
-            gold: { 400: '#facc15', 500: '#eab308' },
-            cream: { 100: '#fef9ef', 200: '#fdf3dc' },
+            navy: { 700: '#1A2D4D', 800: '#121F36', 900: '#0A1628', 950: '#060F1E' },
+            gold: { 400: '#D4BB8A', 500: '#C5A572' },
+            cream: { 100: '#FAF7F0', 200: '#F0EBE0' },
           },
           fontFamily: {
             serif: ['Libre Caslon Text', 'Georgia', 'serif'],
@@ -25,12 +25,87 @@ export function getDashboardHtml(): string {
       },
     };
   </script>
-  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Caslon+Text:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    :root { color-scheme: dark; }
     body { font-family: 'Inter', system-ui, sans-serif; }
-    .tab-active { border-bottom: 2px solid #eab308; color: #facc15; }
+
+    /* Ambient background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(900px 700px at 12% -10%, rgba(197, 165, 114, 0.18), transparent 55%),
+        radial-gradient(900px 700px at 90% 10%, rgba(59, 130, 246, 0.10), transparent 60%),
+        radial-gradient(900px 700px at 70% 110%, rgba(16, 185, 129, 0.08), transparent 58%);
+      opacity: 1;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+    }
+
+    /* Reusable surfaces */
+    .surface {
+      background: rgba(18, 31, 54, 0.58);
+      border: 1px solid rgba(148, 163, 184, 0.10);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 20px 45px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(10px);
+    }
+    .surface-2 {
+      background: rgba(10, 22, 40, 0.62);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Nav */
+    .tab-active { background: rgba(197, 165, 114, 0.12); border-color: rgba(197, 165, 114, 0.35); color: #FAF7F0; }
+
+    /* Small UI primitives */
+    .ghost-btn {
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      background: rgba(2, 6, 23, 0.25);
+      color: rgba(226, 232, 240, 0.78);
+      transition: all 0.15s ease;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .ghost-btn:hover { background: rgba(18, 31, 54, 0.6); border-color: rgba(197, 165, 114, 0.22); color: #FAF7F0; }
+    .ghost-btn:active { transform: translateY(1px); }
+    .kbd {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(6, 15, 30, 0.55);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(226, 232, 240, 0.85);
+    }
+    .chip {
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      background: rgba(2, 6, 23, 0.22);
+      color: rgba(148, 163, 184, 0.85);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .chip:hover { background: rgba(18, 31, 54, 0.6); color: rgba(226, 232, 240, 0.95); }
+    .chip-active { background: rgba(197, 165, 114, 0.12); border-color: rgba(197, 165, 114, 0.35); color: rgba(250, 247, 240, 0.95); }
+
     .score-bar { transition: width 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.25s ease-out; }
@@ -41,29 +116,67 @@ export function getDashboardHtml(): string {
     .row-clickable:hover { background: rgba(2, 6, 23, 0.3); }
     .row-clickable { cursor: pointer; }
     .tweet-embed { max-width: 550px; }
-    .tweet-embed .twitter-tweet { margin: 0 !important; }
-    .loading-shimmer { background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+    .loading-shimmer { background: linear-gradient(90deg, #121F36 25%, #1A2D4D 50%, #121F36 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     /* Custom scrollbar */
     main::-webkit-scrollbar, .opp-scroll::-webkit-scrollbar { width: 6px; }
     main::-webkit-scrollbar-track, .opp-scroll::-webkit-scrollbar-track { background: transparent; }
-    main::-webkit-scrollbar-thumb, .opp-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-    main::-webkit-scrollbar-thumb:hover, .opp-scroll::-webkit-scrollbar-thumb:hover { background: #475569; }
+    main::-webkit-scrollbar-thumb, .opp-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.22); border-radius: 6px; }
+    main::-webkit-scrollbar-thumb:hover, .opp-scroll::-webkit-scrollbar-thumb:hover { background: rgba(212, 187, 138, 0.32); }
+    .opp-scroll { scrollbar-width: thin; scrollbar-color: rgba(148, 163, 184, 0.22) transparent; }
     /* Range input styling */
-    input[type="range"] { -webkit-appearance: none; background: #334155; height: 4px; border-radius: 2px; outline: none; }
-    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #eab308; cursor: pointer; }
+    input[type="range"] { -webkit-appearance: none; background: #1A2D4D; height: 4px; border-radius: 2px; outline: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #C5A572; cursor: pointer; }
     /* Split pane */
     .split-pane { display: flex; gap: 0; height: 100%; overflow: hidden; }
     .opp-list { width: 100%; height: 100%; transition: width 0.25s ease; overflow-y: auto; overscroll-behavior: contain; }
-    .opp-list.split { width: 50%; border-right: 1px solid rgba(51, 65, 85, 0.4); }
+    .opp-list.split { width: 60%; border-right: 1px solid rgba(148, 163, 184, 0.10); }
     .opp-detail { width: 0; height: 100%; overflow: hidden; transition: width 0.25s ease, opacity 0.2s ease; opacity: 0; }
-    .opp-detail.open { width: 50%; opacity: 1; overflow-y: auto; overscroll-behavior: contain; }
-    /* Twitter embed inside detail pane */
-    .opp-detail .twitter-tweet { margin: 0 !important; }
-    .opp-detail .twitter-tweet iframe { border-radius: 12px !important; }
-    .opp-card { cursor: pointer; transition: all 0.15s ease; }
-    .opp-card:hover { background: rgba(30, 41, 59, 0.8); }
-    .opp-card.selected { background: rgba(30, 41, 59, 0.9); border-left: 3px solid #eab308; }
+    .opp-detail.open { width: 40%; opacity: 1; overflow-y: auto; overscroll-behavior: contain; }
+    .split-pane.focus .opp-list.split { width: 42%; }
+    .split-pane.focus .opp-detail.open { width: 58%; }
+    @media (min-width: 1400px) { .opp-list.split { width: 55%; } .opp-detail.open { width: 45%; } }
+    @media (min-width: 1800px) { .opp-list.split { width: 50%; } .opp-detail.open { width: 50%; } }
+    @media (min-width: 1400px) { .split-pane.focus .opp-list.split { width: 40%; } .split-pane.focus .opp-detail.open { width: 60%; } }
+    @media (min-width: 1800px) { .split-pane.focus .opp-list.split { width: 38%; } .split-pane.focus .opp-detail.open { width: 62%; } }
+    @media (max-width: 1024px) {
+      .opp-list.split { width: 100%; }
+      .opp-detail.open {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 60;
+        opacity: 1;
+        background: rgba(6, 15, 30, 0.92);
+        backdrop-filter: blur(12px);
+        border-left: none;
+      }
+    }
+    .opp-card { cursor: pointer; transition: all 0.15s ease; position: relative; }
+    .opp-card:hover { background: rgba(18, 31, 54, 0.75); border-color: rgba(148, 163, 184, 0.18); }
+    .opp-card.selected {
+      background: rgba(10, 22, 40, 0.85);
+      border-color: rgba(197, 165, 114, 0.35);
+      box-shadow: 0 0 0 1px rgba(197, 165, 114, 0.12), 0 12px 24px rgba(0, 0, 0, 0.35);
+    }
+    .opp-card.selected::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 3px;
+      border-radius: 999px;
+      background: #C5A572;
+    }
+    /* Tweet embed iframe fix */
+    #tweet-embed-target { overflow: hidden; border-radius: 14px; background: rgba(2, 6, 23, 0.20); display: flex; justify-content: center; align-items: flex-start; }
+    #tweet-embed-target iframe { display: block; width: 550px; max-width: 100%; margin: 0 auto; }
+    .tweet-frame { position: relative; border: 1px solid rgba(148, 163, 184, 0.12); border-radius: 16px; background: linear-gradient(180deg, rgba(2, 6, 23, 0.30), rgba(2, 6, 23, 0.16)); padding: 10px; }
+    .tweet-frame::before { content: ''; position: absolute; inset: 0; border-radius: 16px; pointer-events: none; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset; }
+    .embed-overlay { position: absolute; inset: 10px; border-radius: 14px; pointer-events: none; opacity: 0; transition: opacity 0.15s ease; background: radial-gradient(500px 320px at 50% 0%, rgba(197,165,114,0.16), transparent 55%); }
+    .tweet-frame:hover .embed-overlay { opacity: 1; }
     /* Pipeline steps */
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner { animation: spin 1s linear infinite; display: inline-block; }
@@ -71,112 +184,302 @@ export function getDashboardHtml(): string {
     .char-over { color: #ef4444 !important; }
     /* Action toggle */
     .action-btn { transition: all 0.15s ease; }
-    .action-btn.active { background: rgba(234, 179, 8, 0.15); color: #facc15; border-color: rgba(234, 179, 8, 0.3); }
+    .action-btn.active { background: rgba(197, 165, 114, 0.15); color: #D4BB8A; border-color: rgba(197, 165, 114, 0.3); }
+
+    /* Toasts */
+    @keyframes toastIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-6px); } }
+    .toast { animation: toastIn 0.18s ease-out; }
+    .toast.toast-out { animation: toastOut 0.18s ease-in forwards; }
   </style>
 </head>
-<body class="bg-navy-900 text-gray-300 min-h-screen font-sans flex flex-col">
-  <!-- Header -->
-  <header class="border-b border-gray-700/40 px-6 py-3 flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-3">
-      <h1 class="text-lg font-serif font-bold text-cream-100 tracking-tight">Absurdity Index</h1>
-      <span class="text-xs text-gray-500 font-mono tracking-wider uppercase">Dashboard</span>
-    </div>
-    <div class="flex items-center gap-4">
-      <span id="last-update" class="text-xs text-gray-600 font-mono"></span>
-      <div id="live-indicator" class="flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot"></span>
-        <span class="text-xs text-gray-500 font-mono uppercase tracking-wider">Live</span>
+<body class="bg-navy-950 text-slate-200 h-screen overflow-hidden font-sans antialiased">
+  <div class="h-full grid grid-cols-1 lg:grid-cols-[280px,1fr]">
+    <!-- Sidebar -->
+    <aside class="border-b lg:border-b-0 lg:border-r border-slate-700/25 px-5 py-4 flex flex-col gap-4 bg-navy-950/40 backdrop-blur">
+      <div class="flex items-center gap-3">
+        <svg viewBox="0 0 64 64" class="w-10 h-10 shrink-0" fill="none" aria-hidden="true">
+          <circle cx="32" cy="32" r="30" stroke="#C5A572" stroke-width="3" fill="#0A1628"/>
+          <circle cx="32" cy="32" r="22" stroke="#C5A572" stroke-width="1.5"/>
+          <text x="32" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#C5A572" font-family="'Libre Caslon Text', serif">NOT</text>
+          <text x="32" y="42" text-anchor="middle" font-size="8" fill="#C5A572" font-family="'Libre Caslon Text', serif">CONGRESS</text>
+          <circle cx="32" cy="5" r="2" fill="#C5A572"/>
+          <circle cx="32" cy="59" r="2" fill="#C5A572"/>
+          <circle cx="5" cy="32" r="2" fill="#C5A572"/>
+          <circle cx="59" cy="32" r="2" fill="#C5A572"/>
+        </svg>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-serif font-bold text-cream-100 tracking-tight leading-none">Absurdity Index</h1>
+            <span id="mode-pill" class="hidden text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-slate-700/40 text-slate-400">--</span>
+          </div>
+          <div class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">Engagement Control Room</div>
+        </div>
       </div>
-    </div>
-  </header>
 
-  <!-- Stat Cards -->
-  <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 px-6 py-4 shrink-0">
-    <div class="bg-navy-800/80 rounded-lg p-3.5 border border-gray-700/25 hover:border-gray-600/40 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <span class="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Posts Today</span>
-        <span id="stat-posts-total" class="text-[10px] text-gray-600 font-mono"></span>
+      <div class="surface rounded-xl p-3 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Last update</div>
+          <div id="last-update" class="text-xs text-slate-200 font-mono tabular-nums truncate"></div>
+        </div>
+        <div id="live-indicator" class="flex items-center gap-2 shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot"></span>
+          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Live</span>
+        </div>
       </div>
-      <div id="stat-posts" class="text-2xl font-bold text-cream-100 mt-0.5 font-mono tabular-nums">--</div>
-    </div>
-    <div class="bg-navy-800/80 rounded-lg p-3.5 border border-gray-700/25 hover:border-gray-600/40 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <span class="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Engagements</span>
-        <span id="stat-tracked" class="text-[10px] text-gray-600 font-mono"></span>
-      </div>
-      <div id="stat-engagements" class="text-2xl font-bold text-emerald-400 mt-0.5 font-mono tabular-nums">--</div>
-    </div>
-    <div class="bg-navy-800/80 rounded-lg p-3.5 border border-gray-700/25 hover:border-gray-600/40 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <span class="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Safety Reject</span>
-        <span id="stat-safety-detail" class="text-[10px] text-gray-600 font-mono"></span>
-      </div>
-      <div id="stat-safety" class="text-2xl font-bold text-amber-400 mt-0.5 font-mono tabular-nums">--</div>
-    </div>
-    <div class="bg-navy-800/80 rounded-lg p-3.5 border border-gray-700/25 hover:border-gray-600/40 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <span class="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Cost Today</span>
-        <span id="stat-cost-week" class="text-[10px] text-gray-600 font-mono"></span>
-      </div>
-      <div id="stat-cost" class="text-2xl font-bold text-gold-400 mt-0.5 font-mono tabular-nums">--</div>
-    </div>
-  </section>
 
-  <!-- Tab Bar -->
-  <nav class="px-6 flex gap-0.5 border-b border-gray-700/40 shrink-0">
-    <button class="tab-btn tab-active px-3.5 py-2 text-sm font-medium hover:text-gold-400 transition-colors flex items-center gap-1.5" data-tab="cycles" title="Press 1">
-      Cycles <span id="badge-cycles" class="text-[10px] bg-gray-700/50 text-gray-400 px-1.5 py-0.5 rounded-full font-mono min-w-[20px] text-center">--</span>
-    </button>
-    <button class="tab-btn px-3.5 py-2 text-sm font-medium text-gray-500 hover:text-gold-400 transition-colors flex items-center gap-1.5" data-tab="opportunities" title="Press 2">
-      Opportunities <span id="badge-opportunities" class="text-[10px] bg-gray-700/50 text-gray-400 px-1.5 py-0.5 rounded-full font-mono min-w-[20px] text-center">--</span>
-    </button>
-    <button class="tab-btn px-3.5 py-2 text-sm font-medium text-gray-500 hover:text-gold-400 transition-colors flex items-center gap-1.5" data-tab="posts" title="Press 3">
-      Posts <span id="badge-posts" class="text-[10px] bg-gray-700/50 text-gray-400 px-1.5 py-0.5 rounded-full font-mono min-w-[20px] text-center">--</span>
-    </button>
-    <button class="tab-btn px-3.5 py-2 text-sm font-medium text-gray-500 hover:text-gold-400 transition-colors flex items-center gap-1.5" data-tab="safety" title="Press 4">
-      Safety <span id="badge-safety" class="text-[10px] bg-gray-700/50 text-gray-400 px-1.5 py-0.5 rounded-full font-mono min-w-[20px] text-center">--</span>
-    </button>
-    <button class="tab-btn px-3.5 py-2 text-sm font-medium text-gray-500 hover:text-gold-400 transition-colors flex items-center gap-1.5" data-tab="costs" title="Press 5">
-      Costs <span id="badge-costs" class="text-[10px] bg-gray-700/50 text-gray-400 px-1.5 py-0.5 rounded-full font-mono min-w-[20px] text-center">--</span>
-    </button>
-  </nav>
+      <nav class="flex-1 space-y-1">
+        <button class="tab-btn tab-active w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="cycles" title="Press 1">
+          <span class="flex items-center gap-2">
+            <span>Cycles</span>
+            <span class="kbd">1</span>
+          </span>
+          <span id="badge-cycles" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
+        </button>
+        <button class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="opportunities" title="Press 2">
+          <span class="flex items-center gap-2">
+            <span>Inbox</span>
+            <span class="kbd">2</span>
+          </span>
+          <span id="badge-opportunities" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
+        </button>
+        <button class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="posts" title="Press 3">
+          <span class="flex items-center gap-2">
+            <span>Posts</span>
+            <span class="kbd">3</span>
+          </span>
+          <span id="badge-posts" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
+        </button>
+        <button class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="safety" title="Press 4">
+          <span class="flex items-center gap-2">
+            <span>Safety</span>
+            <span class="kbd">4</span>
+          </span>
+          <span id="badge-safety" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
+        </button>
+        <button class="tab-btn w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-transparent text-sm font-medium text-slate-400 hover:text-cream-100 hover:bg-navy-800/40 transition-colors" data-tab="costs" title="Press 5">
+          <span class="flex items-center gap-2">
+            <span>Spend</span>
+            <span class="kbd">5</span>
+          </span>
+          <span id="badge-costs" class="text-[10px] bg-slate-700/30 text-slate-300 px-1.5 py-0.5 rounded-full font-mono min-w-[22px] text-center">--</span>
+        </button>
+      </nav>
 
-  <!-- Tab Content -->
-  <main class="px-6 py-4 flex-1 overflow-hidden">
-    <div id="tab-cycles" class="tab-content overflow-y-auto h-full"></div>
-    <div id="tab-opportunities" class="tab-content hidden h-full"></div>
-    <div id="tab-posts" class="tab-content overflow-y-auto h-full hidden"></div>
-    <div id="tab-safety" class="tab-content overflow-y-auto h-full hidden"></div>
-    <div id="tab-costs" class="tab-content overflow-y-auto h-full hidden"></div>
-  </main>
+      <div class="surface-2 rounded-xl p-3 text-[10px] text-slate-400 font-mono leading-relaxed">
+        <div class="flex items-center justify-between">
+          <span class="uppercase tracking-wider text-slate-500">Shortcuts</span>
+          <button class="ghost-btn" onclick="toggleHelp(true)" type="button">Help</button>
+        </div>
+        <div class="mt-2 text-slate-400">
+          <span class="kbd">Esc</span> close panel
+          <span class="text-slate-600"> &middot; </span>
+          <span class="kbd">J</span>/<span class="kbd">K</span> navigate
+          <span class="text-slate-600"> &middot; </span>
+          <span class="kbd">G</span> generate
+          <span class="text-slate-600"> &middot; </span>
+          <span class="kbd">P</span> post
+        </div>
+      </div>
+    </aside>
 
-  <!-- Footer -->
-  <footer class="border-t border-gray-700/25 px-6 py-1.5 text-[10px] text-gray-600 font-mono flex justify-between shrink-0">
-    <span>absurdityindex.org</span>
-    <span>Press 1-5 to switch tabs &middot; Esc to close panel &middot; Click opportunity to engage</span>
-  </footer>
+    <!-- Main -->
+    <div class="min-w-0 flex flex-col">
+      <header class="px-6 py-4 border-b border-slate-700/25 flex items-center justify-between bg-navy-950/30 backdrop-blur shrink-0">
+        <div class="min-w-0">
+          <div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Dashboard</div>
+          <div id="page-title" class="text-lg font-serif font-bold text-cream-100 tracking-tight leading-tight truncate">Cycles</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div id="capabilities-pill" class="hidden md:flex items-center gap-2 text-[10px] text-slate-400 font-mono"></div>
+          <button id="btn-refresh" class="ghost-btn" onclick="loadTab(currentTab)" title="Refresh">Refresh</button>
+        </div>
+      </header>
+
+      <!-- Stat Cards -->
+      <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 px-6 py-4 shrink-0">
+        <div class="surface rounded-xl p-3.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Posts Today</span>
+            <span id="stat-posts-total" class="text-[10px] text-slate-500 font-mono"></span>
+          </div>
+          <div id="stat-posts" class="text-2xl font-bold text-cream-100 mt-1 font-mono tabular-nums">--</div>
+        </div>
+        <div class="surface rounded-xl p-3.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Engagements</span>
+            <span id="stat-tracked" class="text-[10px] text-slate-500 font-mono"></span>
+          </div>
+          <div id="stat-engagements" class="text-2xl font-bold text-emerald-400 mt-1 font-mono tabular-nums">--</div>
+        </div>
+        <div class="surface rounded-xl p-3.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Safety Reject</span>
+            <span id="stat-safety-detail" class="text-[10px] text-slate-500 font-mono"></span>
+          </div>
+          <div id="stat-safety" class="text-2xl font-bold text-amber-300 mt-1 font-mono tabular-nums">--</div>
+        </div>
+        <div class="surface rounded-xl p-3.5">
+          <div class="flex items-baseline justify-between">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Cost Today</span>
+            <span id="stat-cost-week" class="text-[10px] text-slate-500 font-mono"></span>
+          </div>
+          <div id="stat-cost" class="text-2xl font-bold text-gold-400 mt-1 font-mono tabular-nums">--</div>
+        </div>
+      </section>
+
+      <!-- Tab Content -->
+      <main class="px-6 pb-6 flex-1 min-h-0 overflow-hidden">
+        <div id="tab-cycles" class="tab-content overflow-y-auto h-full"></div>
+        <div id="tab-opportunities" class="tab-content hidden h-full"></div>
+        <div id="tab-posts" class="tab-content overflow-y-auto h-full hidden"></div>
+        <div id="tab-safety" class="tab-content overflow-y-auto h-full hidden"></div>
+        <div id="tab-costs" class="tab-content overflow-y-auto h-full hidden"></div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="border-t border-slate-700/20 px-6 py-2 text-[10px] text-slate-500 font-mono flex justify-between shrink-0 bg-navy-950/20 backdrop-blur">
+        <span class="text-slate-600">absurdityindex.org</span>
+        <span class="hidden md:inline">Press 1-5 to switch tabs &middot; Esc to close panel &middot; J/K to navigate inbox</span>
+        <span class="md:hidden">Esc closes panel</span>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast-root" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <div id="help-overlay" class="fixed inset-0 hidden items-end sm:items-center justify-center p-4 z-50">
+    <div class="absolute inset-0 bg-black/70" onclick="toggleHelp(false)"></div>
+    <div class="relative surface rounded-xl w-full sm:w-[560px] p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold text-cream-100">Keyboard</div>
+        <button class="ghost-btn" onclick="toggleHelp(false)" type="button">Close</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs text-slate-200">
+        <div><span class="kbd">1-5</span> switch tabs</div>
+        <div><span class="kbd">Esc</span> close panel</div>
+        <div><span class="kbd">J/K</span> move selection</div>
+        <div><span class="kbd">Enter</span> open selected</div>
+        <div><span class="kbd">G</span> generate draft</div>
+        <div><span class="kbd">P</span> post (or dry run)</div>
+      </div>
+      <div class="mt-3 text-[10px] text-slate-400 font-mono">
+        Tip: use filters to keep the inbox focused on high-score, tracked items.
+      </div>
+    </div>
+  </div>
 
 <script>
 // ── State ──
 let currentTab = 'cycles';
 let tabLoading = {};
-let capabilities = { canFetchTweets: false, canGenerate: false, canPost: false, dryRun: false };
+let capabilities = {
+  canFetchTweets: false,
+  canGenerate: false,
+  canWrite: false,
+  canRefreshMetrics: false,
+  canPost: false,
+  dryRun: false,
+  siteUrl: 'https://absurdityindex.org',
+  engageAuthorCooldownHours: 12,
+  maxEngagementsPerDay: 100,
+};
 let selectedOpp = null;
 let selectedAction = 'quote';
 let generateES = null; // active EventSource for generate-draft
 let oppData = []; // cached opportunity list
+let oppFilters = loadOppFilters();
+let tweetEmbedResizeHandler = null;
+
+const TAB_META = {
+  cycles: { title: 'Cycles' },
+  opportunities: { title: 'Inbox' },
+  posts: { title: 'Posts' },
+  safety: { title: 'Safety' },
+  costs: { title: 'Spend' },
+};
+
+function isTextInput(el) {
+  return el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA');
+}
+
+function isHelpOpen() {
+  const el = document.getElementById('help-overlay');
+  return el && !el.classList.contains('hidden');
+}
+
+function toggleHelp(show) {
+  const el = document.getElementById('help-overlay');
+  if (!el) return;
+  const shouldShow = typeof show === 'boolean' ? show : el.classList.contains('hidden');
+  if (shouldShow) { el.classList.remove('hidden'); el.classList.add('flex'); }
+  else { el.classList.add('hidden'); el.classList.remove('flex'); }
+}
+
+function toast(msg, kind) {
+  const root = document.getElementById('toast-root');
+  if (!root || !msg) return;
+  const colors = {
+    info: 'border-slate-700/40 text-slate-200',
+    success: 'border-emerald-500/30 text-emerald-200',
+    warning: 'border-amber-500/30 text-amber-200',
+    error: 'border-red-500/30 text-red-200',
+  };
+  const el = document.createElement('div');
+  el.className = 'toast surface rounded-xl px-3 py-2 text-xs font-medium border ' + (colors[kind] || colors.info);
+  el.textContent = msg;
+  root.appendChild(el);
+  setTimeout(() => { el.classList.add('toast-out'); setTimeout(() => el.remove(), 220); }, 2400);
+}
+
+function applyCapabilities(c) {
+  capabilities = { ...capabilities, ...(c || {}) };
+
+  const modePill = document.getElementById('mode-pill');
+  if (modePill) {
+    modePill.classList.remove('hidden');
+    const isDry = !!capabilities.dryRun;
+    modePill.textContent = isDry ? 'DRY RUN' : 'LIVE';
+    modePill.className = 'text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ' +
+      (isDry ? 'border-amber-500/30 text-amber-200 bg-amber-500/10' : 'border-emerald-500/30 text-emerald-200 bg-emerald-500/10');
+  }
+
+  const capsEl = document.getElementById('capabilities-pill');
+  if (capsEl) {
+    capsEl.classList.remove('hidden');
+    capsEl.innerHTML =
+      pillDot(capabilities.canFetchTweets, 'Tweets') +
+      pillDot(capabilities.canGenerate, 'Generate') +
+      pillDot(capabilities.canPost, capabilities.dryRun ? 'Post (dry)' : 'Post');
+  }
+}
+
+function pillDot(ok, label) {
+  const cls = ok ? 'bg-emerald-400' : 'bg-slate-600';
+  const txt = ok ? 'text-slate-200' : 'text-slate-500';
+  return '<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700/30 bg-navy-950/30 ' + txt + '">' +
+    '<span class="w-1.5 h-1.5 rounded-full ' + cls + '"></span>' +
+    '<span>' + esc(label) + '</span>' +
+  '</span>';
+}
 
 // Load capabilities on boot
-fetch('/api/capabilities').then(r => r.json()).then(c => { capabilities = c; }).catch(() => {});
+fetch('/api/capabilities')
+  .then(r => r.ok ? r.json() : null)
+  .then(c => applyCapabilities(c))
+  .catch(() => {});
 
 // ── Tab switching ──
 function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('tab-active'); b.classList.add('text-gray-500'); });
+  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('tab-active'); b.classList.add('text-slate-400'); });
   const btn = document.querySelector('[data-tab="' + tab + '"]');
-  if (btn) { btn.classList.add('tab-active'); btn.classList.remove('text-gray-500'); }
+  if (btn) { btn.classList.add('tab-active'); btn.classList.remove('text-slate-400'); }
   document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
   document.getElementById('tab-' + tab).classList.remove('hidden');
   currentTab = tab;
+  try { localStorage.setItem('ai-dashboard-tab', tab); } catch {}
+  const title = TAB_META[tab]?.title || tab;
+  setText('page-title', title);
   loadTab(tab);
 }
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -185,11 +488,27 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-  if (e.key === 'Escape') { closeDetailPanel(); return; }
+  if (isTextInput(e.target)) return;
+  if (e.key === 'Escape') {
+    if (isHelpOpen()) { toggleHelp(false); return; }
+    closeDetailPanel();
+    return;
+  }
+  if (e.key === 'r' || e.key === 'R') { loadTab(currentTab); return; }
   const tabs = ['cycles', 'opportunities', 'posts', 'safety', 'costs'];
   const idx = parseInt(e.key) - 1;
   if (idx >= 0 && idx < tabs.length) switchTab(tabs[idx]);
+
+  // Inbox navigation + actions
+  if (currentTab === 'opportunities') {
+    if (e.key === 'j' || e.key === 'ArrowDown') { moveOppSelection(1); return; }
+    if (e.key === 'k' || e.key === 'ArrowUp') { moveOppSelection(-1); return; }
+    if (e.key === 'Enter') { if (selectedOpp) renderDetailPanel(selectedOpp); return; }
+    if (e.key === 'g' || e.key === 'G') { startGenerate(); return; }
+    if (e.key === 'p' || e.key === 'P') { postEngagement(); return; }
+    if (e.key === 's' || e.key === 'S') { setOppStatus('skipped'); return; }
+    if (e.key === 't' || e.key === 'T') { setOppStatus('tracked'); return; }
+  }
 });
 
 // ── SSE ──
@@ -307,63 +626,204 @@ async function renderCycles() {
 
 // ── Opportunities (split-pane) ──
 let oppFilterTimeout;
+function loadOppFilters() {
+  try {
+    const raw = localStorage.getItem('ai-dashboard-opp-filters');
+    if (!raw) return { status: 'all', minScore: 0, q: '', sort: 'score' };
+    const parsed = JSON.parse(raw);
+    return {
+      status: parsed.status || 'all',
+      minScore: Number.isFinite(parsed.minScore) ? parsed.minScore : 0,
+      q: typeof parsed.q === 'string' ? parsed.q : '',
+      sort: parsed.sort || 'score',
+    };
+  } catch {
+    return { status: 'all', minScore: 0, q: '', sort: 'score' };
+  }
+}
+
+function saveOppFilters() {
+  try { localStorage.setItem('ai-dashboard-opp-filters', JSON.stringify(oppFilters)); } catch {}
+}
+
+function setOppFilter(next) {
+  oppFilters = { ...oppFilters, ...next };
+  saveOppFilters();
+  renderOppList();
+}
+
+function applyOppFiltersToUi() {
+  const q = document.getElementById('opp-q');
+  const score = document.getElementById('opp-score');
+  const sort = document.getElementById('opp-sort');
+  const scoreVal = document.getElementById('opp-score-val');
+
+  if (q) q.value = oppFilters.q || '';
+  if (score) score.value = String(oppFilters.minScore || 0);
+  if (scoreVal) scoreVal.textContent = String(oppFilters.minScore || 0);
+  if (sort) sort.value = oppFilters.sort || 'score';
+
+  document.querySelectorAll('[data-opp-status]').forEach(btn => {
+    const s = btn.getAttribute('data-opp-status');
+    btn.classList.toggle('chip-active', s === (oppFilters.status || 'all'));
+  });
+}
+
 async function renderOpportunities() {
   const el = document.getElementById('tab-opportunities');
-  if (!el.querySelector('.split-pane')) {
+  if (!el.querySelector('#opp-root')) {
     el.innerHTML =
-      '<div class="opp-filters flex flex-wrap gap-3 mb-3 items-center">' +
-        '<select id="opp-status" class="bg-navy-800 border border-gray-700/40 rounded-md px-2.5 py-1.5 text-xs text-gray-300 focus:border-gold-500 focus:outline-none">' +
-          '<option value="all">All statuses</option><option value="tracked">Tracked</option><option value="engaged">Engaged</option><option value="skipped">Skipped</option><option value="expired">Expired</option>' +
-        '</select>' +
-        '<label class="text-xs text-gray-500 flex items-center gap-2">Min score' +
-          '<input id="opp-score" type="range" min="0" max="100" value="0" class="w-24">' +
-          '<span id="opp-score-val" class="font-mono text-gold-400 w-5 text-right">0</span>' +
-        '</label>' +
-      '</div>' +
-      '<div class="split-pane" style="height:calc(100% - 44px)">' +
-        '<div id="opp-list" class="opp-list opp-scroll pr-2"></div>' +
-        '<div id="opp-detail" class="opp-detail opp-scroll pl-4"></div>' +
+      '<div id="opp-root" class="h-full flex flex-col gap-3">' +
+        '<div class="surface rounded-xl p-3">' +
+          '<div class="flex flex-col lg:flex-row gap-3 lg:items-center">' +
+            '<div class="flex flex-wrap gap-1.5">' +
+              chipHtml('all', 'All') +
+              chipHtml('tracked', 'Tracked') +
+              chipHtml('engaged', 'Engaged') +
+              chipHtml('skipped', 'Skipped') +
+              chipHtml('expired', 'Expired') +
+            '</div>' +
+            '<div class="flex-1 flex items-center gap-2 min-w-0">' +
+              '<div class="relative flex-1 min-w-[180px]">' +
+                '<div class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500">' + lucide('search', 'w-4 h-4') + '</div>' +
+                '<input id="opp-q" type="text" class="w-full bg-navy-950/40 border border-slate-700/30 rounded-lg pl-8 pr-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-gold-500/40" placeholder="Search author, text, bill..." />' +
+              '</div>' +
+              '<select id="opp-sort" class="bg-navy-950/40 border border-slate-700/30 rounded-lg px-2.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-gold-500/40">' +
+                '<option value="score">Sort: Score</option>' +
+                '<option value="recent">Sort: Recent</option>' +
+                '<option value="impressions">Sort: Impressions</option>' +
+              '</select>' +
+              '<button id="opp-clear" class="ghost-btn" type="button" title="Clear search">' + lucide('x', 'w-4 h-4') + '</button>' +
+            '</div>' +
+            '<label class="text-xs text-slate-400 flex items-center gap-2 shrink-0">Min score' +
+              '<input id="opp-score" type="range" min="0" max="100" value="0" class="w-28">' +
+              '<span id="opp-score-val" class="font-mono text-gold-400 w-6 text-right tabular-nums">0</span>' +
+            '</label>' +
+          '</div>' +
+          '<div class="mt-2 flex items-center justify-between text-[10px] text-slate-400 font-mono">' +
+            '<span id="opp-count">--</span>' +
+            '<span class="text-slate-600">Tip: click a card or use J/K</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="surface rounded-xl flex-1 min-h-0 overflow-hidden">' +
+          '<div class="split-pane h-full">' +
+            '<div id="opp-list" class="opp-list opp-scroll p-3"></div>' +
+            '<div id="opp-detail" class="opp-detail opp-scroll p-4"></div>' +
+          '</div>' +
+        '</div>' +
       '</div>';
-    document.getElementById('opp-status').addEventListener('change', () => renderOppList());
-    document.getElementById('opp-score').addEventListener('input', (e) => {
-      document.getElementById('opp-score-val').textContent = e.target.value;
-      clearTimeout(oppFilterTimeout);
-      oppFilterTimeout = setTimeout(() => renderOppList(), 150);
+
+    document.querySelectorAll('[data-opp-status]').forEach(btn => {
+      btn.addEventListener('click', () => setOppFilter({ status: btn.getAttribute('data-opp-status') || 'all' }));
     });
+
+    const q = document.getElementById('opp-q');
+    if (q) q.addEventListener('input', () => {
+      clearTimeout(oppFilterTimeout);
+      oppFilterTimeout = setTimeout(() => setOppFilter({ q: q.value }), 120);
+    });
+
+    const clearBtn = document.getElementById('opp-clear');
+    if (clearBtn) clearBtn.addEventListener('click', () => setOppFilter({ q: '' }));
+
+    const sort = document.getElementById('opp-sort');
+    if (sort) sort.addEventListener('change', () => setOppFilter({ sort: sort.value }));
+
+    const score = document.getElementById('opp-score');
+    if (score) score.addEventListener('input', () => {
+      const v = parseInt(score.value, 10) || 0;
+      document.getElementById('opp-score-val').textContent = String(v);
+      clearTimeout(oppFilterTimeout);
+      oppFilterTimeout = setTimeout(() => setOppFilter({ minScore: v }), 120);
+    });
+
+    applyOppFiltersToUi();
   }
   await renderOppList();
 }
 
+function chipHtml(status, label) {
+  const active = (oppFilters.status || 'all') === status;
+  return '<button type="button" class="chip ' + (active ? 'chip-active' : '') + '" data-opp-status="' + status + '">' + esc(label) + '</button>';
+}
+
 async function renderOppList() {
-  const status = document.getElementById('opp-status')?.value ?? 'all';
-  const minScore = parseInt(document.getElementById('opp-score')?.value) || 0;
-  const data = await fetchJson('/api/opportunities?limit=100&status=' + status);
-  oppData = (data || []).filter(o => o.score >= minScore);
+  applyOppFiltersToUi();
+  const status = oppFilters.status || 'all';
+  const minScore = parseInt(String(oppFilters.minScore || 0), 10) || 0;
+  const q = String(oppFilters.q || '').trim().toLowerCase();
+  const sort = oppFilters.sort || 'score';
+
+  const data = await fetchJson('/api/opportunities?limit=150&status=' + encodeURIComponent(status));
+  oppData = (data || [])
+    .filter(o => (o.score || 0) >= minScore)
+    .filter(o => {
+      if (!q) return true;
+      const hay = [
+        o.author_username || o.author_id || '',
+        o.text || '',
+        o.matched_bill_slug || '',
+        o.matched_keywords || '',
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+
+  if (sort === 'recent') {
+    oppData.sort((a, b) => (parseSqliteTimeToMs(b.first_seen) ?? 0) - (parseSqliteTimeToMs(a.first_seen) ?? 0));
+  } else if (sort === 'impressions') {
+    oppData.sort((a, b) => (b.impressions || 0) - (a.impressions || 0));
+  } else {
+    oppData.sort((a, b) => (b.score || 0) - (a.score || 0));
+  }
+
   const list = document.getElementById('opp-list');
   if (!list) return;
+  setText('opp-count', oppData.length + ' result' + (oppData.length === 1 ? '' : 's'));
   if (oppData.length === 0) {
     list.innerHTML = emptyState('No opportunities match filters', 'Try lowering the minimum score or changing the status filter.');
     return;
   }
-  list.innerHTML = '<div class="space-y-1.5">' + oppData.map((o, i) => {
-    const sc = o.score >= 70 ? 'text-emerald-400' : o.score >= 40 ? 'text-yellow-400' : 'text-gray-500';
-    const sel = selectedOpp && selectedOpp.tweet_id === o.tweet_id ? ' selected' : '';
-    return '<div class="opp-card rounded-lg px-3 py-2.5 border border-gray-700/20 bg-navy-800/40' + sel + '" data-idx="' + i + '" onclick="selectOpportunity(' + i + ')">' +
-      '<div class="flex items-center gap-2 mb-1">' +
-        '<span class="font-mono font-bold text-sm ' + sc + '">' + o.score + '</span>' +
-        '<span class="text-cyan-400 text-xs font-medium">@' + esc(o.author_username || o.author_id) + '</span>' +
-        statusBadge(o.status) +
-        '<span class="ml-auto text-[10px] text-gray-600">' + ago(o.first_seen) + '</span>' +
-      '</div>' +
-      '<div class="text-xs text-gray-400 leading-relaxed line-clamp-2" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + esc(o.text || '') + '</div>' +
-      '<div class="flex items-center gap-3 mt-1.5 text-[10px] text-gray-500 font-mono">' +
-        '<span title="Likes">' + fmtK(o.likes) + ' \\u2764</span>' +
-        '<span title="Retweets">' + fmtK(o.retweets) + ' \\uD83D\\uDD01</span>' +
-        '<span title="Replies">' + fmtK(o.replies) + ' \\uD83D\\uDCAC</span>' +
-        (o.matched_bill_slug ? '<span class="text-fuchsia-400">' + esc(o.matched_bill_slug) + '</span>' : '') +
+
+  const selectedId = selectedOpp?.tweet_id;
+  list.innerHTML = '<div class="space-y-2">' + oppData.map((o, i) => {
+    const sc = o.score >= 70 ? 'text-emerald-300' : o.score >= 40 ? 'text-amber-300' : 'text-slate-400';
+    const sel = selectedId && selectedId === o.tweet_id ? ' selected' : '';
+    const reco = recommendedBadge(o.recommended_action);
+    const author = esc(o.author_username || o.author_id || 'unknown');
+    const text = esc(o.text || '');
+    const bill = o.matched_bill_slug ? '<span class="text-fuchsia-300 truncate" title="' + esc(o.matched_bill_slug) + '">' + esc(o.matched_bill_slug) + '</span>' : '';
+    return '<div class="opp-card rounded-xl px-3.5 py-3 border border-slate-700/15 bg-navy-950/10' + sel + '" data-idx="' + i + '" onclick="selectOpportunity(' + i + ')">' +
+      '<div class="flex items-center gap-3">' +
+        '<div class="w-10 h-10 rounded-lg surface-2 flex items-center justify-center font-mono font-bold tabular-nums ' + sc + '">' + (o.score ?? 0) + '</div>' +
+        '<div class="min-w-0 flex-1">' +
+          '<div class="flex items-center gap-2 min-w-0">' +
+            '<span class="text-sm font-semibold text-slate-200 truncate">@' + author + '</span>' +
+            statusBadge(o.status) +
+            reco +
+            '<span class="ml-auto text-[10px] text-slate-500 font-mono shrink-0">' + ago(o.first_seen) + '</span>' +
+          '</div>' +
+          '<div class="text-xs text-slate-300/90 leading-relaxed mt-1" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + text + '</div>' +
+          '<div class="flex items-center gap-3 mt-2 text-[10px] text-slate-400 font-mono">' +
+            '<span title="Likes" class="inline-flex items-center gap-1">' + lucide('heart', 'w-3 h-3') + fmtK(o.likes) + '</span>' +
+            '<span title="Retweets" class="inline-flex items-center gap-1">' + lucide('repeat-2', 'w-3 h-3') + fmtK(o.retweets) + '</span>' +
+            '<span title="Replies" class="inline-flex items-center gap-1">' + lucide('message-circle', 'w-3 h-3') + fmtK(o.replies) + '</span>' +
+            (o.impressions != null ? '<span title="Impressions" class="inline-flex items-center gap-1">' + lucide('bar-chart-3', 'w-3 h-3') + fmtK(o.impressions) + '</span>' : '') +
+            bill +
+          '</div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('') + '</div>';
+}
+
+function moveOppSelection(delta) {
+  if (!oppData || oppData.length === 0) return;
+  let idx = selectedOpp ? oppData.findIndex(o => o.tweet_id === selectedOpp.tweet_id) : -1;
+  if (idx === -1) idx = delta > 0 ? -1 : oppData.length;
+  const next = Math.max(0, Math.min(oppData.length - 1, idx + delta));
+  selectOpportunity(next);
+  const card = document.querySelector('.opp-card[data-idx="' + next + '"]');
+  if (card && card.scrollIntoView) card.scrollIntoView({ block: 'nearest' });
 }
 
 function selectOpportunity(idx) {
@@ -391,6 +851,10 @@ function selectOpportunity(idx) {
 function closeDetailPanel() {
   selectedOpp = null;
   if (generateES) { generateES.close(); generateES = null; }
+  if (tweetEmbedResizeHandler) {
+    window.removeEventListener('message', tweetEmbedResizeHandler);
+    tweetEmbedResizeHandler = null;
+  }
   document.getElementById('opp-list')?.classList.remove('split');
   const detail = document.getElementById('opp-detail');
   if (detail) { detail.classList.remove('open'); }
@@ -401,101 +865,136 @@ function renderDetailPanel(opp) {
   const detail = document.getElementById('opp-detail');
   if (!detail) return;
 
-  const canGen = capabilities.canGenerate;
-  const canPost = capabilities.canPost || capabilities.dryRun;
-  const genTitle = canGen ? 'Generate Draft' : 'Configure API keys to enable';
-  const postTitle = canPost ? (capabilities.dryRun ? 'Post to X (Dry Run)' : 'Post to X') : 'Configure API keys to enable';
+  const canGen = !!capabilities.canGenerate;
+  const canPost = !!capabilities.canPost;
+  const canWrite = !!capabilities.canWrite;
+  const canRefresh = !!capabilities.canRefreshMetrics;
+
+  const genTitle = canGen ? 'Generate Draft' : 'Configure API keys to enable generation';
+  const postLabel = capabilities.dryRun ? 'Save Draft (Dry Run)' : 'Post to X';
+  const postTitle = canPost ? postLabel : (capabilities.dryRun ? 'Write DB not configured' : 'Configure API keys to enable posting');
 
   detail.innerHTML =
-    '<div class="fade-in space-y-4">' +
+    '<div class="fade-in space-y-4 max-w-4xl mx-auto">' +
       // Header
-      '<div class="flex items-center justify-between">' +
-        '<span class="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Engagement</span>' +
-        '<div class="flex items-center gap-2">' +
-          (opp.tweet_id ? '<a href="https://x.com/i/status/' + opp.tweet_id + '" target="_blank" rel="noopener" class="text-[10px] text-cyan-400 hover:underline">View on X \\u2192</a>' : '') +
-          '<button onclick="closeDetailPanel()" class="text-gray-500 hover:text-gray-300 text-xs px-1">\\u2715</button>' +
-        '</div>' +
-      '</div>' +
-
-      // Tweet embed (real embed with fallback card)
-      '<div id="tweet-embed-container">' +
-        // Fallback card shown immediately while embed loads
-        '<div id="tweet-fallback-card" class="bg-navy-950/80 rounded-lg p-3.5 border border-gray-700/30">' +
-          '<div class="flex items-center gap-2 mb-2">' +
-            '<div class="w-8 h-8 rounded-full bg-navy-700 flex items-center justify-center text-xs font-bold text-gray-400">' +
-              esc((opp.author_username || opp.author_id || '?')[0].toUpperCase()) +
-            '</div>' +
-            '<div>' +
-              '<div class="text-sm font-medium text-cream-100">@' + esc(opp.author_username || opp.author_id) + '</div>' +
-              '<div class="text-[10px] text-gray-600">' + ago(opp.first_seen) + '</div>' +
-            '</div>' +
+      '<div class="flex items-start justify-between gap-3">' +
+        '<div class="min-w-0">' +
+          '<div class="flex items-center gap-2">' +
+            '<span class="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Opportunity</span>' +
+            '<span id="detail-status-badge">' + statusBadge(opp.status) + '</span>' +
+            recommendedBadge(opp.recommended_action) +
           '</div>' +
-          '<div class="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">' + linkify(esc(opp.text || '')) + '</div>' +
-          '<div class="flex items-center gap-4 mt-2.5 text-xs text-gray-500 font-mono">' +
-            '<span>' + fmtK(opp.likes) + ' likes</span>' +
-            '<span>' + fmtK(opp.retweets) + ' RTs</span>' +
-            '<span>' + fmtK(opp.replies) + ' replies</span>' +
-            '<span>' + fmtK(opp.impressions) + ' impr</span>' +
+          '<div class="mt-1 flex items-baseline gap-2 min-w-0">' +
+            '<div class="text-base font-semibold text-cream-100 truncate">@' + esc(opp.author_username || opp.author_id || 'unknown') + '</div>' +
+            '<div class="text-[10px] text-slate-500 font-mono shrink-0">' + ago(opp.first_seen) + '</div>' +
           '</div>' +
         '</div>' +
-        // Real embed will be injected here
-        '<div id="tweet-embed-target"></div>' +
-      '</div>' +
-      '<div id="quoted-tweet-card"></div>' +
-
-      // Score breakdown
-      '<div class="space-y-1.5">' +
-        '<div class="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Score Breakdown</div>' +
-        '<div class="grid grid-cols-2 gap-x-4 gap-y-1">' +
-          scoreBar('Viral', opp.viral_score, 30, 'bg-rose-400') +
-          scoreBar('Relevance', opp.relevance_score, 30, 'bg-blue-400') +
-          scoreBar('Timing', opp.timing_score, 20, 'bg-amber-400') +
-          scoreBar('Engage', opp.engageability_score, 20, 'bg-emerald-400') +
-        '</div>' +
-        (opp.matched_bill_slug ? '<div class="text-xs text-gray-500 mt-1">Bill: <span class="text-fuchsia-400">' + esc(opp.matched_bill_slug) + '</span></div>' : '') +
-        (opp.matched_keywords ? '<div class="text-xs text-gray-500">Keywords: <span class="text-gray-400">' + esc(opp.matched_keywords) + '</span></div>' : '') +
-      '</div>' +
-
-      // Action toggle
-      '<div>' +
-        '<div class="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-1.5">Action</div>' +
-        '<div class="flex gap-1">' +
-          '<button class="action-btn text-xs px-3 py-1.5 rounded border border-gray-700/40' + (selectedAction === 'quote' ? ' active' : '') + '" onclick="setAction(\\'quote\\')">Quote</button>' +
-          '<button class="action-btn text-xs px-3 py-1.5 rounded border border-gray-700/40' + (selectedAction === 'reply' ? ' active' : '') + '" onclick="setAction(\\'reply\\')">Reply</button>' +
+        '<div class="flex flex-wrap items-center justify-end gap-2 shrink-0">' +
+          (opp.tweet_id ? '<a href="https://x.com/i/status/' + opp.tweet_id + '" target="_blank" rel="noopener" class="ghost-btn inline-flex items-center gap-1.5" title="Open on X">' + lucide('external-link', 'w-4 h-4') + 'Open</a>' : '') +
+          (opp.tweet_id ? '<button class="ghost-btn inline-flex items-center gap-1.5" onclick="copyOppLink()" type="button" title="Copy link">' + lucide('copy', 'w-4 h-4') + 'Copy</button>' : '') +
+          '<button class="ghost-btn inline-flex items-center gap-1.5' + (canRefresh ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="refreshOppMetrics()" type="button" ' + (canRefresh ? '' : 'disabled') + ' title="Refresh metrics">' + lucide('refresh-cw', 'w-4 h-4') + 'Refresh</button>' +
+          '<button class="ghost-btn inline-flex items-center gap-1.5' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="setOppStatus(\\'tracked\\')" type="button" ' + (canWrite ? '' : 'disabled') + ' title="Mark tracked">' + lucide('bookmark', 'w-4 h-4') + 'Track</button>' +
+          '<button class="ghost-btn inline-flex items-center gap-1.5' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" onclick="setOppStatus(\\'skipped\\')" type="button" ' + (canWrite ? '' : 'disabled') + ' title="Mark skipped">' + lucide('ban', 'w-4 h-4') + 'Skip</button>' +
+          '<button class="ghost-btn" onclick="closeDetailPanel()" type="button" title="Close">' + lucide('x', 'w-4 h-4') + '</button>' +
         '</div>' +
       '</div>' +
 
-      // Generate
-      '<div>' +
-        '<button id="btn-generate" onclick="startGenerate()" class="w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ' +
-          (canGen ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30 hover:bg-gold-500/25' : 'bg-gray-700/30 text-gray-500 border border-gray-700/30 cursor-not-allowed') +
-        '" ' + (canGen ? '' : 'disabled') + ' title="' + genTitle + '">' +
-          '\\u26A1 Generate Draft' +
-        '</button>' +
-        '<div id="pipeline-steps" class="mt-2 space-y-1 hidden"></div>' +
+      // Signals + author stats
+      '<div class="grid grid-cols-1 xl:grid-cols-2 gap-3">' +
+        '<div class="surface rounded-xl p-3 space-y-2">' +
+          '<div class="flex items-center justify-between">' +
+            '<div class="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Signals</div>' +
+            '<div class="text-[10px] text-slate-500 font-mono">Score <span class="text-slate-200 tabular-nums">' + (opp.score ?? 0) + '</span>/100</div>' +
+          '</div>' +
+          '<div class="grid grid-cols-2 gap-x-4 gap-y-2">' +
+            scoreBar('Viral', opp.viral_score, 30, 'bg-rose-400') +
+            scoreBar('Relevance', opp.relevance_score, 30, 'bg-blue-400') +
+            scoreBar('Timing', opp.timing_score, 20, 'bg-amber-400') +
+            scoreBar('Engage', opp.engageability_score, 20, 'bg-emerald-400') +
+          '</div>' +
+          (opp.matched_bill_slug ? '<div class="text-xs text-slate-400">Bill: <span class="text-fuchsia-300">' + esc(opp.matched_bill_slug) + '</span></div>' : '') +
+          (opp.matched_keywords ? '<div class="text-xs text-slate-500">Keywords: <span class="text-slate-300">' + esc(opp.matched_keywords) + '</span></div>' : '') +
+        '</div>' +
+        '<div class="surface rounded-xl p-3">' +
+          '<div class="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Author</div>' +
+          '<div id="author-stats" class="mt-2 text-xs text-slate-300">Loading...</div>' +
+        '</div>' +
+      '</div>' +
+
+      // Tweet embed + context
+      '<div class="surface rounded-xl p-3">' +
+        '<div id="tweet-embed-container" class="relative">' +
+          '<div id="tweet-embed-target"></div>' +
+          '<div id="tweet-fallback-card" class="surface-2 rounded-xl p-3 mt-2" style="display:none">' +
+            '<div class="flex items-center gap-2 mb-2">' +
+              '<div class="w-8 h-8 rounded-full bg-navy-700 flex items-center justify-center text-xs font-bold text-slate-300">' +
+                esc((opp.author_username || opp.author_id || '?')[0].toUpperCase()) +
+              '</div>' +
+              '<div class="min-w-0">' +
+                '<div class="text-sm font-medium text-cream-100 truncate">@' + esc(opp.author_username || opp.author_id) + '</div>' +
+                '<div class="text-[10px] text-slate-500 font-mono">' + ago(opp.first_seen) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">' + linkify(esc(opp.text || '')) + '</div>' +
+            '<div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-xs text-slate-400 font-mono">' +
+              '<span><span id="detail-likes" class="text-slate-200 tabular-nums">' + fmtK(opp.likes) + '</span> likes</span>' +
+              '<span><span id="detail-retweets" class="text-slate-200 tabular-nums">' + fmtK(opp.retweets) + '</span> RTs</span>' +
+              '<span><span id="detail-replies" class="text-slate-200 tabular-nums">' + fmtK(opp.replies) + '</span> replies</span>' +
+              '<span><span id="detail-impressions" class="text-slate-200 tabular-nums">' + fmtK(opp.impressions) + '</span> impr</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div id="quoted-tweet-card" class="mt-3"></div>' +
+      '</div>' +
+
+      // Assistant
+      '<div class="surface rounded-xl p-3 space-y-3">' +
+        '<div class="flex items-center justify-between">' +
+          '<div class="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Assistant</div>' +
+          '<div class="text-[10px] text-slate-500 font-mono">' + (canGen ? 'connected' : 'disabled') + '</div>' +
+        '</div>' +
+        '<div class="flex flex-wrap items-center gap-2">' +
+          '<div class="flex rounded-lg overflow-hidden border border-slate-700/30 shrink-0">' +
+            '<button class="action-btn text-xs px-3 py-1.5 inline-flex items-center gap-1' + (selectedAction === 'quote' ? ' active' : '') + '" onclick="setAction(\\'quote\\')" type="button">' + lucide('message-square', 'w-3 h-3') + 'Quote</button>' +
+            '<button class="action-btn text-xs px-3 py-1.5 inline-flex items-center gap-1' + (selectedAction === 'reply' ? ' active' : '') + '" onclick="setAction(\\'reply\\')" type="button">' + lucide('reply', 'w-3 h-3') + 'Reply</button>' +
+          '</div>' +
+          '<button id="btn-generate" onclick="startGenerate()" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 ' +
+            (canGen ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30 hover:bg-gold-500/25' : 'bg-slate-700/15 text-slate-500 border border-slate-700/20 cursor-not-allowed') +
+          '" ' + (canGen ? '' : 'disabled') + ' title="' + genTitle + '">' +
+            lucide('zap', 'w-3.5 h-3.5') + 'Generate' +
+          '</button>' +
+        '</div>' +
+        '<div>' +
+          '<div class="text-[10px] text-slate-400 uppercase tracking-wider font-mono mb-1">Guidance (optional)</div>' +
+          '<textarea id="gen-hint" rows="2" class="w-full bg-navy-950/40 border border-slate-700/30 rounded-xl px-3 py-2 text-sm text-slate-200 resize-y focus:border-gold-500/40 focus:outline-none leading-relaxed" placeholder="Steer tone, facts, or angle. Example: focus on process hypocrisy; avoid dunking on individuals."></textarea>' +
+        '</div>' +
+        '<div id="pipeline-steps" class="space-y-1 hidden"></div>' +
       '</div>' +
 
       // Draft textarea
-      '<div id="draft-section" class="hidden">' +
-        '<div class="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-1.5">Draft</div>' +
-        '<textarea id="draft-textarea" rows="4" class="w-full bg-navy-950 border border-gray-700/40 rounded-lg px-3 py-2 text-sm text-gray-200 resize-y focus:border-gold-500/50 focus:outline-none font-sans leading-relaxed" placeholder="Generated draft will appear here..."></textarea>' +
+      '<div id="draft-section" class="hidden surface rounded-xl p-3">' +
+        '<div class="flex items-center justify-between mb-1.5">' +
+          '<div class="text-[10px] text-slate-400 uppercase tracking-wider font-mono">Draft</div>' +
+          '<button class="ghost-btn inline-flex items-center gap-1.5" onclick="copyDraft()" type="button" title="Copy draft">' + lucide('copy', 'w-4 h-4') + 'Copy</button>' +
+        '</div>' +
+        '<textarea id="draft-textarea" rows="4" class="w-full bg-navy-950/40 border border-slate-700/30 rounded-xl px-3 py-2 text-sm text-slate-200 resize-y focus:border-gold-500/40 focus:outline-none font-sans leading-relaxed" placeholder="Generated draft will appear here..."></textarea>' +
         '<div class="flex justify-between mt-1">' +
-          '<div id="draft-research" class="text-[10px] text-gray-600 truncate max-w-[70%]"></div>' +
-          '<span id="char-count" class="text-[10px] font-mono text-gray-500">0/280</span>' +
+          '<div id="draft-research" class="text-[10px] text-slate-500 font-mono truncate max-w-[70%]"></div>' +
+          '<span id="char-count" class="text-[10px] font-mono text-slate-400">0/280</span>' +
         '</div>' +
       '</div>' +
 
       // Post button
       '<div id="post-section" class="hidden">' +
-        '<button id="btn-post" onclick="postEngagement()" class="w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ' +
-          (canPost ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25' : 'bg-gray-700/30 text-gray-500 border border-gray-700/30 cursor-not-allowed') +
+        '<button id="btn-post" onclick="postEngagement()" class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-colors ' +
+          (canPost ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/25' : 'bg-slate-700/15 text-slate-500 border border-slate-700/20 cursor-not-allowed') +
         '" ' + (canPost ? '' : 'disabled') + ' title="' + postTitle + '">' +
-          (capabilities.dryRun ? '\\uD83D\\uDE80 Post to X (Dry Run)' : '\\uD83D\\uDE80 Post to X') +
+          '<span class="inline-flex items-center gap-1.5">' + lucide('send', 'w-4 h-4') + esc(postLabel) + '</span>' +
         '</button>' +
       '</div>' +
 
       // Status banner
-      '<div id="post-banner" class="hidden rounded-lg px-3 py-2 text-xs"></div>' +
+      '<div id="post-banner" class="hidden rounded-xl px-3 py-2 text-xs"></div>' +
     '</div>';
 
   // Set up char counter on textarea
@@ -513,6 +1012,131 @@ function renderDetailPanel(opp) {
   if (capabilities.canFetchTweets && opp.tweet_id) {
     fetchLiveTweetContext(opp.tweet_id);
   }
+
+  // Author stats
+  loadAuthorStats(opp.author_id);
+}
+
+async function loadAuthorStats(authorId) {
+  const el = document.getElementById('author-stats');
+  if (!el || !authorId) return;
+  const data = await fetchJson('/api/author-stats?authorId=' + encodeURIComponent(authorId));
+  if (!data || data.error) { el.textContent = 'No author stats'; return; }
+
+  const by = data.byStatus || {};
+  const tracked = by.tracked || 0;
+  const engaged = by.engaged || 0;
+  const skipped = by.skipped || 0;
+  const expired = by.expired || 0;
+
+  const cooldown = (data.cooldownHours != null) ? data.cooldownHours : capabilities.engageAuthorCooldownHours;
+  const canEngage = data.canEngage;
+  const last = data.lastEngaged ? ago(data.lastEngaged) : 'never';
+
+  let cooldownHtml = '<span class="text-slate-500">unknown</span>';
+  if (canEngage === true) {
+    cooldownHtml = '<span class="text-emerald-200">eligible</span>';
+  } else if (canEngage === false) {
+    let extra = '';
+    const lastMs = parseSqliteTimeToMs(data.lastEngaged);
+    if (lastMs != null && cooldown != null) {
+      const remaining = (cooldown * 60 * 60 * 1000) - (Date.now() - lastMs);
+      if (remaining > 0) extra = ' <span class="text-slate-500">(' + esc(fmtDuration(remaining)) + ' left)</span>';
+    }
+    cooldownHtml = '<span class="text-amber-200">on cooldown</span>' + extra;
+  }
+
+  el.innerHTML =
+    '<div class="flex flex-wrap gap-x-4 gap-y-1">' +
+      '<span class="text-slate-500">Engaged: <span class="text-slate-200 font-mono tabular-nums">' + engaged + '</span></span>' +
+      '<span class="text-slate-500">Tracked: <span class="text-slate-200 font-mono tabular-nums">' + tracked + '</span></span>' +
+      '<span class="text-slate-500">Skipped: <span class="text-slate-200 font-mono tabular-nums">' + skipped + '</span></span>' +
+      '<span class="text-slate-500">Expired: <span class="text-slate-200 font-mono tabular-nums">' + expired + '</span></span>' +
+    '</div>' +
+    '<div class="mt-2 text-slate-500">Last engaged: <span class="text-slate-200">' + esc(last) + '</span></div>' +
+    '<div class="mt-0.5 text-slate-500">Cooldown (' + esc(String(cooldown || '')) + 'h): ' + cooldownHtml + '</div>';
+}
+
+function oppUrl(tweetId) {
+  return tweetId ? ('https://x.com/i/status/' + tweetId) : '';
+}
+
+async function copyOppLink() {
+  if (!selectedOpp?.tweet_id) return;
+  const url = oppUrl(selectedOpp.tweet_id);
+  try {
+    await navigator.clipboard.writeText(url);
+    toast('Copied link', 'success');
+  } catch {
+    toast('Copy failed', 'error');
+  }
+}
+
+async function copyDraft() {
+  const ta = document.getElementById('draft-textarea');
+  if (!ta || !ta.value) return;
+  try {
+    await navigator.clipboard.writeText(ta.value);
+    toast('Copied draft', 'success');
+  } catch {
+    toast('Copy failed', 'error');
+  }
+}
+
+async function setOppStatus(status) {
+  if (!selectedOpp) return;
+  if (!capabilities.canWrite) { toast('Writes disabled', 'warning'); return; }
+  try {
+    const r = await fetch('/api/opportunity-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tweetId: selectedOpp.tweet_id, status }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Failed to update status', 'error');
+      return;
+    }
+    selectedOpp.status = status;
+    const badgeEl = document.getElementById('detail-status-badge');
+    if (badgeEl) badgeEl.innerHTML = statusBadge(status);
+    toast('Marked ' + status, 'success');
+    await renderOppList();
+    // If it dropped out of the filtered list, close panel.
+    if (!oppData.find(o => o.tweet_id === selectedOpp.tweet_id)) closeDetailPanel();
+  } catch (err) {
+    toast('Failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+async function refreshOppMetrics() {
+  if (!selectedOpp) return;
+  if (!capabilities.canRefreshMetrics) { toast('Metrics refresh disabled', 'warning'); return; }
+  try {
+    const r = await fetch('/api/opportunity-refresh-metrics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tweetId: selectedOpp.tweet_id }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Failed to refresh metrics', 'error');
+      return;
+    }
+    const m = data.metrics || {};
+    selectedOpp.likes = m.likes ?? selectedOpp.likes;
+    selectedOpp.retweets = m.retweets ?? selectedOpp.retweets;
+    selectedOpp.replies = m.replies ?? selectedOpp.replies;
+    selectedOpp.impressions = m.impressions ?? selectedOpp.impressions;
+    setText('detail-likes', fmtK(selectedOpp.likes));
+    setText('detail-retweets', fmtK(selectedOpp.retweets));
+    setText('detail-replies', fmtK(selectedOpp.replies));
+    setText('detail-impressions', fmtK(selectedOpp.impressions));
+    toast('Metrics refreshed', 'success');
+    await renderOppList();
+  } catch (err) {
+    toast('Failed: ' + (err?.message || 'network'), 'error');
+  }
 }
 
 function embedTweet(tweetId) {
@@ -520,31 +1144,51 @@ function embedTweet(tweetId) {
   const fallback = document.getElementById('tweet-fallback-card');
   if (!target || !tweetId) return;
 
-  // Wait for Twitter widgets.js to load
-  function tryEmbed() {
-    if (window.twttr && twttr.widgets && twttr.widgets.createTweet) {
-      twttr.widgets.createTweet(tweetId, target, {
-        theme: 'dark',
-        conversation: 'none',
-        dnt: true,
-        align: 'center',
-      }).then((el) => {
-        if (el && fallback) {
-          // Real embed loaded — hide fallback
-          fallback.style.display = 'none';
-        }
-      }).catch(() => {
-        // Embed failed — fallback stays visible
-      });
-    } else {
-      // widgets.js not loaded yet, retry in 500ms (up to 5 attempts)
-      if (!tryEmbed._attempts) tryEmbed._attempts = 0;
-      if (tryEmbed._attempts++ < 5) {
-        setTimeout(tryEmbed, 500);
-      }
-    }
+  // Clear previous embed + listeners
+  target.innerHTML = '';
+  if (tweetEmbedResizeHandler) {
+    window.removeEventListener('message', tweetEmbedResizeHandler);
+    tweetEmbedResizeHandler = null;
   }
-  tryEmbed();
+
+  function showFallback() {
+    if (fallback) fallback.style.display = '';
+  }
+
+  // Use direct iframe embed — far more reliable than widgets.js
+  const iframe = document.createElement('iframe');
+  iframe.src = 'https://platform.twitter.com/embed/Tweet.html?dnt=true&theme=dark&id=' + encodeURIComponent(tweetId);
+  // The embed page itself is ~550px wide; if we stretch the iframe to 100% it leaves a big blank area (often white).
+  iframe.style.cssText = 'width:100%;max-width:550px;margin:0 auto;border:none;border-radius:12px;background:transparent;display:block;color-scheme:dark;';
+  iframe.setAttribute('allowtransparency', 'true');
+  iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox');
+
+  // Auto-resize: listen for height messages from the embed iframe
+  tweetEmbedResizeHandler = (e) => {
+    if (e.source === iframe.contentWindow && e.data && e.data['twttr.embed']) {
+      const height = e.data['twttr.embed'].method === 'twttr.private.resize'
+        ? e.data['twttr.embed'].params?.[0]?.height
+        : null;
+      if (height) iframe.style.height = height + 'px';
+    }
+  };
+  window.addEventListener('message', tweetEmbedResizeHandler);
+
+  // Start with a reasonable initial height
+  iframe.style.height = '250px';
+
+  // Fallback if iframe fails to load within 6s
+  const timeout = setTimeout(showFallback, 6000);
+  iframe.onload = () => {
+    clearTimeout(timeout);
+    // Give the embed a moment to render and send resize message
+    setTimeout(() => {
+      if (iframe.offsetHeight < 50) showFallback();
+    }, 2000);
+  };
+  iframe.onerror = () => { clearTimeout(timeout); showFallback(); };
+
+  target.appendChild(iframe);
 }
 
 function linkify(text) {
@@ -565,23 +1209,23 @@ async function fetchLiveTweetContext(tweetId) {
     if (ctx.quotedTweet) {
       const qt = ctx.quotedTweet;
       document.getElementById('quoted-tweet-card').innerHTML =
-        '<div class="bg-navy-950/60 rounded-lg p-3 border border-gray-700/20 ml-4 mt-1">' +
-          '<div class="text-[10px] text-gray-500 mb-1">Quoted tweet</div>' +
+        '<div class="surface-2 rounded-xl p-3 ml-4">' +
+          '<div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider mb-1">Quoted tweet</div>' +
           '<div class="flex items-center gap-1.5 mb-1">' +
             '<span class="text-xs font-medium text-cream-100">@' + esc(qt.author.username) + '</span>' +
           '</div>' +
-          '<div class="text-xs text-gray-400 leading-relaxed">' + linkify(esc(qt.text)) + '</div>' +
+          '<div class="text-xs text-slate-300 leading-relaxed">' + linkify(esc(qt.text)) + '</div>' +
         '</div>';
     }
     if (ctx.repliedToTweet) {
       const rt = ctx.repliedToTweet;
       document.getElementById('quoted-tweet-card').innerHTML =
-        '<div class="bg-navy-950/60 rounded-lg p-3 border border-gray-700/20 ml-4 mt-1">' +
-          '<div class="text-[10px] text-gray-500 mb-1">Replying to</div>' +
+        '<div class="surface-2 rounded-xl p-3 ml-4">' +
+          '<div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider mb-1">Replying to</div>' +
           '<div class="flex items-center gap-1.5 mb-1">' +
             '<span class="text-xs font-medium text-cream-100">@' + esc(rt.author.username) + '</span>' +
           '</div>' +
-          '<div class="text-xs text-gray-400 leading-relaxed">' + linkify(esc(rt.text)) + '</div>' +
+          '<div class="text-xs text-slate-300 leading-relaxed">' + linkify(esc(rt.text)) + '</div>' +
         '</div>';
     }
   } catch { /* non-fatal */ }
@@ -612,7 +1256,7 @@ function startGenerate() {
   stepsEl.classList.remove('hidden');
   stepsEl.innerHTML = '';
   btn.disabled = true;
-  btn.textContent = 'Generating...';
+  btn.innerHTML = lucide('loader-2', 'w-3.5 h-3.5 spinner') + 'Generating...';
 
   document.getElementById('draft-section')?.classList.add('hidden');
   document.getElementById('post-section')?.classList.add('hidden');
@@ -621,7 +1265,9 @@ function startGenerate() {
   const steps = {};
   const stepOrder = ['fetch', 'research', 'generate', 'fact-check', 'safety'];
 
-  generateES = new EventSource('/api/generate-draft?tweetId=' + encodeURIComponent(selectedOpp.tweet_id) + '&action=' + selectedAction);
+  const hint = (document.getElementById('gen-hint')?.value || '').trim();
+  const hintParam = hint ? ('&hint=' + encodeURIComponent(hint)) : '';
+  generateES = new EventSource('/api/generate-draft?tweetId=' + encodeURIComponent(selectedOpp.tweet_id) + '&action=' + selectedAction + hintParam);
 
   generateES.addEventListener('step', (e) => {
     const data = JSON.parse(e.data);
@@ -634,7 +1280,7 @@ function startGenerate() {
     generateES.close();
     generateES = null;
     btn.disabled = false;
-    btn.textContent = '\\u26A1 Generate Draft';
+    btn.innerHTML = lucide('zap', 'w-3.5 h-3.5') + 'Generate';
 
     if (data.skipReason) {
       showBanner('post-banner', data.skipReason, 'yellow');
@@ -673,7 +1319,7 @@ function startGenerate() {
     generateES.close();
     generateES = null;
     btn.disabled = false;
-    btn.textContent = '\\u26A1 Generate Draft';
+    btn.innerHTML = lucide('zap', 'w-3.5 h-3.5') + 'Generate';
     showBanner('post-banner', msg, 'red');
   });
 
@@ -681,20 +1327,20 @@ function startGenerate() {
     generateES.close();
     generateES = null;
     btn.disabled = false;
-    btn.textContent = '\\u26A1 Generate Draft';
+    btn.innerHTML = lucide('zap', 'w-3.5 h-3.5') + 'Generate';
   };
 }
 
 function renderPipelineSteps(el, order, steps) {
   el.innerHTML = order.map(name => {
     const s = steps[name];
-    if (!s) return '<div class="flex items-center gap-2 text-xs text-gray-600"><span class="w-4 text-center">\\u25CB</span><span>' + name + '</span></div>';
-    const icons = { running: '<span class="spinner w-3 h-3 text-gold-400">\\u25E0</span>', complete: '<span class="text-emerald-400">\\u2713</span>', failed: '<span class="text-red-400">\\u2717</span>', skipped: '<span class="text-gray-500">\\u2212</span>' };
-    const colors = { running: 'text-gold-400', complete: 'text-emerald-400', failed: 'text-red-400', skipped: 'text-gray-500' };
-    return '<div class="flex items-center gap-2 text-xs ' + (colors[s.status] || 'text-gray-500') + '">' +
-      '<span class="w-4 text-center">' + (icons[s.status] || '\\u25CB') + '</span>' +
+    if (!s) return '<div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-4 text-center">' + lucide('circle', 'w-3 h-3 text-slate-600') + '</span><span>' + name + '</span></div>';
+    const icons = { running: '<span class="spinner text-gold-400">' + lucide('loader-2', 'w-3.5 h-3.5') + '</span>', complete: '<span class="text-emerald-300">' + lucide('check', 'w-3.5 h-3.5') + '</span>', failed: '<span class="text-red-300">' + lucide('x', 'w-3.5 h-3.5') + '</span>', skipped: '<span class="text-slate-500">' + lucide('minus', 'w-3.5 h-3.5') + '</span>' };
+    const colors = { running: 'text-gold-400', complete: 'text-emerald-300', failed: 'text-red-300', skipped: 'text-slate-500' };
+    return '<div class="flex items-center gap-2 text-xs ' + (colors[s.status] || 'text-slate-500') + '">' +
+      '<span class="w-4 text-center">' + (icons[s.status] || lucide('circle', 'w-3 h-3 text-slate-600')) + '</span>' +
       '<span>' + name + '</span>' +
-      (s.detail ? '<span class="text-gray-600 ml-auto text-[10px] truncate max-w-[50%]">' + esc(s.detail) + '</span>' : '') +
+      (s.detail ? '<span class="text-slate-500 ml-auto text-[10px] truncate max-w-[50%]">' + esc(s.detail) + '</span>' : '') +
     '</div>';
   }).join('');
 }
@@ -711,10 +1357,29 @@ function updateCharCount() {
     document.getElementById('btn-post')?.setAttribute('disabled', '');
   } else {
     counter.classList.remove('char-over');
-    if (len > 0 && (capabilities.canPost || capabilities.dryRun)) {
+    if (len > 0 && capabilities.canPost) {
       document.getElementById('btn-post')?.removeAttribute('disabled');
     }
   }
+}
+
+function parseSqliteTimeToMs(raw) {
+  if (!raw) return null;
+  const s = String(raw);
+  const norm = s.includes('T') ? s : s.replace(' ', 'T');
+  const withZone = (norm.includes('Z') || norm.includes('+')) ? norm : (norm + 'Z');
+  const t = new Date(withZone).getTime();
+  return isFinite(t) ? t : null;
+}
+
+function fmtDuration(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h <= 0) return Math.max(1, m) + 'm';
+  const mm = m % 60;
+  if (mm === 0) return h + 'h';
+  return h + 'h ' + mm + 'm';
 }
 
 async function postEngagement() {
@@ -723,7 +1388,7 @@ async function postEngagement() {
   if (!ta || !selectedOpp || !ta.value.trim()) return;
 
   btn.disabled = true;
-  btn.textContent = 'Posting...';
+  btn.innerHTML = '<span class="inline-flex items-center gap-1.5">' + lucide('loader-2', 'w-4 h-4 spinner') + (capabilities.dryRun ? 'Saving...' : 'Posting...') + '</span>';
 
   try {
     const r = await fetch('/api/post-engagement', {
@@ -740,36 +1405,42 @@ async function postEngagement() {
     if (data.safetyRejected) {
       showBanner('post-banner', 'Safety REJECTED: ' + (data.safetyReason || 'Unknown'), 'red');
       btn.disabled = false;
-      btn.textContent = capabilities.dryRun ? '\\uD83D\\uDE80 Post to X (Dry Run)' : '\\uD83D\\uDE80 Post to X';
+      btn.innerHTML = '<span class="inline-flex items-center gap-1.5">' + lucide('send', 'w-4 h-4') + (capabilities.dryRun ? 'Save Draft (Dry Run)' : 'Post to X') + '</span>';
+      toast('Safety rejected', 'error');
       return;
     }
 
     if (data.success) {
-      const msg = data.dryRun
-        ? 'Dry run successful — content was not actually posted'
-        : 'Posted! ' + (data.tweetUrl ? '<a href="' + data.tweetUrl + '" target="_blank" rel="noopener" class="underline">View tweet</a>' : '');
-      showBanner('post-banner', msg, 'green');
-      btn.textContent = 'Posted!';
+      if (data.dryRun) {
+        showBanner('post-banner', 'Dry run saved a draft locally. Nothing was posted to X.', 'green');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="inline-flex items-center gap-1.5">' + lucide('send', 'w-4 h-4') + 'Save Draft (Dry Run)' + '</span>';
+        toast('Draft saved', 'success');
+      } else {
+        const msg = 'Posted! ' + (data.tweetUrl ? '<a href="' + data.tweetUrl + '" target="_blank" rel="noopener" class="underline">View tweet</a>' : '');
+        showBanner('post-banner', msg, 'green');
+        btn.innerHTML = '<span class="inline-flex items-center gap-1.5">' + lucide('check', 'w-4 h-4') + 'Posted' + '</span>';
+        toast('Posted to X', 'success');
 
-      // Update the list item badge
-      if (selectedOpp) {
-        const cards = document.querySelectorAll('.opp-card');
-        cards.forEach(c => {
-          if (oppData[c.dataset.idx]?.tweet_id === selectedOpp.tweet_id) {
-            const badge = c.querySelector('[class*="bg-blue-500"]');
-            if (badge) { badge.textContent = 'engaged'; badge.className = 'px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-400'; }
-          }
-        });
+        // Update local state + list
+        if (selectedOpp) {
+          selectedOpp.status = 'engaged';
+          const badgeEl = document.getElementById('detail-status-badge');
+          if (badgeEl) badgeEl.innerHTML = statusBadge('engaged');
+          await renderOppList();
+        }
       }
     } else {
       showBanner('post-banner', 'Failed: ' + (data.error || 'Unknown error'), 'red');
       btn.disabled = false;
-      btn.textContent = capabilities.dryRun ? '\\uD83D\\uDE80 Post to X (Dry Run)' : '\\uD83D\\uDE80 Post to X';
+      btn.innerHTML = '<span class="inline-flex items-center gap-1.5">' + lucide('send', 'w-4 h-4') + (capabilities.dryRun ? 'Save Draft (Dry Run)' : 'Post to X') + '</span>';
+      toast('Post failed', 'error');
     }
   } catch (err) {
     showBanner('post-banner', 'Network error: ' + err.message, 'red');
     btn.disabled = false;
-    btn.textContent = capabilities.dryRun ? '\\uD83D\\uDE80 Post to X (Dry Run)' : '\\uD83D\\uDE80 Post to X';
+    btn.innerHTML = '<span class="inline-flex items-center gap-1.5">' + lucide('send', 'w-4 h-4') + (capabilities.dryRun ? 'Save Draft (Dry Run)' : 'Post to X') + '</span>';
+    toast('Network error', 'error');
   }
 }
 
@@ -777,11 +1448,11 @@ function showBanner(id, msg, color) {
   const el = document.getElementById(id);
   if (!el) return;
   const colors = {
-    green: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400',
-    red: 'bg-red-500/10 border border-red-500/20 text-red-400',
-    yellow: 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400',
+    green: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-200',
+    red: 'bg-red-500/10 border border-red-500/20 text-red-200',
+    yellow: 'bg-amber-500/10 border border-amber-500/20 text-amber-200',
   };
-  el.className = 'rounded-lg px-3 py-2 text-xs ' + (colors[color] || colors.yellow);
+  el.className = 'rounded-xl px-3 py-2 text-xs ' + (colors[color] || colors.yellow);
   el.innerHTML = msg;
   el.classList.remove('hidden');
 }
@@ -895,6 +1566,32 @@ async function renderCosts() {
     '<div class="space-y-1">' + recentHtml + '</div>';
 }
 
+// ── Lucide Icons ──
+function lucide(name, cls) {
+  const p = {
+    'heart': '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+    'repeat-2': '<path d="m2 9 3-3 3 3"/><path d="M13 18H7a2 2 0 0 1-2-2V6"/><path d="m22 15-3 3-3-3"/><path d="M11 6h6a2 2 0 0 1 2 2v10"/>',
+    'message-circle': '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+    'external-link': '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    'search': '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    'copy': '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    'refresh-cw': '<path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>',
+    'bookmark': '<path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+    'ban': '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+    'bar-chart-3': '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    'zap': '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+    'send': '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    'circle': '<circle cx="12" cy="12" r="10"/>',
+    'loader-2': '<path d="M21 12a9 9 0 1 1-6.219-8.56"/>',
+    'check': '<path d="M20 6 9 17l-5-5"/>',
+    'minus': '<path d="M5 12h14"/>',
+    'message-square': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    'reply': '<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>',
+  };
+  return '<svg class="' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (p[name] || '') + '</svg>';
+}
+
 // ── Utilities ──
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val ?? ''; }
@@ -904,11 +1601,17 @@ function toggle(id) {
   r.classList.toggle('open');
   if (r.classList.contains('open')) {
     const embed = r.querySelector('.tweet-embed:not(.tweet-loaded)');
-    if (embed && window.twttr && twttr.widgets) {
+    if (embed) {
       embed.classList.add('tweet-loaded');
       const tweetId = embed.getAttribute('data-tweet-id');
-      embed.innerHTML = '';
-      twttr.widgets.createTweet(tweetId, embed, { theme: 'dark', conversation: 'none', width: 500 });
+      if (tweetId) {
+        embed.innerHTML = '';
+        const iframe = document.createElement('iframe');
+        iframe.src = 'https://platform.twitter.com/embed/Tweet.html?dnt=true&theme=dark&id=' + encodeURIComponent(tweetId);
+        iframe.style.cssText = 'width:100%;max-width:550px;margin:0 auto;height:250px;border:none;border-radius:12px;background:transparent;display:block;color-scheme:dark;';
+        iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox');
+        embed.appendChild(iframe);
+      }
     }
   }
 }
@@ -922,7 +1625,12 @@ async function fetchJson(url) {
 function ago(iso) {
   if (!iso) return '';
   try {
-    const ms = Date.now() - new Date(iso + (iso.includes('Z') || iso.includes('+') ? '' : 'Z')).getTime();
+    const raw = String(iso);
+    const norm = raw.includes('T') ? raw : raw.replace(' ', 'T');
+    const withZone = (norm.includes('Z') || norm.includes('+')) ? norm : (norm + 'Z');
+    const t = new Date(withZone).getTime();
+    if (!isFinite(t)) return raw;
+    const ms = Date.now() - t;
     if (ms < 0) return 'just now';
     const s = Math.floor(ms / 1000);
     if (s < 60) return s + 's ago';
@@ -955,41 +1663,64 @@ function fmtK(n) {
 
 function typeBadge(type) {
   const map = {
-    original: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/20',
-    quote: 'bg-blue-500/15 text-blue-300 border-blue-500/20',
-    reply: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
+    original: 'bg-fuchsia-500/10 text-fuchsia-200 border-fuchsia-500/25',
+    quote: 'bg-blue-500/10 text-blue-200 border-blue-500/25',
+    reply: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/25',
   };
-  const cls = map[type] || 'bg-gray-500/15 text-gray-400 border-gray-500/20';
-  return '<span class="px-1.5 py-0.5 rounded text-[10px] font-medium border ' + cls + '">' + (type || '').toUpperCase() + '</span>';
+  const cls = map[type] || 'bg-slate-500/10 text-slate-300 border-slate-500/15';
+  return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ' + cls + '">' + esc((type || '').toUpperCase()) + '</span>';
 }
 
 function statusBadge(status) {
   const map = {
-    posted: 'bg-emerald-500/15 text-emerald-400', tracked: 'bg-blue-500/15 text-blue-400',
-    engaged: 'bg-emerald-500/15 text-emerald-400', draft: 'bg-gray-500/15 text-gray-400',
-    queued: 'bg-blue-500/15 text-blue-400', review: 'bg-yellow-500/15 text-yellow-400',
-    rejected: 'bg-red-500/15 text-red-400', failed: 'bg-red-500/15 text-red-400',
-    skipped: 'bg-gray-500/15 text-gray-500', expired: 'bg-gray-500/15 text-gray-600',
+    posted: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/25',
+    tracked: 'bg-blue-500/10 text-blue-200 border-blue-500/25',
+    engaged: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/25',
+    draft: 'bg-slate-500/10 text-slate-300 border-slate-500/15',
+    queued: 'bg-blue-500/10 text-blue-200 border-blue-500/25',
+    review: 'bg-amber-500/10 text-amber-200 border-amber-500/25',
+    rejected: 'bg-red-500/10 text-red-200 border-red-500/25',
+    failed: 'bg-red-500/10 text-red-200 border-red-500/25',
+    skipped: 'bg-slate-500/10 text-slate-300 border-slate-500/15',
+    expired: 'bg-slate-500/10 text-slate-400 border-slate-500/10',
   };
-  const cls = map[status] || 'bg-gray-500/15 text-gray-400';
-  return '<span class="px-1.5 py-0.5 rounded text-[10px] font-medium ' + cls + '">' + (status || '') + '</span>';
+  const cls = map[status] || 'bg-slate-500/10 text-slate-300 border-slate-500/15';
+  return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ' + cls + '">' + esc(status || '') + '</span>';
+}
+
+function recommendedBadge(action) {
+  const map = {
+    quote: { cls: 'bg-blue-500/10 text-blue-200 border-blue-500/25', label: 'quote', icon: 'message-square' },
+    reply: { cls: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/25', label: 'reply', icon: 'reply' },
+    track: { cls: 'bg-gold-500/10 text-gold-400 border-gold-500/25', label: 'track', icon: 'bookmark' },
+    skip: { cls: 'bg-slate-500/10 text-slate-400 border-slate-500/15', label: 'skip', icon: 'ban' },
+  };
+  const v = map[action] || { cls: 'bg-slate-500/10 text-slate-300 border-slate-500/15', label: action || 'n/a', icon: 'minus' };
+  return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ' + v.cls + '" title="Recommended action: ' + esc(v.label) + '">' +
+    '<span class="-ml-0.5">' + lucide(v.icon, 'w-3 h-3') + '</span>' +
+    '<span>' + esc(v.label) + '</span>' +
+  '</span>';
 }
 
 function verdictBadge(v) {
-  const map = { SAFE: 'bg-emerald-500/15 text-emerald-400', REVIEW: 'bg-yellow-500/15 text-yellow-400', REJECT: 'bg-red-500/15 text-red-400' };
-  const cls = map[v] || 'bg-gray-500/15 text-gray-400';
-  return '<span class="px-1.5 py-0.5 rounded text-[10px] font-medium ' + cls + '">' + (v || '') + '</span>';
+  const map = {
+    SAFE: 'bg-emerald-500/10 text-emerald-200 border-emerald-500/25',
+    REVIEW: 'bg-amber-500/10 text-amber-200 border-amber-500/25',
+    REJECT: 'bg-red-500/10 text-red-200 border-red-500/25',
+  };
+  const cls = map[v] || 'bg-slate-500/10 text-slate-300 border-slate-500/15';
+  return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ' + cls + '">' + esc(v || '') + '</span>';
 }
 
 function stat(label, val, color) {
-  return '<span class="text-gray-500 text-xs">' + label + ' <span class="font-mono ' + color + '">' + (val ?? 0) + '</span></span>';
+  return '<span class="text-slate-500 text-xs">' + esc(label) + ' <span class="font-mono tabular-nums ' + color + '">' + (val ?? 0) + '</span></span>';
 }
 
 function scoreBar(label, val, max, color) {
   const pct = Math.min(100, Math.max(0, (val / max) * 100));
   return '<div>' +
-    '<div class="flex justify-between mb-0.5"><span class="text-[10px] text-gray-500">' + label + '</span><span class="text-[10px] font-mono text-gray-500">' + val + '</span></div>' +
-    '<div class="h-1.5 bg-gray-700/50 rounded-full overflow-hidden"><div class="h-full rounded-full score-bar ' + color + '" style="width:' + pct + '%"></div></div>' +
+    '<div class="flex justify-between mb-0.5"><span class="text-[10px] text-slate-500">' + esc(label) + '</span><span class="text-[10px] font-mono tabular-nums text-slate-500">' + (val ?? 0) + '</span></div>' +
+    '<div class="h-1.5 bg-slate-700/35 rounded-full overflow-hidden"><div class="h-full rounded-full score-bar ' + color + '" style="width:' + pct + '%"></div></div>' +
   '</div>';
 }
 
@@ -1001,37 +1732,42 @@ function renderLayers(layersStr) {
     const pct = Math.min(100, Math.max(0, score));
     const color = pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-red-500';
     return '<div class="flex items-center gap-2">' +
-      '<span class="text-[10px] text-gray-500 w-24 truncate">' + esc(name) + '</span>' +
-      '<div class="flex-1 h-1.5 bg-gray-700/50 rounded-full overflow-hidden"><div class="h-full rounded-full score-bar ' + color + '" style="width:' + pct + '%"></div></div>' +
-      '<span class="text-[10px] font-mono text-gray-500 w-6 text-right">' + score + '</span>' +
+      '<span class="text-[10px] text-slate-500 w-24 truncate">' + esc(name) + '</span>' +
+      '<div class="flex-1 h-1.5 bg-slate-700/35 rounded-full overflow-hidden"><div class="h-full rounded-full score-bar ' + color + '" style="width:' + pct + '%"></div></div>' +
+      '<span class="text-[10px] font-mono tabular-nums text-slate-500 w-6 text-right">' + score + '</span>' +
     '</div>';
   }).join('') + '</div>';
 }
 
 function metricsLine(p) {
   if (p.analytics_likes == null) return '';
-  return '<span>Metrics: <span class="text-gray-300">' + fmtK(p.analytics_likes) + ' likes / ' + fmtK(p.analytics_retweets) + ' RTs / ' + fmtK(p.analytics_replies) + ' replies</span></span>';
+  return '<span>Metrics: <span class="text-slate-200">' + fmtK(p.analytics_likes) + ' likes / ' + fmtK(p.analytics_retweets) + ' RTs / ' + fmtK(p.analytics_replies) + ' replies</span></span>';
 }
 
 function statCard(label, value, color) {
-  return '<div class="bg-navy-800/60 rounded-lg p-3 border border-gray-700/20">' +
-    '<div class="text-[10px] text-gray-500 uppercase tracking-wider">' + label + '</div>' +
+  return '<div class="surface rounded-xl p-3">' +
+    '<div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono">' + esc(label) + '</div>' +
     '<div class="text-lg font-bold ' + color + ' mt-0.5 font-mono tabular-nums">' + value + '</div>' +
   '</div>';
 }
 
 function emptyState(title, desc) {
   return '<div class="flex flex-col items-center justify-center py-16 text-center">' +
-    '<div class="w-10 h-10 rounded-full bg-navy-800 border border-gray-700/30 flex items-center justify-center mb-3">' +
-      '<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>' +
+    '<div class="w-10 h-10 rounded-full bg-navy-950/40 border border-slate-700/25 flex items-center justify-center mb-3">' +
+      '<svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>' +
     '</div>' +
-    '<div class="text-sm text-gray-400 font-medium mb-1">' + title + '</div>' +
-    '<div class="text-xs text-gray-600 max-w-sm leading-relaxed">' + desc + '</div>' +
+    '<div class="text-sm text-slate-200 font-semibold mb-1">' + esc(title) + '</div>' +
+    '<div class="text-xs text-slate-500 max-w-sm leading-relaxed">' + desc + '</div>' +
   '</div>';
 }
 
 // ── Boot ──
-loadTab('cycles');
+(() => {
+  let saved = null;
+  try { saved = localStorage.getItem('ai-dashboard-tab'); } catch {}
+  const initial = (saved && TAB_META[saved]) ? saved : 'cycles';
+  switchTab(initial);
+})();
 </script>
 </body>
 </html>`;

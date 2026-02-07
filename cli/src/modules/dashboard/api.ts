@@ -13,6 +13,7 @@ import type { PromptType, PromptContext } from '../claude/prompts/index.js';
 
 export interface ApiDeps {
   db: Database.Database;
+  config?: Config;
 }
 
 export interface FullApiDeps {
@@ -27,7 +28,7 @@ export interface FullApiDeps {
 }
 
 export function handleApi(deps: ApiDeps, pathname: string, url: URL, _req: IncomingMessage, res: ServerResponse): void {
-  const { db } = deps;
+  const { db, config } = deps;
 
   try {
     switch (pathname) {
@@ -49,6 +50,15 @@ export function handleApi(deps: ApiDeps, pathname: string, url: URL, _req: Incom
       case '/api/costs':
         json(res, getCosts(db, intParam(url, 'days', 7)));
         break;
+      case '/api/author-stats': {
+        const authorId = url.searchParams.get('authorId') ?? '';
+        if (!authorId) {
+          json(res, { error: 'authorId is required' }, 400);
+          break;
+        }
+        json(res, getAuthorStats(db, authorId, config));
+        break;
+      }
       default:
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Not found' }));
@@ -137,6 +147,12 @@ export async function handlePostApi(deps: FullApiDeps, pathname: string, req: In
       case '/api/tweet-context':
         await handleTweetContext(deps, req, res);
         break;
+      case '/api/opportunity-status':
+        await handleOpportunityStatus(deps, req, res);
+        break;
+      case '/api/opportunity-refresh-metrics':
+        await handleOpportunityRefreshMetrics(deps, req, res);
+        break;
       case '/api/post-engagement':
         await handlePostEngagement(deps, req, res);
         break;
@@ -180,6 +196,8 @@ async function handleTweetContext(deps: FullApiDeps, req: IncomingMessage, res: 
 export function handleGenerateSSE(deps: FullApiDeps, url: URL, _req: IncomingMessage, res: ServerResponse): void {
   const tweetId = url.searchParams.get('tweetId');
   const action = (url.searchParams.get('action') ?? 'quote') as 'quote' | 'reply';
+  const hintRaw = url.searchParams.get('hint');
+  const hint = hintRaw ? hintRaw.slice(0, 800) : null;
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -205,7 +223,7 @@ export function handleGenerateSSE(deps: FullApiDeps, url: URL, _req: IncomingMes
   }
 
   // Run pipeline asynchronously
-  runGeneratePipeline(deps, tweetId, action, send)
+  runGeneratePipeline(deps, tweetId, action, hint, send)
     .catch(err => {
       send('error', { message: err instanceof Error ? err.message : String(err) });
     })
@@ -218,6 +236,7 @@ async function runGeneratePipeline(
   deps: FullApiDeps,
   tweetId: string,
   action: 'quote' | 'reply',
+  hint: string | null,
   send: (event: string, data: unknown) => void,
 ): Promise<void> {
   const { claude, xReader, config, bills } = deps;
@@ -302,6 +321,7 @@ async function runGeneratePipeline(
     quoteTweetAuthor: tweetContext.tweet.author.username,
     tweetContext,
     researchResult,
+    additionalContext: hint ?? undefined,
   };
 
   // Add bill context if matched
@@ -388,20 +408,20 @@ async function runGeneratePipeline(
 async function handlePostEngagement(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
   const { writeDb, xWriter, claude, config } = deps;
 
-  if (!writeDb || !xWriter) {
-    json(res, { error: 'Write capabilities not configured' }, 503);
-    return;
-  }
-
   const body = await parseBody<{ tweetId: string; content: string; action: 'quote' | 'reply' }>(req);
   if (!body.tweetId || !body.content || !body.action) {
     json(res, { error: 'tweetId, content, and action are required' }, 400);
     return;
   }
 
+  let safetyScore = 0;
+  let safetyVerdict: 'SAFE' | 'REVIEW' | 'REJECT' = 'SAFE';
+
   // Re-run safety check on final content (user may have edited)
   if (claude && config) {
     const safety = await runHotPotDetector({ content: body.content, claude, config });
+    safetyScore = safety.score;
+    safetyVerdict = safety.verdict;
     if (safety.verdict === 'REJECT') {
       json(res, {
         success: false,
@@ -415,12 +435,29 @@ async function handlePostEngagement(deps: FullApiDeps, req: IncomingMessage, res
 
   // Dry-run mode: don't actually post
   if (deps.dryRun) {
+    // Optionally record the draft locally so users can review it later.
+    if (writeDb) {
+      const posts = createPostModel(writeDb);
+      posts.create({
+        content: body.content,
+        prompt_type: body.action === 'quote' ? 'quote-dunk' : 'reply-dunk',
+        safety_score: safetyScore,
+        safety_verdict: safetyVerdict,
+        status: 'draft',
+        parent_tweet_id: body.tweetId,
+      });
+    }
     json(res, {
       success: true,
       dryRun: true,
       tweetUrl: null,
       message: 'Dry run — content not posted',
     });
+    return;
+  }
+
+  if (!writeDb || !xWriter) {
+    json(res, { error: 'Write capabilities not configured' }, 503);
     return;
   }
 
@@ -440,8 +477,8 @@ async function handlePostEngagement(deps: FullApiDeps, req: IncomingMessage, res
   const post = posts.create({
     content: body.content,
     prompt_type: promptType,
-    safety_score: 0,
-    safety_verdict: 'SAFE',
+    safety_score: safetyScore,
+    safety_verdict: safetyVerdict,
     status: 'posted',
     parent_tweet_id: body.tweetId,
   });
@@ -456,11 +493,89 @@ async function handlePostEngagement(deps: FullApiDeps, req: IncomingMessage, res
   const opportunities = createOpportunityModel(writeDb);
   opportunities.markEngaged(body.tweetId, post.id);
 
+  // Record author cooldown stats (best-effort; non-fatal if table doesn't exist yet)
+  try {
+    const row = writeDb.prepare('SELECT author_id FROM opportunities WHERE tweet_id = ?').get(body.tweetId) as { author_id: string } | undefined;
+    if (row?.author_id) {
+      writeDb.prepare(`
+        INSERT INTO engagement_cooldowns (author_id, last_engaged, engage_count)
+        VALUES (?, datetime('now'), 1)
+        ON CONFLICT(author_id) DO UPDATE SET
+          last_engaged = datetime('now'),
+          engage_count = engage_count + 1
+      `).run(row.author_id);
+    }
+  } catch {
+    // Non-fatal
+  }
+
   json(res, {
     success: true,
     tweetUrl: postResult.tweetUrl,
     tweetId: postResult.tweetId,
   });
+}
+
+// ── POST /api/opportunity-status ─────────────────────
+
+async function handleOpportunityStatus(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+
+  const body = await parseBody<{ tweetId: string; status: 'tracked' | 'skipped' }>(req);
+  if (!body.tweetId || !body.status) {
+    json(res, { error: 'tweetId and status are required' }, 400);
+    return;
+  }
+
+  if (body.status !== 'tracked' && body.status !== 'skipped') {
+    json(res, { error: 'Invalid status' }, 400);
+    return;
+  }
+
+  const info = deps.writeDb.prepare(
+    'UPDATE opportunities SET status = ?, last_evaluated = datetime(\'now\') WHERE tweet_id = ?'
+  ).run(body.status, body.tweetId);
+
+  if (info.changes === 0) {
+    json(res, { error: 'Opportunity not found' }, 404);
+    return;
+  }
+
+  const updated = deps.writeDb.prepare('SELECT * FROM opportunities WHERE tweet_id = ?').get(body.tweetId);
+  json(res, { success: true, opportunity: updated });
+}
+
+// ── POST /api/opportunity-refresh-metrics ────────────
+
+async function handleOpportunityRefreshMetrics(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.xReader) {
+    json(res, { error: 'X API reader not configured' }, 503);
+    return;
+  }
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+
+  const body = await parseBody<{ tweetId: string }>(req);
+  if (!body.tweetId) {
+    json(res, { error: 'tweetId is required' }, 400);
+    return;
+  }
+
+  const metrics = await deps.xReader.getTweetMetrics(body.tweetId);
+  if (!metrics) {
+    json(res, { error: 'Metrics unavailable' }, 404);
+    return;
+  }
+
+  const opportunities = createOpportunityModel(deps.writeDb);
+  opportunities.updateMetrics(body.tweetId, metrics);
+
+  json(res, { success: true, metrics });
 }
 
 // ── parseBody helper ─────────────────────────────────
@@ -574,6 +689,52 @@ function getOverview(db: Database.Database) {
       generations: safeCount(db, 'generations'),
     },
   };
+}
+
+function getAuthorStats(db: Database.Database, authorId: string, config?: Config) {
+  const out: {
+    authorId: string;
+    byStatus: Record<string, number>;
+    total: number;
+    lastEngaged: string | null;
+    engageCount: number;
+    canEngage: boolean | null;
+    cooldownHours: number | null;
+  } = {
+    authorId,
+    byStatus: {},
+    total: 0,
+    lastEngaged: null,
+    engageCount: 0,
+    canEngage: null,
+    cooldownHours: null,
+  };
+
+  if (tableExists(db, 'opportunities')) {
+    const rows = db.prepare(
+      'SELECT status, COUNT(*) as c FROM opportunities WHERE author_id = ? GROUP BY status'
+    ).all(authorId) as Array<{ status: string; c: number }>;
+    out.byStatus = Object.fromEntries(rows.map(r => [r.status, r.c]));
+    out.total = rows.reduce((sum, r) => sum + r.c, 0);
+  }
+
+  if (tableExists(db, 'engagement_cooldowns')) {
+    const row = db.prepare(
+      'SELECT last_engaged, engage_count FROM engagement_cooldowns WHERE author_id = ?'
+    ).get(authorId) as { last_engaged: string; engage_count: number } | undefined;
+    if (row) {
+      out.lastEngaged = row.last_engaged;
+      out.engageCount = row.engage_count;
+      const cooldownHours = config?.engageAuthorCooldownHours ?? null;
+      out.cooldownHours = cooldownHours;
+      if (cooldownHours != null) {
+        const last = new Date(row.last_engaged + (row.last_engaged.includes('Z') || row.last_engaged.includes('+') ? '' : 'Z')).getTime();
+        out.canEngage = (Date.now() - last) > cooldownHours * 60 * 60 * 1000;
+      }
+    }
+  }
+
+  return out;
 }
 
 function getCycles(db: Database.Database, limit: number) {

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "x-engage": {
+      "command": "node",
+      "args": ["tools/x-engage.mjs"],
+      "cwd": "/Users/coreysteinwand/Developer/Source/not-congress.io"
+    }
+  }
+}
