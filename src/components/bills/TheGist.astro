@@ -6,6 +6,7 @@
  * Prominently displayed at the top of bill detail pages.
  */
 import Icon from '../ui/Icon.astro';
+import { getTier } from '../../utils/absurdity-tiers';
 
 interface Props {
   theGist: string;
@@ -22,16 +23,20 @@ const renderLinks = (text: string) =>
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-navy-800 underline hover:text-gold-600">$1</a>'
   );
 
-// Determine the editorial tone based on absurdity score
-const getToneLabel = (score: number | undefined) => {
-  if (!score) return null;
-  if (score >= 8) return { label: 'Peak Absurdity', color: 'text-red-600 bg-red-50' };
-  if (score >= 6) return { label: 'Highly Questionable', color: 'text-orange-600 bg-orange-50' };
-  if (score >= 4) return { label: 'Eyebrow-Raising', color: 'text-amber-600 bg-amber-50' };
-  return { label: 'Relatively Sane', color: 'text-green-600 bg-green-50' };
+// Map tier colors to tone badge styling
+const toneColors: Record<string, string> = {
+  'tier-green': 'text-green-600 bg-green-50',
+  'tier-yellow': 'text-amber-600 bg-amber-50',
+  'tier-orange': 'text-orange-600 bg-orange-50',
+  'tier-red': 'text-red-600 bg-red-50',
 };
 
-const tone = getToneLabel(absurdityIndex);
+const tone = absurdityIndex
+  ? (() => {
+      const tier = getTier(absurdityIndex);
+      return { label: tier.name, color: toneColors[tier.color.drawerClass] };
+    })()
+  : null;
 ---
 
 <div class="the-gist relative">

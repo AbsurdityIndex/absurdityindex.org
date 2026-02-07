@@ -1,4 +1,5 @@
 import { getCollection } from 'astro:content';
+import { getLabel } from '../../utils/absurdity-tiers';
 
 export async function GET() {
   const bills = await getCollection('bills');
@@ -108,7 +109,7 @@ export async function GET() {
       average: avgScore,
       billsWithScore: billsWithAbsurdity.length,
       distribution: absurdityDistribution,
-      _analysis: avgScore >= 7 ? "Fish on Meth territory" : avgScore >= 5 ? "Your Tax Dollars at work" : "Suspiciously reasonable",
+      _analysis: `${getLabel(Math.round(avgScore))} territory`,
     },
     byCategory: categories,
     byStatus: statuses,

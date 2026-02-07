@@ -135,9 +135,10 @@ function safeUrl(value) {
   return '#';
 }
 
+// Keep in sync with src/utils/absurdity-tiers.ts
 function getLabel(score) {
-  if (score <= 3) return 'Business as Usual';
-  if (score <= 6) return 'Questionable';
-  if (score <= 8) return 'Your Tax Dollars';
+  if (score <= 3) return 'Suspiciously Reasonable';
+  if (score <= 6) return 'Pork-Adjacent';
+  if (score <= 8) return 'Hold My Gavel';
   return 'Fish on Meth';
 }

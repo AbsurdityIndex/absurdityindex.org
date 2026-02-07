@@ -6,6 +6,7 @@
  * Can be triggered from anywhere via custom event: 'open-absurdity-help'
  */
 import Icon from './Icon.astro';
+import { ABSURDITY_TIERS } from '../../utils/absurdity-tiers';
 ---
 
 <!-- Drawer Backdrop -->
@@ -64,37 +65,15 @@ import Icon from './Icon.astro';
 
       <!-- Tiers -->
       <div class="tiers">
-        <div class="tier tier-green">
-          <div class="tier-range">1-3</div>
-          <div class="tier-content">
-            <h4 class="tier-name">Business as Usual</h4>
-            <p class="tier-desc">Standard legislation, procedural stuff, post office namings. The kind of bills that make you say "yeah, I guess someone has to do that."</p>
+        {ABSURDITY_TIERS.map((tier) => (
+          <div class={`tier ${tier.color.drawerClass}`}>
+            <div class="tier-range">{tier.range}</div>
+            <div class="tier-content">
+              <h4 class="tier-name">{tier.name}</h4>
+              <p class="tier-desc">{tier.description}</p>
+            </div>
           </div>
-        </div>
-
-        <div class="tier tier-yellow">
-          <div class="tier-range">4-6</div>
-          <div class="tier-content">
-            <h4 class="tier-name">Questionable</h4>
-            <p class="tier-desc">Bills that make you raise an eyebrow. Creative acronyms, odd priorities, solutions in search of problems.</p>
-          </div>
-        </div>
-
-        <div class="tier tier-orange">
-          <div class="tier-range">7-8</div>
-          <div class="tier-content">
-            <h4 class="tier-name">Your Tax Dollars</h4>
-            <p class="tier-desc">Genuinely wasteful spending, bizarre research funding, pork barrel projects. The bills that make you wonder if anyone is paying attention.</p>
-          </div>
-        </div>
-
-        <div class="tier tier-red">
-          <div class="tier-range">9-10</div>
-          <div class="tier-content">
-            <h4 class="tier-name">Fish on Meth</h4>
-            <p class="tier-desc">The pinnacle of absurdity. Pizza-as-vegetable tier. Bills so absurd they transcend partisan criticism and unite us all in confused disbelief.</p>
-          </div>
-        </div>
+        ))}
       </div>
     </section>
 

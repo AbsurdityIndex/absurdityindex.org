@@ -1,5 +1,6 @@
 ---
 import Icon from '../ui/Icon.astro';
+import { getTier, getSegmentColor } from '../../utils/absurdity-tiers';
 
 interface Props {
   score: number; // 1-10
@@ -9,45 +10,10 @@ interface Props {
 const { score, compact = false } = Astro.props;
 
 const clampedScore = Math.max(1, Math.min(10, Math.round(score)));
-
-function getLabel(s: number) {
-  if (s <= 3) return 'Business as Usual';
-  if (s <= 6) return 'Questionable';
-  if (s <= 8) return 'Your Tax Dollars';
-  return 'Fish on Meth';
-}
-
-function getTierRange(s: number) {
-  if (s <= 3) return '1-3';
-  if (s <= 6) return '4-6';
-  if (s <= 8) return '7-8';
-  return '9-10';
-}
-
-function getColor(segment: number) {
-  if (segment <= 3) return 'bg-green-600';
-  if (segment <= 6) return 'bg-yellow-500';
-  if (segment <= 8) return 'bg-orange-500';
-  return 'bg-red-600';
-}
-
-function getScoreBadgeColor(s: number) {
-  if (s <= 3) return 'bg-green-100 text-green-800 border-green-200';
-  if (s <= 6) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-  if (s <= 8) return 'bg-orange-100 text-orange-800 border-orange-200';
-  return 'bg-red-100 text-red-800 border-red-200';
-}
-
-function getTierBadgeColors(s: number) {
-  if (s <= 3) return { bg: 'bg-green-600', text: 'text-white' };
-  if (s <= 6) return { bg: 'bg-yellow-500', text: 'text-yellow-900' };
-  if (s <= 8) return { bg: 'bg-orange-500', text: 'text-white' };
-  return { bg: 'bg-red-600', text: 'text-white' };
-}
-
-const label = getLabel(clampedScore);
-const tierRange = getTierRange(clampedScore);
-const tierBadge = getTierBadgeColors(clampedScore);
+const tier = getTier(clampedScore);
+const label = tier.name;
+const tierRange = tier.range;
+const tierBadge = tier.color.pill;
 ---
 
 {compact ? (
@@ -58,14 +24,14 @@ const tierBadge = getTierBadgeColors(clampedScore);
         <div
           class:list={[
             'h-2 rounded-sm flex-1',
-            seg <= clampedScore ? getColor(seg) : 'bg-cream-200',
+            seg <= clampedScore ? getSegmentColor(seg) : 'bg-cream-200',
           ]}
         />
       ))}
     </div>
     <span class:list={[
       'font-mono text-xs font-bold px-1.5 py-0.5 rounded border',
-      getScoreBadgeColor(clampedScore)
+      tier.color.badge
     ]}>
       {clampedScore}
     </span>
@@ -102,7 +68,7 @@ const tierBadge = getTierBadgeColors(clampedScore);
         <div
           class:list={[
             'h-3 rounded flex-1 transition-all',
-            seg <= clampedScore ? getColor(seg) : 'bg-cream-200',
+            seg <= clampedScore ? getSegmentColor(seg) : 'bg-cream-200',
           ]}
         />
       ))}
