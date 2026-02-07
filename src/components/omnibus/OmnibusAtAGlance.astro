@@ -1,0 +1,110 @@
+---
+/**
+ * OmnibusAtAGlance - Executive summary card for omnibus bill detail pages.
+ *
+ * Shows key stats (spending, pages, divisions, time-to-vote), a dramatic
+ * callout quote, compact absurdity bar, and vote result.
+ */
+import Icon from '../ui/Icon.astro';
+import AbsurdityMeter from '../bills/AbsurdityMeter.astro';
+
+interface Props {
+  totalSpending: number;
+  pageCount: number;
+  divisionCount: number;
+  absurdityIndex?: number;
+  votes?: {
+    yeas: number;
+    nays: number;
+    notVoting?: number;
+    passed: boolean;
+    chamber?: 'house' | 'senate';
+  };
+  /** Dramatic callout text, e.g. "Text released at 1:30 AM..." */
+  callout?: string;
+  /** Hours between text release and first vote (if known) */
+  hoursToVote?: number;
+}
+
+const {
+  totalSpending,
+  pageCount,
+  divisionCount,
+  absurdityIndex,
+  votes,
+  callout,
+  hoursToVote,
+} = Astro.props;
+
+const readingHours = Math.round((pageCount * 250) / (200 * 60));
+const wordsEstimate = (pageCount * 250).toLocaleString();
+---
+
+<section class="bg-cream-100 border border-gold-300 rounded-lg overflow-hidden" data-section="overview">
+  <!-- Stats grid -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-gold-200">
+    <div class="bg-cream-100 p-4 text-center">
+      <div class="font-mono text-2xl font-bold text-navy-900">${totalSpending}B</div>
+      <div class="text-xs text-navy-500 mt-1">Total Spending</div>
+    </div>
+    <div class="bg-cream-100 p-4 text-center">
+      <div class="font-mono text-2xl font-bold text-navy-900">{pageCount.toLocaleString()}</div>
+      <div class="text-xs text-navy-500 mt-1">Pages</div>
+    </div>
+    <div class="bg-cream-100 p-4 text-center">
+      <div class="font-mono text-2xl font-bold text-navy-900">{divisionCount}</div>
+      <div class="text-xs text-navy-500 mt-1">Divisions</div>
+    </div>
+    <div class="bg-cream-100 p-4 text-center">
+      <div class="font-mono text-2xl font-bold text-navy-900">
+        {hoursToVote ? `${hoursToVote}h` : `~${readingHours}h`}
+      </div>
+      <div class="text-xs text-navy-500 mt-1">
+        {hoursToVote ? 'Text → Vote' : 'Reading Time'}
+      </div>
+    </div>
+  </div>
+
+  <div class="p-5 space-y-4">
+    <!-- Dramatic callout -->
+    {callout && (
+      <blockquote class="border-l-4 border-red-600 pl-4 py-2 bg-red-50 rounded-r">
+        <p class="font-serif text-sm text-navy-800 italic leading-relaxed">
+          <Icon name="alert-triangle" size={14} class="inline text-red-600 -mt-0.5 mr-1" />
+          {callout}
+        </p>
+      </blockquote>
+    )}
+
+    <!-- Absurdity bar -->
+    {absurdityIndex !== undefined && (
+      <AbsurdityMeter score={absurdityIndex} compact />
+    )}
+
+    <!-- Vote result -->
+    {votes && (
+      <div class="flex items-center justify-between pt-3 border-t border-gold-200">
+        <div class="flex items-center gap-2">
+          <span class:list={[
+            'px-2 py-0.5 text-xs font-mono font-bold rounded',
+            votes.passed
+              ? 'bg-green-100 text-green-800 border border-green-200'
+              : 'bg-red-100 text-red-800 border border-red-200'
+          ]}>
+            {votes.passed ? 'PASSED' : 'FAILED'}
+          </span>
+          {votes.chamber && (
+            <span class="text-xs text-navy-500 capitalize">{votes.chamber}</span>
+          )}
+        </div>
+        <div class="flex items-center gap-3 text-sm font-mono">
+          <span class="text-green-700">{votes.yeas} yeas</span>
+          <span class="text-red-700">{votes.nays} nays</span>
+          {votes.notVoting && votes.notVoting > 0 && (
+            <span class="text-navy-400">{votes.notVoting} NV</span>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+</section>

@@ -1,0 +1,161 @@
+---
+/**
+ * OmnibusSidebar - Sticky desktop sidebar with donut chart, scroll-spy nav, quick stats.
+ *
+ * Shows top 4 divisions + "Other" in an SVG donut, navigation links that
+ * highlight based on scroll position, and key stats.
+ */
+import Icon from '../ui/Icon.astro';
+
+interface Division {
+  title: string;
+  shortTitle?: string;
+  spending: number;
+}
+
+interface Props {
+  divisions: Division[];
+  totalSpending: number;
+  pageCount: number;
+  absurdityIndex?: number;
+  hasRiders: boolean;
+  hasTimeline: boolean;
+  hasBillEvolution: boolean;
+}
+
+const { divisions, totalSpending, pageCount, absurdityIndex, hasRiders, hasTimeline, hasBillEvolution } = Astro.props;
+
+// Donut chart: top 4 by spending + "Other"
+const sorted = [...divisions]
+  .map((d, i) => ({ ...d, index: i }))
+  .sort((a, b) => b.spending - a.spending);
+
+const top4 = sorted.slice(0, 4);
+const otherSpending = sorted.slice(4).reduce((sum, d) => sum + d.spending, 0);
+
+const donutColors = ['#1a2744', '#c5a572', '#b91c1c', '#15803d', '#64748b'];
+const donutLabels = [
+  ...top4.map(d => d.shortTitle || d.title),
+  ...(otherSpending > 0 ? ['Other'] : []),
+];
+const donutValues = [
+  ...top4.map(d => d.spending),
+  ...(otherSpending > 0 ? [otherSpending] : []),
+];
+
+// Build SVG donut segments (stroke-dasharray on circles)
+const donutTotal = donutValues.reduce((a, b) => a + b, 0);
+const radius = 40;
+const circumference = 2 * Math.PI * radius;
+
+let cumulativePercent = 0;
+const segments = donutValues.map((val, i) => {
+  const percent = donutTotal > 0 ? (val / donutTotal) * 100 : 0;
+  const dashLength = (percent / 100) * circumference;
+  const dashGap = circumference - dashLength;
+  const offset = -((cumulativePercent / 100) * circumference) + circumference * 0.25;
+  cumulativePercent += percent;
+  return { dashArray: `${dashLength} ${dashGap}`, offset, color: donutColors[i % donutColors.length] };
+});
+
+// Navigation sections
+const navSections = [
+  { id: 'overview', label: 'Overview', icon: 'clipboard-list' as const },
+  { id: 'spending', label: 'Spending', icon: 'bar-chart-2' as const },
+  { id: 'divisions-section', label: 'Divisions', icon: 'book-open' as const },
+  ...(hasRiders ? [{ id: 'riders', label: 'Riders', icon: 'gift' as const }] : []),
+  ...(hasTimeline ? [{ id: 'timeline', label: 'Timeline', icon: 'calendar-days' as const }] : []),
+  ...(hasBillEvolution ? [{ id: 'evolution', label: 'Evolution', icon: 'history' as const }] : []),
+];
+---
+
+<aside class="hidden lg:block sticky top-24 space-y-5">
+  <!-- SVG Donut Chart -->
+  <div class="bg-cream-100 border border-gold-300 rounded-lg p-4">
+    <div class="relative w-32 h-32 mx-auto">
+      <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+        {segments.map((seg) => (
+          <circle
+            cx="50" cy="50" r={radius}
+            fill="none"
+            stroke={seg.color}
+            stroke-width="18"
+            stroke-dasharray={seg.dashArray}
+            stroke-dashoffset={seg.offset}
+            class="transition-all duration-300"
+          />
+        ))}
+      </svg>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <div class="text-center">
+          <div class="font-mono text-lg font-bold text-navy-900">${totalSpending}B</div>
+          <div class="text-[10px] text-navy-500">total</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-3 space-y-1">
+      {donutLabels.map((label, i) => (
+        <div class="flex items-center gap-2 text-xs">
+          <span
+            class="w-2.5 h-2.5 rounded-sm shrink-0"
+            style={`background: ${donutColors[i % donutColors.length]}`}
+          />
+          <span class="text-navy-700 truncate flex-1">{label}</span>
+          <span class="font-mono text-navy-500 shrink-0">${donutValues[i]}B</span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Section Navigation -->
+  <nav class="bg-cream-100 border border-gold-300 rounded-lg p-3" aria-label="Page sections">
+    <ul class="space-y-0.5">
+      {navSections.map((section) => (
+        <li>
+          <a
+            href={`#${section.id}`}
+            class="sidebar-nav-link flex items-center gap-2 px-3 py-2 rounded text-xs font-sans text-navy-600 hover:bg-cream-200 hover:text-navy-900 transition-colors"
+            data-nav-target={section.id}
+          >
+            <Icon name={section.icon} size={14} class="text-gold-600" />
+            {section.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <!-- Quick Stats -->
+  <div class="bg-cream-100 border border-gold-300 rounded-lg p-4 space-y-3">
+    <div class="flex items-center justify-between">
+      <span class="text-xs text-navy-500">Pages</span>
+      <span class="font-mono text-sm font-bold text-navy-900">{pageCount.toLocaleString()}</span>
+    </div>
+    <div class="flex items-center justify-between">
+      <span class="text-xs text-navy-500">Divisions</span>
+      <span class="font-mono text-sm font-bold text-navy-900">{divisions.length}</span>
+    </div>
+    {absurdityIndex !== undefined && (
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-navy-500">Absurdity</span>
+        <span class="font-mono text-sm font-bold text-navy-900">{absurdityIndex}/10</span>
+      </div>
+    )}
+    <div class="flex items-center justify-between">
+      <span class="text-xs text-navy-500">Est. Words</span>
+      <span class="font-mono text-sm font-bold text-navy-900">~{(pageCount * 250).toLocaleString()}</span>
+    </div>
+  </div>
+</aside>
+
+<style>
+  /* Scroll-spy active state — set by page JS */
+  .sidebar-nav-link[data-active="true"] {
+    background-color: var(--color-gold-100);
+    color: var(--color-navy-900);
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--color-gold-500);
+  }
+</style>

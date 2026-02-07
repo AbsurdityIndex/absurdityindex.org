@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import OfficialSeal from '../../components/ui/OfficialSeal.astro';
+import CollapsibleSection from '../../components/ui/CollapsibleSection.astro';
+import AbsurdityMeter from '../../components/bills/AbsurdityMeter.astro';
 import Icon from '../../components/ui/Icon.astro';
 import { getCollection } from 'astro:content';
 
@@ -20,78 +21,71 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
 >
   <main class="bg-parchment min-h-screen">
     <!-- Hero Section -->
-    <section class="bg-navy-900 py-16" data-theme-fixed>
-      <div class="max-w-5xl mx-auto px-4 text-center">
-        <OfficialSeal size="100" />
-        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-6 mb-2">The Legislative Sausage Factory</p>
-        <h1 class="font-serif text-4xl md:text-5xl text-gold-400 font-bold mb-4">
+    <section class="bg-navy-900 py-10" data-theme-fixed>
+      <div class="max-w-3xl mx-auto px-4 text-center">
+        <p class="text-xs text-gold-500 font-mono uppercase tracking-widest mb-2">The Legislative Sausage Factory</p>
+        <h1 class="font-serif text-3xl md:text-4xl text-gold-400 font-bold mb-3">
           Omnibus Bills
         </h1>
-        <p class="text-gold-300/80 max-w-2xl mx-auto text-lg">
+        <p class="text-gold-300/80 max-w-xl mx-auto text-sm">
           Where thousands of pages of legislation get bundled together at the last minute,
           voted on sight-unseen, and passed in the dead of night.
         </p>
       </div>
     </section>
 
-    <div class="max-w-5xl mx-auto px-4 py-12">
+    <div class="max-w-3xl mx-auto px-4 py-10">
       <!-- Stats Bar -->
-      <div class="bg-cream-100 rounded-lg border border-gold-300 p-6 mb-10">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      <div class="bg-cream-100 rounded-lg border border-gold-300 p-5 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <div class="font-mono text-3xl font-bold text-navy-900">{omnibusBills.length}</div>
-            <div class="text-sm text-navy-600">Omnibus Bills</div>
+            <div class="font-mono text-2xl font-bold text-navy-900">{omnibusBills.length}</div>
+            <div class="text-xs text-navy-600">Bills</div>
           </div>
           <div>
-            <div class="font-mono text-3xl font-bold text-navy-900">${totalSpending.toFixed(1)}T</div>
-            <div class="text-sm text-navy-600">Total Spending</div>
+            <div class="font-mono text-2xl font-bold text-navy-900">${totalSpending.toFixed(1)}T</div>
+            <div class="text-xs text-navy-600">Total Spending</div>
           </div>
           <div>
-            <div class="font-mono text-3xl font-bold text-navy-900">{totalPages.toLocaleString()}</div>
-            <div class="text-sm text-navy-600">Combined Pages</div>
+            <div class="font-mono text-2xl font-bold text-navy-900">{totalPages.toLocaleString()}</div>
+            <div class="text-xs text-navy-600">Combined Pages</div>
           </div>
           <div>
-            <div class="font-mono text-3xl font-bold text-navy-900">~{Math.round(totalPages / 4000)}</div>
-            <div class="text-sm text-navy-600">Reams of Paper</div>
+            <div class="font-mono text-2xl font-bold text-navy-900">~{Math.round(totalPages / 4000)}</div>
+            <div class="text-xs text-navy-600">Reams of Paper</div>
           </div>
         </div>
       </div>
 
-      <!-- What is an Omnibus -->
-      <div class="bg-parchment border border-gold-300 rounded-lg p-8 mb-10">
-        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-4 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center">
-            <Icon name="help-circle" size={18} class="text-gold-700" />
+      <!-- What is an Omnibus (collapsible) -->
+      <div class="mb-8">
+        <CollapsibleSection title="What is an Omnibus Bill?" icon="help-circle">
+          <div class="prose prose-sm max-w-none text-navy-700">
+            <p>
+              An <strong>omnibus bill</strong> combines multiple appropriations bills into a single massive package,
+              typically thousands of pages long. Instead of passing 12 separate spending bills through the normal
+              committee process, Congress bundles them together at the last minute — often with a government
+              shutdown deadline looming.
+            </p>
+            <p>
+              Because of their size and timing, omnibus bills are virtually impossible to read before voting.
+              They frequently contain <strong>policy riders</strong> — unrelated provisions that couldn't pass
+              on their own merits, hidden among the spending provisions.
+            </p>
           </div>
-          What is an Omnibus Bill?
-        </h2>
-        <div class="prose prose-navy max-w-none">
-          <p class="text-navy-700 leading-relaxed">
-            An <strong>omnibus bill</strong> combines multiple appropriations bills into a single massive package,
-            typically thousands of pages long. Instead of passing 12 separate spending bills through the normal
-            committee process, Congress bundles them together at the last minute — often with a government
-            shutdown deadline looming.
-          </p>
-          <p class="text-navy-700 leading-relaxed">
-            Because of their size and timing, omnibus bills are virtually impossible to read before voting.
-            They frequently contain <strong>policy riders</strong> — unrelated provisions that couldn't pass
-            on their own merits, hidden among the spending provisions like presents nobody asked for.
-          </p>
-        </div>
+        </CollapsibleSection>
       </div>
 
       {omnibusBills.length === 0 ? (
-        <div class="text-center py-16 bg-cream-100 rounded-lg border border-gold-300">
-          <div class="w-16 h-16 rounded-full bg-gold-100 flex items-center justify-center mx-auto mb-4">
-            <Icon name="book-open" size={32} class="text-gold-700" />
+        <div class="text-center py-12 bg-cream-100 rounded-lg border border-gold-300">
+          <div class="w-14 h-14 rounded-full bg-gold-100 flex items-center justify-center mx-auto mb-3">
+            <Icon name="book-open" size={28} class="text-gold-700" />
           </div>
-          <h2 class="font-serif text-2xl text-navy-900 font-bold mb-2">No Omnibus Bills Yet</h2>
-          <p class="text-navy-600">
-            We're working on adding comprehensive omnibus bill analysis. Check back soon.
-          </p>
+          <h2 class="font-serif text-xl text-navy-900 font-bold mb-2">No Omnibus Bills Yet</h2>
+          <p class="text-navy-600 text-sm">Check back soon.</p>
         </div>
       ) : (
-        <div class="space-y-6">
+        <div class="space-y-5">
           {omnibusBills.map((bill) => {
             const d = bill.data;
             const omnibus = d.omnibusData!;
@@ -100,53 +94,65 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
               month: 'short',
             });
 
+            // Top 3 divisions by spending for mini bars
+            const topDivisions = [...omnibus.divisions]
+              .sort((a, b) => b.spending - a.spending)
+              .slice(0, 3);
+            const maxDivSpending = topDivisions[0]?.spending ?? 1;
+
             return (
               <a
                 href={`/omnibus/${bill.id}`}
-                class="block bg-white rounded-lg border-2 border-gold-300 shadow-lg overflow-hidden hover:shadow-xl hover:border-gold-500 transition-all group"
+                class="block bg-white rounded-lg border border-gold-300 shadow-sm overflow-hidden hover:shadow-md hover:border-gold-500 transition-all group"
               >
-                <div class="bg-navy-800 px-6 py-3 flex items-center justify-between" data-theme-fixed>
-                  <div class="flex items-center gap-3">
-                    <span class="font-mono text-gold-400">{d.billNumber}</span>
-                    <span class="px-2 py-0.5 bg-red-700 text-cream-100 text-xs font-mono rounded">OMNIBUS</span>
+                {/* Top bar */}
+                <div class="bg-navy-800 px-4 py-2.5 flex items-center justify-between" data-theme-fixed>
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-sm text-gold-400">{d.billNumber}</span>
+                    <span class="px-1.5 py-0.5 bg-red-700 text-cream-100 text-[10px] font-mono rounded">OMNIBUS</span>
                   </div>
-                  <span class="text-gold-400/70 text-sm">{formattedDate}</span>
+                  <span class="text-gold-400/70 text-xs">{formattedDate}</span>
                 </div>
 
-                <div class="p-6">
-                  <h2 class="font-serif text-xl font-bold text-navy-900 group-hover:text-gold-700 transition-colors mb-3">
+                {/* Content */}
+                <div class="p-4">
+                  <h2 class="font-serif text-lg font-bold text-navy-900 group-hover:text-gold-700 transition-colors mb-2 line-clamp-1">
                     {d.title}
                   </h2>
-                  <p class="text-navy-600 text-sm line-clamp-2 mb-4">{d.summary}</p>
+                  <p class="text-navy-600 text-xs line-clamp-2 mb-4">{d.summary}</p>
 
-                  <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gold-200">
-                    <div class="text-center">
-                      <div class="font-mono text-xl font-bold text-navy-900">${omnibus.totalSpending}B</div>
-                      <div class="text-xs text-navy-500">Spending</div>
-                    </div>
-                    <div class="text-center">
-                      <div class="font-mono text-xl font-bold text-navy-900">{omnibus.pageCount.toLocaleString()}</div>
-                      <div class="text-xs text-navy-500">Pages</div>
-                    </div>
-                    <div class="text-center">
-                      <div class="font-mono text-xl font-bold text-navy-900">{omnibus.divisions.length}</div>
-                      <div class="text-xs text-navy-500">Divisions</div>
-                    </div>
+                  {/* Mini spending bars - top 3 divisions */}
+                  <div class="space-y-1.5 mb-4">
+                    {topDivisions.map((div) => {
+                      const barWidth = maxDivSpending > 0 ? (div.spending / maxDivSpending * 100) : 0;
+                      return (
+                        <div class="flex items-center gap-2">
+                          <span class="text-[10px] text-navy-500 w-24 truncate">{div.shortTitle || div.title}</span>
+                          <div class="flex-1 h-1.5 bg-cream-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-gold-500 rounded-full" style={`width: ${barWidth}%`} />
+                          </div>
+                          <span class="text-[10px] font-mono text-navy-500 w-12 text-right">${div.spending}B</span>
+                        </div>
+                      );
+                    })}
+                    {omnibus.divisions.length > 3 && (
+                      <p class="text-[10px] text-navy-400 text-right">+{omnibus.divisions.length - 3} more divisions</p>
+                    )}
                   </div>
 
-                  {d.absurdityIndex && (
-                    <div class="mt-4 flex items-center justify-center gap-2">
-                      <span class="text-sm text-navy-500">Absurdity:</span>
-                      <div class="flex gap-0.5">
-                        {[...Array(10)].map((_, i) => (
-                          <div
-                            class={`w-3 h-6 rounded-sm ${i < d.absurdityIndex! ? 'bg-gradient-to-t from-gold-600 to-red-600' : 'bg-cream-300'}`}
-                          />
-                        ))}
-                      </div>
-                      <span class="font-mono font-bold text-navy-900">{d.absurdityIndex}/10</span>
+                  {/* Bottom stats row */}
+                  <div class="flex items-center justify-between pt-3 border-t border-gold-200">
+                    <div class="flex items-center gap-4 text-xs">
+                      <span class="font-mono font-bold text-navy-900">${omnibus.totalSpending}B</span>
+                      <span class="text-navy-500">{omnibus.pageCount.toLocaleString()} pages</span>
+                      <span class="text-navy-500">{omnibus.divisions.length} div</span>
                     </div>
-                  )}
+                    {d.absurdityIndex && (
+                      <div class="w-32">
+                        <AbsurdityMeter score={d.absurdityIndex} compact />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </a>
             );
@@ -155,8 +161,8 @@ const totalPages = omnibusBills.reduce((sum, b) => sum + (b.data.omnibusData?.pa
       )}
 
       <!-- Navigation -->
-      <div class="text-center mt-12">
-        <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
+      <div class="text-center mt-10">
+        <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif text-sm transition-colors">
           &larr; Back to All Bills
         </a>
       </div>

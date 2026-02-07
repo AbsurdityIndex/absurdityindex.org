@@ -1,4 +1,10 @@
 ---
+/**
+ * OmnibusRiders - Policy riders grouped by category with color accents.
+ *
+ * Categories ordered: controversial → sneaky → policy → spending → tax
+ * Each category gets a left-border color accent and section header.
+ */
 import Icon from '../ui/Icon.astro';
 
 interface Rider {
@@ -14,95 +20,123 @@ interface Props {
 const { riders } = Astro.props;
 
 const categoryConfig = {
-  policy: {
-    label: 'Policy Rider',
-    bg: 'bg-navy-600',
-    text: 'text-cream-100',
-    icon: 'scale' as const,
-    description: 'Non-spending policy change',
-  },
-  spending: {
-    label: 'Spending Rider',
-    bg: 'bg-green-700',
-    text: 'text-cream-100',
-    icon: 'banknote' as const,
-    description: 'Additional spending provision',
-  },
-  tax: {
-    label: 'Tax Provision',
-    bg: 'bg-gold-600',
-    text: 'text-navy-900',
-    icon: 'receipt' as const,
-    description: 'Tax code modification',
-  },
   controversial: {
     label: 'Controversial',
-    bg: 'bg-red-700',
-    text: 'text-cream-100',
+    border: 'border-l-red-600',
+    headerBg: 'bg-red-50',
+    badge: 'bg-red-700 text-cream-100',
     icon: 'flame' as const,
-    description: 'Politically contentious addition',
+    order: 0,
   },
   sneaky: {
     label: 'Buried Deep',
-    bg: 'bg-navy-800',
-    text: 'text-gold-400',
+    border: 'border-l-navy-700',
+    headerBg: 'bg-navy-50',
+    badge: 'bg-navy-800 text-gold-400',
     icon: 'eye-off' as const,
-    description: 'Easy to miss in 4,000+ pages',
+    order: 1,
+  },
+  policy: {
+    label: 'Policy Riders',
+    border: 'border-l-navy-500',
+    headerBg: 'bg-cream-200',
+    badge: 'bg-navy-600 text-cream-100',
+    icon: 'scale' as const,
+    order: 2,
+  },
+  spending: {
+    label: 'Spending Riders',
+    border: 'border-l-green-600',
+    headerBg: 'bg-green-50',
+    badge: 'bg-green-700 text-cream-100',
+    icon: 'banknote' as const,
+    order: 3,
+  },
+  tax: {
+    label: 'Tax Provisions',
+    border: 'border-l-gold-500',
+    headerBg: 'bg-gold-50',
+    badge: 'bg-gold-600 text-navy-900',
+    icon: 'receipt' as const,
+    order: 4,
   },
 };
+
+// Group riders by category
+type Category = keyof typeof categoryConfig;
+const grouped: Record<Category, Rider[]> = {
+  controversial: [],
+  sneaky: [],
+  policy: [],
+  spending: [],
+  tax: [],
+};
+
+for (const rider of riders) {
+  const cat = rider.category || 'policy';
+  grouped[cat].push(rider);
+}
+
+// Filter to only categories that have riders, sorted by priority
+const activeCategories = (Object.keys(grouped) as Category[])
+  .filter(cat => grouped[cat].length > 0)
+  .sort((a, b) => categoryConfig[a].order - categoryConfig[b].order);
 ---
 
-<div class="bg-parchment border border-gold-300 rounded-lg overflow-hidden">
-  <div class="px-6 py-4 bg-navy-800 border-b border-gold-300" data-theme-fixed>
-    <div class="flex items-center justify-between">
-      <h3 class="font-serif text-lg font-bold text-gold-400 flex items-center gap-2">
-        <Icon name="gift" size={20} class="text-gold-400" />
-        Policy Riders & Hidden Provisions
-      </h3>
-      <span class="font-mono text-sm text-gold-400/70">
-        {riders.length} found
-      </span>
-    </div>
-    <p class="text-sm text-gold-300/70 mt-1">
-      Non-appropriations items slipped into the spending bill
-    </p>
+<section class="bg-cream-100 border border-gold-300 rounded-lg overflow-hidden" data-section="riders">
+  <div class="px-5 py-4 bg-navy-800 border-b border-gold-300 flex items-center justify-between" data-theme-fixed>
+    <h2 class="font-serif text-lg font-bold text-gold-400 flex items-center gap-2">
+      <Icon name="gift" size={18} class="text-gold-400" />
+      Policy Riders & Hidden Provisions
+    </h2>
+    <span class="font-mono text-sm text-gold-400/70">{riders.length} found</span>
   </div>
 
-  <div class="divide-y divide-gold-200">
-    {riders.map((rider, i) => {
-      const config = categoryConfig[rider.category || 'policy'];
+  <div class="p-4 space-y-5">
+    {activeCategories.map((cat) => {
+      const config = categoryConfig[cat];
+      const catRiders = grouped[cat];
       return (
-        <div class="px-6 py-4 hover:bg-cream-200 transition-colors">
-          <div class="flex items-start gap-4">
-            <div class="w-8 h-8 rounded-full bg-cream-200 flex items-center justify-center shrink-0">
-              <Icon name={config.icon} size={18} class="text-navy-700" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2 flex-wrap mb-1">
-                <h4 class="font-serif font-bold text-navy-900">
-                  {rider.title}
-                </h4>
-                <span class={`${config.bg} ${config.text} text-xs font-mono px-2.5 py-0.5 rounded-full`}>
-                  {config.label}
-                </span>
-              </div>
-              <p class="text-sm text-navy-700 leading-relaxed">
-                {rider.description}
-              </p>
-            </div>
-            <span class="font-mono text-xs text-navy-400 shrink-0">
-              #{i + 1}
+        <div>
+          <!-- Category header -->
+          <div class:list={['flex items-center gap-2 px-3 py-2 rounded-lg mb-2', config.headerBg]}>
+            <Icon name={config.icon} size={14} class="text-navy-600" />
+            <span class="text-xs font-sans font-semibold text-navy-700 uppercase tracking-wide">
+              {config.label}
             </span>
+            <span class="text-xs font-mono text-navy-400 ml-auto">{catRiders.length}</span>
+          </div>
+
+          <!-- Riders in this category -->
+          <div class="space-y-1.5">
+            {catRiders.map((rider) => (
+              <div class:list={[
+                'border-l-4 rounded-r-lg bg-white p-3 hover:bg-cream-200 transition-colors',
+                config.border
+              ]}>
+                <div class="flex items-start gap-3">
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-serif font-bold text-sm text-navy-900 mb-0.5">{rider.title}</h4>
+                    <p class="text-xs text-navy-600 leading-relaxed">{rider.description}</p>
+                  </div>
+                  <span class:list={[
+                    'shrink-0 text-[10px] font-mono px-2 py-0.5 rounded-full',
+                    config.badge
+                  ]}>
+                    {config.label}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       );
     })}
   </div>
 
-  <div class="px-6 py-3 bg-cream-200 border-t border-gold-300">
+  <div class="px-5 py-3 bg-cream-200 border-t border-gold-300">
     <p class="text-xs text-navy-600 italic text-center">
-      <strong>Rider:</strong> A provision attached to a bill that has little or no connection to the bill's main subject.
-      Often used to pass measures that couldn't pass on their own merits.
+      <strong>Rider:</strong> A provision attached to a must-pass bill that has little connection to the bill's main subject.
     </p>
   </div>
-</div>
+</section>

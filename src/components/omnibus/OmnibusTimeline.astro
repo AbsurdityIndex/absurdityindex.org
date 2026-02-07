@@ -1,0 +1,100 @@
+---
+/**
+ * OmnibusTimeline - Dramatic legislative timeline with editorial annotations.
+ *
+ * Vertical layout on both mobile and desktop (cleaner in a narrow column).
+ * Key events get callout styling. Dates within 48h of each other are
+ * flagged as "rushed."
+ */
+import Icon from '../ui/Icon.astro';
+
+interface TimelineEvent {
+  date: Date;
+  event: string;
+}
+
+interface Props {
+  timeline: TimelineEvent[];
+}
+
+const { timeline } = Astro.props;
+
+// Detect rushed events (< 48h between consecutive events)
+function isRushed(current: Date, previous?: Date): boolean {
+  if (!previous) return false;
+  const diffHours = (current.getTime() - previous.getTime()) / (1000 * 60 * 60);
+  return diffHours > 0 && diffHours <= 72;
+}
+
+// Check if this is a "dramatic" event (text released, passed, signed)
+function isDramatic(event: string): boolean {
+  const triggers = ['released', 'passes', 'passed', 'signs', 'signed', 'cloture', 'shutdown'];
+  return triggers.some(t => event.toLowerCase().includes(t));
+}
+
+const totalDays = timeline.length >= 2
+  ? Math.round((timeline[timeline.length - 1].date.getTime() - timeline[0].date.getTime()) / (1000 * 60 * 60 * 24))
+  : 0;
+---
+
+<section class="bg-cream-100 border border-gold-300 rounded-lg overflow-hidden" data-section="timeline">
+  <div class="px-5 py-4 border-b border-gold-200 flex items-center justify-between">
+    <h2 class="font-serif text-lg font-bold text-navy-900 flex items-center gap-2">
+      <Icon name="calendar-days" size={18} class="text-gold-600" />
+      Legislative Timeline
+    </h2>
+    {totalDays > 0 && (
+      <span class="text-xs font-mono text-navy-500">{totalDays} days total</span>
+    )}
+  </div>
+
+  <div class="p-5">
+    <div class="relative border-l-2 border-gold-400 ml-3 space-y-5">
+      {timeline.map((entry, i) => {
+        const prev = i > 0 ? timeline[i - 1] : undefined;
+        const rushed = isRushed(entry.date, prev?.date);
+        const dramatic = isDramatic(entry.event);
+        const isFirst = i === 0;
+        const isLast = i === timeline.length - 1;
+
+        return (
+          <div class="relative pl-6">
+            {/* Timeline dot */}
+            <div class:list={[
+              'absolute -left-[9px] w-4 h-4 rounded-full border-2',
+              dramatic
+                ? 'bg-red-600 border-red-300'
+                : isLast
+                  ? 'bg-green-600 border-green-300'
+                  : isFirst
+                    ? 'bg-navy-600 border-navy-300'
+                    : 'bg-gold-500 border-gold-300'
+            ]} />
+
+            <div class:list={[
+              'rounded-lg p-3',
+              dramatic ? 'bg-red-50 border border-red-200' : 'bg-white border border-gold-200'
+            ]}>
+              <div class="flex items-center gap-2 mb-1">
+                <time class="font-mono text-xs text-navy-500">
+                  {entry.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </time>
+                {rushed && (
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 bg-red-100 text-red-700 rounded">
+                    RUSHED
+                  </span>
+                )}
+              </div>
+              <p class:list={[
+                'text-sm leading-relaxed',
+                dramatic ? 'font-serif font-semibold text-navy-900' : 'font-serif text-navy-700'
+              ]}>
+                {entry.event}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
