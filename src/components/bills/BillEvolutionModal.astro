@@ -450,18 +450,21 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
 
   <!-- Footer -->
   <footer class="modal-footer">
-    {congressDotGovUrl && (
-      <a
-        href={congressDotGovUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="congress-link"
-      >
-        <Icon name="landmark" size={14} />
-        <span>View on Congress.gov</span>
-        <Icon name="external-link" size={12} />
-      </a>
-    )}
+    <div class="footer-left">
+      <p class="satire-note">Spending figures are satirical estimates, not official cost analyses.</p>
+      {congressDotGovUrl && (
+        <a
+          href={congressDotGovUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="congress-link"
+        >
+          <Icon name="landmark" size={14} />
+          <span>Verify at Congress.gov</span>
+          <Icon name="external-link" size={12} />
+        </a>
+      )}
+    </div>
     <button
       type="button"
       class="close-btn"
@@ -854,6 +857,21 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
     padding: 0.75rem 1.5rem;
     background: var(--color-navy-900);
     border-top: 1px solid var(--color-gold-600);
+  }
+
+  .footer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .satire-note {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-style: italic;
+    color: var(--color-gold-500);
+    margin: 0;
+    opacity: 0.85;
   }
 
   .congress-link {

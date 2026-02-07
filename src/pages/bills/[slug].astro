@@ -211,6 +211,19 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       <CostEstimate status={d.status} billNumber={d.billNumber} />
     </div>
 
+    {/* Satire disclaimer — appears when pork or evolution data is present */}
+    {(hasPork || hasBillEvolution) && (
+      <div class="mb-6 px-4 py-3 bg-gold-50 border border-gold-300 rounded-lg flex items-start gap-3">
+        <Icon name="alert-triangle" size={16} class="text-gold-600 flex-shrink-0 mt-0.5" />
+        <p class="text-xs text-navy-700 leading-relaxed">
+          <strong class="font-semibold">Satire notice:</strong> Spending figures, pork tracking, and editorial commentary below are
+          satirical estimates for entertainment purposes. They are not official government cost analyses.
+          Legislative history and vote records are real &mdash;
+          <a href={d.congressDotGovUrl || "https://www.congress.gov"} target="_blank" rel="noopener noreferrer" class="text-gold-700 underline hover:text-gold-800">verify at Congress.gov</a>.
+        </p>
+      </div>
+    )}
+
     {/* Pork Barrel Meter */}
     {hasPork && (
       <div class="mb-8">
@@ -419,10 +432,11 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     <div class="text-center p-4 bg-cream-100 rounded-lg border border-gold-200">
       <p class="text-xs text-navy-600 leading-relaxed">
         <Icon name="info" size={12} class="inline -mt-0.5 mr-1" />
-        Editorial commentary by AbsurdityIndex.org. Bill data from public congressional records.
+        This page is satirical commentary by AbsurdityIndex.org. Legislative history comes from public congressional records;
+        spending estimates and "pork" figures are editorial and may not reflect official cost analyses.
         Absurdity scores are subjective editorial ratings.
         <a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer" class="text-navy-800 underline hover:text-gold-700 ml-1">
-          Verify at Congress.gov
+          Verify all claims at Congress.gov
         </a>
       </p>
     </div>
