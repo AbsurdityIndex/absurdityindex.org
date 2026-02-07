@@ -4,14 +4,14 @@ import ora from 'ora';
 import { loadConfig } from '../config.js';
 import { createLogger } from '../utils/logger.js';
 import { ClaudeClient } from '../modules/claude/client.js';
-import { XReadClient } from '../modules/x-api/client.js';
-import { BrowserPoster } from '../modules/x-api/browser-poster.js';
+import { XReadClient, XWriteClient } from '../modules/x-api/client.js';
 import { cleanContent } from '../utils/format.js';
 import { getDb } from '../modules/state/db.js';
 import { createPostModel } from '../modules/state/models/posts.js';
 import { createOpportunityModel } from '../modules/state/models/opportunities.js';
 import { runHotPotDetector } from '../modules/safety/hot-pot-detector.js';
 import { startWatchDaemon } from '../modules/engage/watch-daemon.js';
+import { startDashboardServer } from '../modules/dashboard/server.js';
 
 export function registerEngageCommand(program: Command): void {
   const engage = program.command('engage').description('Engagement tools (quote-tweet, reply, watch)');
@@ -37,11 +37,13 @@ export function registerEngageCommand(program: Command): void {
       const opportunities: Array<{ text: string; author: string; id: string }> = [];
 
       for (const query of queries) {
-        const tweets = await xClient.searchTweets(query, 5);
+        const { tweets, authors } = await xClient.searchTweetsExpanded(query, 10);
         for (const tweet of tweets) {
+          // Skip retweets — engaging with them is confusing and off-target
+          if (tweet.text.startsWith('RT @')) continue;
           opportunities.push({
             text: tweet.text,
-            author: tweet.author_id ?? 'unknown',
+            author: authors.get(tweet.author_id ?? '') ?? tweet.author_id ?? 'unknown',
             id: tweet.id,
           });
         }
@@ -72,8 +74,7 @@ export function registerEngageCommand(program: Command): void {
       const spinner = ora('Generating quote-tweet...').start();
 
       // Fetch original tweet
-      const tweets = await xClient.searchTweets(`id:${tweetId}`, 1);
-      const original = tweets[0];
+      const original = await xClient.singleTweet(tweetId);
 
       if (!original) {
         spinner.fail('Could not fetch original tweet');
@@ -109,23 +110,20 @@ export function registerEngageCommand(program: Command): void {
       if (!config.dryRun) {
         const db = getDb(config.dbPath);
         const posts = createPostModel(db);
-        const tweetUrl = `https://x.com/i/status/${tweetId}`;
-        const poster = new BrowserPoster(config);
-        try {
-          const result = await poster.quoteTweet(content, tweetUrl);
-          if (result.success) {
-            posts.create({
-              content,
-              prompt_type: 'quote-dunk',
-              safety_score: safety.score,
-              safety_verdict: safety.verdict,
-              status: 'posted',
-              parent_tweet_id: tweetId,
-            });
-            console.log(chalk.green('Quote-tweeted via browser!'));
-          }
-        } finally {
-          await poster.close();
+        const xWriter = new XWriteClient(config);
+        const result = await xWriter.quote(content, tweetId);
+        if (result.success) {
+          posts.create({
+            content,
+            prompt_type: 'quote-dunk',
+            safety_score: safety.score,
+            safety_verdict: safety.verdict,
+            status: 'posted',
+            parent_tweet_id: tweetId,
+          });
+          console.log(chalk.green(`Quote-tweeted via API! ${result.tweetUrl}`));
+        } else {
+          console.log(chalk.red('Failed to post quote tweet'));
         }
       } else {
         console.log(chalk.yellow('[DRY RUN]'));
@@ -144,15 +142,15 @@ export function registerEngageCommand(program: Command): void {
       const config = loadConfig({ dryRun: opts.dryRun });
       createLogger(config.logLevel);
 
-      const interval = parseInt(opts.interval, 10) || config.engageScanIntervalMinutes;
+      const interval = parseFloat(opts.interval) || config.engageScanIntervalMinutes;
       const maxEngagementsPerDay = parseInt(opts.maxEngagementsPerDay, 10) || config.maxEngagementsPerDay;
       const minOpportunityScore = parseInt(opts.minOpportunityScore, 10) || config.engageMinScore;
       const trackThreshold = parseInt(opts.trackThreshold, 10) || config.engageTrackThreshold;
 
       const db = getDb(config.dbPath);
       const xClient = new XReadClient(config);
+      const xWriter = new XWriteClient(config);
       const claude = new ClaudeClient(config);
-      const poster = new BrowserPoster(config);
 
       console.log(chalk.bold('\n  Absurdity Index Engagement Scanner'));
       console.log(chalk.dim('  ─'.repeat(25)));
@@ -165,7 +163,7 @@ export function registerEngageCommand(program: Command): void {
       console.log(chalk.dim('  Press Ctrl+C to stop\n'));
 
       const daemon = startWatchDaemon(
-        { db, xClient, claude, poster, config },
+        { db, xClient, xWriter, claude, config },
         {
           interval,
           maxEngagementsPerDay,
@@ -176,10 +174,9 @@ export function registerEngageCommand(program: Command): void {
       );
 
       // Clean shutdown on Ctrl+C
-      process.on('SIGINT', async () => {
+      process.on('SIGINT', () => {
         console.log(chalk.dim('\n  Shutting down...'));
         daemon.stop();
-        await poster.close();
         process.exit(0);
       });
 
@@ -248,5 +245,38 @@ export function registerEngageCommand(program: Command): void {
       }
 
       console.log('');
+    });
+
+  engage
+    .command('dashboard')
+    .description('Local engagement monitoring dashboard')
+    .option('--port <port>', 'HTTP port', '3847')
+    .action(async (opts) => {
+      const config = loadConfig();
+      createLogger(config.logLevel);
+
+      const port = parseInt(opts.port, 10) || 3847;
+
+      // Open DB read-only — dashboard never writes
+      const Database = (await import('better-sqlite3')).default;
+      const db = new Database(config.dbPath, { readonly: true });
+      db.pragma('journal_mode = WAL');
+
+      const { stop } = startDashboardServer({ port, db });
+
+      console.log(chalk.bold('\n  Absurdity Index Engagement Dashboard'));
+      console.log(chalk.dim('  ─'.repeat(25)));
+      console.log(`  URL: ${chalk.cyan(`http://127.0.0.1:${port}`)}`);
+      console.log(chalk.dim('  Press Ctrl+C to stop\n'));
+
+      process.on('SIGINT', () => {
+        console.log(chalk.dim('\n  Shutting down dashboard...'));
+        stop();
+        db.close();
+        process.exit(0);
+      });
+
+      // Keep process alive
+      await new Promise(() => {});
     });
 }

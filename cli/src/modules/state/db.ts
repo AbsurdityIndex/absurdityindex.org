@@ -191,6 +191,25 @@ const MIGRATIONS = [
   ALTER TABLE posts ADD COLUMN meme_strategy TEXT;
   ALTER TABLE posts ADD COLUMN meme_template TEXT;
   `,
+  // Migration 007: Daemon cycle tracking for dashboard
+  `
+  CREATE TABLE IF NOT EXISTS daemon_cycles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cycle_index INTEGER NOT NULL,
+    cycle_type TEXT NOT NULL,
+    scanned INTEGER DEFAULT 0,
+    engaged INTEGER DEFAULT 0,
+    tracked INTEGER DEFAULT 0,
+    expired INTEGER DEFAULT 0,
+    posted INTEGER DEFAULT 0,
+    topic TEXT,
+    error TEXT,
+    started_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT,
+    duration_ms INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS idx_cycles_started ON daemon_cycles(started_at);
+  `,
 ];
 
 export function getDb(dbPath: string): Database.Database {

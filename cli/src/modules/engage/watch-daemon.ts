@@ -6,10 +6,18 @@ import { executeEngagement, evaluateWithClaude } from './engagement-generator.js
 import { createOpportunityModel, type RecommendedAction } from '../state/models/opportunities.js';
 import { createEngagementCooldownModel } from '../state/models/engagement-cooldowns.js';
 import { createPostModel } from '../state/models/posts.js';
+import { createDaemonCycleModel } from '../state/models/daemon-cycles.js';
 import { loadBills, type LoadedBill } from '../bills/loader.js';
-import type { XReadClient } from '../x-api/client.js';
+import { fetchXTrends } from '../trending/x-trends.js';
+import { fetchCongressActions } from '../trending/congress-watch.js';
+import { aggregateTrends } from '../trending/aggregator.js';
+import { matchTrendToBills } from '../bills/matcher.js';
+import { scoreTrend } from '../scoring/composite-scorer.js';
+import { runHotPotDetector } from '../safety/hot-pot-detector.js';
+import { cleanContent, billUrl } from '../../utils/format.js';
+import type { PromptContext } from '../claude/prompts/index.js';
+import type { XReadClient, XWriteClient } from '../x-api/client.js';
 import type { ClaudeClient } from '../claude/client.js';
-import type { BrowserPoster } from '../x-api/browser-poster.js';
 import type { Config } from '../../config.js';
 import type Database from 'better-sqlite3';
 
@@ -26,8 +34,8 @@ export interface WatchOptions {
 interface WatchDeps {
   db: Database.Database;
   xClient: XReadClient;
+  xWriter: XWriteClient;
   claude: ClaudeClient;
-  poster: BrowserPoster;
   config: Config;
 }
 
@@ -38,8 +46,15 @@ export async function runWatchCycle(
   deps: WatchDeps,
   options: WatchOptions,
   cycleIndex: number,
+  engageAction: 'quote' | 'reply' = 'quote',
 ): Promise<{ scanned: number; engaged: number; tracked: number; expired: number }> {
-  const { db, xClient, claude, poster, config } = deps;
+  const { db, xClient, xWriter, claude, config } = deps;
+  // Override config thresholds with watch options so the scorer respects CLI flags
+  const effectiveConfig = {
+    ...config,
+    engageMinScore: options.minOpportunityScore,
+    engageTrackThreshold: options.trackThreshold,
+  };
   const opportunities = createOpportunityModel(db);
   const cooldowns = createEngagementCooldownModel(db);
   const posts = createPostModel(db);
@@ -58,7 +73,7 @@ export async function runWatchCycle(
     const existing = opportunities.getByTweetId(tweet.id);
     if (existing && existing.status !== 'tracked') continue; // Already engaged/skipped/expired
 
-    const score = scoreOpportunity(tweet, bills, config);
+    const score = scoreOpportunity(tweet, bills, effectiveConfig);
 
     if (score.skipReason) {
       log.debug({ tweetId: tweet.id, reason: score.skipReason }, 'Skipped (pre-filter)');
@@ -153,9 +168,10 @@ export async function runWatchCycle(
       opportunity: opp,
       bills,
       claude,
-      poster,
+      xWriter,
       config,
       dryRun: options.dryRun,
+      preferredAction: engageAction,
     });
 
     if (result.success && result.content) {
@@ -210,6 +226,11 @@ async function reEvaluateTracked(
   bills: LoadedBill[],
 ): Promise<void> {
   const { db, xClient, claude, config } = deps;
+  const effectiveConfig = {
+    ...config,
+    engageMinScore: options.minOpportunityScore,
+    engageTrackThreshold: options.trackThreshold,
+  };
   const opportunities = createOpportunityModel(db);
   const tracked = opportunities.getTracked(20);
 
@@ -234,7 +255,7 @@ async function reEvaluateTracked(
       createdAt: opp.tweet_created_at,
     };
 
-    const score = scoreOpportunity(tweet, bills, config);
+    const score = scoreOpportunity(tweet, bills, effectiveConfig);
     opportunities.updateScore(opp.tweet_id, {
       score: score.total,
       viral_score: score.viral,
@@ -267,6 +288,146 @@ async function reEvaluateTracked(
 }
 
 /**
+ * Generate and post an original standalone tweet based on trending topics.
+ * Runs every Nth cycle to mix original content with engagement.
+ */
+async function runOriginalPostCycle(
+  deps: WatchDeps,
+  dryRun = false,
+): Promise<{ posted: boolean; topic: string | null }> {
+  const { db, xClient, xWriter, claude, config } = deps;
+  const posts = createPostModel(db);
+  const bills = loadBills(config.billsDir);
+
+  log.info('Original post cycle starting — scanning trends');
+
+  // Fetch trends from X and Congress.gov
+  const [xTrends, congressTrends] = await Promise.all([
+    fetchXTrends(xClient),
+    fetchCongressActions(config),
+  ]);
+  const aggregated = aggregateTrends(xTrends, congressTrends, []);
+
+  // Score and filter
+  const scored = aggregated
+    .map(t => ({ ...t, score: scoreTrend(t, config) }))
+    .filter(t => t.score >= 40)
+    .sort((a, b) => b.score - a.score);
+
+  if (scored.length === 0) {
+    // Fall back to high-absurdity bills
+    const highAbsurdity = bills
+      .filter(b => (b.absurdityIndex ?? 0) >= 6)
+      .sort(() => Math.random() - 0.5);
+
+    if (highAbsurdity.length === 0) {
+      log.info('No trends or eligible bills for original post');
+      return { posted: false, topic: null };
+    }
+
+    const bill = highAbsurdity[0]!;
+    return generateOriginalPost(deps, bill.title, {
+      bill,
+      siteUrl: billUrl(bill.slug, config.siteUrl),
+    }, dryRun);
+  }
+
+  const topTrend = scored[0]!;
+  log.info({ topic: topTrend.topic, score: topTrend.score }, 'Top trend for original post');
+
+  // Match to bills
+  const billMatches = matchTrendToBills(topTrend, bills);
+  const matchedBill = billMatches[0]?.bill;
+
+  const context: PromptContext = {
+    trendTopic: topTrend.topic,
+    bill: matchedBill,
+    siteUrl: matchedBill ? billUrl(matchedBill.slug, config.siteUrl) : undefined,
+  };
+
+  return generateOriginalPost(deps, topTrend.topic, context, dryRun);
+}
+
+async function generateOriginalPost(
+  deps: WatchDeps,
+  topic: string,
+  context: PromptContext,
+  dryRun = false,
+): Promise<{ posted: boolean; topic: string | null }> {
+  const { db, xWriter, claude, config } = deps;
+  const posts = createPostModel(db);
+
+  // Let Claude pick the best prompt type
+  const promptType = await claude.pickBestPromptType(context);
+  log.info({ promptType, topic }, 'Prompt type selected for original post');
+
+  // Generate content
+  const result = await claude.generate(promptType, context);
+  const content = cleanContent(result.content);
+
+  if (content === 'SKIP' || content === 'skip') {
+    log.info({ topic }, 'Claude says SKIP for original post');
+    return { posted: false, topic };
+  }
+
+  // Safety check
+  const safety = await runHotPotDetector({ content, claude, config });
+
+  if (safety.verdict === 'REJECT') {
+    log.warn({ score: safety.score, reasons: safety.reasons }, 'Original post REJECTED by safety');
+    posts.create({
+      content,
+      prompt_type: promptType,
+      trend_topic: topic,
+      safety_score: safety.score,
+      safety_verdict: 'REJECT',
+      status: 'rejected',
+    });
+    return { posted: false, topic };
+  }
+
+  if (safety.verdict === 'REVIEW') {
+    log.warn({ score: safety.score }, 'Original post needs REVIEW');
+    posts.create({
+      content,
+      prompt_type: promptType,
+      trend_topic: topic,
+      safety_score: safety.score,
+      safety_verdict: 'REVIEW',
+      status: 'review',
+    });
+    return { posted: false, topic };
+  }
+
+  // Post via API
+  const post = posts.create({
+    content,
+    prompt_type: promptType,
+    trend_topic: topic,
+    bill_slug: context.bill?.slug,
+    safety_score: safety.score,
+    safety_verdict: 'SAFE',
+    status: 'queued',
+  });
+
+  if (dryRun) {
+    log.info({ content: content.slice(0, 80) }, '[DRY RUN] Would post original tweet');
+    return { posted: true, topic };
+  }
+
+  const postResult = await xWriter.tweet(content);
+  if (postResult.success && postResult.tweetId) {
+    posts.markPosted(post.id, postResult.tweetId);
+    log.info({ topic, tweetUrl: postResult.tweetUrl }, 'Original post published');
+    return { posted: true, topic };
+  }
+
+  log.error({ topic }, 'Failed to post original tweet');
+  posts.markFailed(post.id, 'API posting failed');
+  return { posted: false, topic };
+}
+
+/**
  * Start the watch daemon — runs scan cycles on an interval.
  */
 export function startWatchDaemon(
@@ -284,16 +445,47 @@ export function startWatchDaemon(
     const cycleNum = cycleIndex++;
     log.info({ cycle: cycleNum, interval: options.interval }, 'Watch cycle starting');
 
+    // 10-cycle repeating pattern: 50% quote, 30% original, 20% reply
+    const CYCLE_PATTERN: Array<'original' | 'quote' | 'reply'> = [
+      'quote', 'original', 'quote', 'quote', 'original',
+      'quote', 'reply', 'original', 'quote', 'reply',
+    ];
+    const cycleType = CYCLE_PATTERN[cycleNum % CYCLE_PATTERN.length]!;
+
+    const cycles = createDaemonCycleModel(deps.db);
+    const cycle = cycles.start(cycleNum, cycleType);
+    const startMs = Date.now();
+
     try {
-      const stats = await runWatchCycle(deps, options, cycleNum);
-      console.log(
-        chalk.dim(`[Cycle ${cycleNum}]`) +
-        ` Scanned: ${chalk.cyan(String(stats.scanned))}` +
-        ` | Engaged: ${chalk.green(String(stats.engaged))}` +
-        ` | Tracked: ${chalk.yellow(String(stats.tracked))}` +
-        ` | Expired: ${chalk.dim(String(stats.expired))}`
-      );
+      if (cycleType === 'original') {
+        const result = await runOriginalPostCycle(deps, options.dryRun);
+        cycles.complete(cycle.id, {
+          posted: result.posted ? 1 : 0,
+          topic: result.topic ?? undefined,
+        }, Date.now() - startMs);
+        console.log(
+          chalk.dim(`[Cycle ${cycleNum}]`) +
+          chalk.magenta(' ORIGINAL POST') +
+          (result.posted
+            ? chalk.green(` ✓ Posted about: ${result.topic}`)
+            : chalk.dim(` — No post (topic: ${result.topic ?? 'none'})`))
+        );
+      } else {
+        const stats = await runWatchCycle(deps, options, cycleNum, cycleType);
+        cycles.complete(cycle.id, stats, Date.now() - startMs);
+        console.log(
+          chalk.dim(`[Cycle ${cycleNum}]`) +
+          chalk.blue(` [${cycleType.toUpperCase()}]`) +
+          ` Scanned: ${chalk.cyan(String(stats.scanned))}` +
+          ` | Engaged: ${chalk.green(String(stats.engaged))}` +
+          ` | Tracked: ${chalk.yellow(String(stats.tracked))}` +
+          ` | Expired: ${chalk.dim(String(stats.expired))}`
+        );
+      }
     } catch (err) {
+      cycles.complete(cycle.id, {
+        error: err instanceof Error ? err.message : String(err),
+      }, Date.now() - startMs);
       log.error({ err, cycle: cycleNum }, 'Watch cycle failed');
       console.error(chalk.red(`[Cycle ${cycleNum}] Error: ${err instanceof Error ? err.message : String(err)}`));
     } finally {
