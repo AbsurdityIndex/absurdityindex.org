@@ -175,8 +175,9 @@ import Icon from '../../../components/ui/Icon.astro';
           flags. Each event is cryptographically signed, so any modification is detectable.
         </p>
         <p class="text-navy-500 text-xs mt-1.5 italic">
-          In a real election, VoteChain would be a distributed ledger operated by independent
-          nodes &mdash; no single party could rewrite or suppress events.
+          In this POC, the VCL runs on 3 distributed Cloudflare Workers nodes. In a production
+          election, VoteChain would span many more independent nodes &mdash; no single party
+          could rewrite or suppress events.
         </p>
 
         <div class="mt-4 flex items-center gap-3">
@@ -302,13 +303,14 @@ import Icon from '../../../components/ui/Icon.astro';
           <div class="flex items-start gap-3">
             <Icon name="info" class="text-gold-700 mt-0.5" />
             <div>
-              <p class="text-navy-800 font-sans text-sm font-semibold">POC Limitations</p>
+              <p class="text-navy-800 font-sans text-sm font-semibold">POC Architecture</p>
               <p class="text-navy-700 font-sans text-sm mt-1">
-                This is a local-only proof-of-concept. All data is stored in your browser's
-                <span class="font-mono">localStorage</span>. In a real election:
+                Cryptographic keys are stored in your browser. VCL audit events are recorded
+                on 3 distributed Cloudflare Workers nodes (federal, state, oversight) with
+                Durable Object append-only storage and ECDSA P-256 signing. In a real election:
               </p>
               <ul class="text-navy-700 font-sans text-sm mt-1 list-disc ml-5 space-y-1">
-                <li>The VoteChain ledger would be a distributed system operated by independent nodes.</li>
+                <li>The VoteChain ledger would span more independent nodes across organizations.</li>
                 <li>The bulletin board would be a public, replicable service monitored by multiple parties.</li>
                 <li>Key pairs would be generated via ceremony, with private keys held in hardware security modules.</li>
                 <li>ZK proofs would replace the POC's signature-based eligibility checks.</li>

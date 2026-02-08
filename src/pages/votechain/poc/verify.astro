@@ -56,8 +56,8 @@ import Icon from '../../../components/ui/Icon.astro';
           event exists on the VoteChain ledger. All checks must pass for full confidence.
         </p>
         <p class="text-navy-500 text-xs mt-1.5 italic">
-          All verification runs locally in your browser against the state in
-          <span class="font-mono">localStorage</span>. Nothing is sent to any server.
+          Verification checks your receipt against local state and the distributed
+          ledger nodes. Ledger ack verification queries Workers nodes directly (public reads).
         </p>
         <p class="text-navy-600 text-sm mt-2">
           <strong>In a real election:</strong> Verification would check your receipt against
@@ -126,12 +126,11 @@ import Icon from '../../../components/ui/Icon.astro';
             how they voted. This is called "recorded-as-cast" verification.
           </p>
           <p>
-            <strong>POC limitation:</strong> This demo runs entirely in your browser, so the
-            bulletin board and ledger are local &mdash; stored in
-            <span class="font-mono">localStorage</span>. In a production system, these would
-            be independent network services hosted and monitored by multiple parties, making
-            tampering far more difficult to conceal. Anyone could run the same verification
-            tool against the live services and get the same result.
+            <strong>POC note:</strong> The bulletin board is stored locally in your browser.
+            The VCL ledger runs on distributed Cloudflare Workers nodes &mdash; verification
+            checks your receipt's ledger acknowledgments against these nodes directly.
+            In a production system, the bulletin board would also be an independent network
+            service monitored by multiple parties.
           </p>
         </div>
       </section>

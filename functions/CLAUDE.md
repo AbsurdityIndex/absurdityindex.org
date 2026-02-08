@@ -15,6 +15,10 @@ Edge middleware and API endpoints that run on Cloudflare's Workers runtime along
 | `_middleware.js` | All requests | US-only geo-restriction + security headers + www→root redirect |
 | `api/today.json.js` | `/api/today.json` | Daily featured content endpoint |
 | `api/visitors.json.js` | `/api/visitors.json` | Visitor analytics endpoint |
+| `api/votechain/poc/config.js` | `/api/votechain/poc/config` | Turnstile config for POC gate |
+| `api/votechain/poc/session.js` | `/api/votechain/poc/session` | Session cookie verification |
+| `api/votechain/poc/unlock.js` | `/api/votechain/poc/unlock` | Turnstile token verification + cookie issuance |
+| `api/votechain/poc/replicate.js` | `/api/votechain/poc/replicate` | Server-side proxy for VCL event replication to Workers nodes (holds write tokens) |
 
 ## Middleware (`_middleware.js`)
 

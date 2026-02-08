@@ -148,10 +148,10 @@ import Icon from '../../../components/ui/Icon.astro';
             detectable.
           </p>
           <p class="text-navy-500 text-xs mt-1.5 italic">
-            In this POC, STHs are stored in your browser's <span class="font-mono">localStorage</span>.
-            In a real election, they would be published to a public append-only log &mdash; independent
-            monitors, media, and political parties could all download and compare tree heads to detect
-            any inconsistency.
+            STH snapshots are recorded on the state node's distributed ledger as
+            <code>bb_sth_published</code> events. In a real election, they would also be published
+            to a public append-only log &mdash; independent monitors, media, and political parties
+            could all download and compare tree heads to detect any inconsistency.
           </p>
           <pre
             class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="latest-sth">Loading...</code></pre>
@@ -187,7 +187,7 @@ import Icon from '../../../components/ui/Icon.astro';
         <p class="text-navy-600 text-sm mt-2">
           This queue simulates the reviewer workflow from the VoteChain PRD: triage, investigation,
           escalation, and resolution. Every reviewer action is recorded as an immutable ledger event
-          (in this POC: your browser's <span class="font-mono">localStorage</span>).
+          on the distributed oversight node.
         </p>
         <p class="text-navy-500 text-xs mt-1.5 italic">
           Note: this is a demo. In a production system, reviewer actions would be role-gated,
@@ -384,10 +384,10 @@ import Icon from '../../../components/ui/Icon.astro';
           immutable event on the VoteChain ledger. This is the public audit trail.
         </p>
         <p class="text-navy-500 text-xs mt-1.5 italic">
-          In this POC, the ledger is simulated in <span class="font-mono">localStorage</span>.
-          In a real election, VoteChain would be a distributed ledger operated by multiple
-          independent nodes &mdash; election authorities, civil society organizations, and
-          international observers &mdash; so that no single party could rewrite history without
+          Ledger events are recorded on 3 distributed Cloudflare Workers nodes (federal, state,
+          oversight) with Durable Object append-only storage. In a real election, VoteChain would
+          span many more independent nodes &mdash; election authorities, civil society organizations,
+          and international observers &mdash; so that no single party could rewrite history without
           detection.
         </p>
         <div class="mt-4 overflow-x-auto">
@@ -424,7 +424,8 @@ import Icon from '../../../components/ui/Icon.astro';
           included.
         </p>
         <p class="text-navy-500 text-xs mt-1.5 italic">
-          In this POC, leaves are stored in <span class="font-mono">localStorage</span>.
+          In this POC, BB leaves are stored locally in your browser. Each ballot cast is also
+          anchored on the distributed ledger via an <code>ewp_ballot_cast</code> event.
           In a real election, the bulletin board would be a publicly accessible, append-only
           server &mdash; anyone could download the full list of leaves and independently verify
           the Merkle tree, ensuring no ballot was added, removed, or modified after acceptance.

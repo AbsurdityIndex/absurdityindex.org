@@ -186,9 +186,10 @@ import Icon from '../../../components/ui/Icon.astro';
           Merkle root, which would be detected by any observer comparing tree heads.
         </p>
         <p class="text-navy-500 text-xs mt-1.5 italic">
-          In this POC, the bulletin board is stored in your browser's
-          <span class="font-mono">localStorage</span>. In a real election, it would be a publicly
-          accessible server that anyone could download and audit independently.
+          In this POC, the bulletin board is stored locally in your browser. The VCL anchor for
+          each ballot is recorded on the distributed Workers ledger nodes. In a real election,
+          the bulletin board would also be a publicly accessible server that anyone could
+          download and audit independently.
         </p>
 
         <div class="mt-4 overflow-x-auto">
