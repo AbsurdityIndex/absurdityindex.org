@@ -28,8 +28,8 @@ import Icon from '../../../components/ui/Icon.astro';
       </div>
     </section>
 
-    <!-- Sticky step indicator -->
-    <div id="step-indicator-bar" class="sticky top-0 z-20 bg-parchment border-b border-navy-200 py-3 shadow-sm">
+    <!-- Step indicator -->
+    <div id="step-indicator-bar" class="bg-parchment border-b border-navy-200 py-3">
       <div class="flex items-center justify-between max-w-3xl mx-auto px-4" id="step-indicator">
         <div class="flex flex-col items-center flex-shrink-0" data-step="1">
           <div
@@ -203,212 +203,15 @@ import Icon from '../../../components/ui/Icon.astro';
         </div>
 
         <!-- Review panel (hidden until encryption) -->
-        <div id="review-panel" class="hidden mt-5">
-        <summary class="flex items-center justify-between flex-wrap gap-3 cursor-pointer list-none">
-          <div class="flex items-center gap-2">
-            <Icon name="file-text" class="text-gold-600" />
-            <span class="font-serif text-xl text-navy-900 font-bold">Election Manifest</span>
-          </div>
-          <span class="text-xs font-mono text-navy-500 uppercase tracking-widest">
-            Toggle Details
-          </span>
-        </summary>
-        <div class="mt-4">
-          <div class="flex justify-end">
-            <a
-              href="/votechain/poc"
-              class="text-sm font-sans font-semibold text-navy-700 hover:text-gold-700 underline"
-            >
-              POC Home
-            </a>
-          </div>
-          <p class="text-navy-600 text-sm mt-2">
-            Before voting begins, the election authority publishes an <strong>election manifest</strong>
-            &mdash; a tamper-proof document that defines the contests, candidates, encryption keys, and
-            rules for this election. Think of it as the official ballot design, locked down with a
-            cryptographic signature so nobody can change it after the fact.
-          </p>
-          <p class="text-navy-600 text-sm mt-1.5">
-            <strong>Where it lives:</strong> In this POC, the manifest and all election state are
-            stored in your browser's <span class="font-mono">localStorage</span> &mdash; nothing is
-            sent to a server. You can open DevTools and inspect the
-            <span class="font-mono">votechain_poc_state_v1</span> key to see exactly what's stored.
-          </p>
-          <p class="text-navy-600 text-sm mt-1.5">
-            <strong>In a real election:</strong> The manifest would be published to a public,
-            append-only transparency log hosted by the election authority &mdash; similar to how
-            Certificate Transparency works for HTTPS. Independent monitors, political parties, and
-            the public could all download and verify the same manifest, ensuring no one silently
-            swaps candidates, changes encryption keys, or alters contest rules after publication.
-          </p>
-          <p class="text-navy-500 text-xs mt-1.5 italic">
-            The <span class="font-mono">manifest_id</span> is a SHA-256 hash of the manifest's
-            contents, and its signature is anchored on the simulated VoteChain ledger.
-          </p>
-          <pre
-            class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="manifest-json">Loading manifest...</code></pre>
-        </div>
-      </details>
-
-      <!-- Wizard step container: min-height prevents page collapse when swapping between steps -->
-      <div id="wizard-step-container" class="min-h-[50vh] space-y-8">
-      <!-- Step 1: Credential -->
-      <section
-        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md"
-        id="credential"
-      >
-        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
-          <Icon name="user" class="text-gold-600" />
-          Voter Credential (POC)
-        </h2>
-        <p class="text-navy-600 text-sm mt-2">
-          <strong>What:</strong> Click <strong>Generate Credential</strong> in the wizard controls
-          below. This gives you a unique, anonymous ID and a cryptographic signing key &mdash;
-          stored only in your browser.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>Why:</strong> Your credential lets you prove you're eligible to vote without revealing
-          who you are. The <em>nullifier</em> is a one-time-use fingerprint tied to this election
-          &mdash; it prevents double-voting while keeping your identity private.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>Where it lives:</strong> Your credential's private key is stored in
-          <span class="font-mono">localStorage</span> and never leaves your browser.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>In this POC:</strong> Your credential is certified by the registration authority
-          using a <em>blind Schnorr signature</em> &mdash; the authority signs your public key
-          without learning which key it signed. This breaks the link between registration and
-          voting: the election server verifies the issuer's signature but cannot tell which signing
-          session produced your credential.
-          <strong>In a real election:</strong> The authority would be your county clerk; the blind
-          signing would happen over a secure channel after identity verification; and a full ZK
-          membership proof would hide the public key entirely.
-        </p>
-        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
-            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">DID</p>
-            <p id="credential-did" class="font-mono text-xs text-navy-900 break-words">
-              Not generated
-            </p>
-          </div>
-          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
-            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
-              Nullifier (This Election)
-            </p>
-            <p id="credential-nullifier" class="font-mono text-xs text-navy-900 break-words">
-              Not generated
-            </p>
-          </div>
-          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
-            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
-              Blind Signature (Issuer)
-            </p>
-            <p id="credential-blind-sig" class="font-mono text-xs text-navy-900 break-words">
-              Not generated
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Step 2: Challenge -->
-      <section
-        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md hidden"
-        id="challenge"
-      >
-        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
-          <Icon name="repeat" class="text-gold-600" />
-          Challenge (Anti-Replay)
-        </h2>
-        <p class="text-navy-600 text-sm mt-2">
-          <strong>What:</strong> Click <strong>Request Challenge</strong> in the wizard controls
-          below. This one-time code will be baked into your ballot to prove it was cast right now,
-          not replayed from a previous session.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>Why:</strong> Without this step, an attacker could intercept your ballot and
-          re-submit it later. The challenge expires after 10 minutes, so your session stays fresh.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>Where it lives:</strong> In this POC, the challenge is generated and stored
-          locally in <span class="font-mono">localStorage</span>.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>In a real election:</strong> The challenge would be issued by the Election Web
-          Gateway &mdash; a server operated by the election authority. It would be signed with the
-          gateway's private key so your device can verify it's authentic, and rate-limited to
-          prevent abuse.
-        </p>
-        <pre
-          class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="challenge-json">No challenge yet.</code></pre>
-      </section>
-
-      <!-- Step 3: Encrypt & Review (with Benaloh challenge) -->
-      <section
-        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md hidden"
-        id="encrypt-review"
-      >
-        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
-          <Icon name="vote" class="text-gold-600" />
-          Encrypt & Review
-        </h2>
-        <p class="text-navy-600 text-sm mt-2">
-          <strong>What:</strong> Make your selections below, then click <strong>Encrypt Ballot</strong>
-          in the wizard controls at the bottom of the page. Your choices will be encrypted so that
-          no one &mdash; not even the server &mdash; can see how you voted until the official tally.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>What to expect:</strong> After encryption, you'll see a review screen with your
-          ballot's hash (a unique fingerprint of the encrypted data). From there you have two options:
-        </p>
-        <ul class="text-navy-600 text-sm mt-1.5 ml-4 list-disc space-y-1">
-          <li>
-            <strong>Cast</strong> &mdash; submit the encrypted ballot as-is. It gets recorded on the
-            bulletin board and you receive a signed receipt.
-          </li>
-          <li>
-            <strong>Challenge (Spoil)</strong> &mdash; ask the device to prove it encrypted your
-            actual selections by revealing the encryption key. The ballot is discarded (spoiled) and
-            you re-encrypt a fresh one. This is your way to catch a dishonest device.
-          </li>
-        </ul>
-        <p class="text-navy-600 text-sm mt-2">
-          <strong>Where it lives:</strong> Encryption happens entirely in your browser using the
-          Web Crypto API. The encrypted ballot stays in memory until you cast or spoil it.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>In a real election:</strong> Your device would encrypt using the election's
-          public key (from the manifest). Only a quorum of independent trustees &mdash; holding
-          separate key shares &mdash; could decrypt the ballots together during the official
-          tally. No single trustee, server, or election official could see individual votes.
-        </p>
-
-        <!-- Ballot options (multi-contest) -->
-        <div class="mt-5 rounded-lg border border-navy-200 bg-cream-50 p-4" id="ballot-section">
-          <div id="ballot-options" class="space-y-6"></div>
-        </div>
-
         <!-- Review panel (hidden until encryption) -->
-        <div id="review-panel" class="hidden mt-6">
+        <div id="review-panel" class="hidden mt-4">
           <Divider withSeal={false} />
 
-          <p class="text-navy-600 text-sm mt-4 mb-3">
-            Your ballot has been encrypted. The hash below is a unique fingerprint of the ciphertext
-            &mdash; you can use it later to verify your ballot was included in the final tally.
-            You have two choices:
+          <p class="text-navy-600 text-sm mt-3 mb-2">
+            Ballot encrypted. <strong>Cast</strong> to submit, or <strong>Challenge (Spoil)</strong> to verify the device was honest.
           </p>
-          <ul class="text-navy-600 text-sm mb-3 ml-4 list-disc space-y-1">
-            <li>
-              Click <strong>Continue to Cast</strong> in the wizard controls below to proceed to the
-              final submission step.
-            </li>
-            <li>
-              Click <strong>Challenge (Spoil)</strong> above to force the device to prove it
-              encrypted your selections honestly. This discards the ballot and lets you re-encrypt.
-            </li>
-          </ul>
 
-          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-3">
             <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
               Encrypted Ballot
             </p>
@@ -422,35 +225,33 @@ import Icon from '../../../components/ui/Icon.astro';
                 <p id="review-ballot-id" class="font-mono text-xs text-navy-900 break-all">-</p>
               </div>
             </div>
-            <div class="mt-3">
+            <div class="mt-2">
               <p class="text-[10px] font-mono text-navy-400 mb-0.5">Your Selections</p>
               <div id="review-selections" class="space-y-1"></div>
             </div>
           </div>
 
-          <div class="mt-4 flex items-center justify-between flex-wrap gap-3">
+          <div class="mt-3 flex items-center justify-between flex-wrap gap-3">
             <p id="spoil-count" class="text-sm text-navy-500 font-sans">Challenges used: 0</p>
             <button
               id="spoil-btn"
-              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-1.5 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
               type="button"
             >
-              <Icon name="eye" class="text-navy-700" size={18} />
+              <Icon name="eye" class="text-navy-700" size={16} />
               Challenge (Spoil)
             </button>
           </div>
 
           <!-- Spoil verification result (hidden until spoil) -->
-          <div id="spoil-result" class="hidden mt-4">
-            <p class="text-navy-600 text-sm mb-3">
-              The device revealed its encryption key and randomness (IV) for this ballot. We
-              re-encrypted your selections with those same values and compared the result to the
-              original ciphertext. If they match, the device was honest. If not, it may have
-              silently altered your vote. Either way, this ballot is now <strong>spoiled</strong>
-              and cannot be cast &mdash; click <em>Re-Encrypt & Continue</em> to create a fresh one.
+          <div id="spoil-result" class="hidden mt-3">
+            <p class="text-navy-600 text-xs mb-2">
+              The device revealed its encryption randomness. We re-encrypted your selections and
+              compared the result. If they match, the device was honest. This ballot is now
+              <strong>spoiled</strong> &mdash; click <em>Re-Encrypt</em> for a fresh one.
             </p>
             <div
-              class="rounded-lg border-2 p-4"
+              class="rounded-lg border-2 p-3"
               id="spoil-result-box"
             >
               <div class="flex items-start gap-3">
@@ -460,7 +261,7 @@ import Icon from '../../../components/ui/Icon.astro';
                   <p id="spoil-result-detail" class="text-xs mt-1"></p>
                 </div>
               </div>
-              <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <p class="text-[10px] font-mono text-navy-400 mb-0.5">Revealed IV</p>
                   <p id="spoil-iv" class="font-mono text-xs text-navy-800 break-all">-</p>
@@ -471,13 +272,13 @@ import Icon from '../../../components/ui/Icon.astro';
                 </div>
               </div>
             </div>
-            <div class="mt-3 flex justify-end">
+            <div class="mt-2 flex justify-end">
               <button
                 id="re-encrypt-btn"
-                class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-4 py-2 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors"
+                class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-3 py-1.5 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors"
                 type="button"
               >
-                <Icon name="repeat" class="text-navy-900" size={18} />
+                <Icon name="repeat" class="text-navy-900" size={16} />
                 Re-Encrypt & Continue
               </button>
             </div>
@@ -487,36 +288,31 @@ import Icon from '../../../components/ui/Icon.astro';
 
       <!-- Step 4: Cast -->
       <section
-        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md hidden"
+        class="bg-white rounded-xl border border-navy-200 p-5 sm:p-6 shadow-md hidden"
         id="cast-step"
       >
-        <div class="flex items-center justify-between flex-wrap gap-3">
-          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="font-serif text-lg text-navy-900 font-bold flex items-center gap-2">
             <Icon name="check-square" class="text-gold-600" />
             Cast Ballot
           </h2>
           <a
             href="/votechain/poc/dashboard"
-            class="text-sm font-sans font-semibold text-navy-700 hover:text-gold-700 underline"
+            class="text-xs font-sans font-semibold text-navy-700 hover:text-gold-700 underline"
           >
-            Open Dashboard
+            Dashboard
           </a>
         </div>
         <p class="text-navy-600 text-sm mt-2">
-          You're about to submit your <strong>encrypted ballot</strong> along with an eligibility proof
-          and a one-time challenge. In this POC, everything is simulated locally, but the flow matches
-          the EWP concept: challenge + cast + receipt.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          Click <strong>Cast Ballot</strong> in the wizard controls below to submit. If the
-          challenge expired or the nullifier was already used, you'll see a clear error with next steps.
+          Submit your encrypted ballot with the eligibility proof and challenge. Click
+          <strong>Cast Ballot</strong> below.
         </p>
 
-        <div class="mt-5 rounded-lg border border-navy-200 bg-cream-50 p-4">
+        <div class="mt-3 rounded-lg border border-navy-200 bg-cream-50 p-3">
           <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
-            Cast Summary (Local)
+            Cast Summary
           </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-2">
             <div>
               <p class="text-[10px] font-mono text-navy-400 mb-0.5">Ballot Hash</p>
               <p id="cast-summary-ballot-hash" class="font-mono text-xs text-navy-900 break-all">-</p>
@@ -527,45 +323,33 @@ import Icon from '../../../components/ui/Icon.astro';
             </div>
             <div>
               <p class="text-[10px] font-mono text-navy-400 mb-0.5">Challenge ID</p>
-              <p
-                id="cast-summary-challenge-id"
-                class="font-mono text-xs text-navy-900 break-all"
-              >
-                -
-              </p>
+              <p id="cast-summary-challenge-id" class="font-mono text-xs text-navy-900 break-all">-</p>
             </div>
             <div>
               <p class="text-[10px] font-mono text-navy-400 mb-0.5">Challenge Expires</p>
-              <p
-                id="cast-summary-challenge-exp"
-                class="font-mono text-xs text-navy-900 break-all"
-              >
-                -
-              </p>
+              <p id="cast-summary-challenge-exp" class="font-mono text-xs text-navy-900 break-all">-</p>
             </div>
           </div>
-          <p class="text-navy-500 text-xs mt-2 italic" id="cast-summary-hint">
-            -
-          </p>
+          <p class="text-navy-500 text-xs mt-1.5 italic" id="cast-summary-hint">-</p>
         </div>
 
         <!-- Cast request/response JSON (shown after you click Cast) -->
-        <div id="cast-json-panel" class="hidden mt-6">
+        <div id="cast-json-panel" class="hidden mt-4">
           <Divider withSeal={false} />
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
             <div>
-              <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
+              <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
                 Cast Request
               </p>
               <pre
-                class="rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="cast-request-json">Waiting...</code></pre>
+                class="rounded-lg bg-navy-800 text-cream-100 p-3 overflow-x-auto text-xs leading-relaxed font-mono"><code id="cast-request-json">Waiting...</code></pre>
             </div>
             <div>
-              <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
+              <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
                 Cast Response
               </p>
               <pre
-                class="rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="cast-response-json">Waiting...</code></pre>
+                class="rounded-lg bg-navy-800 text-cream-100 p-3 overflow-x-auto text-xs leading-relaxed font-mono"><code id="cast-response-json">Waiting...</code></pre>
             </div>
           </div>
         </div>
@@ -575,40 +359,40 @@ import Icon from '../../../components/ui/Icon.astro';
       <!-- Wizard Controls -->
       <section
         id="wizard-controls"
-        class="sticky bottom-4 z-10 bg-white rounded-xl border border-navy-200 p-4 shadow-lg"
+        class="sticky bottom-3 z-10 bg-white rounded-xl border border-navy-200 px-4 py-3 shadow-lg"
       >
-        <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center justify-between gap-2">
           <button
             id="wizard-back"
-            class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all disabled:opacity-50 disabled:hover:border-navy-200 disabled:hover:shadow-none"
+            class="inline-flex items-center gap-1.5 rounded-md border border-navy-200 bg-white px-3 py-1.5 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 transition-all disabled:opacity-50 disabled:hover:border-navy-200"
             type="button"
           >
-            <Icon name="arrow-right" class="text-navy-700 rotate-180" size={18} />
+            <Icon name="arrow-right" class="text-navy-700 rotate-180" size={16} />
             Back
           </button>
 
           <div class="flex items-center gap-2">
             <button
               id="wizard-restart"
-              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+              class="inline-flex items-center gap-1.5 rounded-md border border-navy-200 bg-white px-3 py-1.5 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 transition-all"
               type="button"
             >
-              <Icon name="repeat" class="text-navy-700" size={18} />
+              <Icon name="repeat" class="text-navy-700" size={16} />
               Restart
             </button>
 
             <button
               id="wizard-next"
-              class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-4 py-2 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors disabled:opacity-50"
+              class="inline-flex items-center gap-1.5 rounded-md bg-gold-500 px-4 py-1.5 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors disabled:opacity-50"
               type="button"
             >
               <span id="wizard-next-label">Next</span>
-              <Icon name="arrow-right" class="text-navy-900" size={18} />
+              <Icon name="arrow-right" class="text-navy-900" size={16} />
             </button>
           </div>
         </div>
 
-        <p id="wizard-status" class="mt-3 text-sm text-navy-700"></p>
+        <p id="wizard-status" class="mt-2 text-sm text-navy-700 empty:hidden"></p>
       </section>
 
       <!-- Cast error section (hidden until error) -->
@@ -648,15 +432,15 @@ import Icon from '../../../components/ui/Icon.astro';
 
       <!-- Post-cast success section (hidden until success) -->
       <section
-        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md hidden"
+        class="bg-white rounded-xl border border-navy-200 p-5 sm:p-6 shadow-md hidden"
         id="cast-success"
       >
-        <div class="text-center py-4">
-          <div class="flex justify-center mb-4">
+        <div class="text-center py-2">
+          <div class="flex justify-center mb-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="48"
-              height="48"
+              width="36"
+              height="36"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -669,26 +453,10 @@ import Icon from '../../../components/ui/Icon.astro';
               <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
           </div>
-          <h2 class="font-serif text-2xl text-navy-900 font-bold">Ballot Cast Successfully</h2>
+          <h2 class="font-serif text-xl text-navy-900 font-bold">Ballot Cast Successfully</h2>
           <p class="text-navy-600 text-sm mt-2 max-w-lg mx-auto">
             Your encrypted ballot has been written to the bulletin board and anchored on the
-            VoteChain ledger. A <strong>signed receipt</strong> has been saved to your browser
-            &mdash; this is your proof that your vote was accepted. You can use it at any time
-            to verify that your ballot is still included in the official count.
-          </p>
-          <p class="text-navy-500 text-xs mt-1.5 max-w-lg mx-auto italic">
-            The receipt is saved in your browser's <span class="font-mono">localStorage</span>
-            and contains a Merkle inclusion proof, a signed tree head, and a VoteChain anchor
-            transaction &mdash; three independent pieces of evidence that your ballot exists on
-            the record. You can copy, export, or share it without revealing how you voted.
-          </p>
-          <p class="text-navy-600 text-sm mt-3 max-w-lg mx-auto">
-            <strong>In a real election:</strong> Your receipt would be digitally signed by
-            the Election Web Gateway and independently anchored on the VoteChain ledger &mdash;
-            a distributed, append-only record monitored by multiple independent parties. The
-            bulletin board, ledger, and gateway would all be separate network services, so no
-            single organization could suppress or alter your ballot without the discrepancy
-            being publicly detectable.
+            VoteChain ledger. A <strong>signed receipt</strong> has been saved to your browser.
           </p>
 
           <div
@@ -742,6 +510,28 @@ import Icon from '../../../components/ui/Icon.astro';
           ></pre>
         </div>
       </section>
+
+      <!-- Election Manifest (reference, below wizard) -->
+      <details class="bg-white rounded-xl border border-navy-200 p-5 sm:p-6 shadow-md">
+        <summary class="flex items-center justify-between flex-wrap gap-3 cursor-pointer list-none">
+          <div class="flex items-center gap-2">
+            <Icon name="file-text" class="text-gold-600" />
+            <span class="font-serif text-lg text-navy-900 font-bold">Election Manifest</span>
+          </div>
+          <span class="text-xs font-mono text-navy-500 uppercase tracking-widest">
+            Toggle Details
+          </span>
+        </summary>
+        <div class="mt-3">
+          <p class="text-navy-600 text-xs">
+            The election manifest defines contests, candidates, encryption keys, and rules &mdash;
+            locked down with a cryptographic signature. In this POC it lives in
+            <span class="font-mono">localStorage</span>.
+          </p>
+          <pre
+            class="mt-3 rounded-lg bg-navy-800 text-cream-100 p-3 overflow-x-auto text-xs leading-relaxed font-mono"><code id="manifest-json">Loading manifest...</code></pre>
+        </div>
+      </details>
     </div>
   </main>
 

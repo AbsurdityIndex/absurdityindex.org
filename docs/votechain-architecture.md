@@ -88,7 +88,116 @@ Names are descriptive; implementations can vary as long as the interfaces and in
   - Where: election authority public publication service.
   - Why: publishes the final tally artifact and the proof bundle; anchors the tally hash to VoteChain.
 
-## 4. Alignment Diagram (Production Ownership + Data Paths)
+## 4. Diagrams (Readable + Complete)
+
+Tip: click the `Fullscreen` button on any diagram to pan and zoom.
+
+### 4A Ownership Map (High-Level)
+
+```mermaid
+flowchart LR
+  subgraph VOTERS["Voters"]
+    VC["Voter Client(s)"]
+  end
+
+  subgraph EA["Election Authority (State/Local)"]
+    EAOPS["EA Ops: enroll, attest, recover, review, publish"]
+  end
+
+  subgraph VCL["VoteChain Consortium"]
+    VCLW["Write Gateway/SDK"]
+    VCLN["Permissioned ledger (74 nodes)"]
+    VCLR["Read API (public, replicated)"]
+    VCLW --> VCLN
+    VCLN --> VCLR
+  end
+
+  subgraph EWP["EWP Operators"]
+    GW["EWP Gateways (A/B/C)"]
+  end
+
+  subgraph BB["Public Bulletin Board"]
+    BLOG["Append-only log"]
+    STH["STH signer (HSM)"]
+    BLOG --> STH
+  end
+
+  subgraph TRUST["Trustees/Guardians"]
+    TS["Threshold trustees"]
+  end
+
+  subgraph MON["Independent Monitors"]
+    M["Monitors"]
+  end
+
+  EAOPS -->|attestations + flags + review actions| VCLW
+  VC -->|cast| GW
+  GW -->|append encrypted ballot| BLOG
+  STH -->|anchor checkpoint| VCLW
+  GW -->|anchor receipt + nullifier used| VCLW
+  VC -->|verify anchors| VCLR
+  M -->|fetch + verify| BLOG
+  M -->|cross-check| VCLR
+  TS -->|decrypt proofs| EAOPS
+  EAOPS -->|publish tally artifacts| BLOG
+  EAOPS -->|anchor tally hash| VCLW
+```
+
+### 4B VoteChain Consortium (74 Nodes)
+
+```mermaid
+flowchart TB
+  subgraph OPS["Node Operators (74 total)"]
+    F["Federal (6)"]
+    S["State (50)"]
+    A["Auditor (12)"]
+    O["Oversight (6)"]
+  end
+
+  F --> CQ["Category-quorum consensus"]
+  S --> CQ
+  A --> CQ
+  O --> CQ
+
+  CQ --> LEDGER["VoteChain ledger (74 nodes)"]
+
+  WG["Write Gateway/SDK"] -->|submit tx| LEDGER
+  LEDGER -->|serve queries| RA["Read API (public, replicated)"]
+```
+
+### 4C EWP Cast-to-Tally (Sequence)
+
+```mermaid
+sequenceDiagram
+  participant VC as Voter Client
+  participant EWG as EWP Gateway
+  participant VCL as VoteChain
+  participant BB as Bulletin Board Log
+  participant STH as STH Signer
+  participant MON as Monitor
+  participant TS as Trustees
+  participant TP as Tally Publisher
+
+  VC->>EWG: GET manifest
+  EWG-->>VC: signed manifest (manifest_id)
+  VC->>VCL: verify manifest_id anchored
+
+  VC->>EWG: POST cast (nullifier, ZK proof, ciphertext, validity proof)
+  EWG->>BB: append ciphertext
+  BB->>STH: issue checkpoint (STH)
+  STH->>VCL: anchor STH hash
+  EWG->>VCL: anchor cast receipt (nullifier + leaf_hash + sth_hash)
+  EWG-->>VC: receipt (tx_id, leaf_hash, sth)
+
+  MON->>BB: fetch STH + proofs
+  MON->>VCL: cross-check anchors
+
+  TS->>TP: publish decrypt proofs + tally bundle
+  TP->>BB: publish tally artifacts
+  TP->>VCL: anchor tally hash
+```
+
+### 4D Full Alignment Map (Dense)
 
 ```mermaid
 flowchart LR
@@ -111,25 +220,9 @@ flowchart LR
 
   %% VoteChain consortium
   subgraph VCL["VoteChain Consortium (Permissioned Ledger)"]
-    direction TB
-    subgraph VCL_OPS["Node Operators (74 total)"]
-      direction LR
-      VF["Federal (6)"]
-      VS["State (50)"]
-      VA["Auditor (12)"]
-      VO["Oversight (6)"]
-    end
-
-    VCLCQ["Category-Quorum Consensus"]
-    VCLN["VoteChain Nodes (74)"]
     VCLW["VoteChain Write Gateway/SDK"]
+    VCLN["VoteChain Nodes (74, category quorum)"]
     VCLR["VoteChain Read API (Public, Replicated)"]
-
-    VF --> VCLCQ
-    VS --> VCLCQ
-    VA --> VCLCQ
-    VO --> VCLCQ
-    VCLCQ --> VCLN
     VCLW -->|submit tx| VCLN
     VCLN -->|serve queries| VCLR
   end
@@ -146,18 +239,12 @@ flowchart LR
     STH["STH Signer (HSM)"]
   end
 
-  %% Trustees and monitors
   subgraph TRUSTEES["Trustees / Guardians (Independent)"]
     TS["Trustee Service (Key Ceremony + Decrypt Proofs)"]
-    T1["Trustee 1 (Share)"]
-    T2["Trustee 2 (Share)"]
-    TN["Trustee n (Share)"]
   end
 
   subgraph MON["Independent Monitors"]
-    M1["Monitor (Academic)"]
-    M2["Monitor (NGO)"]
-    M3["Monitor (Media)"]
+    M["Monitor (Independent)"]
   end
 
   %% Enrollment and credential lifecycle
@@ -189,18 +276,10 @@ flowchart LR
   G3 -->|anchor cast receipt + nullifier used| VCLW
 
   %% Monitors detect equivocation/suppression
-  M1 -->|fetch STH + proofs| BLOG
-  M2 -->|fetch STH + proofs| BLOG
-  M3 -->|fetch STH + proofs| BLOG
-  M1 -->|cross-check anchors| VCLR
-  M2 -->|cross-check anchors| VCLR
-  M3 -->|cross-check anchors| VCLR
+  M -->|fetch STH + proofs| BLOG
+  M -->|cross-check anchors| VCLR
 
-  %% Trustees: key ceremony (pre-election) + tally (post-election)
-  TS --- T1
-  TS --- T2
-  TS --- TN
-  TS -->|publish PK_e + trustee set in manifest| G1
+  %% Trustees: tally (post-election)
   TS -->|tally decrypt proofs + tally bundle| TP
   TP -->|anchor tally hash| VCLW
   TP -->|publish artifacts| BLOG
