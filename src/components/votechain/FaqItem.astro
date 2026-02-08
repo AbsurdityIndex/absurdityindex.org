@@ -1,0 +1,72 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { FaqStatus } from '../../data/votechain-faq';
+
+interface Props {
+  id: string;
+  question: string;
+  answer: string;
+  status: FaqStatus;
+}
+
+const { id, question, answer, status } = Astro.props;
+const isOpen = status === 'open';
+---
+
+<details
+  class="faq-item group border-b border-gold-200"
+  data-faq-id={id}
+  data-status={status}
+>
+  <summary
+    class="flex items-center justify-between cursor-pointer select-none py-3 px-1 hover:bg-cream-200 transition-colors"
+  >
+    <span class="font-sans font-medium text-navy-800 text-sm pr-3">{question}</span>
+    <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+      {isOpen && (
+        <span class="inline-flex items-center px-2 py-0.5 text-[0.65rem] font-mono font-bold uppercase tracking-wider bg-orange-100 text-orange-700 rounded-full whitespace-nowrap">
+          Open
+        </span>
+      )}
+      <Icon
+        name="chevron-right"
+        size={16}
+        class="text-navy-400 transition-transform duration-200 group-open:rotate-90"
+      />
+    </div>
+  </summary>
+
+  <div class="faq-answer pb-4 px-1">
+    {isOpen && (
+      <div class="rounded-md border border-orange-300 bg-orange-50 px-3 py-2 mb-3">
+        <p class="text-orange-800 text-xs font-sans font-medium">
+          <strong>This is an open question.</strong> The answer below describes what is currently known.
+          The highlighted area remains unsolved or requires further research.
+        </p>
+      </div>
+    )}
+    <div class="text-navy-700 text-sm font-serif leading-relaxed" set:html={answer} />
+  </div>
+</details>
+
+<style>
+  summary::-webkit-details-marker,
+  summary::marker {
+    display: none;
+  }
+
+  .faq-answer {
+    animation: faqSlideDown 0.2s ease-out;
+  }
+
+  @keyframes faqSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

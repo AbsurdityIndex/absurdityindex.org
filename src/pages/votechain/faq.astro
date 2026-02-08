@@ -1,0 +1,218 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/ui/Icon.astro';
+import FaqSearch from '../../components/votechain/FaqSearch.astro';
+import FaqCategory from '../../components/votechain/FaqCategory.astro';
+import { VOTECHAIN_FAQ } from '../../data/votechain-faq';
+
+const totalCount = VOTECHAIN_FAQ.reduce((acc, c) => acc + c.items.length, 0);
+const openCount = VOTECHAIN_FAQ.reduce(
+  (acc, c) => acc + c.items.filter((i) => i.status === 'open').length,
+  0,
+);
+const answeredCount = totalCount - openCount;
+---
+
+<BaseLayout
+  title="VoteChain FAQ — 150 Questions, Answered Honestly"
+  description="150 frequently asked questions about VoteChain voter verification — privacy, security, cost, coercion, accessibility, and 32 open questions we cannot yet answer."
+  ogType="article"
+  article={{
+    publishedTime: '2026-02-08',
+    author: 'Absurdity Index',
+    section: 'Policy',
+    tags: ['votechain', 'faq', 'voter verification', 'election security'],
+  }}
+>
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    {/* Header */}
+    <div class="text-center mb-6">
+      <p class="text-xs text-gold-600 font-mono uppercase tracking-widest mb-1">
+        Frequently Asked Questions
+      </p>
+      <h1 class="font-serif text-2xl md:text-3xl text-navy-900 font-bold">
+        150 Questions, Answered Honestly
+      </h1>
+      <p class="text-navy-600 font-serif italic mt-2 text-sm max-w-2xl mx-auto">
+        What VoteChain is, what it isn&rsquo;t, what&rsquo;s solved, and what&rsquo;s still open &mdash;
+        in plain English
+      </p>
+    </div>
+
+    {/* Stats bar */}
+    <div class="flex justify-center gap-6 mb-6">
+      <div class="text-center">
+        <span class="block text-2xl font-mono font-bold text-navy-900">{totalCount}</span>
+        <span class="text-xs font-sans text-navy-500 uppercase tracking-wide">Total</span>
+      </div>
+      <div class="w-px bg-gold-200"></div>
+      <div class="text-center">
+        <span class="block text-2xl font-mono font-bold text-navy-900">{answeredCount}</span>
+        <span class="text-xs font-sans text-navy-500 uppercase tracking-wide">Answered</span>
+      </div>
+      <div class="w-px bg-gold-200"></div>
+      <div class="text-center">
+        <span class="block text-2xl font-mono font-bold text-orange-600">{openCount}</span>
+        <span class="text-xs font-sans text-orange-600 uppercase tracking-wide">Open</span>
+      </div>
+    </div>
+
+    {/* Search + filter controls — sticky below subnav */}
+    <div
+      class="sticky bg-cream-50/95 backdrop-blur-sm border-b border-gold-200 -mx-4 px-4 py-3 mb-4"
+      style="top: var(--sticky-offset, 96px); z-index: 35;"
+    >
+      <FaqSearch categories={VOTECHAIN_FAQ} />
+    </div>
+
+    {/* No-results message (hidden by default) */}
+    <div
+      id="faq-no-results"
+      class="hidden text-center py-12"
+    >
+      <Icon name="search" size={32} class="text-navy-300 mx-auto mb-3" />
+      <p class="font-serif text-navy-500 text-sm">No questions match your filters.</p>
+      <button
+        id="faq-clear-filters"
+        class="mt-2 text-xs font-sans font-semibold text-gold-600 hover:text-gold-700 underline underline-offset-2"
+      >
+        Clear all filters
+      </button>
+    </div>
+
+    {/* FAQ sections */}
+    <div class="bg-parchment rounded-lg shadow-lg p-6 md:p-8" id="faq-container">
+      {VOTECHAIN_FAQ.map((category) => (
+        <FaqCategory category={category} />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', function () {
+    var searchInput = document.getElementById('faq-search');
+    var pillContainer = document.getElementById('faq-category-pills');
+    var openToggle = document.getElementById('faq-open-toggle');
+    var noResults = document.getElementById('faq-no-results');
+    var clearBtn = document.getElementById('faq-clear-filters');
+    var container = document.getElementById('faq-container');
+
+    if (!searchInput || !pillContainer || !openToggle || !container) return;
+
+    var allItems = container.querySelectorAll('.faq-item');
+    var allCategories = container.querySelectorAll('.faq-category');
+    var allPills = pillContainer.querySelectorAll('.faq-pill');
+
+    var activeCategory = 'all';
+    var openOnly = false;
+    var searchText = '';
+    var debounceTimer = null;
+
+    // Pill styling classes
+    var activePillClasses = ['bg-gold-500', 'text-navy-900', 'shadow-sm'];
+    var inactivePillClasses = ['bg-white', 'text-navy-700', 'border', 'border-navy-200'];
+    var activeOpenClasses = ['bg-orange-500', 'text-white', 'shadow-sm', 'border-orange-500'];
+    var inactiveOpenClasses = ['bg-white', 'text-navy-700', 'border', 'border-navy-200'];
+
+    function setPillActive(pill, isActive) {
+      if (isActive) {
+        inactivePillClasses.forEach(function (c) { pill.classList.remove(c); });
+        activePillClasses.forEach(function (c) { pill.classList.add(c); });
+      } else {
+        activePillClasses.forEach(function (c) { pill.classList.remove(c); });
+        inactivePillClasses.forEach(function (c) { pill.classList.add(c); });
+      }
+    }
+
+    function setOpenToggleActive(isActive) {
+      if (isActive) {
+        inactiveOpenClasses.forEach(function (c) { openToggle.classList.remove(c); });
+        activeOpenClasses.forEach(function (c) { openToggle.classList.add(c); });
+        openToggle.setAttribute('aria-pressed', 'true');
+      } else {
+        activeOpenClasses.forEach(function (c) { openToggle.classList.remove(c); });
+        inactiveOpenClasses.forEach(function (c) { openToggle.classList.add(c); });
+        openToggle.setAttribute('aria-pressed', 'false');
+      }
+    }
+
+    function applyFilters() {
+      var visibleCount = 0;
+      var query = searchText.toLowerCase();
+
+      allCategories.forEach(function (cat) {
+        var catSlug = cat.getAttribute('data-category');
+        var catMatch = activeCategory === 'all' || catSlug === activeCategory;
+        var catHasVisible = false;
+
+        var items = cat.querySelectorAll('.faq-item');
+        items.forEach(function (item) {
+          var status = item.getAttribute('data-status');
+          var summary = item.querySelector('summary');
+          var answer = item.querySelector('.faq-answer');
+          var text = (summary ? summary.textContent : '') + ' ' + (answer ? answer.textContent : '');
+
+          var show = catMatch;
+          if (show && openOnly && status !== 'open') show = false;
+          if (show && query && text.toLowerCase().indexOf(query) === -1) show = false;
+
+          item.style.display = show ? '' : 'none';
+          if (show) {
+            visibleCount++;
+            catHasVisible = true;
+          }
+        });
+
+        cat.style.display = catHasVisible ? '' : 'none';
+      });
+
+      if (noResults) {
+        noResults.style.display = visibleCount === 0 ? '' : 'none';
+        noResults.classList.toggle('hidden', visibleCount > 0);
+      }
+    }
+
+    // Search input with debounce
+    searchInput.addEventListener('input', function () {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () {
+        searchText = searchInput.value.trim();
+        applyFilters();
+      }, 150);
+    });
+
+    // Category pills
+    allPills.forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        activeCategory = pill.getAttribute('data-category');
+        allPills.forEach(function (p) {
+          setPillActive(p, p.getAttribute('data-category') === activeCategory);
+        });
+        applyFilters();
+      });
+    });
+
+    // Open only toggle
+    openToggle.addEventListener('click', function () {
+      openOnly = !openOnly;
+      setOpenToggleActive(openOnly);
+      applyFilters();
+    });
+
+    // Clear filters
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        searchText = '';
+        searchInput.value = '';
+        activeCategory = 'all';
+        openOnly = false;
+        allPills.forEach(function (p) {
+          setPillActive(p, p.getAttribute('data-category') === 'all');
+        });
+        setOpenToggleActive(false);
+        applyFilters();
+      });
+    }
+  });
+</script>

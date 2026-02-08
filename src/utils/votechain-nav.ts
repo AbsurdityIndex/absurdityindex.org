@@ -21,6 +21,7 @@ export const VOTECHAIN_PRIMARY_NAV: VoteChainNavItem[] = [
   { href: '/votechain/ewp', label: 'EWP PRD', icon: 'file-text' },
   { href: '/votechain/poc', label: 'POC', icon: 'vote' },
   { href: '/votechain/assurance', label: 'Assurance', icon: 'clipboard-list' },
+  { href: '/votechain/faq', label: 'FAQ', icon: 'help-circle' },
 ];
 
 export const VOTECHAIN_POC_MODULES: VoteChainSubpageItem[] = [

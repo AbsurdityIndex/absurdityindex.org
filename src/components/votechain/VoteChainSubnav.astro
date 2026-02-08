@@ -41,8 +41,8 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
 
 <nav class="border-b border-navy-200 bg-cream-50/90 backdrop-blur" aria-label="VoteChain" data-votechain-subnav>
   {/* Primary Nav — tab-style with underline indicator */}
-  <div class="max-w-5xl mx-auto px-4">
-    <div class="flex gap-1 -mb-px">
+  <div class="max-w-7xl mx-auto px-3 sm:px-4 relative subnav-wrap">
+    <div class="subnav-scroll flex -mb-px overflow-x-auto">
       {
         VOTECHAIN_PRIMARY_NAV.map((item) => {
           const active = isActive(item.href);
@@ -51,7 +51,7 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
               href={item.href}
               aria-current={active ? 'page' : undefined}
               class:list={[
-                'inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all',
+                'inline-flex items-center gap-1.5 px-3 py-3 text-[13px] font-semibold border-b-2 transition-all whitespace-nowrap',
                 active
                   ? 'border-gold-500 text-navy-900'
                   : 'border-transparent text-navy-500 hover:text-navy-800 hover:border-navy-300',
@@ -59,7 +59,7 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
             >
               <Icon
                 name={item.icon as any}
-                size={18}
+                size={16}
                 class={active ? 'text-gold-600' : 'text-navy-400'}
               />
               {item.label}
@@ -68,15 +68,17 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
         })
       }
     </div>
+    <div class="subnav-fade-right" aria-hidden="true"></div>
+    <div class="subnav-fade-left" aria-hidden="true"></div>
   </div>
 
   {/* POC Secondary Nav — collapsible on mobile, always visible on desktop */}
   {
     inPoc && (
       <div class="border-t border-navy-100 bg-cream-50/60">
-        <div class="max-w-5xl mx-auto px-4 py-3">
-          <div class="flex items-start justify-between gap-2 flex-wrap">
-            <details class="section-subnav min-w-0 flex-1" open>
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3">
+          <div>
+            <details class="section-subnav" open>
               <summary class="flex items-center gap-1.5 text-xs font-medium text-navy-500 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none py-1">
                 <Icon
                   name="chevron-right"
@@ -122,12 +124,12 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
 
             <div
               id="poc-human-chip"
-              class="hidden shrink-0 items-center gap-1.5 rounded-md border border-navy-200 bg-white px-2.5 py-1.5 text-xs font-mono text-navy-700"
+              class="hidden mt-2 items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-mono border-navy-200 bg-white text-navy-600"
               role="status"
               aria-live="polite"
               title="This POC uses Cloudflare Turnstile to reduce automated abuse. Verification is server-checked via an HttpOnly session cookie."
             >
-              <Icon name="shield" size={14} class="text-current" />
+              <Icon name="shield" size={12} class="text-current shrink-0" />
               <span id="poc-human-text">Human check</span>
               <a
                 id="poc-human-unlock"
@@ -147,7 +149,7 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
   {
     inAssurance && (
       <div class="border-t border-navy-100 bg-cream-50/60">
-        <div class="max-w-5xl mx-auto px-4 py-3">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3">
           <details class="section-subnav">
             <summary class="flex items-center gap-1.5 text-xs font-medium text-navy-500 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none py-1">
               <Icon name="chevron-right" size={14} class="section-subnav-chevron transition-transform" />
@@ -206,6 +208,28 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
     document.documentElement.style.setProperty('--sticky-offset', `${h + subnav.getBoundingClientRect().height}px`);
   }
 
+  // Auto-scroll the active tab into view and manage fade indicators
+  const scrollContainer = document.querySelector('.subnav-scroll') as HTMLElement | null;
+  const wrap = document.querySelector('.subnav-wrap') as HTMLElement | null;
+  if (scrollContainer && wrap) {
+    const activeLink = scrollContainer.querySelector('[aria-current="page"]') as HTMLElement | null;
+    if (activeLink) {
+      activeLink.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
+    }
+
+    function updateFades() {
+      if (!scrollContainer || !wrap) return;
+      const atStart = scrollContainer.scrollLeft <= 4;
+      const atEnd = scrollContainer.scrollLeft + scrollContainer.clientWidth >= scrollContainer.scrollWidth - 4;
+      wrap.classList.toggle('at-start', atStart);
+      wrap.classList.toggle('at-end', atEnd);
+    }
+
+    scrollContainer.addEventListener('scroll', updateFades, { passive: true });
+    updateFades();
+    window.addEventListener('load', updateFades);
+  }
+
   // POC: show whether the current browser session is Turnstile-verified (server-side).
   const pocChip = document.getElementById('poc-human-chip') as HTMLElement | null;
   const pocText = document.getElementById('poc-human-text') as HTMLElement | null;
@@ -217,7 +241,7 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
     pocChip.classList.remove(
       'border-navy-200',
       'bg-white',
-      'text-navy-700',
+      'text-navy-600',
       'border-gold-400',
       'bg-gold-50',
       'text-navy-900',
@@ -225,7 +249,6 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
       'bg-red-50',
       'text-red-700',
       'bg-cream-50',
-      'text-navy-600',
     );
 
     if (state === 'verified') {
@@ -267,6 +290,7 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
 
       // Only show if the endpoint is present. (Astro dev server may not serve Pages Functions.)
       pocChip.classList.remove('hidden');
+      pocChip.classList.add('inline-flex');
 
       if (!data?.enabled) {
         setChipState('disabled', 'Human check: off', false);
@@ -290,6 +314,41 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
 </script>
 
 <style>
+  /* Hide scrollbar on primary nav while keeping scroll functional */
+  .subnav-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .subnav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Fade edges to hint at scrollable overflow */
+  .subnav-fade-right,
+  .subnav-fade-left {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2.5rem;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 1;
+  }
+  .subnav-fade-right {
+    right: 0;
+    background: linear-gradient(to right, transparent, var(--color-cream-50, #faf8f3));
+  }
+  .subnav-fade-left {
+    left: 0;
+    background: linear-gradient(to left, transparent, var(--color-cream-50, #faf8f3));
+  }
+  .subnav-wrap.at-end .subnav-fade-right {
+    opacity: 0;
+  }
+  .subnav-wrap.at-start .subnav-fade-left {
+    opacity: 0;
+  }
+
   /* Rotate chevron when open */
   .section-subnav[open] > summary .section-subnav-chevron {
     transform: rotate(90deg);

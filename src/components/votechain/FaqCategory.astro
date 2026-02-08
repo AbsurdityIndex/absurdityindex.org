@@ -1,0 +1,45 @@
+---
+import Icon from '../ui/Icon.astro';
+import FaqItem from './FaqItem.astro';
+import type { FaqCategory } from '../../data/votechain-faq';
+
+interface Props {
+  category: FaqCategory;
+}
+
+const { category } = Astro.props;
+const openCount = category.items.filter((i) => i.status === 'open').length;
+---
+
+<section class="faq-category" data-category={category.slug} id={`cat-${category.slug}`}>
+  <div class="flex items-center gap-3 mb-1 pt-8 pb-3">
+    <div class="w-8 h-8 rounded-lg bg-gold-100 flex items-center justify-center flex-shrink-0">
+      <Icon name={category.icon as any} size={16} class="text-gold-700" />
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 flex-wrap">
+        <h2 class="font-serif text-lg font-bold text-navy-900">{category.title}</h2>
+        <span class="px-2 py-0.5 text-xs font-mono font-semibold bg-navy-100 text-navy-600 rounded-full">
+          {category.items.length}
+        </span>
+        {openCount > 0 && (
+          <span class="px-2 py-0.5 text-xs font-mono font-semibold bg-orange-100 text-orange-700 rounded-full">
+            {openCount} open
+          </span>
+        )}
+      </div>
+      <p class="text-navy-500 text-xs font-sans mt-0.5">{category.description}</p>
+    </div>
+  </div>
+
+  <div class="border-t border-gold-200">
+    {category.items.map((item) => (
+      <FaqItem
+        id={item.id}
+        question={item.question}
+        answer={item.answer}
+        status={item.status}
+      />
+    ))}
+  </div>
+</section>

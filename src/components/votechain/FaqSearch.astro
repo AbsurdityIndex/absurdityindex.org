@@ -1,0 +1,54 @@
+---
+import Icon from '../ui/Icon.astro';
+import type { FaqCategory } from '../../data/votechain-faq';
+
+interface Props {
+  categories: FaqCategory[];
+}
+
+const { categories } = Astro.props;
+---
+
+<div class="faq-controls" data-faq-controls>
+  {/* Search input */}
+  <div class="relative mb-3">
+    <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+      <Icon name="search" size={16} class="text-gold-600" />
+    </div>
+    <input
+      type="text"
+      id="faq-search"
+      placeholder="Search 150 questions..."
+      class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gold-300 bg-cream-50 text-navy-800 text-sm font-serif placeholder:text-navy-400 focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 transition-colors"
+    />
+  </div>
+
+  {/* Category pills + Open toggle — wrapping layout */}
+  <div class="flex flex-wrap gap-1.5" id="faq-category-pills">
+    <button
+      class="faq-pill inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all whitespace-nowrap bg-gold-500 text-navy-900 shadow-sm"
+      data-category="all"
+    >
+      All
+    </button>
+    {categories.map((cat) => (
+      <button
+        class="faq-pill inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all whitespace-nowrap bg-white text-navy-700 border border-navy-200 hover:border-gold-400 hover:bg-gold-50"
+        data-category={cat.slug}
+      >
+        <Icon name={cat.icon as any} size={14} class="text-navy-500" />
+        {cat.title}
+      </button>
+    ))}
+
+    {/* Open Only toggle sits at the end of the wrapped pills */}
+    <button
+      id="faq-open-toggle"
+      class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all whitespace-nowrap bg-white text-navy-700 border border-navy-200 hover:border-orange-400 hover:bg-orange-50 ml-auto"
+      aria-pressed="false"
+    >
+      <Icon name="lightbulb" size={14} class="text-navy-500" />
+      Open Only
+    </button>
+  </div>
+</div>
