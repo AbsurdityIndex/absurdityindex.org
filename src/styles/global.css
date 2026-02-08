@@ -65,6 +65,154 @@ body {
   line-height: 1.6;
 }
 
+/* Mermaid diagram inspector (fullscreen + pan/zoom) */
+.mermaid-diagram.diagram-has-overlay {
+  position: relative;
+}
+
+.diagram-fullscreen-trigger {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-navy-200);
+  background: rgba(254, 252, 247, 0.92);
+  color: var(--color-navy-800);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.diagram-fullscreen-trigger:hover {
+  border-color: var(--color-gold-500);
+  box-shadow: 0 8px 20px rgba(10, 22, 40, 0.14);
+}
+
+.diagram-inspector-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  background: rgba(10, 22, 40, 0.72);
+}
+
+.diagram-inspector-overlay[data-open='true'] {
+  display: flex;
+}
+
+.diagram-inspector {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-cream-50);
+  border: 1px solid rgba(194, 211, 232, 0.6);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .diagram-inspector-overlay {
+    padding: 1rem;
+  }
+  .diagram-inspector {
+    border-radius: 0.75rem;
+  }
+}
+
+.diagram-inspector-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--color-navy-200);
+  background: rgba(254, 252, 247, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.diagram-inspector-title {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-navy-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diagram-inspector-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.diagram-inspector-btn {
+  appearance: none;
+  border: 1px solid var(--color-navy-200);
+  background: white;
+  color: var(--color-navy-800);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.55rem;
+  cursor: pointer;
+}
+
+.diagram-inspector-btn:hover {
+  border-color: var(--color-gold-500);
+  background: var(--color-gold-50);
+}
+
+.diagram-inspector-btn-primary {
+  border-color: var(--color-navy-800);
+  background: var(--color-navy-800);
+  color: var(--color-gold-200);
+}
+
+.diagram-inspector-btn-primary:hover {
+  background: var(--color-navy-700);
+  border-color: var(--color-navy-700);
+}
+
+.diagram-inspector-viewport {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: white;
+  touch-action: none;
+  cursor: grab;
+}
+
+.diagram-inspector-viewport.diagram-inspector-dragging {
+  cursor: grabbing;
+}
+
+/* Hide per-diagram overlay controls when the diagram is in the fullscreen inspector */
+.diagram-inspector-overlay .diagram-fullscreen-trigger {
+  display: none;
+}
+
+.diagram-inspector-overlay .mermaid-diagram {
+  margin: 0 !important;
+}
+
+.diagram-inspector-overlay .mermaid-diagram svg {
+  max-width: none !important;
+  max-height: none !important;
+}
+
 /* Official document styling for MDX bill content */
 .bill-content {
   font-family: var(--font-serif);

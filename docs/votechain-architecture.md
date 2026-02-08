@@ -57,7 +57,7 @@ Names are descriptive; implementations can vary as long as the interfaces and in
   - Why: case management, evidence bundles, reviewer actions, and audit exports.
 
 - `votechain-ledger` (permissioned network)
-  - Where: multiple independent operators in different categories.
+  - Where: 74 permissioned nodes operated across categories (Federal 6, State 50, Auditor 12, Oversight 6), using a category-quorum consensus policy.
   - Why: no single party can unilaterally rewrite or suppress verification or audit anchors.
 
 - `votechain-read-api`
@@ -111,9 +111,27 @@ flowchart LR
 
   %% VoteChain consortium
   subgraph VCL["VoteChain Consortium (Permissioned Ledger)"]
-    VCLN["VoteChain Nodes (Federal/State/Auditor/Oversight)"]
+    direction TB
+    subgraph VCL_OPS["Node Operators (74 total)"]
+      direction LR
+      VF["Federal (6)"]
+      VS["State (50)"]
+      VA["Auditor (12)"]
+      VO["Oversight (6)"]
+    end
+
+    VCLCQ["Category-Quorum Consensus"]
+    VCLN["VoteChain Nodes (74)"]
     VCLW["VoteChain Write Gateway/SDK"]
     VCLR["VoteChain Read API (Public, Replicated)"]
+
+    VF --> VCLCQ
+    VS --> VCLCQ
+    VA --> VCLCQ
+    VO --> VCLCQ
+    VCLCQ --> VCLN
+    VCLW -->|submit tx| VCLN
+    VCLN -->|serve queries| VCLR
   end
 
   %% EWP services

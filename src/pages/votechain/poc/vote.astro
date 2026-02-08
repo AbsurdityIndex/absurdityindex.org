@@ -17,24 +17,20 @@ import Icon from '../../../components/ui/Icon.astro';
   }}
 >
   <main class="bg-parchment min-h-screen">
-    <section class="relative bg-navy-900 py-10 sm:py-14">
-      <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
-        <div class="flex justify-center">
-          <OfficialSeal size="90" />
+    <!-- Compact hero bar -->
+    <section class="bg-navy-900 py-3">
+      <div class="max-w-5xl mx-auto px-4 flex items-center gap-3">
+        <OfficialSeal size="32" />
+        <div>
+          <p class="text-[10px] text-gold-500 font-mono uppercase tracking-widest leading-none">EWP POC</p>
+          <h1 class="font-serif text-lg sm:text-xl text-gold-400 font-bold leading-tight">Voting Client</h1>
         </div>
-        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-5 mb-2">EWP POC</p>
-        <h1 class="font-serif text-3xl sm:text-4xl text-gold-400 font-bold">Voting Client</h1>
-        <p class="mt-3 text-gold-300/80 font-sans text-base max-w-3xl mx-auto">
-          Walk through each step of casting a vote with VoteChain. You'll create an identity,
-          prove you're eligible, make your selections, and submit an encrypted ballot &mdash; with
-          the option to verify the encryption was honest before it counts.
-        </p>
       </div>
     </section>
 
-    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-12 space-y-8 pb-28">
-      <!-- Step Indicator -->
-      <div class="flex items-center justify-between max-w-3xl mx-auto" id="step-indicator">
+    <!-- Sticky step indicator -->
+    <div id="step-indicator-bar" class="sticky top-0 z-20 bg-parchment border-b border-navy-200 py-3 shadow-sm">
+      <div class="flex items-center justify-between max-w-3xl mx-auto px-4" id="step-indicator">
         <div class="flex flex-col items-center flex-shrink-0" data-step="1">
           <div
             class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-sans font-semibold text-sm bg-navy-200 text-navy-500 transition-all"
@@ -82,9 +78,132 @@ import Icon from '../../../components/ui/Icon.astro';
           <p class="font-mono text-[10px] uppercase tracking-wider mt-1.5 text-navy-500">Cast</p>
         </div>
       </div>
+    </div>
 
-      <!-- Manifest -->
-      <details class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+    <div class="max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-6 pb-28">
+
+      <!-- Wizard step container -->
+      <div id="wizard-step-container" class="space-y-6">
+      <!-- Step 1: Credential -->
+      <section
+        class="bg-white rounded-xl border border-navy-200 p-5 sm:p-6 shadow-md"
+        id="credential"
+      >
+        <h2 class="font-serif text-lg text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="user" class="text-gold-600" />
+          Voter Credential (POC)
+        </h2>
+        <details class="mt-2 text-sm text-navy-600">
+          <summary class="cursor-pointer text-navy-500 hover:text-navy-700 font-sans text-xs font-semibold uppercase tracking-wider">How it works</summary>
+          <div class="mt-2 space-y-1.5">
+            <p>
+              <strong>What:</strong> Click <strong>Generate Credential</strong> in the wizard controls
+              below. This gives you a unique, anonymous ID and a cryptographic signing key &mdash;
+              stored only in your browser.
+            </p>
+            <p>
+              <strong>Why:</strong> Your credential lets you prove you're eligible to vote without revealing
+              who you are. The <em>nullifier</em> is a one-time-use fingerprint tied to this election
+              &mdash; it prevents double-voting while keeping your identity private.
+            </p>
+            <p>
+              <strong>In this POC:</strong> Your credential is certified by the registration authority
+              using a <em>blind Schnorr signature</em> &mdash; the authority signs your public key
+              without learning which key it signed. This breaks the link between registration and
+              voting.
+            </p>
+          </div>
+        </details>
+        <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-3">
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">DID</p>
+            <p id="credential-did" class="font-mono text-xs text-navy-900 break-words">
+              Not generated
+            </p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-3">
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
+              Nullifier (This Election)
+            </p>
+            <p id="credential-nullifier" class="font-mono text-xs text-navy-900 break-words">
+              Not generated
+            </p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-3">
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
+              Blind Signature (Issuer)
+            </p>
+            <p id="credential-blind-sig" class="font-mono text-xs text-navy-900 break-words">
+              Not generated
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2: Challenge -->
+      <section
+        class="bg-white rounded-xl border border-navy-200 p-5 sm:p-6 shadow-md hidden"
+        id="challenge"
+      >
+        <h2 class="font-serif text-lg text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="repeat" class="text-gold-600" />
+          Challenge (Anti-Replay)
+        </h2>
+        <details class="mt-2 text-sm text-navy-600">
+          <summary class="cursor-pointer text-navy-500 hover:text-navy-700 font-sans text-xs font-semibold uppercase tracking-wider">How it works</summary>
+          <div class="mt-2 space-y-1.5">
+            <p>
+              <strong>What:</strong> Click <strong>Request Challenge</strong> below. This one-time code
+              will be baked into your ballot to prove it was cast right now, not replayed from a previous session.
+            </p>
+            <p>
+              <strong>Why:</strong> Without this step, an attacker could intercept your ballot and
+              re-submit it later. The challenge expires after 10 minutes.
+            </p>
+            <p>
+              <strong>In a real election:</strong> The challenge would be issued by the Election Web
+              Gateway and signed with the gateway's private key.
+            </p>
+          </div>
+        </details>
+        <pre
+          class="mt-3 rounded-lg bg-navy-800 text-cream-100 p-3 overflow-x-auto text-xs leading-relaxed font-mono"><code id="challenge-json">No challenge yet.</code></pre>
+      </section>
+
+      <!-- Step 3: Encrypt & Review (with Benaloh challenge) -->
+      <section
+        class="bg-white rounded-xl border border-navy-200 p-5 sm:p-6 shadow-md hidden"
+        id="encrypt-review"
+      >
+        <h2 class="font-serif text-lg text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="vote" class="text-gold-600" />
+          Encrypt & Review
+        </h2>
+        <details class="mt-2 text-sm text-navy-600">
+          <summary class="cursor-pointer text-navy-500 hover:text-navy-700 font-sans text-xs font-semibold uppercase tracking-wider">How it works</summary>
+          <div class="mt-2 space-y-1.5">
+            <p>
+              <strong>What:</strong> Make your selections below, then click <strong>Encrypt Ballot</strong>.
+              Your choices will be encrypted so no one can see how you voted until the official tally.
+            </p>
+            <p>
+              After encryption you can <strong>Cast</strong> (submit) or <strong>Challenge (Spoil)</strong>
+              to verify the device encrypted your actual selections honestly.
+            </p>
+            <p>
+              <strong>In a real election:</strong> Only a quorum of independent trustees holding
+              separate key shares could decrypt the ballots together during the official tally.
+            </p>
+          </div>
+        </details>
+
+        <!-- Ballot options (multi-contest) -->
+        <div class="mt-4 rounded-lg border border-navy-200 bg-cream-50 p-4" id="ballot-section">
+          <div id="ballot-options" class="space-y-6"></div>
+        </div>
+
+        <!-- Review panel (hidden until encryption) -->
+        <div id="review-panel" class="hidden mt-5">
         <summary class="flex items-center justify-between flex-wrap gap-3 cursor-pointer list-none">
           <div class="flex items-center gap-2">
             <Icon name="file-text" class="text-gold-600" />
@@ -131,6 +250,8 @@ import Icon from '../../../components/ui/Icon.astro';
         </div>
       </details>
 
+      <!-- Wizard step container: min-height prevents page collapse when swapping between steps -->
+      <div id="wizard-step-container" class="min-h-[50vh] space-y-8">
       <!-- Step 1: Credential -->
       <section
         class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md"
@@ -449,6 +570,7 @@ import Icon from '../../../components/ui/Icon.astro';
           </div>
         </div>
       </section>
+      </div><!-- /wizard-step-container -->
 
       <!-- Wizard Controls -->
       <section
@@ -868,7 +990,7 @@ import Icon from '../../../components/ui/Icon.astro';
       4: castStepSection,
     };
 
-    function setWizardStep(step: WizardStep, opts: { scroll?: boolean } = {}) {
+    function setWizardStep(step: WizardStep) {
       wizardStep = step;
 
       for (const [k, el] of Object.entries(wizardStepEls)) {
@@ -886,10 +1008,6 @@ import Icon from '../../../components/ui/Icon.astro';
 
       updateStepIndicator(step);
       updateWizardControls();
-
-      if (opts.scroll !== false) {
-        wizardStepEls[step].scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
     }
 
     function updateWizardControls() {
@@ -1094,7 +1212,7 @@ import Icon from '../../../components/ui/Icon.astro';
           ? 3
           : 2;
 
-      setWizardStep(start, { scroll: false });
+      setWizardStep(start);
       setWizardStatus('');
     }
 
@@ -1366,7 +1484,7 @@ import Icon from '../../../components/ui/Icon.astro';
       castErrorMessage.textContent = info.message;
       castErrorHint.textContent = info.hint;
       castErrorRaw.textContent = JSON.stringify(rawError, null, 2);
-      castError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function performCast() {
@@ -1452,7 +1570,7 @@ import Icon from '../../../components/ui/Icon.astro';
           }
 
           rawReceiptJson.textContent = JSON.stringify(receipt, null, 2);
-          castSuccess.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       } catch (err) {
         castResEl.textContent = `Error: ${String(err)}`;

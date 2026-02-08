@@ -1,0 +1,466 @@
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', function () {
+    var preBlocks = document.querySelectorAll('pre[data-language="mermaid"]');
+    if (preBlocks.length === 0) return;
+
+    var MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+
+    function isThenable(x) {
+      return !!x && (typeof x === 'object' || typeof x === 'function') && typeof x.then === 'function';
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function createModal() {
+      var overlay = document.createElement('div');
+      overlay.className = 'diagram-inspector-overlay';
+      overlay.setAttribute('aria-hidden', 'true');
+
+      var dialog = document.createElement('div');
+      dialog.className = 'diagram-inspector';
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+
+      var header = document.createElement('div');
+      header.className = 'diagram-inspector-header';
+
+      var title = document.createElement('div');
+      title.className = 'diagram-inspector-title';
+      title.textContent = 'Diagram inspector';
+
+      var controls = document.createElement('div');
+      controls.className = 'diagram-inspector-controls';
+
+      function makeBtn(label, action) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'diagram-inspector-btn';
+        b.textContent = label;
+        b.setAttribute('data-action', action);
+        return b;
+      }
+
+      var btnFit = makeBtn('Fit', 'fit');
+      var btnReset = makeBtn('Reset', 'reset');
+      var btnZoomOut = makeBtn('Zoom -', 'zoomOut');
+      var btnZoomIn = makeBtn('Zoom +', 'zoomIn');
+      var btnClose = makeBtn('Close', 'close');
+      btnClose.classList.add('diagram-inspector-btn-primary');
+
+      controls.appendChild(btnFit);
+      controls.appendChild(btnReset);
+      controls.appendChild(btnZoomOut);
+      controls.appendChild(btnZoomIn);
+      controls.appendChild(btnClose);
+
+      header.appendChild(title);
+      header.appendChild(controls);
+
+      var viewport = document.createElement('div');
+      viewport.className = 'diagram-inspector-viewport';
+
+      dialog.appendChild(header);
+      dialog.appendChild(viewport);
+
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+
+      return { overlay: overlay, dialog: dialog, viewport: viewport, title: title, btnClose: btnClose };
+    }
+
+    // Lazy-created modal so we only pay DOM cost on pages with diagrams.
+    var modal = null;
+    var active = null;
+
+    // Pan/zoom state for the active diagram SVG in the modal viewport.
+    var panZoom = {
+      svg: null,
+      scale: 1,
+      tx: 0,
+      ty: 0,
+      pointers: new Map(),
+      dragStart: null,
+      pinchStart: null,
+    };
+
+    function applyTransform() {
+      if (!panZoom.svg) return;
+      panZoom.svg.style.transformOrigin = '0 0';
+      panZoom.svg.style.transform =
+        'translate(' + panZoom.tx + 'px, ' + panZoom.ty + 'px) scale(' + panZoom.scale + ')';
+      panZoom.svg.style.willChange = 'transform';
+    }
+
+    function fitToViewport() {
+      if (!modal || !active || !panZoom.svg) return;
+
+      // Reset first so measurements are stable.
+      panZoom.scale = 1;
+      panZoom.tx = 0;
+      panZoom.ty = 0;
+      applyTransform();
+
+      requestAnimationFrame(function () {
+        if (!modal || !active || !panZoom.svg) return;
+        var viewportRect = modal.viewport.getBoundingClientRect();
+        var svgRect = panZoom.svg.getBoundingClientRect();
+        if (svgRect.width === 0 || svgRect.height === 0) return;
+
+        var padding = 16;
+        var maxW = Math.max(1, viewportRect.width - padding * 2);
+        var maxH = Math.max(1, viewportRect.height - padding * 2);
+
+        var scale = Math.min(maxW / svgRect.width, maxH / svgRect.height);
+        scale = clamp(scale, 0.2, 6);
+
+        var tx = (viewportRect.width - svgRect.width * scale) / 2;
+        var ty = (viewportRect.height - svgRect.height * scale) / 2;
+
+        panZoom.scale = scale;
+        panZoom.tx = tx;
+        panZoom.ty = ty;
+        applyTransform();
+      });
+    }
+
+    function zoomAt(viewportX, viewportY, factor) {
+      if (!modal || !active || !panZoom.svg) return;
+
+      var newScale = clamp(panZoom.scale * factor, 0.2, 6);
+      if (newScale === panZoom.scale) return;
+
+      var x = (viewportX - panZoom.tx) / panZoom.scale;
+      var y = (viewportY - panZoom.ty) / panZoom.scale;
+
+      panZoom.tx = viewportX - x * newScale;
+      panZoom.ty = viewportY - y * newScale;
+      panZoom.scale = newScale;
+      applyTransform();
+    }
+
+    function closeModal() {
+      if (!modal || !active) return;
+
+      // Restore diagram to original location.
+      if (active.nextSibling) active.parent.insertBefore(active.diagram, active.nextSibling);
+      else active.parent.appendChild(active.diagram);
+
+      if (active.placeholder && active.placeholder.parentNode) {
+        active.placeholder.parentNode.removeChild(active.placeholder);
+      }
+
+      active.diagram.className = active.originalClassName;
+
+      modal.overlay.setAttribute('data-open', 'false');
+      modal.overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+
+      // Reset state
+      panZoom.svg = null;
+      panZoom.pointers.clear();
+      panZoom.dragStart = null;
+      panZoom.pinchStart = null;
+      active = null;
+    }
+
+    function openModalForDiagram(diagramEl) {
+      if (!modal) modal = createModal();
+      if (active) closeModal();
+
+      // Save original placement so we can restore.
+      var parent = diagramEl.parentNode;
+      var nextSibling = diagramEl.nextSibling;
+      var rect = diagramEl.getBoundingClientRect();
+      var computed = window.getComputedStyle(diagramEl);
+
+      var placeholder = document.createElement('div');
+      placeholder.className = 'diagram-inspector-placeholder';
+      placeholder.style.height = rect.height + 'px';
+      placeholder.style.marginTop = computed.marginTop;
+      placeholder.style.marginBottom = computed.marginBottom;
+      placeholder.style.marginLeft = computed.marginLeft;
+      placeholder.style.marginRight = computed.marginRight;
+
+      parent.insertBefore(placeholder, diagramEl);
+
+      var originalClassName = diagramEl.className;
+      diagramEl.className = originalClassName + ' diagram-inspector-active';
+
+      // Move the diagram into the modal viewport.
+      modal.viewport.appendChild(diagramEl);
+
+      // Update title if we can infer something useful.
+      var heading = diagramEl.closest('.bill-content')?.querySelector('h2, h3, h4');
+      modal.title.textContent = heading ? heading.textContent.trim() : 'Diagram inspector';
+
+      active = {
+        diagram: diagramEl,
+        parent: parent,
+        nextSibling: nextSibling,
+        placeholder: placeholder,
+        originalClassName: originalClassName,
+      };
+
+      modal.overlay.setAttribute('data-open', 'true');
+      modal.overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+
+      // Wire up pan/zoom to the SVG.
+      panZoom.svg = diagramEl.querySelector('svg');
+      panZoom.scale = 1;
+      panZoom.tx = 0;
+      panZoom.ty = 0;
+      applyTransform();
+      fitToViewport();
+
+      // Focus the close button for keyboard users.
+      requestAnimationFrame(function () {
+        try {
+          modal.btnClose.focus();
+        } catch {
+          // ignore
+        }
+      });
+    }
+
+    function ensureControlsWired() {
+      if (!modal) return;
+      if (modal._wired) return;
+      modal._wired = true;
+
+      // Close on overlay click (outside dialog)
+      modal.overlay.addEventListener('click', function (e) {
+        if (e.target === modal.overlay) closeModal();
+      });
+
+      // Escape closes
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && active) closeModal();
+      });
+
+      // Buttons
+      modal.dialog.addEventListener('click', function (e) {
+        var target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        var action = target.getAttribute('data-action');
+        if (!action) return;
+
+        if (action === 'close') closeModal();
+        else if (action === 'fit') fitToViewport();
+        else if (action === 'reset') {
+          panZoom.scale = 1;
+          panZoom.tx = 0;
+          panZoom.ty = 0;
+          applyTransform();
+          fitToViewport();
+        } else if (action === 'zoomIn' && modal) {
+          var r = modal.viewport.getBoundingClientRect();
+          zoomAt(r.width / 2, r.height / 2, 1.2);
+        } else if (action === 'zoomOut' && modal) {
+          var r2 = modal.viewport.getBoundingClientRect();
+          zoomAt(r2.width / 2, r2.height / 2, 1 / 1.2);
+        }
+      });
+
+      // Wheel zoom
+      modal.viewport.addEventListener(
+        'wheel',
+        function (e) {
+          if (!active) return;
+          e.preventDefault();
+          var rect = modal.viewport.getBoundingClientRect();
+          var x = e.clientX - rect.left;
+          var y = e.clientY - rect.top;
+          var factor = e.deltaY > 0 ? 1 / 1.12 : 1.12;
+          zoomAt(x, y, factor);
+        },
+        { passive: false },
+      );
+
+      // Pointer-based pan/zoom (drag + pinch)
+      modal.viewport.addEventListener('pointerdown', function (e) {
+        if (!active) return;
+        modal.viewport.setPointerCapture(e.pointerId);
+        panZoom.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (panZoom.pointers.size === 1) {
+          panZoom.dragStart = {
+            x: e.clientX,
+            y: e.clientY,
+            tx: panZoom.tx,
+            ty: panZoom.ty,
+          };
+          modal.viewport.classList.add('diagram-inspector-dragging');
+        } else if (panZoom.pointers.size === 2) {
+          var pts = Array.from(panZoom.pointers.values());
+          var dx = pts[0].x - pts[1].x;
+          var dy = pts[0].y - pts[1].y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          var centerX = (pts[0].x + pts[1].x) / 2;
+          var centerY = (pts[0].y + pts[1].y) / 2;
+
+          var viewportRect = modal.viewport.getBoundingClientRect();
+          var cx = centerX - viewportRect.left;
+          var cy = centerY - viewportRect.top;
+
+          panZoom.pinchStart = {
+            dist: dist,
+            centerX: cx,
+            centerY: cy,
+            scale: panZoom.scale,
+            tx: panZoom.tx,
+            ty: panZoom.ty,
+            anchorX: (cx - panZoom.tx) / panZoom.scale,
+            anchorY: (cy - panZoom.ty) / panZoom.scale,
+          };
+
+          panZoom.dragStart = null;
+        }
+      });
+
+      modal.viewport.addEventListener('pointermove', function (e) {
+        if (!active) return;
+        if (!panZoom.pointers.has(e.pointerId)) return;
+        panZoom.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (panZoom.pointers.size === 1 && panZoom.dragStart) {
+          panZoom.tx = panZoom.dragStart.tx + (e.clientX - panZoom.dragStart.x);
+          panZoom.ty = panZoom.dragStart.ty + (e.clientY - panZoom.dragStart.y);
+          applyTransform();
+          return;
+        }
+
+        if (panZoom.pointers.size === 2 && panZoom.pinchStart && modal) {
+          var pts = Array.from(panZoom.pointers.values());
+          var dx = pts[0].x - pts[1].x;
+          var dy = pts[0].y - pts[1].y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+
+          var centerX = (pts[0].x + pts[1].x) / 2;
+          var centerY = (pts[0].y + pts[1].y) / 2;
+          var viewportRect = modal.viewport.getBoundingClientRect();
+          var cx = centerX - viewportRect.left;
+          var cy = centerY - viewportRect.top;
+
+          var factor = dist / panZoom.pinchStart.dist;
+          var newScale = clamp(panZoom.pinchStart.scale * factor, 0.2, 6);
+
+          panZoom.scale = newScale;
+          panZoom.tx = cx - panZoom.pinchStart.anchorX * newScale;
+          panZoom.ty = cy - panZoom.pinchStart.anchorY * newScale;
+          applyTransform();
+        }
+      });
+
+      function onPointerEnd(e) {
+        if (!active) return;
+        if (!panZoom.pointers.has(e.pointerId)) return;
+        panZoom.pointers.delete(e.pointerId);
+
+        if (panZoom.pointers.size === 0) {
+          panZoom.dragStart = null;
+          panZoom.pinchStart = null;
+          modal.viewport.classList.remove('diagram-inspector-dragging');
+        } else if (panZoom.pointers.size === 1) {
+          // Transition from pinch to drag.
+          var pt = Array.from(panZoom.pointers.values())[0];
+          panZoom.dragStart = { x: pt.x, y: pt.y, tx: panZoom.tx, ty: panZoom.ty };
+          panZoom.pinchStart = null;
+        }
+      }
+
+      modal.viewport.addEventListener('pointerup', onPointerEnd);
+      modal.viewport.addEventListener('pointercancel', onPointerEnd);
+      modal.viewport.addEventListener('pointerleave', onPointerEnd);
+
+      // Ensure explicit close button works even if event delegation above changes.
+      modal.btnClose.addEventListener('click', closeModal);
+    }
+
+    function enhanceMermaidDiagrams() {
+      var diagrams = document.querySelectorAll('.mermaid-diagram');
+      if (diagrams.length === 0) return;
+
+      diagrams.forEach(function (diagram) {
+        if (!(diagram instanceof HTMLElement)) return;
+        if (diagram.querySelector('.diagram-fullscreen-trigger')) return;
+
+        // Ensure a stable stacking context for the button.
+        diagram.classList.add('diagram-has-overlay');
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'diagram-fullscreen-trigger';
+        btn.textContent = 'Fullscreen';
+        btn.setAttribute('aria-label', 'Open diagram fullscreen');
+
+        btn.addEventListener('click', function () {
+          openModalForDiagram(diagram);
+          ensureControlsWired();
+        });
+
+        // Double-click on the diagram also opens the inspector.
+        diagram.addEventListener('dblclick', function () {
+          openModalForDiagram(diagram);
+          ensureControlsWired();
+        });
+
+        diagram.appendChild(btn);
+      });
+    }
+
+    function runMermaid() {
+      // Mermaid script loads asynchronously and provides window.mermaid.
+      var isDark = document.documentElement.classList.contains('dark');
+
+      window.mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        securityLevel: 'loose',
+        flowchart: { useMaxWidth: true, htmlLabels: true },
+        sequence: { useMaxWidth: true },
+      });
+
+      preBlocks.forEach(function (pre, index) {
+        var container = document.createElement('div');
+        container.className = 'mermaid-diagram my-6 overflow-x-auto';
+        container.id = 'mermaid-diagram-' + index;
+        container.setAttribute('data-mermaid-source', pre.textContent || '');
+        container.textContent = pre.textContent;
+        pre.parentElement.replaceChild(container, pre);
+      });
+
+      var runResult = window.mermaid.run({ querySelector: '.mermaid-diagram' });
+      if (isThenable(runResult)) {
+        runResult
+          .then(function () {
+            enhanceMermaidDiagrams();
+          })
+          .catch(function () {
+            enhanceMermaidDiagrams();
+          });
+      } else {
+        // Mermaid might run synchronously; defer enhancement to next tick.
+        setTimeout(enhanceMermaidDiagrams, 0);
+      }
+    }
+
+    // Load Mermaid only on pages that include mermaid code blocks.
+    var existing = document.querySelector('script[data-mermaid-client]');
+    if (existing && window.mermaid) {
+      runMermaid();
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.setAttribute('data-mermaid-client', 'true');
+    script.src = MERMAID_CDN;
+    script.onload = function () {
+      if (window.mermaid) runMermaid();
+    };
+    document.head.appendChild(script);
+  });
+</script>
+

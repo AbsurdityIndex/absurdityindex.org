@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import OfficialSeal from '../../components/ui/OfficialSeal.astro';
 import Divider from '../../components/ui/Divider.astro';
 import Icon from '../../components/ui/Icon.astro';
+import MermaidClient from '../../components/votechain/MermaidClient.astro';
 import { Content as DocContent } from '../../../docs/votechain-architecture.md';
 ---
 
@@ -70,38 +71,5 @@ import { Content as DocContent } from '../../../docs/votechain-architecture.md';
     </div>
   </div>
 
-  <!-- Mermaid.js for diagram rendering -->
-  <script is:inline>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Astro/Shiki renders fenced code blocks as <pre data-language="mermaid">
-      var preBlocks = document.querySelectorAll('pre[data-language=\"mermaid\"]');
-      if (preBlocks.length === 0) return;
-
-      var script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
-      script.onload = function () {
-        var isDark = document.documentElement.classList.contains('dark');
-
-        window.mermaid.initialize({
-          startOnLoad: false,
-          theme: isDark ? 'dark' : 'default',
-          securityLevel: 'loose',
-          flowchart: { useMaxWidth: true, htmlLabels: true },
-          sequence: { useMaxWidth: true },
-        });
-
-        preBlocks.forEach(function (pre, index) {
-          var container = document.createElement('div');
-          container.className = 'mermaid-diagram my-6 overflow-x-auto';
-          container.id = 'mermaid-diagram-' + index;
-          container.textContent = pre.textContent;
-          pre.parentElement.replaceChild(container, pre);
-        });
-
-        window.mermaid.run({ querySelector: '.mermaid-diagram' });
-      };
-      document.head.appendChild(script);
-    });
-  </script>
+  <MermaidClient />
 </BaseLayout>
-
