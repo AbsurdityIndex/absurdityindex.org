@@ -31,7 +31,7 @@ import { blindSchnorrIssuance, verifyBlindSchnorr } from './crypto/blind-schnorr
 import { signB64u } from './crypto/ecdsa.js';
 import { ensureInitialized, saveState } from './state.js';
 import { vclSignEvent } from './vcl.js';
-import { replicateIfConfigured } from './vcl-client.js';
+import { replicateViaProxy } from './vcl-client.js';
 
 export async function computeNullifier(credentialPubB64u: string, election_id: string): Promise<Hex0x> {
   const pub = b64uToBytes(credentialPubB64u);
@@ -110,13 +110,18 @@ async function registerCredential(): Promise<PocCredential> {
 
   saveState(state);
 
-  // Fire-and-forget replication of credential_issued event to state node
-  replicateIfConfigured({
+  // Replicate credential_issued event to state node (awaited, non-blocking on failure)
+  const replication = await replicateViaProxy({
     type: issuanceEvent.type,
     payload: issuanceEvent.payload,
     tx_id: signed.tx_id,
     recorded_at: issuanceEvent.recorded_at,
   });
+  if (replication.ok) {
+    console.info(`[VCL] Replicated credential_issued to state node (index=${replication.entry?.index})`);
+  } else {
+    console.warn(`[VCL] credential_issued replication failed: ${replication.error}`);
+  }
 
   return credential;
 }

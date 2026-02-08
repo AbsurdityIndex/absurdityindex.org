@@ -21,7 +21,7 @@ import { shamirSplit } from './crypto/shamir.js';
 import { generateEcdsaKeyPair, exportKeyPair } from './crypto/ecdsa.js';
 import { signManifest } from './manifest.js';
 import { vclSignEvent } from './vcl.js';
-import { replicateIfConfigured } from './vcl-client.js';
+import { replicateViaProxy } from './vcl-client.js';
 
 const STORAGE_KEY = 'votechain_poc_state_v2';
 
@@ -242,15 +242,20 @@ export async function ensureInitialized(): Promise<PocStateV2> {
 
   saveState(initialState);
 
-  // Fire-and-forget replication of manifest event to federal node
+  // Replicate manifest event to federal node (awaited, non-blocking on failure)
   const manifestEvent = initialState.vcl.events[0];
   if (manifestEvent) {
-    replicateIfConfigured({
+    const replication = await replicateViaProxy({
       type: manifestEvent.type,
       payload: manifestEvent.payload,
       tx_id: manifestEvent.tx_id,
       recorded_at: manifestEvent.recorded_at,
     });
+    if (replication.ok) {
+      console.info(`[VCL] Replicated election_manifest_published to federal node (index=${replication.entry?.index})`);
+    } else {
+      console.warn(`[VCL] Manifest replication failed: ${replication.error}`);
+    }
   }
 
   return initialState;

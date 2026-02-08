@@ -19,6 +19,7 @@ export type {
   EwpErrorCode,
   CastStatus,
   VerifyStatus,
+  LedgerAck,
   PocSignedTreeHead,
   PocCastReceipt,
   PocCastRecordedResponse,
@@ -100,6 +101,7 @@ export type {
   EntriesPage,
   LedgerAppendResponse,
   ReplicationResult,
+  ProxyReplicationResult,
   AllNodesHealth,
   NodeRole,
 } from './vcl-client.js';
@@ -115,6 +117,9 @@ export {
   fetchLedgerEntries,
   appendEvent,
   replicateVclEvent,
+  replicateViaProxy,
   replicateIfConfigured,
+  fetchEntryByIndex,
+  fetchEntryByRoleAndIndex,
   fetchAllNodesHealth,
 } from './vcl-client.js';

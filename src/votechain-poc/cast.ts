@@ -16,6 +16,7 @@ import type {
   PocChallengeResponse,
   PocEwpErrorResponse,
   PocStateV2,
+  LedgerAck,
 } from './types.js';
 import {
   sha256B64u,
@@ -33,7 +34,8 @@ import { buildEwpError, hasUsedNullifier, recordBbSthPublished, recordEwpBallotC
 import { ensureInitialized, saveState } from './state.js';
 import { ensureCredential, computeNullifier, buildEligibilityProof, verifyEligibilityProof } from './credential.js';
 import { recordFraudFlag } from './fraud.js';
-import { replicateIfConfigured } from './vcl-client.js';
+import { replicateViaProxy } from './vcl-client.js';
+import type { ProxyReplicationResult } from './vcl-client.js';
 
 // ── Receipt helpers ─────────────────────────────────────────────────────────
 
@@ -220,7 +222,44 @@ export async function castBallot(args: {
   // 9) Anchor cast on VCL
   const anchor = await recordEwpBallotCast(state, args.request, leaf_hash, sth.root_hash);
 
-  // 10) Build receipt
+  // 10) Replicate VCL events to distributed ledger (awaited, not fire-and-forget).
+  // Collect ledger acks — the Worker's ECDSA P-256 signature proving the vote was
+  // recorded on the distributed ledger. Failures are non-blocking (graceful degradation).
+  const ledger_acks: LedgerAck[] = [];
+  const recentEvents = state.vcl.events.slice(-2);
+  const replicatePromises: Promise<{ evt: typeof recentEvents[0]; result: ProxyReplicationResult }>[] = [];
+
+  for (const evt of recentEvents) {
+    if (evt.type === 'bb_sth_published' || evt.type === 'ewp_ballot_cast') {
+      replicatePromises.push(
+        replicateViaProxy({
+          type: evt.type,
+          payload: evt.payload,
+          tx_id: evt.tx_id,
+          recorded_at: evt.recorded_at,
+        }).then((result) => ({ evt, result })),
+      );
+    }
+  }
+
+  const replicationResults = await Promise.allSettled(replicatePromises);
+  for (const settled of replicationResults) {
+    if (settled.status !== 'fulfilled') continue;
+    const { evt, result } = settled.value;
+    if (result.ok && result.entry && result.ack) {
+      ledger_acks.push({
+        node_role: 'state',
+        entry_index: result.entry.index,
+        entry_hash: result.entry.hash,
+        ack: result.ack,
+      });
+      console.info(`[VCL] Replicated ${evt.type} to state node (index=${result.entry.index})`);
+    } else {
+      console.warn(`[VCL] Replication of ${evt.type} failed: ${result.error ?? 'unknown'}`);
+    }
+  }
+
+  // 11) Build receipt (includes ledger acks from distributed nodes)
   const receiptUnsigned: Omit<PocCastReceipt, 'sig'> = {
     receipt_id: bytesToB64u(randomBytes(16)),
     election_id: args.request.election_id,
@@ -233,6 +272,7 @@ export async function castBallot(args: {
       event_type: 'ewp_ballot_cast',
       sth_root_hash: sth.root_hash,
     },
+    ...(ledger_acks.length > 0 ? { ledger_acks } : {}),
     kid: state.keys.ewg.kid,
   };
   const sig = await signReceipt(state, receiptUnsigned);
@@ -246,19 +286,6 @@ export async function castBallot(args: {
     stored_at: nowIso(),
   };
   saveState(state);
-
-  // Fire-and-forget replication of bb_sth_published and ewp_ballot_cast events to state node
-  const recentEvents = state.vcl.events.slice(-2);
-  for (const evt of recentEvents) {
-    if (evt.type === 'bb_sth_published' || evt.type === 'ewp_ballot_cast') {
-      replicateIfConfigured({
-        type: evt.type,
-        payload: evt.payload,
-        tx_id: evt.tx_id,
-        recorded_at: evt.recorded_at,
-      });
-    }
-  }
 
   return response;
 }

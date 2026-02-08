@@ -7,7 +7,7 @@ export function getDashboardHtml(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Absurdity Index — Engagement Dashboard</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'><circle cx='32' cy='32' r='30' stroke='%23C5A572' stroke-width='3' fill='%230A1628'/><circle cx='32' cy='32' r='22' stroke='%23C5A572' stroke-width='1.5'/><text x='32' y='28' text-anchor='middle' font-size='12' font-weight='700' fill='%23C5A572' font-family='serif'>NOT</text><text x='32' y='42' text-anchor='middle' font-size='8' fill='%23C5A572' font-family='serif'>CONGRESS</text><circle cx='32' cy='5' r='2' fill='%23C5A572'/><circle cx='32' cy='59' r='2' fill='%23C5A572'/><circle cx='5' cy='32' r='2' fill='%23C5A572'/><circle cx='59' cy='32' r='2' fill='%23C5A572'/></svg>">
+	  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'><circle cx='32' cy='32' r='30' stroke='%23C5A572' stroke-width='3' fill='%230A1628'/><circle cx='32' cy='32' r='22' stroke='%23C5A572' stroke-width='1.5'/><text x='32' y='28' text-anchor='middle' font-size='8' font-weight='700' fill='%23C5A572' font-family='serif'>ABSURDITY</text><text x='32' y='42' text-anchor='middle' font-size='9' fill='%23C5A572' font-family='serif' letter-spacing='2'>INDEX</text><circle cx='32' cy='5' r='2' fill='%23C5A572'/><circle cx='32' cy='59' r='2' fill='%23C5A572'/><circle cx='5' cy='32' r='2' fill='%23C5A572'/><circle cx='59' cy='32' r='2' fill='%23C5A572'/></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -228,8 +228,8 @@ export function getDashboardHtml(): string {
 	        <svg viewBox="0 0 64 64" class="w-10 h-10 shrink-0" fill="none" aria-hidden="true">
           <circle cx="32" cy="32" r="30" stroke="#C5A572" stroke-width="3" fill="#0A1628"/>
           <circle cx="32" cy="32" r="22" stroke="#C5A572" stroke-width="1.5"/>
-          <text x="32" y="28" text-anchor="middle" font-size="12" font-weight="700" fill="#C5A572" font-family="'Libre Caslon Text', serif">NOT</text>
-          <text x="32" y="42" text-anchor="middle" font-size="8" fill="#C5A572" font-family="'Libre Caslon Text', serif">CONGRESS</text>
+	          <text x="32" y="28" text-anchor="middle" font-size="8" font-weight="700" fill="#C5A572" font-family="'Libre Caslon Text', serif">ABSURDITY</text>
+	          <text x="32" y="42" text-anchor="middle" font-size="9" fill="#C5A572" font-family="'Libre Caslon Text', serif" letter-spacing="2">INDEX</text>
           <circle cx="32" cy="5" r="2" fill="#C5A572"/>
           <circle cx="32" cy="59" r="2" fill="#C5A572"/>
           <circle cx="5" cy="32" r="2" fill="#C5A572"/>

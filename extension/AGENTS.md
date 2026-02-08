@@ -53,6 +53,6 @@ For Firefox: `about:debugging` → This Firefox → Load Temporary Add-on → se
 ## Key Patterns
 
 - Uses `browser` API when available (Firefox), falls back to `chrome` API for cross-browser compatibility
-- Icons are exported from the site's `/public/favicon.svg` at 48px and 128px sizes
+- Icons are generated from the site's `/public/favicon.svg` via `npm run icons:generate` (run from repo root)
 - Content script is declaratively registered in `manifest.json` (not programmatically injected)
 - No external dependencies — everything is self-contained vanilla JS

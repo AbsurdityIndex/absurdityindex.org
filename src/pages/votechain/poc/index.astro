@@ -6,7 +6,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
 
 <BaseLayout
   title="VoteChain POC"
-  description="A local-only proof-of-concept for the VoteChain Election Web Protocol (EWP): cast, verify, and monitor."
+  description="A proof-of-concept for the VoteChain Election Web Protocol (EWP): cast, verify, and monitor with distributed Cloudflare Workers ledger nodes."
   ogType="article"
   article={{
     publishedTime: '2026-02-08',
@@ -18,12 +18,13 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
   <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="text-center mb-6">
       <p class="text-xs text-gold-600 font-mono uppercase tracking-widest mb-1">
-        Local-Only Demo
+        Distributed Ledger Demo
       </p>
       <h1 class="font-serif text-2xl md:text-3xl text-navy-900 font-bold">VoteChain POC</h1>
       <p class="text-navy-600 font-serif italic mt-2 text-sm max-w-2xl mx-auto">
-        A proof-of-concept UI for the VoteChain verification chain and the Election Web Protocol
-        (EWP). Everything runs in your browser.
+        A proof-of-concept for the VoteChain verification chain and the Election Web Protocol
+        (EWP). Cryptographic operations run in your browser; audit trail events are recorded on
+        distributed Cloudflare Workers nodes.
       </p>
     </div>
 
@@ -41,7 +42,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
         <p class="font-bold text-lg text-navy-900 mb-3">The science fair version:</p>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">What is this?</p>
-        <p class="mb-3">This is a working model &mdash; like a science fair project that shows how VoteChain would work. It runs entirely in your web browser. Nothing leaves your computer. It's not a real voting system, but it lets you walk through the same steps a real voter would take.</p>
+        <p class="mb-3">This is a working model &mdash; like a science fair project that shows how VoteChain would work. Cryptographic operations happen in your browser, while audit trail events are recorded on 3 distributed ledger nodes running on Cloudflare Workers. It's not a real voting system, but it lets you walk through the same steps a real voter would take.</p>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">What can you do here?</p>
         <ul class="list-disc pl-6 space-y-2.5 mb-4">
@@ -64,7 +65,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
         <p class="font-bold text-lg text-navy-900 mb-3">Here's what the POC demonstrates:</p>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">What is this?</p>
-        <p class="mb-3">A browser-only proof of concept that makes the VoteChain and EWP protocol documents concrete. Instead of reading about zero-knowledge proofs and encrypted ballots, you can see them generated, verified, and anchored in real time. All state lives in your browser's localStorage &mdash; nothing is sent to any server.</p>
+        <p class="mb-3">A proof of concept that makes the VoteChain and EWP protocol documents concrete. Instead of reading about zero-knowledge proofs and encrypted ballots, you can see them generated, verified, and anchored in real time. Cryptographic keys remain in your browser; VCL events are recorded on 3 distributed Cloudflare Workers nodes (federal, state, oversight).</p>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">Four modules:</p>
         <ul class="list-disc pl-6 space-y-2.5 mb-4">
@@ -85,7 +86,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
         </ul>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">Limitations (by design):</p>
-        <p class="mb-3">This is a <em>proof of concept</em>, not a production system. The "74-node ledger" is an in-memory array. The "bulletin board" is a localStorage object. The "threshold ceremony" runs all trustee roles in one browser tab. The cryptographic primitives are real, but the operational security model (HSMs, air gaps, multi-party key ceremonies) is simulated. The POC exists to make the protocol tangible, not to be deployed.</p>
+        <p class="mb-3">This is a <em>proof of concept</em>, not a production system. The VCL ledger runs on 3 distributed Cloudflare Workers nodes with Durable Object append-only storage and ECDSA P-256 signing. The bulletin board is a localStorage object. The threshold ceremony runs all trustee roles in one browser tab. The cryptographic primitives are real, but the operational security model (HSMs, air gaps, multi-party key ceremonies) is simulated. The POC exists to make the protocol tangible, not to be deployed.</p>
 
         <p class="text-navy-500 text-sm italic mt-4">Close this and pick a module to explore. Start with the Voting Client for the full flow.</p>
       </Fragment>
@@ -94,7 +95,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
         <p class="font-bold text-lg text-navy-900 mb-3">Technical summary of the POC:</p>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">Runtime:</p>
-        <p class="mb-3">Pure client-side TypeScript compiled by Astro. All state in <code>localStorage</code> under <code>votechain_poc_state_v2</code>. No network requests. Crypto operations use <code>@noble/curves</code> (secp256k1, ed25519) and <code>@noble/hashes</code> (SHA-256). Suite identifier: <code>ewp_suite_poc_threshold_blind_schnorr_ecies_aesgcm_v2</code>.</p>
+        <p class="mb-3">Client-side TypeScript compiled by Astro. Local state (keys, credentials, BB) in <code>localStorage</code> under <code>votechain_poc_state_v2</code>. VCL events are replicated to 3 distributed Cloudflare Workers nodes via a server-side proxy (write tokens never leave the server). Crypto operations use <code>@noble/curves</code> (secp256k1, ed25519) and <code>@noble/hashes</code> (SHA-256). Suite identifier: <code>ewp_suite_poc_threshold_blind_schnorr_ecies_aesgcm_v2</code>.</p>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">Credential issuance (threshold blind Schnorr):</p>
         <ul class="list-disc pl-6 space-y-2.5 mb-4">

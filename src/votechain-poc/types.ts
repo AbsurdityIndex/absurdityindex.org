@@ -42,6 +42,15 @@ export interface PocSignedTreeHead {
   sig: string;
 }
 
+// ── Ledger Acknowledgment ───────────────────────────────────────────────────
+
+export interface LedgerAck {
+  node_role: 'federal' | 'state' | 'oversight';
+  entry_index: number;
+  entry_hash: string;
+  ack: { alg: string; kid: string; sig: string };
+}
+
 // ── Cast Receipt & Response ─────────────────────────────────────────────────
 
 export interface PocCastReceipt {
@@ -56,6 +65,7 @@ export interface PocCastReceipt {
     event_type: 'ewp_ballot_cast';
     sth_root_hash: string;
   };
+  ledger_acks?: LedgerAck[];
   kid: string;
   sig: string;
 }

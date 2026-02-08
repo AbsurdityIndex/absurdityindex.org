@@ -99,7 +99,7 @@ import Icon from '../../../components/ui/Icon.astro';
             <p>
               <strong>What:</strong> Click <strong>Generate Credential</strong> in the wizard controls
               below. This gives you a unique, anonymous ID and a cryptographic signing key &mdash;
-              stored only in your browser.
+              stored in your browser (keys stay local; the issuance event is recorded on the distributed ledger).
             </p>
             <p>
               <strong>Why:</strong> Your credential lets you prove you're eligible to vote without revealing
@@ -525,8 +525,8 @@ import Icon from '../../../components/ui/Icon.astro';
         <div class="mt-3">
           <p class="text-navy-600 text-xs">
             The election manifest defines contests, candidates, encryption keys, and rules &mdash;
-            locked down with a cryptographic signature. In this POC it lives in
-            <span class="font-mono">localStorage</span>.
+            locked down with a cryptographic signature. It is anchored on the federal ledger node
+            and cached locally.
           </p>
           <pre
             class="mt-3 rounded-lg bg-navy-800 text-cream-100 p-3 overflow-x-auto text-xs leading-relaxed font-mono"><code id="manifest-json">Loading manifest...</code></pre>

@@ -35,7 +35,7 @@ Icon files are now included in this folder:
 - `icon-48.png`
 - `icon-128.png`
 
-If you want to regenerate them, export `/public/favicon.svg` to those two PNG sizes.
+If you want to regenerate them, run `npm run icons:generate` from the repo root.
 
 ## How It Works
 

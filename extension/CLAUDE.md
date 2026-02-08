@@ -45,4 +45,4 @@ No build step needed — edit files and reload the extension.
 ## Conventions
 
 - Uses `browser` API when available (Firefox), falls back to `chrome` API
-- Icons are exported from `/public/favicon.svg` at 48px and 128px
+- Icons are generated from `/public/favicon.svg` via `npm run icons:generate` (run from repo root)

@@ -2,8 +2,8 @@
  * VoteChain POC — VCL Client Library
  *
  * Typed client for interacting with the 3 Cloudflare Workers VoteChain nodes
- * (federal, state, oversight). Provides health checks, ledger reads, event
- * append, and fire-and-forget replication from the browser-side POC.
+ * (federal, state, oversight). Provides health checks, ledger reads, and
+ * server-proxied replication (write tokens held server-side).
  */
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -14,7 +14,6 @@ export interface VclNodeConfig {
   name: string;
   role: NodeRole;
   url: string;
-  writeToken?: string;
 }
 
 export interface NodeHealthResult {
@@ -82,6 +81,13 @@ export interface AllNodesHealth {
   allOnline: boolean;
 }
 
+export interface ProxyReplicationResult {
+  ok: boolean;
+  entry?: LedgerEntry;
+  ack?: { alg: string; kid: string; sig: string };
+  error?: string;
+}
+
 // ── Event-to-node routing ────────────────────────────────────────────────────
 
 type VclEventType =
@@ -136,10 +142,9 @@ export function setNodeConfig(nodes: VclNodeConfig[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(nodes));
 }
 
-/** Check if any node has both a URL and a write token configured (needed for replication). */
+/** Check if replication is available (always true — writes go via server-side proxy). */
 export function isConfigured(): boolean {
-  const nodes = getNodeConfig();
-  return nodes.some((n) => n.url.trim().length > 0 && n.writeToken?.trim());
+  return true;
 }
 
 /** Check if any node has a URL configured (sufficient for read-only monitoring). */
@@ -170,12 +175,8 @@ async function fetchWithTimeout(
   }
 }
 
-function authHeaders(node: VclNodeConfig): Record<string, string> {
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
-  if (node.writeToken?.trim()) {
-    headers['authorization'] = `Bearer ${node.writeToken.trim()}`;
-  }
-  return headers;
+function jsonHeaders(): Record<string, string> {
+  return { 'content-type': 'application/json' };
 }
 
 // ── Node API calls ───────────────────────────────────────────────────────────
@@ -246,7 +247,7 @@ export async function appendEvent(
   try {
     const res = await fetchWithTimeout(
       `${node.url.replace(/\/$/, '')}/v1/ledger/append`,
-      { method: 'POST', headers: authHeaders(node), body: JSON.stringify(event) },
+      { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(event) },
     );
     const data = await res.json();
     if (!res.ok) {
@@ -258,7 +259,35 @@ export async function appendEvent(
   }
 }
 
-// ── Replication ──────────────────────────────────────────────────────────────
+// ── Proxy Replication (write tokens held server-side) ────────────────────────
+
+/**
+ * Replicate a VCL event via the server-side proxy at `/api/votechain/poc/replicate`.
+ * The proxy attaches the correct write token and forwards to the appropriate Worker.
+ * Returns the Worker's acknowledgment including its ECDSA P-256 signature.
+ */
+export async function replicateViaProxy(event: {
+  type: string;
+  payload: Record<string, unknown>;
+  tx_id?: string;
+  recorded_at?: string;
+}): Promise<ProxyReplicationResult> {
+  try {
+    const res = await fetchWithTimeout(
+      '/api/votechain/poc/replicate',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(event),
+      },
+      12_000,
+    );
+    const data = await res.json();
+    return data as ProxyReplicationResult;
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
 
 /**
  * Replicate a POC VCL event to the appropriate Workers node based on event type.
@@ -275,39 +304,68 @@ export async function replicateVclEvent(event: {
     return { node: 'unknown', role: 'federal', ok: false, error: `Unknown event type: ${event.type}` };
   }
 
-  const node = getNodeByRole(targetRole);
-  if (!node) {
-    return { node: targetRole, role: targetRole, ok: false, error: 'Node not configured' };
+  // Use server-side proxy for writes
+  const proxyResult = await replicateViaProxy(event);
+  if (!proxyResult.ok) {
+    return { node: targetRole, role: targetRole, ok: false, error: proxyResult.error ?? 'Proxy error' };
   }
-
-  const result = await appendEvent(node, event);
-  if ('error' in result) {
-    return { node: node.name, role: targetRole, ok: false, error: result.error };
-  }
-  return { node: node.name, role: targetRole, ok: true, entry: result.entry };
+  return { node: targetRole, role: targetRole, ok: true, entry: proxyResult.entry };
 }
 
 /**
- * Fire-and-forget replication: if Workers are configured, replicate the event.
- * Failures are logged to console but never thrown.
+ * Replicate a VCL event via the server proxy. Logs success/failure to console.
+ * Callers should await this (not fire-and-forget) but should not block on failure.
  */
 export async function replicateIfConfigured(event: {
   type: string;
   payload: Record<string, unknown>;
   tx_id?: string;
   recorded_at?: string;
-}): Promise<void> {
-  if (!isConfigured()) return;
+}): Promise<ProxyReplicationResult> {
   try {
-    const result = await replicateVclEvent(event);
+    const result = await replicateViaProxy(event);
     if (!result.ok) {
-      console.warn(`[VCL] Replication to ${result.node} failed: ${result.error}`);
+      console.warn(`[VCL] Replication failed: ${result.error}`);
     } else {
-      console.info(`[VCL] Replicated ${event.type} to ${result.node} (index=${result.entry?.index})`);
+      console.info(`[VCL] Replicated ${event.type} (index=${result.entry?.index})`);
     }
+    return result;
   } catch (err) {
     console.warn('[VCL] Replication error:', err);
+    return { ok: false, error: String(err) };
   }
+}
+
+// ── Entry lookup (public reads, no auth) ────────────────────────────────────
+
+/**
+ * Fetch a single ledger entry by index from a Worker node.
+ * Read endpoints are public (no auth required).
+ */
+export async function fetchEntryByIndex(
+  node: VclNodeConfig,
+  index: number,
+): Promise<LedgerEntry | null> {
+  try {
+    const res = await fetchWithTimeout(`${node.url.replace(/\/$/, '')}/v1/ledger/entries/${index}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data as { entry: LedgerEntry }).entry ?? (data as LedgerEntry);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch a single ledger entry by index from a node identified by role.
+ */
+export async function fetchEntryByRoleAndIndex(
+  role: NodeRole,
+  index: number,
+): Promise<LedgerEntry | null> {
+  const node = getNodeByRole(role);
+  if (!node) return null;
+  return fetchEntryByIndex(node, index);
 }
 
 // ── Multi-node operations ────────────────────────────────────────────────────

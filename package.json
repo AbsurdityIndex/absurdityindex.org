@@ -29,6 +29,7 @@
     "check:icons": "node scripts/check-no-unicode-icons.mjs",
     "check:innerhtml": "node scripts/check-no-innerhtml.mjs",
     "validate:build": "npm run validate && npm run build",
+    "icons:generate": "node scripts/generate-icons.mjs",
     "security:audit": "npm audit --omit=dev --audit-level=high && npm audit --prefix cli --omit=dev --audit-level=high",
     "security:scan-secrets": "node scripts/scan-secrets.mjs",
     "security:ci": "npm run security:audit && npm run security:scan-secrets",

@@ -2,8 +2,8 @@
 /**
  * VoteChain POC — Receipt Verification
  *
- * Verifies a cast receipt against the local BB and VCL state:
- * manifest anchor, receipt signature, STH, leaf inclusion, and VCL anchor.
+ * Verifies a cast receipt against the local BB and VCL state,
+ * plus the distributed Workers ledger nodes for recorded-as-cast confirmation.
  */
 
 import type {
@@ -16,6 +16,7 @@ import type { PocInclusionProof } from './bulletin-board.js';
 import { getAnchorEventForLeaf, vclVerifyEvent } from './vcl.js';
 import { ensureInitialized } from './state.js';
 import { utf8, canonicalJson } from './encoding.js';
+import { fetchEntryByRoleAndIndex } from './vcl-client.js';
 
 export interface ReceiptVerificationResult {
   status: VerifyStatus;
@@ -122,6 +123,44 @@ export async function verifyReceipt(receipt: PocCastReceipt): Promise<ReceiptVer
       name: 'votechain_anchor_signature',
       status: 'fail',
       details: 'No anchor event available to verify signature.',
+    });
+  }
+
+  // Distributed ledger verification: check receipt's ledger_acks against Workers nodes
+  if (receipt.ledger_acks && receipt.ledger_acks.length > 0) {
+    let confirmedCount = 0;
+    let failedCount = 0;
+    const details: string[] = [];
+
+    for (const ack of receipt.ledger_acks) {
+      try {
+        const entry = await fetchEntryByRoleAndIndex(ack.node_role, ack.entry_index);
+        if (entry && entry.hash === ack.entry_hash) {
+          confirmedCount++;
+          details.push(`${ack.node_role}[${ack.entry_index}]: confirmed`);
+        } else if (entry) {
+          failedCount++;
+          details.push(`${ack.node_role}[${ack.entry_index}]: hash mismatch`);
+        } else {
+          failedCount++;
+          details.push(`${ack.node_role}[${ack.entry_index}]: entry not found`);
+        }
+      } catch {
+        failedCount++;
+        details.push(`${ack.node_role}[${ack.entry_index}]: unreachable`);
+      }
+    }
+
+    checks.push({
+      name: 'distributed_ledger',
+      status: failedCount === 0 ? 'ok' : 'fail',
+      details: `${confirmedCount}/${receipt.ledger_acks.length} acks confirmed on Workers nodes. ${details.join('; ')}`,
+    });
+  } else {
+    checks.push({
+      name: 'distributed_ledger',
+      status: 'ok',
+      details: 'No ledger acks in receipt (local-only cast or Workers unavailable at cast time). Local verification passed.',
     });
   }
 
