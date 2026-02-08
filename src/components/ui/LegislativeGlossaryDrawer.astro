@@ -21,13 +21,15 @@ const processStages = [
     id: 'introduction',
     name: 'Introduction',
     icon: 'file-plus',
-    description: 'A bill is introduced by a member of Congress (the sponsor) and assigned a number.',
+    description:
+      'A bill is introduced by a member of Congress (the sponsor) and assigned a number.',
   },
   {
     id: 'committee',
     name: 'Committee Review',
     icon: 'users',
-    description: 'The bill is referred to relevant committee(s) for hearings, markup, and amendments.',
+    description:
+      'The bill is referred to relevant committee(s) for hearings, markup, and amendments.',
   },
   {
     id: 'floor',
@@ -51,7 +53,8 @@ const processStages = [
     id: 'president',
     name: 'Presidential Action',
     icon: 'pen-tool',
-    description: 'The President can sign the bill into law, veto it, or take no action (pocket veto).',
+    description:
+      'The President can sign the bill into law, veto it, or take no action (pocket veto).',
   },
 ];
 
@@ -67,7 +70,8 @@ const keyTerms = [
   },
   {
     term: 'Engrossed Bill',
-    definition: 'The official copy of a bill as passed by one chamber, with all amendments incorporated.',
+    definition:
+      'The official copy of a bill as passed by one chamber, with all amendments incorporated.',
   },
   {
     term: 'Enrolled Bill',
@@ -83,7 +87,8 @@ const keyTerms = [
   },
   {
     term: 'Markup',
-    definition: 'A committee meeting where members amend and finalize a bill before reporting it out.',
+    definition:
+      'A committee meeting where members amend and finalize a bill before reporting it out.',
   },
   {
     term: 'Veto',
@@ -91,7 +96,8 @@ const keyTerms = [
   },
   {
     term: 'Pocket Veto',
-    definition: 'When the President takes no action and Congress adjourns within 10 days, killing the bill.',
+    definition:
+      'When the President takes no action and Congress adjourns within 10 days, killing the bill.',
   },
   {
     term: 'Rider',
@@ -99,11 +105,13 @@ const keyTerms = [
   },
   {
     term: 'Omnibus Bill',
-    definition: 'A single bill that packages together several measures, often spanning multiple policy areas.',
+    definition:
+      'A single bill that packages together several measures, often spanning multiple policy areas.',
   },
   {
     term: 'Continuing Resolution',
-    definition: 'Temporary funding legislation that maintains government operations at current levels.',
+    definition:
+      'Temporary funding legislation that maintains government operations at current levels.',
   },
 ];
 ---
@@ -124,11 +132,7 @@ const keyTerms = [
       <Icon name="book-open" size={20} />
       <h2>Legislative Glossary</h2>
     </div>
-    <button
-      id="glossary-drawer-close"
-      class="drawer-close"
-      aria-label="Close drawer"
-    >
+    <button id="glossary-drawer-close" class="drawer-close" aria-label="Close drawer">
       <Icon name="x" size={20} />
     </button>
   </header>
@@ -138,8 +142,8 @@ const keyTerms = [
     <!-- Intro Section -->
     <section class="intro-section">
       <p class="intro-text">
-        Understanding Congress doesn't require a law degree. Here's your guide to
-        bill types, the legislative process, and key terms.
+        Understanding Congress doesn't require a law degree. Here's your guide to bill types, the
+        legislative process, and key terms.
       </p>
     </section>
 
@@ -157,26 +161,22 @@ const keyTerms = [
           House
         </h4>
         <div class="bill-type-list">
-          {houseBillTypes.map((bt) => (
-            <div class="bill-type-card">
-              <div class="bill-type-header">
-                <span class="bill-type-prefix">{bt.prefix}</span>
-                <span class="bill-type-name">{bt.displayName}</span>
+          {
+            houseBillTypes.map((bt) => (
+              <div class="bill-type-card">
+                <div class="bill-type-header">
+                  <span class="bill-type-prefix">{bt.prefix}</span>
+                  <span class="bill-type-name">{bt.displayName}</span>
+                </div>
+                <p class="bill-type-desc">{bt.description}</p>
+                <div class="bill-type-path">
+                  {bt.needsBothChambers && <span class="path-badge bicameral">Both Chambers</span>}
+                  {!bt.needsBothChambers && <span class="path-badge unicameral">House Only</span>}
+                  {bt.needsPresident && <span class="path-badge president">President</span>}
+                </div>
               </div>
-              <p class="bill-type-desc">{bt.description}</p>
-              <div class="bill-type-path">
-                {bt.needsBothChambers && (
-                  <span class="path-badge bicameral">Both Chambers</span>
-                )}
-                {!bt.needsBothChambers && (
-                  <span class="path-badge unicameral">House Only</span>
-                )}
-                {bt.needsPresident && (
-                  <span class="path-badge president">President</span>
-                )}
-              </div>
-            </div>
-          ))}
+            ))
+          }
         </div>
       </div>
 
@@ -187,26 +187,22 @@ const keyTerms = [
           Senate
         </h4>
         <div class="bill-type-list">
-          {senateBillTypes.map((bt) => (
-            <div class="bill-type-card">
-              <div class="bill-type-header">
-                <span class="bill-type-prefix">{bt.prefix}</span>
-                <span class="bill-type-name">{bt.displayName}</span>
+          {
+            senateBillTypes.map((bt) => (
+              <div class="bill-type-card">
+                <div class="bill-type-header">
+                  <span class="bill-type-prefix">{bt.prefix}</span>
+                  <span class="bill-type-name">{bt.displayName}</span>
+                </div>
+                <p class="bill-type-desc">{bt.description}</p>
+                <div class="bill-type-path">
+                  {bt.needsBothChambers && <span class="path-badge bicameral">Both Chambers</span>}
+                  {!bt.needsBothChambers && <span class="path-badge unicameral">Senate Only</span>}
+                  {bt.needsPresident && <span class="path-badge president">President</span>}
+                </div>
               </div>
-              <p class="bill-type-desc">{bt.description}</p>
-              <div class="bill-type-path">
-                {bt.needsBothChambers && (
-                  <span class="path-badge bicameral">Both Chambers</span>
-                )}
-                {!bt.needsBothChambers && (
-                  <span class="path-badge unicameral">Senate Only</span>
-                )}
-                {bt.needsPresident && (
-                  <span class="path-badge president">President</span>
-                )}
-              </div>
-            </div>
-          ))}
+            ))
+          }
         </div>
       </div>
     </section>
@@ -219,21 +215,23 @@ const keyTerms = [
       </h3>
 
       <div class="process-timeline">
-        {processStages.map((stage, i) => (
-          <div class="process-stage">
-            <div class="stage-indicator">
-              <div class="stage-number">{i + 1}</div>
-              {i < processStages.length - 1 && <div class="stage-line" />}
-            </div>
-            <div class="stage-content">
-              <div class="stage-header">
-                <Icon name={stage.icon} size={14} class="stage-icon" />
-                <h4 class="stage-name">{stage.name}</h4>
+        {
+          processStages.map((stage, i) => (
+            <div class="process-stage">
+              <div class="stage-indicator">
+                <div class="stage-number">{i + 1}</div>
+                {i < processStages.length - 1 && <div class="stage-line" />}
               </div>
-              <p class="stage-desc">{stage.description}</p>
+              <div class="stage-content">
+                <div class="stage-header">
+                  <Icon name={stage.icon} size={14} class="stage-icon" />
+                  <h4 class="stage-name">{stage.name}</h4>
+                </div>
+                <p class="stage-desc">{stage.description}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        }
       </div>
     </section>
 
@@ -245,22 +243,27 @@ const keyTerms = [
       </h3>
 
       <dl class="terms-list">
-        {keyTerms.map((item) => (
-          <div class="term-item">
-            <dt class="term">{item.term}</dt>
-            <dd class="definition">{item.definition}</dd>
-          </div>
-        ))}
+        {
+          keyTerms.map((item) => (
+            <div class="term-item">
+              <dt class="term">{item.term}</dt>
+              <dd class="definition">{item.definition}</dd>
+            </div>
+          ))
+        }
       </dl>
     </section>
 
     <!-- Disclaimer -->
     <section class="disclaimer-section">
       <p>
-        <strong>Note:</strong> This is a simplified overview. The actual legislative
-        process has many more procedures, rules, and exceptions. For official
-        information, visit{' '}
-        <a href="https://www.congress.gov/help/learn-about-the-legislative-process" target="_blank" rel="noopener noreferrer">
+        <strong>Note:</strong> This is a simplified overview. The actual legislative process has many
+        more procedures, rules, and exceptions. For official information, visit{' '}
+        <a
+          href="https://www.congress.gov/help/learn-about-the-legislative-process"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Congress.gov
         </a>.
       </p>
@@ -269,7 +272,12 @@ const keyTerms = [
 
   <!-- Drawer Footer -->
   <footer class="drawer-footer" data-theme-fixed>
-    <a href="https://www.congress.gov/help/learn-about-the-legislative-process" target="_blank" rel="noopener noreferrer" class="learn-more-link">
+    <a
+      href="https://www.congress.gov/help/learn-about-the-legislative-process"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="learn-more-link"
+    >
       <span>Learn more at Congress.gov</span>
       <Icon name="external-link" size={12} />
     </a>
@@ -439,12 +447,12 @@ const keyTerms = [
 
   .chamber-label.house {
     background: rgba(59, 130, 246, 0.1);
-    color: #2563EB;
+    color: #2563eb;
   }
 
   .chamber-label.senate {
     background: rgba(139, 92, 246, 0.15);
-    color: #7C3AED;
+    color: #7c3aed;
   }
 
   .bill-type-list {
@@ -510,18 +518,18 @@ const keyTerms = [
   }
 
   .path-badge.bicameral {
-    background: #DBEAFE;
-    color: #1E40AF;
+    background: #dbeafe;
+    color: #1e40af;
   }
 
   .path-badge.unicameral {
-    background: #E0E7FF;
-    color: #4338CA;
+    background: #e0e7ff;
+    color: #4338ca;
   }
 
   .path-badge.president {
     background: var(--color-gold-200);
-    color: #92400E;
+    color: #92400e;
   }
 
   /* ========================
@@ -749,22 +757,22 @@ const keyTerms = [
 
   :global(html.dark) .chamber-label.house {
     background: rgba(59, 130, 246, 0.2);
-    color: #60A5FA;
+    color: #60a5fa;
   }
 
   :global(html.dark) .chamber-label.senate {
     background: rgba(139, 92, 246, 0.2);
-    color: #A78BFA;
+    color: #a78bfa;
   }
 
   :global(html.dark) .path-badge.bicameral {
     background: rgba(59, 130, 246, 0.2);
-    color: #93C5FD;
+    color: #93c5fd;
   }
 
   :global(html.dark) .path-badge.unicameral {
     background: rgba(139, 92, 246, 0.2);
-    color: #C4B5FD;
+    color: #c4b5fd;
   }
 
   :global(html.dark) .path-badge.president {

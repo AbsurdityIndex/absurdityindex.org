@@ -72,18 +72,19 @@ export async function GET({ request }) {
         pagination: {
           staticPageSize: DIRECTORY_PAGE_SIZE,
           firstPageUrl: 'https://absurdityindex.org/api/not-bills/page/1.json',
-          _note: 'For large syncs, use /api/not-bills/page/{n}.json to avoid full payload downloads.',
+          _note:
+            'For large syncs, use /api/not-bills/page/{n}.json to avoid full payload downloads.',
         },
         bills: paginatedData,
       },
       null,
-      2
+      2,
     ),
     {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
-    }
+    },
   );
 }

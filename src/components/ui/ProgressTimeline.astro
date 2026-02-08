@@ -73,57 +73,70 @@ function getStageLabel(stage: TimelineStage, index: number) {
 
 <div class:list={['progress-timeline', `variant-${variant}`, className]} data-progress-timeline>
   <div class="timeline-track">
-    {stages.map((stage, i) => {
-      const { isCompleted, isCurrent, isFinal, isFinalWithOutcome, isSuccess, isFailed } = getStageState(i);
-      const isLast = i === stages.length - 1;
+    {
+      stages.map((stage, i) => {
+        const { isCompleted, isCurrent, isFinal, isFinalWithOutcome, isSuccess, isFailed } =
+          getStageState(i);
+        const isLast = i === stages.length - 1;
 
-      return (
-        <div
-          class:list={[
-            'timeline-stage',
-            { 'is-completed': isCompleted },
-            { 'is-current': isCurrent },
-            { 'is-final': isFinalWithOutcome },
-            { 'is-success': isFinalWithOutcome && isSuccess },
-            { 'is-failed': isFinalWithOutcome && isFailed },
-            { 'is-last': isLast },
-          ]}
-        >
-          {/* Connector line for vertical variant */}
-          {variant === 'vertical' && !isLast && (
-            <div class:list={['timeline-connector', { 'is-completed': isCompleted }]} />
-          )}
+        return (
+          <div
+            class:list={[
+              'timeline-stage',
+              { 'is-completed': isCompleted },
+              { 'is-current': isCurrent },
+              { 'is-final': isFinalWithOutcome },
+              { 'is-success': isFinalWithOutcome && isSuccess },
+              { 'is-failed': isFinalWithOutcome && isFailed },
+              { 'is-last': isLast },
+            ]}
+          >
+            {/* Connector line for vertical variant */}
+            {variant === 'vertical' && !isLast && (
+              <div class:list={['timeline-connector', { 'is-completed': isCompleted }]} />
+            )}
 
-          <div class="timeline-dot">
-            {/* Checkmark for completed or successful final */}
-            {(isCompleted || (isFinalWithOutcome && isSuccess)) && (
-              <svg class="timeline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-            {/* X mark for failed/vetoed */}
-            {isFinalWithOutcome && isFailed && (
-              <svg class="timeline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-            {/* Number for pending stages */}
-            {!isCompleted && !isFinalWithOutcome && (
-              <span class="timeline-number">{i + 1}</span>
-            )}
+            <div class="timeline-dot">
+              {/* Checkmark for completed or successful final */}
+              {(isCompleted || (isFinalWithOutcome && isSuccess)) && (
+                <svg class="timeline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+              {/* X mark for failed/vetoed */}
+              {isFinalWithOutcome && isFailed && (
+                <svg class="timeline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              )}
+              {/* Number for pending stages */}
+              {!isCompleted && !isFinalWithOutcome && <span class="timeline-number">{i + 1}</span>}
+            </div>
+            <span class="timeline-label">{getStageLabel(stage, i)}</span>
           </div>
-          <span class="timeline-label">{getStageLabel(stage, i)}</span>
-        </div>
-      );
-    })}
+        );
+      })
+    }
 
     {/* Progress line (horizontal variants only) */}
-    {variant !== 'vertical' && (
-      <div
-        class:list={['timeline-line', { 'has-progress': hasProgress }]}
-        style={`--progress: ${progressPercent}%`}
-      />
-    )}
+    {
+      variant !== 'vertical' && (
+        <div
+          class:list={['timeline-line', { 'has-progress': hasProgress }]}
+          style={`--progress: ${progressPercent}%`}
+        />
+      )
+    }
   </div>
 </div>
 
@@ -138,17 +151,17 @@ function getStageLabel(stage: TimelineStage, index: number) {
     --font-size-number: 10px;
 
     /* Colors */
-    --color-completed: #228B4A;
-    --color-completed-stroke: #1A6B3A;
-    --color-current: var(--color-gold-500, #C5A572);
-    --color-current-stroke: var(--color-gold-600, #A88B4A);
-    --color-pending: var(--color-cream-200, #E8E0D0);
-    --color-pending-stroke: var(--color-cream-400, #D0C8B8);
-    --color-failed: #DC2626;
-    --color-failed-stroke: #B91C1C;
-    --color-text-completed: #228B4A;
-    --color-text-current: var(--color-navy-800, #1A2B3C);
-    --color-text-pending: var(--color-navy-500, #5A6B7C);
+    --color-completed: #228b4a;
+    --color-completed-stroke: #1a6b3a;
+    --color-current: var(--color-gold-500, #c5a572);
+    --color-current-stroke: var(--color-gold-600, #a88b4a);
+    --color-pending: var(--color-cream-200, #e8e0d0);
+    --color-pending-stroke: var(--color-cream-400, #d0c8b8);
+    --color-failed: #dc2626;
+    --color-failed-stroke: #b91c1c;
+    --color-text-completed: #228b4a;
+    --color-text-current: var(--color-navy-800, #1a2b3c);
+    --color-text-pending: var(--color-navy-500, #5a6b7c);
   }
 
   /* Compact variant adjustments */
@@ -255,11 +268,16 @@ function getStageLabel(stage: TimelineStage, index: number) {
   }
 
   @keyframes pulse-timeline {
-    0%, 100% {
-      box-shadow: 0 0 0 3px white, 0 0 0 6px rgba(197, 165, 114, 0.3);
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 3px white,
+        0 0 0 6px rgba(197, 165, 114, 0.3);
     }
     50% {
-      box-shadow: 0 0 0 3px white, 0 0 0 10px rgba(197, 165, 114, 0.1);
+      box-shadow:
+        0 0 0 3px white,
+        0 0 0 10px rgba(197, 165, 114, 0.1);
     }
   }
 
@@ -284,7 +302,7 @@ function getStageLabel(stage: TimelineStage, index: number) {
   }
 
   .timeline-stage.is-current .timeline-number {
-    color: var(--color-navy-900, #0A1628);
+    color: var(--color-navy-900, #0a1628);
   }
 
   /* Labels */
@@ -373,18 +391,18 @@ function getStageLabel(stage: TimelineStage, index: number) {
 
   /* Dark mode */
   :global(html.dark) .progress-timeline {
-    --color-pending: var(--color-navy-600, #3A4B5C);
-    --color-pending-stroke: var(--color-navy-500, #4A5B6C);
-    --color-text-pending: var(--color-navy-500, #BDB9B1);
-    --color-text-current: var(--color-navy-900, #F5F0E8);
-    --color-text-completed: #4ADE80;
+    --color-pending: var(--color-navy-600, #3a4b5c);
+    --color-pending-stroke: var(--color-navy-500, #4a5b6c);
+    --color-text-pending: var(--color-navy-500, #bdb9b1);
+    --color-text-current: var(--color-navy-900, #f5f0e8);
+    --color-text-completed: #4ade80;
   }
 
   :global(html.dark) .timeline-dot {
-    box-shadow: 0 0 0 3px var(--color-navy-800, #1A2B3C);
+    box-shadow: 0 0 0 3px var(--color-navy-800, #1a2b3c);
   }
 
   :global(html.dark) .timeline-line {
-    background: var(--color-navy-600, #3A4B5C);
+    background: var(--color-navy-600, #3a4b5c);
   }
 </style>

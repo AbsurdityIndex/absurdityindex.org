@@ -4,61 +4,411 @@ import Icon from '../components/ui/Icon.astro';
 
 // State data with populations (2023 estimates) and fake pork amounts
 const stateData = [
-  { state: "Alabama", abbr: "AL", population: 5074296, pork: 892000000, earmarks: 47, project: "Crimson Tide Victory Parade Infrastructure" },
-  { state: "Alaska", abbr: "AK", population: 733583, pork: 3980000000, earmarks: 156, project: "Bridge to Nowhere Memorial Visitor Center" },
-  { state: "Arizona", abbr: "AZ", population: 7359197, pork: 1240000000, earmarks: 62, project: "Grand Canyon Gift Shop Expansion Study" },
-  { state: "Arkansas", abbr: "AR", population: 3045637, pork: 567000000, earmarks: 31, project: "Razorback Crossing Overpass" },
-  { state: "California", abbr: "CA", population: 38965193, pork: 4500000000, earmarks: 234, project: "High-Speed Rail Feasibility Study Study" },
-  { state: "Colorado", abbr: "CO", population: 5877610, pork: 823000000, earmarks: 44, project: "Rocky Mountain High Altitude Research Retreat" },
-  { state: "Connecticut", abbr: "CT", population: 3617176, pork: 456000000, earmarks: 28, project: "Nutmeg Heritage Trail Renovation" },
-  { state: "Delaware", abbr: "DE", population: 1031890, pork: 287000000, earmarks: 19, project: "Biden's Childhood Home Walking Tour Infrastructure" },
-  { state: "Florida", abbr: "FL", population: 22610726, pork: 2890000000, earmarks: 178, project: "Manatee Awareness Awareness Program" },
-  { state: "Georgia", abbr: "GA", population: 11029227, pork: 1450000000, earmarks: 87, project: "Peach Emoji Trademark Defense Fund" },
-  { state: "Hawaii", abbr: "HI", population: 1435138, pork: 678000000, earmarks: 38, project: "Volcanic Activity Observation Luxury Bunker" },
-  { state: "Idaho", abbr: "ID", population: 1964726, pork: 412000000, earmarks: 24, project: "Potato Museum Interactive Experience" },
-  { state: "Illinois", abbr: "IL", population: 12549689, pork: 1890000000, earmarks: 112, project: "Deep Dish vs Thin Crust Resolution Center" },
-  { state: "Indiana", abbr: "IN", population: 6862199, pork: 723000000, earmarks: 41, project: "Indianapolis 500 Pace Car Storage Facility" },
-  { state: "Iowa", abbr: "IA", population: 3207004, pork: 534000000, earmarks: 33, project: "Corn Maze Emergency Response Training" },
-  { state: "Kansas", abbr: "KS", population: 2940546, pork: 489000000, earmarks: 29, project: "Wizard of Oz Yellow Brick Road Restoration" },
-  { state: "Kentucky", abbr: "KY", population: 4526154, pork: 612000000, earmarks: 36, project: "Bourbon Trail Designated Driver Program" },
-  { state: "Louisiana", abbr: "LA", population: 4573749, pork: 1120000000, earmarks: 67, project: "Mardi Gras Bead Recycling Initiative" },
-  { state: "Maine", abbr: "ME", population: 1395722, pork: 345000000, earmarks: 22, project: "Lobster Roll Quality Assurance Laboratory" },
-  { state: "Maryland", abbr: "MD", population: 6180253, pork: 987000000, earmarks: 58, project: "Old Bay Seasoning Historical Archive" },
-  { state: "Massachusetts", abbr: "MA", population: 7001399, pork: 1230000000, earmarks: 71, project: "Boston Accent Preservation Society" },
-  { state: "Michigan", abbr: "MI", population: 10037261, pork: 1340000000, earmarks: 79, project: "Great Lakes Freshwater Superiority Study" },
-  { state: "Minnesota", abbr: "MN", population: 5737915, pork: 756000000, earmarks: 43, project: "Minnesota Nice Interpersonal Relations Institute" },
-  { state: "Mississippi", abbr: "MS", population: 2939690, pork: 678000000, earmarks: 39, project: "Blues Highway Juke Joint Preservation" },
-  { state: "Missouri", abbr: "MO", population: 6196156, pork: 834000000, earmarks: 48, project: "Gateway Arch Slight Tilt Monitoring System" },
-  { state: "Montana", abbr: "MT", population: 1132812, pork: 456000000, earmarks: 27, project: "Big Sky Even Bigger Sky Research Grant" },
-  { state: "Nebraska", abbr: "NE", population: 1978379, pork: 398000000, earmarks: 23, project: "Cornhusker Rivalry Preparedness Center" },
-  { state: "Nevada", abbr: "NV", population: 3194176, pork: 1560000000, earmarks: 89, project: "What Happens in Vegas Economic Impact Study" },
-  { state: "New Hampshire", abbr: "NH", population: 1402054, pork: 312000000, earmarks: 18, project: "Live Free or Die Motivational Speaker Program" },
-  { state: "New Jersey", abbr: "NJ", population: 9290841, pork: 1780000000, earmarks: 104, project: "Jughandle Turn Optimization Initiative" },
-  { state: "New Mexico", abbr: "NM", population: 2114371, pork: 534000000, earmarks: 32, project: "Alien Landing Site Tourism Infrastructure" },
-  { state: "New York", abbr: "NY", population: 19571216, pork: 3450000000, earmarks: 198, project: "Subway Delay Excuse Generator Upgrade" },
-  { state: "North Carolina", abbr: "NC", population: 10835491, pork: 1290000000, earmarks: 76, project: "BBQ Vinegar vs Tomato Peace Accord Facility" },
-  { state: "North Dakota", abbr: "ND", population: 783926, pork: 387000000, earmarks: 21, project: "Fargo Accent Documentation Project" },
-  { state: "Ohio", abbr: "OH", population: 11785935, pork: 1450000000, earmarks: 85, project: "Astronaut Per Capita Superiority Research" },
-  { state: "Oklahoma", abbr: "OK", population: 4053824, pork: 623000000, earmarks: 37, project: "Sooner vs Later Procrastination Studies" },
-  { state: "Oregon", abbr: "OR", population: 4233358, pork: 712000000, earmarks: 42, project: "Artisanal Rain Collection Facility" },
-  { state: "Pennsylvania", abbr: "PA", population: 12961683, pork: 1670000000, earmarks: 98, project: "Cheesesteak Authenticity Certification Board" },
-  { state: "Rhode Island", abbr: "RI", population: 1095962, pork: 234000000, earmarks: 16, project: "Smallest State Biggest Heart Marketing Campaign" },
-  { state: "South Carolina", abbr: "SC", population: 5373555, pork: 789000000, earmarks: 46, project: "Palmetto Bug Rebranding Initiative" },
-  { state: "South Dakota", abbr: "SD", population: 919318, pork: 423000000, earmarks: 25, project: "Mount Rushmore Fifth Face Feasibility Study" },
-  { state: "Tennessee", abbr: "TN", population: 7126489, pork: 934000000, earmarks: 54, project: "Nashville Bachelorette Party Traffic Study" },
-  { state: "Texas", abbr: "TX", population: 30503301, pork: 3560000000, earmarks: 212, project: "Border Wall Gift Shop" },
-  { state: "Utah", abbr: "UT", population: 3417734, pork: 567000000, earmarks: 34, project: "Greatest Snow on Earth Trademark Defense" },
-  { state: "Vermont", abbr: "VT", population: 647464, pork: 298000000, earmarks: 17, project: "Bernie Sanders Mittens Memorial" },
-  { state: "Virginia", abbr: "VA", population: 8683619, pork: 2340000000, earmarks: 145, project: "Virginia is for Lovers Rebranding Committee" },
-  { state: "Washington", abbr: "WA", population: 7812880, pork: 1120000000, earmarks: 65, project: "Rain Shadow Appreciation Observatory" },
-  { state: "West Virginia", abbr: "WV", population: 1770071, pork: 2870000000, earmarks: 167, project: "Robert Byrd Highway to More Robert Byrd Highways" },
-  { state: "Wisconsin", abbr: "WI", population: 5910955, pork: 823000000, earmarks: 49, project: "Cheese Curd Squeakiness Standards Lab" },
-  { state: "Wyoming", abbr: "WY", population: 584057, pork: 312000000, earmarks: 20, project: "Yellowstone Supervolcano Denial Program" },
+  {
+    state: 'Alabama',
+    abbr: 'AL',
+    population: 5074296,
+    pork: 892000000,
+    earmarks: 47,
+    project: 'Crimson Tide Victory Parade Infrastructure',
+  },
+  {
+    state: 'Alaska',
+    abbr: 'AK',
+    population: 733583,
+    pork: 3980000000,
+    earmarks: 156,
+    project: 'Bridge to Nowhere Memorial Visitor Center',
+  },
+  {
+    state: 'Arizona',
+    abbr: 'AZ',
+    population: 7359197,
+    pork: 1240000000,
+    earmarks: 62,
+    project: 'Grand Canyon Gift Shop Expansion Study',
+  },
+  {
+    state: 'Arkansas',
+    abbr: 'AR',
+    population: 3045637,
+    pork: 567000000,
+    earmarks: 31,
+    project: 'Razorback Crossing Overpass',
+  },
+  {
+    state: 'California',
+    abbr: 'CA',
+    population: 38965193,
+    pork: 4500000000,
+    earmarks: 234,
+    project: 'High-Speed Rail Feasibility Study Study',
+  },
+  {
+    state: 'Colorado',
+    abbr: 'CO',
+    population: 5877610,
+    pork: 823000000,
+    earmarks: 44,
+    project: 'Rocky Mountain High Altitude Research Retreat',
+  },
+  {
+    state: 'Connecticut',
+    abbr: 'CT',
+    population: 3617176,
+    pork: 456000000,
+    earmarks: 28,
+    project: 'Nutmeg Heritage Trail Renovation',
+  },
+  {
+    state: 'Delaware',
+    abbr: 'DE',
+    population: 1031890,
+    pork: 287000000,
+    earmarks: 19,
+    project: "Biden's Childhood Home Walking Tour Infrastructure",
+  },
+  {
+    state: 'Florida',
+    abbr: 'FL',
+    population: 22610726,
+    pork: 2890000000,
+    earmarks: 178,
+    project: 'Manatee Awareness Awareness Program',
+  },
+  {
+    state: 'Georgia',
+    abbr: 'GA',
+    population: 11029227,
+    pork: 1450000000,
+    earmarks: 87,
+    project: 'Peach Emoji Trademark Defense Fund',
+  },
+  {
+    state: 'Hawaii',
+    abbr: 'HI',
+    population: 1435138,
+    pork: 678000000,
+    earmarks: 38,
+    project: 'Volcanic Activity Observation Luxury Bunker',
+  },
+  {
+    state: 'Idaho',
+    abbr: 'ID',
+    population: 1964726,
+    pork: 412000000,
+    earmarks: 24,
+    project: 'Potato Museum Interactive Experience',
+  },
+  {
+    state: 'Illinois',
+    abbr: 'IL',
+    population: 12549689,
+    pork: 1890000000,
+    earmarks: 112,
+    project: 'Deep Dish vs Thin Crust Resolution Center',
+  },
+  {
+    state: 'Indiana',
+    abbr: 'IN',
+    population: 6862199,
+    pork: 723000000,
+    earmarks: 41,
+    project: 'Indianapolis 500 Pace Car Storage Facility',
+  },
+  {
+    state: 'Iowa',
+    abbr: 'IA',
+    population: 3207004,
+    pork: 534000000,
+    earmarks: 33,
+    project: 'Corn Maze Emergency Response Training',
+  },
+  {
+    state: 'Kansas',
+    abbr: 'KS',
+    population: 2940546,
+    pork: 489000000,
+    earmarks: 29,
+    project: 'Wizard of Oz Yellow Brick Road Restoration',
+  },
+  {
+    state: 'Kentucky',
+    abbr: 'KY',
+    population: 4526154,
+    pork: 612000000,
+    earmarks: 36,
+    project: 'Bourbon Trail Designated Driver Program',
+  },
+  {
+    state: 'Louisiana',
+    abbr: 'LA',
+    population: 4573749,
+    pork: 1120000000,
+    earmarks: 67,
+    project: 'Mardi Gras Bead Recycling Initiative',
+  },
+  {
+    state: 'Maine',
+    abbr: 'ME',
+    population: 1395722,
+    pork: 345000000,
+    earmarks: 22,
+    project: 'Lobster Roll Quality Assurance Laboratory',
+  },
+  {
+    state: 'Maryland',
+    abbr: 'MD',
+    population: 6180253,
+    pork: 987000000,
+    earmarks: 58,
+    project: 'Old Bay Seasoning Historical Archive',
+  },
+  {
+    state: 'Massachusetts',
+    abbr: 'MA',
+    population: 7001399,
+    pork: 1230000000,
+    earmarks: 71,
+    project: 'Boston Accent Preservation Society',
+  },
+  {
+    state: 'Michigan',
+    abbr: 'MI',
+    population: 10037261,
+    pork: 1340000000,
+    earmarks: 79,
+    project: 'Great Lakes Freshwater Superiority Study',
+  },
+  {
+    state: 'Minnesota',
+    abbr: 'MN',
+    population: 5737915,
+    pork: 756000000,
+    earmarks: 43,
+    project: 'Minnesota Nice Interpersonal Relations Institute',
+  },
+  {
+    state: 'Mississippi',
+    abbr: 'MS',
+    population: 2939690,
+    pork: 678000000,
+    earmarks: 39,
+    project: 'Blues Highway Juke Joint Preservation',
+  },
+  {
+    state: 'Missouri',
+    abbr: 'MO',
+    population: 6196156,
+    pork: 834000000,
+    earmarks: 48,
+    project: 'Gateway Arch Slight Tilt Monitoring System',
+  },
+  {
+    state: 'Montana',
+    abbr: 'MT',
+    population: 1132812,
+    pork: 456000000,
+    earmarks: 27,
+    project: 'Big Sky Even Bigger Sky Research Grant',
+  },
+  {
+    state: 'Nebraska',
+    abbr: 'NE',
+    population: 1978379,
+    pork: 398000000,
+    earmarks: 23,
+    project: 'Cornhusker Rivalry Preparedness Center',
+  },
+  {
+    state: 'Nevada',
+    abbr: 'NV',
+    population: 3194176,
+    pork: 1560000000,
+    earmarks: 89,
+    project: 'What Happens in Vegas Economic Impact Study',
+  },
+  {
+    state: 'New Hampshire',
+    abbr: 'NH',
+    population: 1402054,
+    pork: 312000000,
+    earmarks: 18,
+    project: 'Live Free or Die Motivational Speaker Program',
+  },
+  {
+    state: 'New Jersey',
+    abbr: 'NJ',
+    population: 9290841,
+    pork: 1780000000,
+    earmarks: 104,
+    project: 'Jughandle Turn Optimization Initiative',
+  },
+  {
+    state: 'New Mexico',
+    abbr: 'NM',
+    population: 2114371,
+    pork: 534000000,
+    earmarks: 32,
+    project: 'Alien Landing Site Tourism Infrastructure',
+  },
+  {
+    state: 'New York',
+    abbr: 'NY',
+    population: 19571216,
+    pork: 3450000000,
+    earmarks: 198,
+    project: 'Subway Delay Excuse Generator Upgrade',
+  },
+  {
+    state: 'North Carolina',
+    abbr: 'NC',
+    population: 10835491,
+    pork: 1290000000,
+    earmarks: 76,
+    project: 'BBQ Vinegar vs Tomato Peace Accord Facility',
+  },
+  {
+    state: 'North Dakota',
+    abbr: 'ND',
+    population: 783926,
+    pork: 387000000,
+    earmarks: 21,
+    project: 'Fargo Accent Documentation Project',
+  },
+  {
+    state: 'Ohio',
+    abbr: 'OH',
+    population: 11785935,
+    pork: 1450000000,
+    earmarks: 85,
+    project: 'Astronaut Per Capita Superiority Research',
+  },
+  {
+    state: 'Oklahoma',
+    abbr: 'OK',
+    population: 4053824,
+    pork: 623000000,
+    earmarks: 37,
+    project: 'Sooner vs Later Procrastination Studies',
+  },
+  {
+    state: 'Oregon',
+    abbr: 'OR',
+    population: 4233358,
+    pork: 712000000,
+    earmarks: 42,
+    project: 'Artisanal Rain Collection Facility',
+  },
+  {
+    state: 'Pennsylvania',
+    abbr: 'PA',
+    population: 12961683,
+    pork: 1670000000,
+    earmarks: 98,
+    project: 'Cheesesteak Authenticity Certification Board',
+  },
+  {
+    state: 'Rhode Island',
+    abbr: 'RI',
+    population: 1095962,
+    pork: 234000000,
+    earmarks: 16,
+    project: 'Smallest State Biggest Heart Marketing Campaign',
+  },
+  {
+    state: 'South Carolina',
+    abbr: 'SC',
+    population: 5373555,
+    pork: 789000000,
+    earmarks: 46,
+    project: 'Palmetto Bug Rebranding Initiative',
+  },
+  {
+    state: 'South Dakota',
+    abbr: 'SD',
+    population: 919318,
+    pork: 423000000,
+    earmarks: 25,
+    project: 'Mount Rushmore Fifth Face Feasibility Study',
+  },
+  {
+    state: 'Tennessee',
+    abbr: 'TN',
+    population: 7126489,
+    pork: 934000000,
+    earmarks: 54,
+    project: 'Nashville Bachelorette Party Traffic Study',
+  },
+  {
+    state: 'Texas',
+    abbr: 'TX',
+    population: 30503301,
+    pork: 3560000000,
+    earmarks: 212,
+    project: 'Border Wall Gift Shop',
+  },
+  {
+    state: 'Utah',
+    abbr: 'UT',
+    population: 3417734,
+    pork: 567000000,
+    earmarks: 34,
+    project: 'Greatest Snow on Earth Trademark Defense',
+  },
+  {
+    state: 'Vermont',
+    abbr: 'VT',
+    population: 647464,
+    pork: 298000000,
+    earmarks: 17,
+    project: 'Bernie Sanders Mittens Memorial',
+  },
+  {
+    state: 'Virginia',
+    abbr: 'VA',
+    population: 8683619,
+    pork: 2340000000,
+    earmarks: 145,
+    project: 'Virginia is for Lovers Rebranding Committee',
+  },
+  {
+    state: 'Washington',
+    abbr: 'WA',
+    population: 7812880,
+    pork: 1120000000,
+    earmarks: 65,
+    project: 'Rain Shadow Appreciation Observatory',
+  },
+  {
+    state: 'West Virginia',
+    abbr: 'WV',
+    population: 1770071,
+    pork: 2870000000,
+    earmarks: 167,
+    project: 'Robert Byrd Highway to More Robert Byrd Highways',
+  },
+  {
+    state: 'Wisconsin',
+    abbr: 'WI',
+    population: 5910955,
+    pork: 823000000,
+    earmarks: 49,
+    project: 'Cheese Curd Squeakiness Standards Lab',
+  },
+  {
+    state: 'Wyoming',
+    abbr: 'WY',
+    population: 584057,
+    pork: 312000000,
+    earmarks: 20,
+    project: 'Yellowstone Supervolcano Denial Program',
+  },
 ];
 
 // Calculate per capita and add rank
 const rankedStates = stateData
-  .map(s => ({
+  .map((s) => ({
     ...s,
     perCapita: s.pork / s.population,
   }))
@@ -70,7 +420,7 @@ const totalPork = stateData.reduce((sum, s) => sum + s.pork, 0);
 const totalPopulation = stateData.reduce((sum, s) => sum + s.population, 0);
 const avgPerCapita = totalPork / totalPopulation;
 const totalEarmarks = stateData.reduce((sum, s) => sum + s.earmarks, 0);
-const baconSandwichCost = 8.50; // Average cost of a bacon sandwich
+const baconSandwichCost = 8.5; // Average cost of a bacon sandwich
 const sandwichesPerPerson = avgPerCapita / baconSandwichCost;
 
 // Format helpers
@@ -104,21 +454,25 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
 
     <!-- Explanation Box -->
     <div class="bg-parchment border border-gold-300 rounded-lg p-6 mb-10 max-w-3xl mx-auto">
-      <h2 class="font-serif text-xl font-bold text-navy-800 mb-3">What is "Pork Barrel" Spending?</h2>
+      <h2 class="font-serif text-xl font-bold text-navy-800 mb-3">
+        What is "Pork Barrel" Spending?
+      </h2>
       <p class="text-navy-700 mb-3">
-        <strong>"Pork barrel"</strong> refers to government spending that benefits a specific
-        district or group, often inserted into larger bills to secure votes. The term comes from
-        the pre-Civil War practice of distributing salt pork to enslaved people from wooden barrels.
+        <strong>"Pork barrel"</strong> refers to government spending that benefits a specific district
+        or group, often inserted into larger bills to secure votes. The term comes from the pre-Civil
+        War practice of distributing salt pork to enslaved people from wooden barrels.
       </p>
       <p class="text-navy-600 text-sm italic">
-        These days, it typically means funding for local projects that may or may not serve
-        the national interest—like bridges to nowhere, museums nobody asked for, and research
-        centers studying things already well understood.
+        These days, it typically means funding for local projects that may or may not serve the
+        national interest—like bridges to nowhere, museums nobody asked for, and research centers
+        studying things already well understood.
       </p>
     </div>
 
     <!-- Controls -->
-    <div class="bg-cream-200 rounded-lg p-4 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+    <div
+      class="bg-cream-200 rounded-lg p-4 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between"
+    >
       <div class="flex flex-wrap gap-3 items-center">
         <label class="font-sans text-sm text-navy-700 font-medium">Sort by:</label>
         <select
@@ -132,7 +486,9 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
         </select>
       </div>
       <div class="flex items-center gap-2">
-        <label for="state-search" class="font-sans text-sm text-navy-700 font-medium">Find your state:</label>
+        <label for="state-search" class="font-sans text-sm text-navy-700 font-medium"
+          >Find your state:</label
+        >
         <input
           type="text"
           id="state-search"
@@ -149,84 +505,124 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
           <tr>
             <th class="px-4 py-3 text-left font-serif text-sm uppercase tracking-wide">Rank</th>
             <th class="px-4 py-3 text-left font-serif text-sm uppercase tracking-wide">State</th>
-            <th class="px-4 py-3 text-right font-serif text-sm uppercase tracking-wide">Total Pork</th>
-            <th class="px-4 py-3 text-right font-serif text-sm uppercase tracking-wide">Per Capita</th>
-            <th class="px-4 py-3 text-right font-serif text-sm uppercase tracking-wide">Earmarks</th>
-            <th class="px-4 py-3 text-left font-serif text-sm uppercase tracking-wide">Signature Project</th>
+            <th class="px-4 py-3 text-right font-serif text-sm uppercase tracking-wide"
+              >Total Pork</th
+            >
+            <th class="px-4 py-3 text-right font-serif text-sm uppercase tracking-wide"
+              >Per Capita</th
+            >
+            <th class="px-4 py-3 text-right font-serif text-sm uppercase tracking-wide">Earmarks</th
+            >
+            <th class="px-4 py-3 text-left font-serif text-sm uppercase tracking-wide"
+              >Signature Project</th
+            >
           </tr>
         </thead>
         <tbody id="table-body">
-          {rankedStates.map((state) => (
-            <tr
-              class={`border-b border-gold-200 hover:bg-gold-100 transition-colors ${state.rank <= 3 ? 'bg-gold-100' : state.rank <= 10 ? 'bg-cream-200' : 'bg-cream-100'}`}
-              data-state={state.state.toLowerCase()}
-              data-pork={state.pork}
-              data-percapita={state.perCapita}
-              data-earmarks={state.earmarks}
-            >
-              <td class="px-4 py-4 font-mono text-navy-800">
-                {state.rank === 1 && <span class="inline-flex items-center mr-1 text-amber-500" title="Gold Medal"><Icon name="trophy" size={24} /></span>}
-                {state.rank === 2 && <span class="inline-flex items-center mr-1 text-slate-400" title="Silver Medal"><Icon name="medal" size={24} /></span>}
-                {state.rank === 3 && <span class="inline-flex items-center mr-1 text-amber-700" title="Bronze Medal"><Icon name="award" size={24} /></span>}
-                {state.rank > 3 && <span class="text-lg font-bold">{state.rank}</span>}
-              </td>
-              <td class="px-4 py-4">
-                <span class="font-serif font-bold text-navy-900">{state.state}</span>
-                <span class="text-navy-500 ml-2 text-sm">({state.abbr})</span>
-              </td>
-              <td class="px-4 py-4 text-right font-mono text-navy-800 font-bold">
-                {formatCurrency(state.pork)}
-              </td>
-              <td class="px-4 py-4 text-right font-mono text-navy-700">
-                {formatPerCapita(state.perCapita)}
-              </td>
-              <td class="px-4 py-4 text-right font-mono text-navy-700">
-                {state.earmarks}
-              </td>
-              <td class="px-4 py-4 text-sm text-navy-600 italic max-w-xs truncate" title={state.project}>
-                {state.project}
-              </td>
-            </tr>
-          ))}
+          {
+            rankedStates.map((state) => (
+              <tr
+                class={`border-b border-gold-200 hover:bg-gold-100 transition-colors ${state.rank <= 3 ? 'bg-gold-100' : state.rank <= 10 ? 'bg-cream-200' : 'bg-cream-100'}`}
+                data-state={state.state.toLowerCase()}
+                data-pork={state.pork}
+                data-percapita={state.perCapita}
+                data-earmarks={state.earmarks}
+              >
+                <td class="px-4 py-4 font-mono text-navy-800">
+                  {state.rank === 1 && (
+                    <span class="inline-flex items-center mr-1 text-amber-500" title="Gold Medal">
+                      <Icon name="trophy" size={24} />
+                    </span>
+                  )}
+                  {state.rank === 2 && (
+                    <span class="inline-flex items-center mr-1 text-slate-400" title="Silver Medal">
+                      <Icon name="medal" size={24} />
+                    </span>
+                  )}
+                  {state.rank === 3 && (
+                    <span class="inline-flex items-center mr-1 text-amber-700" title="Bronze Medal">
+                      <Icon name="award" size={24} />
+                    </span>
+                  )}
+                  {state.rank > 3 && <span class="text-lg font-bold">{state.rank}</span>}
+                </td>
+                <td class="px-4 py-4">
+                  <span class="font-serif font-bold text-navy-900">{state.state}</span>
+                  <span class="text-navy-500 ml-2 text-sm">({state.abbr})</span>
+                </td>
+                <td class="px-4 py-4 text-right font-mono text-navy-800 font-bold">
+                  {formatCurrency(state.pork)}
+                </td>
+                <td class="px-4 py-4 text-right font-mono text-navy-700">
+                  {formatPerCapita(state.perCapita)}
+                </td>
+                <td class="px-4 py-4 text-right font-mono text-navy-700">{state.earmarks}</td>
+                <td
+                  class="px-4 py-4 text-sm text-navy-600 italic max-w-xs truncate"
+                  title={state.project}
+                >
+                  {state.project}
+                </td>
+              </tr>
+            ))
+          }
         </tbody>
       </table>
     </div>
 
     <!-- Mobile Cards -->
     <div class="md:hidden space-y-4" id="mobile-cards">
-      {rankedStates.map((state) => (
-        <div
-          class={`rounded-lg p-4 border ${state.rank <= 3 ? 'border-gold-500 bg-gold-100' : state.rank <= 10 ? 'border-gold-300 bg-cream-200' : 'border-gold-200 bg-cream-100'}`}
-          data-state={state.state.toLowerCase()}
-          data-pork={state.pork}
-          data-percapita={state.perCapita}
-          data-earmarks={state.earmarks}
-        >
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              {state.rank === 1 && <span class="text-amber-500"><Icon name="trophy" size={24} /></span>}
-              {state.rank === 2 && <span class="text-slate-400"><Icon name="medal" size={24} /></span>}
-              {state.rank === 3 && <span class="text-amber-700"><Icon name="award" size={24} /></span>}
-              {state.rank > 3 && <span class="font-mono text-lg font-bold text-navy-600">#{state.rank}</span>}
-              <span class="font-serif text-lg font-bold text-navy-900">{state.state}</span>
+      {
+        rankedStates.map((state) => (
+          <div
+            class={`rounded-lg p-4 border ${state.rank <= 3 ? 'border-gold-500 bg-gold-100' : state.rank <= 10 ? 'border-gold-300 bg-cream-200' : 'border-gold-200 bg-cream-100'}`}
+            data-state={state.state.toLowerCase()}
+            data-pork={state.pork}
+            data-percapita={state.perCapita}
+            data-earmarks={state.earmarks}
+          >
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                {state.rank === 1 && (
+                  <span class="text-amber-500">
+                    <Icon name="trophy" size={24} />
+                  </span>
+                )}
+                {state.rank === 2 && (
+                  <span class="text-slate-400">
+                    <Icon name="medal" size={24} />
+                  </span>
+                )}
+                {state.rank === 3 && (
+                  <span class="text-amber-700">
+                    <Icon name="award" size={24} />
+                  </span>
+                )}
+                {state.rank > 3 && (
+                  <span class="font-mono text-lg font-bold text-navy-600">#{state.rank}</span>
+                )}
+                <span class="font-serif text-lg font-bold text-navy-900">{state.state}</span>
+              </div>
+              <span class="font-mono text-lg font-bold text-navy-800">
+                {formatCurrency(state.pork)}
+              </span>
             </div>
-            <span class="font-mono text-lg font-bold text-navy-800">{formatCurrency(state.pork)}</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-sm mb-3">
-            <div>
-              <span class="text-navy-500">Per Capita:</span>
-              <span class="font-mono text-navy-700 ml-1">{formatPerCapita(state.perCapita)}</span>
+            <div class="grid grid-cols-2 gap-2 text-sm mb-3">
+              <div>
+                <span class="text-navy-500">Per Capita:</span>
+                <span class="font-mono text-navy-700 ml-1">{formatPerCapita(state.perCapita)}</span>
+              </div>
+              <div>
+                <span class="text-navy-500">Earmarks:</span>
+                <span class="font-mono text-navy-700 ml-1">{state.earmarks}</span>
+              </div>
             </div>
-            <div>
-              <span class="text-navy-500">Earmarks:</span>
-              <span class="font-mono text-navy-700 ml-1">{state.earmarks}</span>
+            <div class="text-sm text-navy-600 italic border-t border-gold-200 pt-2">
+              <span class="text-navy-500 not-italic">Signature Project:</span> {state.project}
             </div>
           </div>
-          <div class="text-sm text-navy-600 italic border-t border-gold-200 pt-2">
-            <span class="text-navy-500 not-italic">Signature Project:</span> {state.project}
-          </div>
-        </div>
-      ))}
+        ))
+      }
     </div>
 
     <!-- Fun Stats -->
@@ -260,9 +656,7 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
           <div class="text-cream-300 font-serif text-sm">Total Earmarks</div>
         </div>
         <div>
-          <div class="text-3xl font-mono font-bold text-gold-300 mb-1">
-            50
-          </div>
+          <div class="text-3xl font-mono font-bold text-gold-300 mb-1">50</div>
           <div class="text-cream-300 font-serif text-sm">States Competing for Your Tax Dollars</div>
         </div>
       </div>
@@ -273,9 +667,11 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
 
     <!-- Disclaimer -->
     <div class="mt-8 text-center">
-      <p class="text-navy-500 text-sm italic border border-gold-200 rounded-lg p-4 bg-cream-200 inline-block">
-        <strong>Disclaimer:</strong> These numbers are satirical estimates for entertainment purposes only.
-        Any resemblance to actual pork barrel spending is purely coincidental (and probably an underestimate).
+      <p
+        class="text-navy-500 text-sm italic border border-gold-200 rounded-lg p-4 bg-cream-200 inline-block"
+      >
+        <strong>Disclaimer:</strong> These numbers are satirical estimates for entertainment purposes
+        only. Any resemblance to actual pork barrel spending is purely coincidental (and probably an underestimate).
       </p>
     </div>
   </section>
@@ -283,57 +679,407 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
   <script is:inline>
     // State data for client-side sorting
     const stateData = [
-      { state: "Alabama", abbr: "AL", population: 5074296, pork: 892000000, earmarks: 47, project: "Crimson Tide Victory Parade Infrastructure" },
-      { state: "Alaska", abbr: "AK", population: 733583, pork: 3980000000, earmarks: 156, project: "Bridge to Nowhere Memorial Visitor Center" },
-      { state: "Arizona", abbr: "AZ", population: 7359197, pork: 1240000000, earmarks: 62, project: "Grand Canyon Gift Shop Expansion Study" },
-      { state: "Arkansas", abbr: "AR", population: 3045637, pork: 567000000, earmarks: 31, project: "Razorback Crossing Overpass" },
-      { state: "California", abbr: "CA", population: 38965193, pork: 4500000000, earmarks: 234, project: "High-Speed Rail Feasibility Study Study" },
-      { state: "Colorado", abbr: "CO", population: 5877610, pork: 823000000, earmarks: 44, project: "Rocky Mountain High Altitude Research Retreat" },
-      { state: "Connecticut", abbr: "CT", population: 3617176, pork: 456000000, earmarks: 28, project: "Nutmeg Heritage Trail Renovation" },
-      { state: "Delaware", abbr: "DE", population: 1031890, pork: 287000000, earmarks: 19, project: "Biden's Childhood Home Walking Tour Infrastructure" },
-      { state: "Florida", abbr: "FL", population: 22610726, pork: 2890000000, earmarks: 178, project: "Manatee Awareness Awareness Program" },
-      { state: "Georgia", abbr: "GA", population: 11029227, pork: 1450000000, earmarks: 87, project: "Peach Emoji Trademark Defense Fund" },
-      { state: "Hawaii", abbr: "HI", population: 1435138, pork: 678000000, earmarks: 38, project: "Volcanic Activity Observation Luxury Bunker" },
-      { state: "Idaho", abbr: "ID", population: 1964726, pork: 412000000, earmarks: 24, project: "Potato Museum Interactive Experience" },
-      { state: "Illinois", abbr: "IL", population: 12549689, pork: 1890000000, earmarks: 112, project: "Deep Dish vs Thin Crust Resolution Center" },
-      { state: "Indiana", abbr: "IN", population: 6862199, pork: 723000000, earmarks: 41, project: "Indianapolis 500 Pace Car Storage Facility" },
-      { state: "Iowa", abbr: "IA", population: 3207004, pork: 534000000, earmarks: 33, project: "Corn Maze Emergency Response Training" },
-      { state: "Kansas", abbr: "KS", population: 2940546, pork: 489000000, earmarks: 29, project: "Wizard of Oz Yellow Brick Road Restoration" },
-      { state: "Kentucky", abbr: "KY", population: 4526154, pork: 612000000, earmarks: 36, project: "Bourbon Trail Designated Driver Program" },
-      { state: "Louisiana", abbr: "LA", population: 4573749, pork: 1120000000, earmarks: 67, project: "Mardi Gras Bead Recycling Initiative" },
-      { state: "Maine", abbr: "ME", population: 1395722, pork: 345000000, earmarks: 22, project: "Lobster Roll Quality Assurance Laboratory" },
-      { state: "Maryland", abbr: "MD", population: 6180253, pork: 987000000, earmarks: 58, project: "Old Bay Seasoning Historical Archive" },
-      { state: "Massachusetts", abbr: "MA", population: 7001399, pork: 1230000000, earmarks: 71, project: "Boston Accent Preservation Society" },
-      { state: "Michigan", abbr: "MI", population: 10037261, pork: 1340000000, earmarks: 79, project: "Great Lakes Freshwater Superiority Study" },
-      { state: "Minnesota", abbr: "MN", population: 5737915, pork: 756000000, earmarks: 43, project: "Minnesota Nice Interpersonal Relations Institute" },
-      { state: "Mississippi", abbr: "MS", population: 2939690, pork: 678000000, earmarks: 39, project: "Blues Highway Juke Joint Preservation" },
-      { state: "Missouri", abbr: "MO", population: 6196156, pork: 834000000, earmarks: 48, project: "Gateway Arch Slight Tilt Monitoring System" },
-      { state: "Montana", abbr: "MT", population: 1132812, pork: 456000000, earmarks: 27, project: "Big Sky Even Bigger Sky Research Grant" },
-      { state: "Nebraska", abbr: "NE", population: 1978379, pork: 398000000, earmarks: 23, project: "Cornhusker Rivalry Preparedness Center" },
-      { state: "Nevada", abbr: "NV", population: 3194176, pork: 1560000000, earmarks: 89, project: "What Happens in Vegas Economic Impact Study" },
-      { state: "New Hampshire", abbr: "NH", population: 1402054, pork: 312000000, earmarks: 18, project: "Live Free or Die Motivational Speaker Program" },
-      { state: "New Jersey", abbr: "NJ", population: 9290841, pork: 1780000000, earmarks: 104, project: "Jughandle Turn Optimization Initiative" },
-      { state: "New Mexico", abbr: "NM", population: 2114371, pork: 534000000, earmarks: 32, project: "Alien Landing Site Tourism Infrastructure" },
-      { state: "New York", abbr: "NY", population: 19571216, pork: 3450000000, earmarks: 198, project: "Subway Delay Excuse Generator Upgrade" },
-      { state: "North Carolina", abbr: "NC", population: 10835491, pork: 1290000000, earmarks: 76, project: "BBQ Vinegar vs Tomato Peace Accord Facility" },
-      { state: "North Dakota", abbr: "ND", population: 783926, pork: 387000000, earmarks: 21, project: "Fargo Accent Documentation Project" },
-      { state: "Ohio", abbr: "OH", population: 11785935, pork: 1450000000, earmarks: 85, project: "Astronaut Per Capita Superiority Research" },
-      { state: "Oklahoma", abbr: "OK", population: 4053824, pork: 623000000, earmarks: 37, project: "Sooner vs Later Procrastination Studies" },
-      { state: "Oregon", abbr: "OR", population: 4233358, pork: 712000000, earmarks: 42, project: "Artisanal Rain Collection Facility" },
-      { state: "Pennsylvania", abbr: "PA", population: 12961683, pork: 1670000000, earmarks: 98, project: "Cheesesteak Authenticity Certification Board" },
-      { state: "Rhode Island", abbr: "RI", population: 1095962, pork: 234000000, earmarks: 16, project: "Smallest State Biggest Heart Marketing Campaign" },
-      { state: "South Carolina", abbr: "SC", population: 5373555, pork: 789000000, earmarks: 46, project: "Palmetto Bug Rebranding Initiative" },
-      { state: "South Dakota", abbr: "SD", population: 919318, pork: 423000000, earmarks: 25, project: "Mount Rushmore Fifth Face Feasibility Study" },
-      { state: "Tennessee", abbr: "TN", population: 7126489, pork: 934000000, earmarks: 54, project: "Nashville Bachelorette Party Traffic Study" },
-      { state: "Texas", abbr: "TX", population: 30503301, pork: 3560000000, earmarks: 212, project: "Border Wall Gift Shop" },
-      { state: "Utah", abbr: "UT", population: 3417734, pork: 567000000, earmarks: 34, project: "Greatest Snow on Earth Trademark Defense" },
-      { state: "Vermont", abbr: "VT", population: 647464, pork: 298000000, earmarks: 17, project: "Bernie Sanders Mittens Memorial" },
-      { state: "Virginia", abbr: "VA", population: 8683619, pork: 2340000000, earmarks: 145, project: "Virginia is for Lovers Rebranding Committee" },
-      { state: "Washington", abbr: "WA", population: 7812880, pork: 1120000000, earmarks: 65, project: "Rain Shadow Appreciation Observatory" },
-      { state: "West Virginia", abbr: "WV", population: 1770071, pork: 2870000000, earmarks: 167, project: "Robert Byrd Highway to More Robert Byrd Highways" },
-      { state: "Wisconsin", abbr: "WI", population: 5910955, pork: 823000000, earmarks: 49, project: "Cheese Curd Squeakiness Standards Lab" },
-      { state: "Wyoming", abbr: "WY", population: 584057, pork: 312000000, earmarks: 20, project: "Yellowstone Supervolcano Denial Program" },
-    ].map(s => ({ ...s, perCapita: s.pork / s.population }));
+      {
+        state: 'Alabama',
+        abbr: 'AL',
+        population: 5074296,
+        pork: 892000000,
+        earmarks: 47,
+        project: 'Crimson Tide Victory Parade Infrastructure',
+      },
+      {
+        state: 'Alaska',
+        abbr: 'AK',
+        population: 733583,
+        pork: 3980000000,
+        earmarks: 156,
+        project: 'Bridge to Nowhere Memorial Visitor Center',
+      },
+      {
+        state: 'Arizona',
+        abbr: 'AZ',
+        population: 7359197,
+        pork: 1240000000,
+        earmarks: 62,
+        project: 'Grand Canyon Gift Shop Expansion Study',
+      },
+      {
+        state: 'Arkansas',
+        abbr: 'AR',
+        population: 3045637,
+        pork: 567000000,
+        earmarks: 31,
+        project: 'Razorback Crossing Overpass',
+      },
+      {
+        state: 'California',
+        abbr: 'CA',
+        population: 38965193,
+        pork: 4500000000,
+        earmarks: 234,
+        project: 'High-Speed Rail Feasibility Study Study',
+      },
+      {
+        state: 'Colorado',
+        abbr: 'CO',
+        population: 5877610,
+        pork: 823000000,
+        earmarks: 44,
+        project: 'Rocky Mountain High Altitude Research Retreat',
+      },
+      {
+        state: 'Connecticut',
+        abbr: 'CT',
+        population: 3617176,
+        pork: 456000000,
+        earmarks: 28,
+        project: 'Nutmeg Heritage Trail Renovation',
+      },
+      {
+        state: 'Delaware',
+        abbr: 'DE',
+        population: 1031890,
+        pork: 287000000,
+        earmarks: 19,
+        project: "Biden's Childhood Home Walking Tour Infrastructure",
+      },
+      {
+        state: 'Florida',
+        abbr: 'FL',
+        population: 22610726,
+        pork: 2890000000,
+        earmarks: 178,
+        project: 'Manatee Awareness Awareness Program',
+      },
+      {
+        state: 'Georgia',
+        abbr: 'GA',
+        population: 11029227,
+        pork: 1450000000,
+        earmarks: 87,
+        project: 'Peach Emoji Trademark Defense Fund',
+      },
+      {
+        state: 'Hawaii',
+        abbr: 'HI',
+        population: 1435138,
+        pork: 678000000,
+        earmarks: 38,
+        project: 'Volcanic Activity Observation Luxury Bunker',
+      },
+      {
+        state: 'Idaho',
+        abbr: 'ID',
+        population: 1964726,
+        pork: 412000000,
+        earmarks: 24,
+        project: 'Potato Museum Interactive Experience',
+      },
+      {
+        state: 'Illinois',
+        abbr: 'IL',
+        population: 12549689,
+        pork: 1890000000,
+        earmarks: 112,
+        project: 'Deep Dish vs Thin Crust Resolution Center',
+      },
+      {
+        state: 'Indiana',
+        abbr: 'IN',
+        population: 6862199,
+        pork: 723000000,
+        earmarks: 41,
+        project: 'Indianapolis 500 Pace Car Storage Facility',
+      },
+      {
+        state: 'Iowa',
+        abbr: 'IA',
+        population: 3207004,
+        pork: 534000000,
+        earmarks: 33,
+        project: 'Corn Maze Emergency Response Training',
+      },
+      {
+        state: 'Kansas',
+        abbr: 'KS',
+        population: 2940546,
+        pork: 489000000,
+        earmarks: 29,
+        project: 'Wizard of Oz Yellow Brick Road Restoration',
+      },
+      {
+        state: 'Kentucky',
+        abbr: 'KY',
+        population: 4526154,
+        pork: 612000000,
+        earmarks: 36,
+        project: 'Bourbon Trail Designated Driver Program',
+      },
+      {
+        state: 'Louisiana',
+        abbr: 'LA',
+        population: 4573749,
+        pork: 1120000000,
+        earmarks: 67,
+        project: 'Mardi Gras Bead Recycling Initiative',
+      },
+      {
+        state: 'Maine',
+        abbr: 'ME',
+        population: 1395722,
+        pork: 345000000,
+        earmarks: 22,
+        project: 'Lobster Roll Quality Assurance Laboratory',
+      },
+      {
+        state: 'Maryland',
+        abbr: 'MD',
+        population: 6180253,
+        pork: 987000000,
+        earmarks: 58,
+        project: 'Old Bay Seasoning Historical Archive',
+      },
+      {
+        state: 'Massachusetts',
+        abbr: 'MA',
+        population: 7001399,
+        pork: 1230000000,
+        earmarks: 71,
+        project: 'Boston Accent Preservation Society',
+      },
+      {
+        state: 'Michigan',
+        abbr: 'MI',
+        population: 10037261,
+        pork: 1340000000,
+        earmarks: 79,
+        project: 'Great Lakes Freshwater Superiority Study',
+      },
+      {
+        state: 'Minnesota',
+        abbr: 'MN',
+        population: 5737915,
+        pork: 756000000,
+        earmarks: 43,
+        project: 'Minnesota Nice Interpersonal Relations Institute',
+      },
+      {
+        state: 'Mississippi',
+        abbr: 'MS',
+        population: 2939690,
+        pork: 678000000,
+        earmarks: 39,
+        project: 'Blues Highway Juke Joint Preservation',
+      },
+      {
+        state: 'Missouri',
+        abbr: 'MO',
+        population: 6196156,
+        pork: 834000000,
+        earmarks: 48,
+        project: 'Gateway Arch Slight Tilt Monitoring System',
+      },
+      {
+        state: 'Montana',
+        abbr: 'MT',
+        population: 1132812,
+        pork: 456000000,
+        earmarks: 27,
+        project: 'Big Sky Even Bigger Sky Research Grant',
+      },
+      {
+        state: 'Nebraska',
+        abbr: 'NE',
+        population: 1978379,
+        pork: 398000000,
+        earmarks: 23,
+        project: 'Cornhusker Rivalry Preparedness Center',
+      },
+      {
+        state: 'Nevada',
+        abbr: 'NV',
+        population: 3194176,
+        pork: 1560000000,
+        earmarks: 89,
+        project: 'What Happens in Vegas Economic Impact Study',
+      },
+      {
+        state: 'New Hampshire',
+        abbr: 'NH',
+        population: 1402054,
+        pork: 312000000,
+        earmarks: 18,
+        project: 'Live Free or Die Motivational Speaker Program',
+      },
+      {
+        state: 'New Jersey',
+        abbr: 'NJ',
+        population: 9290841,
+        pork: 1780000000,
+        earmarks: 104,
+        project: 'Jughandle Turn Optimization Initiative',
+      },
+      {
+        state: 'New Mexico',
+        abbr: 'NM',
+        population: 2114371,
+        pork: 534000000,
+        earmarks: 32,
+        project: 'Alien Landing Site Tourism Infrastructure',
+      },
+      {
+        state: 'New York',
+        abbr: 'NY',
+        population: 19571216,
+        pork: 3450000000,
+        earmarks: 198,
+        project: 'Subway Delay Excuse Generator Upgrade',
+      },
+      {
+        state: 'North Carolina',
+        abbr: 'NC',
+        population: 10835491,
+        pork: 1290000000,
+        earmarks: 76,
+        project: 'BBQ Vinegar vs Tomato Peace Accord Facility',
+      },
+      {
+        state: 'North Dakota',
+        abbr: 'ND',
+        population: 783926,
+        pork: 387000000,
+        earmarks: 21,
+        project: 'Fargo Accent Documentation Project',
+      },
+      {
+        state: 'Ohio',
+        abbr: 'OH',
+        population: 11785935,
+        pork: 1450000000,
+        earmarks: 85,
+        project: 'Astronaut Per Capita Superiority Research',
+      },
+      {
+        state: 'Oklahoma',
+        abbr: 'OK',
+        population: 4053824,
+        pork: 623000000,
+        earmarks: 37,
+        project: 'Sooner vs Later Procrastination Studies',
+      },
+      {
+        state: 'Oregon',
+        abbr: 'OR',
+        population: 4233358,
+        pork: 712000000,
+        earmarks: 42,
+        project: 'Artisanal Rain Collection Facility',
+      },
+      {
+        state: 'Pennsylvania',
+        abbr: 'PA',
+        population: 12961683,
+        pork: 1670000000,
+        earmarks: 98,
+        project: 'Cheesesteak Authenticity Certification Board',
+      },
+      {
+        state: 'Rhode Island',
+        abbr: 'RI',
+        population: 1095962,
+        pork: 234000000,
+        earmarks: 16,
+        project: 'Smallest State Biggest Heart Marketing Campaign',
+      },
+      {
+        state: 'South Carolina',
+        abbr: 'SC',
+        population: 5373555,
+        pork: 789000000,
+        earmarks: 46,
+        project: 'Palmetto Bug Rebranding Initiative',
+      },
+      {
+        state: 'South Dakota',
+        abbr: 'SD',
+        population: 919318,
+        pork: 423000000,
+        earmarks: 25,
+        project: 'Mount Rushmore Fifth Face Feasibility Study',
+      },
+      {
+        state: 'Tennessee',
+        abbr: 'TN',
+        population: 7126489,
+        pork: 934000000,
+        earmarks: 54,
+        project: 'Nashville Bachelorette Party Traffic Study',
+      },
+      {
+        state: 'Texas',
+        abbr: 'TX',
+        population: 30503301,
+        pork: 3560000000,
+        earmarks: 212,
+        project: 'Border Wall Gift Shop',
+      },
+      {
+        state: 'Utah',
+        abbr: 'UT',
+        population: 3417734,
+        pork: 567000000,
+        earmarks: 34,
+        project: 'Greatest Snow on Earth Trademark Defense',
+      },
+      {
+        state: 'Vermont',
+        abbr: 'VT',
+        population: 647464,
+        pork: 298000000,
+        earmarks: 17,
+        project: 'Bernie Sanders Mittens Memorial',
+      },
+      {
+        state: 'Virginia',
+        abbr: 'VA',
+        population: 8683619,
+        pork: 2340000000,
+        earmarks: 145,
+        project: 'Virginia is for Lovers Rebranding Committee',
+      },
+      {
+        state: 'Washington',
+        abbr: 'WA',
+        population: 7812880,
+        pork: 1120000000,
+        earmarks: 65,
+        project: 'Rain Shadow Appreciation Observatory',
+      },
+      {
+        state: 'West Virginia',
+        abbr: 'WV',
+        population: 1770071,
+        pork: 2870000000,
+        earmarks: 167,
+        project: 'Robert Byrd Highway to More Robert Byrd Highways',
+      },
+      {
+        state: 'Wisconsin',
+        abbr: 'WI',
+        population: 5910955,
+        pork: 823000000,
+        earmarks: 49,
+        project: 'Cheese Curd Squeakiness Standards Lab',
+      },
+      {
+        state: 'Wyoming',
+        abbr: 'WY',
+        population: 584057,
+        pork: 312000000,
+        earmarks: 20,
+        project: 'Yellowstone Supervolcano Denial Program',
+      },
+    ].map((s) => ({ ...s, perCapita: s.pork / s.population }));
 
     const formatCurrency = (num) => {
       if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
@@ -343,177 +1089,183 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
 
     const formatPerCapita = (num) => `$${num.toFixed(2)}`;
 
-	    const iconSvgs = {
-	      trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
-	      medal: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="m13 12 5.88-9.8"/><path d="M8 7h8"/><circle cx="12" cy="17" r="5"/><path d="M12 18v-2h-.5"/></svg>`,
-	      award: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-700"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
-	    };
+    const iconSvgs = {
+      trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
+      medal: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="m13 12 5.88-9.8"/><path d="M8 7h8"/><circle cx="12" cy="17" r="5"/><path d="M12 18v-2h-.5"/></svg>`,
+      award: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-700"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
+    };
 
-	    const svgParser = new DOMParser();
-	    const iconTemplates = Object.fromEntries(
-	      Object.entries(iconSvgs).map(([key, svg]) => {
-	        const parsed = svgParser.parseFromString(svg, 'image/svg+xml');
-	        return [key, parsed.documentElement];
-	      })
-	    );
+    const svgParser = new DOMParser();
+    const iconTemplates = Object.fromEntries(
+      Object.entries(iconSvgs).map(([key, svg]) => {
+        const parsed = svgParser.parseFromString(svg, 'image/svg+xml');
+        return [key, parsed.documentElement];
+      }),
+    );
 
-	    function cloneIcon(name) {
-	      const template = iconTemplates[name];
-	      if (!template || template.nodeName.toLowerCase() !== 'svg') return null;
-	      return template.cloneNode(true);
-	    }
+    function cloneIcon(name) {
+      const template = iconTemplates[name];
+      if (!template || template.nodeName.toLowerCase() !== 'svg') return null;
+      return template.cloneNode(true);
+    }
 
-	    const sortFunctions = {
-	      total: (a, b) => b.pork - a.pork,
-	      percapita: (a, b) => b.perCapita - a.perCapita,
-	      earmarks: (a, b) => b.earmarks - a.earmarks,
+    const sortFunctions = {
+      total: (a, b) => b.pork - a.pork,
+      percapita: (a, b) => b.perCapita - a.perCapita,
+      earmarks: (a, b) => b.earmarks - a.earmarks,
       alpha: (a, b) => a.state.localeCompare(b.state),
     };
 
-	    function renderTable(data) {
-	      const tbody = document.getElementById('table-body');
-	      const cards = document.getElementById('mobile-cards');
-	      if (!tbody || !cards) return;
+    function renderTable(data) {
+      const tbody = document.getElementById('table-body');
+      const cards = document.getElementById('mobile-cards');
+      if (!tbody || !cards) return;
 
-	      // Assign ranks based on current sort
-	      const rankedData = data.map((s, i) => ({ ...s, rank: i + 1 }));
+      // Assign ranks based on current sort
+      const rankedData = data.map((s, i) => ({ ...s, rank: i + 1 }));
 
-	      tbody.replaceChildren();
-	      cards.replaceChildren();
+      tbody.replaceChildren();
+      cards.replaceChildren();
 
-	      rankedData.forEach((state) => {
-	        const rowBg = state.rank <= 3 ? 'bg-gold-100' : state.rank <= 10 ? 'bg-cream-200' : 'bg-cream-100';
+      rankedData.forEach((state) => {
+        const rowBg =
+          state.rank <= 3 ? 'bg-gold-100' : state.rank <= 10 ? 'bg-cream-200' : 'bg-cream-100';
 
-	        const tr = document.createElement('tr');
-	        tr.className = `border-b border-gold-200 hover:bg-gold-100 transition-colors ${rowBg}`;
-	        tr.dataset.state = state.state.toLowerCase();
+        const tr = document.createElement('tr');
+        tr.className = `border-b border-gold-200 hover:bg-gold-100 transition-colors ${rowBg}`;
+        tr.dataset.state = state.state.toLowerCase();
 
-	        const tdRank = document.createElement('td');
-	        tdRank.className = 'px-4 py-4 font-mono text-navy-800';
+        const tdRank = document.createElement('td');
+        tdRank.className = 'px-4 py-4 font-mono text-navy-800';
 
-	        const addMedal = (iconName, title) => {
-	          const icon = cloneIcon(iconName);
-	          if (!icon) return;
-	          const wrap = document.createElement('span');
-	          wrap.className = 'inline-flex items-center mr-1';
-	          wrap.title = title;
-	          wrap.appendChild(icon);
-	          tdRank.appendChild(wrap);
-	        };
+        const addMedal = (iconName, title) => {
+          const icon = cloneIcon(iconName);
+          if (!icon) return;
+          const wrap = document.createElement('span');
+          wrap.className = 'inline-flex items-center mr-1';
+          wrap.title = title;
+          wrap.appendChild(icon);
+          tdRank.appendChild(wrap);
+        };
 
-	        if (state.rank === 1) addMedal('trophy', 'Gold Medal');
-	        if (state.rank === 2) addMedal('medal', 'Silver Medal');
-	        if (state.rank === 3) addMedal('award', 'Bronze Medal');
-	        if (state.rank > 3) {
-	          const span = document.createElement('span');
-	          span.className = 'text-lg font-bold';
-	          span.textContent = String(state.rank);
-	          tdRank.appendChild(span);
-	        }
+        if (state.rank === 1) addMedal('trophy', 'Gold Medal');
+        if (state.rank === 2) addMedal('medal', 'Silver Medal');
+        if (state.rank === 3) addMedal('award', 'Bronze Medal');
+        if (state.rank > 3) {
+          const span = document.createElement('span');
+          span.className = 'text-lg font-bold';
+          span.textContent = String(state.rank);
+          tdRank.appendChild(span);
+        }
 
-	        const tdState = document.createElement('td');
-	        tdState.className = 'px-4 py-4';
-	        const stateName = document.createElement('span');
-	        stateName.className = 'font-serif font-bold text-navy-900';
-	        stateName.textContent = state.state;
-	        const stateAbbr = document.createElement('span');
-	        stateAbbr.className = 'text-navy-500 ml-2 text-sm';
-	        stateAbbr.textContent = `(${state.abbr})`;
-	        tdState.append(stateName, stateAbbr);
+        const tdState = document.createElement('td');
+        tdState.className = 'px-4 py-4';
+        const stateName = document.createElement('span');
+        stateName.className = 'font-serif font-bold text-navy-900';
+        stateName.textContent = state.state;
+        const stateAbbr = document.createElement('span');
+        stateAbbr.className = 'text-navy-500 ml-2 text-sm';
+        stateAbbr.textContent = `(${state.abbr})`;
+        tdState.append(stateName, stateAbbr);
 
-	        const tdPork = document.createElement('td');
-	        tdPork.className = 'px-4 py-4 text-right font-mono text-navy-800 font-bold';
-	        tdPork.textContent = formatCurrency(state.pork);
+        const tdPork = document.createElement('td');
+        tdPork.className = 'px-4 py-4 text-right font-mono text-navy-800 font-bold';
+        tdPork.textContent = formatCurrency(state.pork);
 
-	        const tdPerCapita = document.createElement('td');
-	        tdPerCapita.className = 'px-4 py-4 text-right font-mono text-navy-700';
-	        tdPerCapita.textContent = formatPerCapita(state.perCapita);
+        const tdPerCapita = document.createElement('td');
+        tdPerCapita.className = 'px-4 py-4 text-right font-mono text-navy-700';
+        tdPerCapita.textContent = formatPerCapita(state.perCapita);
 
-	        const tdEarmarks = document.createElement('td');
-	        tdEarmarks.className = 'px-4 py-4 text-right font-mono text-navy-700';
-	        tdEarmarks.textContent = String(state.earmarks);
+        const tdEarmarks = document.createElement('td');
+        tdEarmarks.className = 'px-4 py-4 text-right font-mono text-navy-700';
+        tdEarmarks.textContent = String(state.earmarks);
 
-	        const tdProject = document.createElement('td');
-	        tdProject.className = 'px-4 py-4 text-sm text-navy-600 italic max-w-xs truncate';
-	        tdProject.title = state.project;
-	        tdProject.textContent = state.project;
+        const tdProject = document.createElement('td');
+        tdProject.className = 'px-4 py-4 text-sm text-navy-600 italic max-w-xs truncate';
+        tdProject.title = state.project;
+        tdProject.textContent = state.project;
 
-	        tr.append(tdRank, tdState, tdPork, tdPerCapita, tdEarmarks, tdProject);
-	        tbody.appendChild(tr);
+        tr.append(tdRank, tdState, tdPork, tdPerCapita, tdEarmarks, tdProject);
+        tbody.appendChild(tr);
 
-	        const cardBorder = state.rank <= 3 ? 'border-gold-500 bg-gold-100' : state.rank <= 10 ? 'border-gold-300 bg-cream-200' : 'border-gold-200 bg-cream-100';
+        const cardBorder =
+          state.rank <= 3
+            ? 'border-gold-500 bg-gold-100'
+            : state.rank <= 10
+              ? 'border-gold-300 bg-cream-200'
+              : 'border-gold-200 bg-cream-100';
 
-	        const card = document.createElement('div');
-	        card.className = `rounded-lg p-4 border ${cardBorder}`;
-	        card.dataset.state = state.state.toLowerCase();
+        const card = document.createElement('div');
+        card.className = `rounded-lg p-4 border ${cardBorder}`;
+        card.dataset.state = state.state.toLowerCase();
 
-	        const header = document.createElement('div');
-	        header.className = 'flex items-center justify-between mb-3';
+        const header = document.createElement('div');
+        header.className = 'flex items-center justify-between mb-3';
 
-	        const left = document.createElement('div');
-	        left.className = 'flex items-center gap-2';
+        const left = document.createElement('div');
+        left.className = 'flex items-center gap-2';
 
-	        if (state.rank === 1) {
-	          const icon = cloneIcon('trophy');
-	          if (icon) left.appendChild(icon);
-	        } else if (state.rank === 2) {
-	          const icon = cloneIcon('medal');
-	          if (icon) left.appendChild(icon);
-	        } else if (state.rank === 3) {
-	          const icon = cloneIcon('award');
-	          if (icon) left.appendChild(icon);
-	        } else {
-	          const rank = document.createElement('span');
-	          rank.className = 'font-mono text-lg font-bold text-navy-600';
-	          rank.textContent = `#${state.rank}`;
-	          left.appendChild(rank);
-	        }
+        if (state.rank === 1) {
+          const icon = cloneIcon('trophy');
+          if (icon) left.appendChild(icon);
+        } else if (state.rank === 2) {
+          const icon = cloneIcon('medal');
+          if (icon) left.appendChild(icon);
+        } else if (state.rank === 3) {
+          const icon = cloneIcon('award');
+          if (icon) left.appendChild(icon);
+        } else {
+          const rank = document.createElement('span');
+          rank.className = 'font-mono text-lg font-bold text-navy-600';
+          rank.textContent = `#${state.rank}`;
+          left.appendChild(rank);
+        }
 
-	        const stateLabel = document.createElement('span');
-	        stateLabel.className = 'font-serif text-lg font-bold text-navy-900';
-	        stateLabel.textContent = state.state;
-	        left.appendChild(stateLabel);
+        const stateLabel = document.createElement('span');
+        stateLabel.className = 'font-serif text-lg font-bold text-navy-900';
+        stateLabel.textContent = state.state;
+        left.appendChild(stateLabel);
 
-	        const amount = document.createElement('span');
-	        amount.className = 'font-mono text-lg font-bold text-navy-800';
-	        amount.textContent = formatCurrency(state.pork);
+        const amount = document.createElement('span');
+        amount.className = 'font-mono text-lg font-bold text-navy-800';
+        amount.textContent = formatCurrency(state.pork);
 
-	        header.append(left, amount);
+        header.append(left, amount);
 
-	        const grid2 = document.createElement('div');
-	        grid2.className = 'grid grid-cols-2 gap-2 text-sm mb-3';
+        const grid2 = document.createElement('div');
+        grid2.className = 'grid grid-cols-2 gap-2 text-sm mb-3';
 
-	        const perCap = document.createElement('div');
-	        const perCapLabel = document.createElement('span');
-	        perCapLabel.className = 'text-navy-500';
-	        perCapLabel.textContent = 'Per Capita:';
-	        const perCapValue = document.createElement('span');
-	        perCapValue.className = 'font-mono text-navy-700 ml-1';
-	        perCapValue.textContent = formatPerCapita(state.perCapita);
-	        perCap.append(perCapLabel, perCapValue);
+        const perCap = document.createElement('div');
+        const perCapLabel = document.createElement('span');
+        perCapLabel.className = 'text-navy-500';
+        perCapLabel.textContent = 'Per Capita:';
+        const perCapValue = document.createElement('span');
+        perCapValue.className = 'font-mono text-navy-700 ml-1';
+        perCapValue.textContent = formatPerCapita(state.perCapita);
+        perCap.append(perCapLabel, perCapValue);
 
-	        const ear = document.createElement('div');
-	        const earLabel = document.createElement('span');
-	        earLabel.className = 'text-navy-500';
-	        earLabel.textContent = 'Earmarks:';
-	        const earValue = document.createElement('span');
-	        earValue.className = 'font-mono text-navy-700 ml-1';
-	        earValue.textContent = String(state.earmarks);
-	        ear.append(earLabel, earValue);
+        const ear = document.createElement('div');
+        const earLabel = document.createElement('span');
+        earLabel.className = 'text-navy-500';
+        earLabel.textContent = 'Earmarks:';
+        const earValue = document.createElement('span');
+        earValue.className = 'font-mono text-navy-700 ml-1';
+        earValue.textContent = String(state.earmarks);
+        ear.append(earLabel, earValue);
 
-	        grid2.append(perCap, ear);
+        grid2.append(perCap, ear);
 
-	        const sig = document.createElement('div');
-	        sig.className = 'text-sm text-navy-600 italic border-t border-gold-200 pt-2';
-	        const sigLabel = document.createElement('span');
-	        sigLabel.className = 'text-navy-500 not-italic';
-	        sigLabel.textContent = 'Signature Project:';
-	        sig.append(sigLabel, document.createTextNode(` ${state.project}`));
+        const sig = document.createElement('div');
+        sig.className = 'text-sm text-navy-600 italic border-t border-gold-200 pt-2';
+        const sigLabel = document.createElement('span');
+        sigLabel.className = 'text-navy-500 not-italic';
+        sigLabel.textContent = 'Signature Project:';
+        sig.append(sigLabel, document.createTextNode(` ${state.project}`));
 
-	        card.append(header, grid2, sig);
-	        cards.appendChild(card);
-	      });
-	    }
+        card.append(header, grid2, sig);
+        cards.appendChild(card);
+      });
+    }
 
     function filterAndSort() {
       const sortBy = document.getElementById('sort-select').value;
@@ -521,9 +1273,9 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
 
       let filtered = stateData;
       if (searchTerm) {
-        filtered = stateData.filter(s =>
-          s.state.toLowerCase().includes(searchTerm) ||
-          s.abbr.toLowerCase().includes(searchTerm)
+        filtered = stateData.filter(
+          (s) =>
+            s.state.toLowerCase().includes(searchTerm) || s.abbr.toLowerCase().includes(searchTerm),
         );
       }
 
@@ -532,7 +1284,9 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
 
       // Highlight matching state
       if (searchTerm && filtered.length > 0) {
-        const firstMatch = document.querySelector(`[data-state="${filtered[0].state.toLowerCase()}"]`);
+        const firstMatch = document.querySelector(
+          `[data-state="${filtered[0].state.toLowerCase()}"]`,
+        );
         if (firstMatch) {
           firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
           firstMatch.classList.add('ring-2', 'ring-gold-500');

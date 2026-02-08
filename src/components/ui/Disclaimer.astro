@@ -10,29 +10,52 @@ interface Props {
 const { context = 'footer' } = Astro.props;
 ---
 
-{context === 'footer' && (
-  <div class="bg-navy-800/50 border-t border-navy-700 py-4 px-4">
-    <div class="max-w-4xl mx-auto">
-      <p class="text-xs text-navy-400 leading-relaxed text-center">
-        <strong class="text-navy-300">Disclaimer:</strong> AbsurdityIndex.org is a satirical and editorial commentary site.
-        Real bill data is sourced from publicly available congressional records and may not reflect the latest amendments or status changes.
-        Bill summaries, absurdity scores, and editorial descriptions represent the opinions of this site's authors, not statements of fact about any legislator's intent or character.
-        All information about real legislation should be verified at <a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer" class="underline hover:text-gold-400 transition-colors">Congress.gov</a>.
-        No endorsement or defamation of any public official is intended.
-        See our <a href="/privacy" class="underline hover:text-gold-400 transition-colors">Privacy Policy</a>.
+{
+  context === 'footer' && (
+    <div class="bg-navy-800/50 border-t border-navy-700 py-4 px-4">
+      <div class="max-w-4xl mx-auto">
+        <p class="text-xs text-navy-400 leading-relaxed text-center">
+          <strong class="text-navy-300">Disclaimer:</strong> AbsurdityIndex.org is a satirical and
+          editorial commentary site. Real bill data is sourced from publicly available congressional
+          records and may not reflect the latest amendments or status changes. Bill summaries,
+          absurdity scores, and editorial descriptions represent the opinions of this site's
+          authors, not statements of fact about any legislator's intent or character. All
+          information about real legislation should be verified at{' '}
+          <a
+            href="https://www.congress.gov"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline hover:text-gold-400 transition-colors"
+          >
+            Congress.gov
+          </a>
+          . No endorsement or defamation of any public official is intended. See our{' '}
+          <a href="/privacy" class="underline hover:text-gold-400 transition-colors">
+            Privacy Policy
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  )
+}
+
+{
+  context === 'bill-detail' && (
+    <div class="bg-cream-200 border border-gold-300 rounded p-4 mt-6 text-xs text-navy-600 leading-relaxed">
+      <p>
+        <strong>Note:</strong> This page contains editorial commentary. Bill data is sourced from
+        public congressional records and may not be fully current. Absurdity scores are subjective
+        editorial ratings.
+        <a
+          href="https://www.congress.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline hover:text-navy-800 transition-colors"
+        >
+          Verify at Congress.gov &rarr;
+        </a>
       </p>
     </div>
-  </div>
-)}
-
-{context === 'bill-detail' && (
-  <div class="bg-cream-200 border border-gold-300 rounded p-4 mt-6 text-xs text-navy-600 leading-relaxed">
-    <p>
-      <strong>Note:</strong> This page contains editorial commentary. Bill data is sourced from public congressional records
-      and may not be fully current. Absurdity scores are subjective editorial ratings.
-      <a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer" class="underline hover:text-navy-800 transition-colors">
-        Verify at Congress.gov &rarr;
-      </a>
-    </p>
-  </div>
-)}
+  )
+}

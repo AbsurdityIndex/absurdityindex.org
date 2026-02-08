@@ -13,7 +13,8 @@ const COST_PER_HOUR = 79158;
 function estimateHours(status: string): number {
   const s = status.toLowerCase();
   if (s.includes('signed into law') || s.includes('became law')) return 24;
-  if (s.includes('passed house') || s.includes('passed senate') || s.includes('passed both')) return 16;
+  if (s.includes('passed house') || s.includes('passed senate') || s.includes('passed both'))
+    return 16;
   if (s.includes('reported')) return 8;
   if (s.includes('died')) return 4;
   return 2; // referred to committee or introduced
@@ -21,7 +22,11 @@ function estimateHours(status: string): number {
 
 const hours = estimateHours(status);
 const cost = hours * COST_PER_HOUR;
-const formatted = cost.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const formatted = cost.toLocaleString('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
 ---
 
 <div class="bg-cream-100 border border-gold-300 rounded-lg p-5 h-full">
@@ -39,6 +44,7 @@ const formatted = cost.toLocaleString('en-US', { style: 'currency', currency: 'U
     (535 members × $174k salary ÷ 147 session days ÷ 8 hours)
   </p>
   <p class="text-xs text-navy-400 italic mt-3 pt-3 border-t border-gold-200">
-    Simplified estimate based on salary costs only. Actual costs include staff, facilities, and lost productivity.
+    Simplified estimate based on salary costs only. Actual costs include staff, facilities, and lost
+    productivity.
   </p>
 </div>

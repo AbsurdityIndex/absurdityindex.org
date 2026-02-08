@@ -21,13 +21,15 @@ interface Props {
 const { title, billNumber, billType, readingTimeContent } = Astro.props;
 
 // Determine the chamber text based on bill type
-const chamberText = billType === 'real'
-  ? 'In the Congress of the United States'
-  : 'In the Absurdity Index of the United States';
+const chamberText =
+  billType === 'real'
+    ? 'In the Congress of the United States'
+    : 'In the Absurdity Index of the United States';
 
-const sessionText = billType === 'real'
-  ? '119th Congress — 1st Session'
-  : '119th Absurdity Index — 1st Session of Futility';
+const sessionText =
+  billType === 'real'
+    ? '119th Congress — 1st Session'
+    : '119th Absurdity Index — 1st Session of Futility';
 ---
 
 <header class="text-center max-w-3xl mx-auto py-10">
@@ -49,11 +51,13 @@ const sessionText = billType === 'real'
     {title}
   </h1>
 
-  {readingTimeContent && (
-    <div class="flex justify-center mb-4">
-      <ReadingTime content={readingTimeContent} />
-    </div>
-  )}
+  {
+    readingTimeContent && (
+      <div class="flex justify-center mb-4">
+        <ReadingTime content={readingTimeContent} />
+      </div>
+    )
+  }
 
   <hr class="gold-rule" />
 </header>

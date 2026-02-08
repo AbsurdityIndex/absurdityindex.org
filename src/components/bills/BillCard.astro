@@ -44,7 +44,10 @@ const formattedDate = new Date(data.dateIntroduced).toLocaleDateString('en-US', 
 });
 
 // Category slug for link
-const categorySlug = data.category.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+const categorySlug = data.category
+  .toLowerCase()
+  .replace(/\s+&\s+/g, '-')
+  .replace(/\s+/g, '-');
 
 function getAbsurdityScoreClasses(score: number): string {
   if (score <= 3) return 'bg-green-100 text-green-800 border-green-200';
@@ -66,88 +69,114 @@ function getAbsurdityScoreClasses(score: number): string {
   ]}
 >
   {/* Top accent bar */}
-  <div class:list={[
-    'h-1',
-    data.featured ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400' : isReal ? 'bg-navy-600' : 'bg-green-600',
-  ]} />
+  <div
+    class:list={[
+      'h-1',
+      data.featured
+        ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400'
+        : isReal
+          ? 'bg-navy-600'
+          : 'bg-green-600',
+    ]}
+  >
+  </div>
 
-  {data.featured && (
-    <div class="absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono">
-      FEATURED
-    </div>
-  )}
+  {
+    data.featured && (
+      <div class="absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono">
+        FEATURED
+      </div>
+    )
+  }
 
   <div class:list={['p-4 min-[375px]:p-5', isRealGridCard && 'space-y-0.5']}>
     {/* Header row: badges */}
     <div class="mb-2 flex items-center justify-between gap-2">
       <BillNumberBadge billNumber={data.billNumber} />
-      {isRealGridCard && data.absurdityIndex ? (
-        <span class:list={[
-          'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-mono font-bold min-[375px]:text-xs',
-          getAbsurdityScoreClasses(data.absurdityIndex),
-        ]}>
-          <Icon name="zap" size={11} />
-          {data.absurdityIndex}/10
-        </span>
-      ) : (
-        <BillTypeBadge billType={data.billType} />
-      )}
+      {
+        isRealGridCard && data.absurdityIndex ? (
+          <span
+            class:list={[
+              'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-mono font-bold min-[375px]:text-xs',
+              getAbsurdityScoreClasses(data.absurdityIndex),
+            ]}
+          >
+            <Icon name="zap" size={11} />
+            {data.absurdityIndex}/10
+          </span>
+        ) : (
+          <BillTypeBadge billType={data.billType} />
+        )
+      }
     </div>
 
     {/* Status badge */}
-    {isReal && (
-      <div class="mb-2.5 min-[375px]:mb-3">
-        <BillStageBadge status={data.status} size="sm" />
-      </div>
-    )}
+    {
+      isReal && (
+        <div class="mb-2.5 min-[375px]:mb-3">
+          <BillStageBadge status={data.status} size="sm" />
+        </div>
+      )
+    }
 
     {/* Title */}
-    <h3 class:list={[
-      'mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700',
-      isRealGridCard
-        ? 'text-[1.06rem] min-[375px]:text-lg min-[430px]:text-xl'
-        : 'text-[1.04rem] min-[375px]:text-lg',
-    ]}>
-      <a
-        href={detailHref}
-        class="after:absolute after:inset-0"
-      >
+    <h3
+      class:list={[
+        'mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700',
+        isRealGridCard
+          ? 'text-[1.06rem] min-[375px]:text-lg min-[430px]:text-xl'
+          : 'text-[1.04rem] min-[375px]:text-lg',
+      ]}
+    >
+      <a href={detailHref} class="after:absolute after:inset-0">
         {data.title}
       </a>
     </h3>
 
     {/* Summary */}
-    <p class:list={[
-      'mb-3.5 text-[13px] leading-relaxed text-navy-600 min-[375px]:mb-4 min-[375px]:text-sm',
-      isRealGridCard ? 'line-clamp-3' : 'line-clamp-2',
-    ]}>
+    <p
+      class:list={[
+        'mb-3.5 text-[13px] leading-relaxed text-navy-600 min-[375px]:mb-4 min-[375px]:text-sm',
+        isRealGridCard ? 'line-clamp-3' : 'line-clamp-2',
+      ]}
+    >
       {data.summary}
     </p>
 
     {/* Absurdity meter for real bills */}
-    {isReal && data.absurdityIndex && (
-      <div class="mb-3.5 min-[375px]:mb-4">
-        <AbsurdityMeter score={data.absurdityIndex} compact />
-      </div>
-    )}
+    {
+      isReal && data.absurdityIndex && (
+        <div class="mb-3.5 min-[375px]:mb-4">
+          <AbsurdityMeter score={data.absurdityIndex} compact />
+        </div>
+      )
+    }
 
     {/* Footer */}
     <div class="space-y-2 border-t border-cream-200 pt-2.5 min-[375px]:pt-3">
       {/* Sponsor row */}
       <div class="flex items-center gap-2 text-[13px] min-[375px]:text-sm">
-        <div class="w-5 h-5 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0">
+        <div
+          class="w-5 h-5 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0"
+        >
           <Icon name="user" size={12} class="text-navy-600" />
         </div>
         <span class="text-navy-700 font-medium truncate" title={data.sponsor}>
           {sponsorName}
         </span>
-        {sponsorParty && (
-          <span class="text-[11px] text-navy-500 font-mono flex-shrink-0 min-[375px]:text-xs">({sponsorParty})</span>
-        )}
+        {
+          sponsorParty && (
+            <span class="text-[11px] text-navy-500 font-mono flex-shrink-0 min-[375px]:text-xs">
+              ({sponsorParty})
+            </span>
+          )
+        }
       </div>
 
       {/* Category and date row */}
-      <div class="flex flex-col items-start gap-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
+      <div
+        class="flex flex-col items-start gap-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between"
+      >
         <a
           href={`/category/${categorySlug}`}
           class="relative z-10 inline-flex items-center gap-1 rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-xs"

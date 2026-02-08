@@ -17,30 +17,24 @@ const numSize = parseInt(size);
   aria-label="Official Seal of the Absurdity Index of the United States"
 >
   <!-- Outer ring -->
-  <circle cx="100" cy="100" r="96" stroke="#C5A572" stroke-width="3" fill="none" />
-  <circle cx="100" cy="100" r="88" stroke="#C5A572" stroke-width="1.5" fill="none" />
+  <circle cx="100" cy="100" r="96" stroke="#C5A572" stroke-width="3" fill="none"></circle>
+  <circle cx="100" cy="100" r="88" stroke="#C5A572" stroke-width="1.5" fill="none"></circle>
 
   <!-- Stars around border -->
-  {Array.from({ length: 13 }).map((_, i) => {
-    const angle = (i * 360) / 13 - 90;
-    const rad = (angle * Math.PI) / 180;
-    const cx = 100 + 92 * Math.cos(rad);
-    const cy = 100 + 92 * Math.sin(rad);
-    return (
-      <circle cx={cx} cy={cy} r="2.5" fill="#C5A572" />
-    );
-  })}
+  {
+    Array.from({ length: 13 }).map((_, i) => {
+      const angle = (i * 360) / 13 - 90;
+      const rad = (angle * Math.PI) / 180;
+      const cx = 100 + 92 * Math.cos(rad);
+      const cy = 100 + 92 * Math.sin(rad);
+      return <circle cx={cx} cy={cy} r="2.5" fill="#C5A572" />;
+    })
+  }
 
   <!-- Circular text path -->
   <defs>
-    <path
-      id="textCircleTop"
-      d="M 100,100 m -72,0 a 72,72 0 1,1 144,0"
-    />
-    <path
-      id="textCircleBottom"
-      d="M 100,100 m 72,0 a 72,72 0 1,1 -144,0"
-    />
+    <path id="textCircleTop" d="M 100,100 m -72,0 a 72,72 0 1,1 144,0"></path>
+    <path id="textCircleBottom" d="M 100,100 m 72,0 a 72,72 0 1,1 -144,0"></path>
   </defs>
 
   <text
@@ -68,25 +62,33 @@ const numSize = parseInt(size);
   </text>
 
   <!-- Inner circle -->
-  <circle cx="100" cy="100" r="55" stroke="#C5A572" stroke-width="1.5" fill="#0A1628" />
+  <circle cx="100" cy="100" r="55" stroke="#C5A572" stroke-width="1.5" fill="#0A1628"></circle>
 
   <!-- Simplified eagle silhouette -->
   <g transform="translate(100,95)" fill="#C5A572">
     <!-- Body -->
-    <ellipse cx="0" cy="5" rx="8" ry="14" />
+    <ellipse cx="0" cy="5" rx="8" ry="14"></ellipse>
     <!-- Head -->
-    <circle cx="0" cy="-14" r="6" />
+    <circle cx="0" cy="-14" r="6"></circle>
     <!-- Beak -->
-    <polygon points="6,-14 10,-16 6,-12" />
+    <polygon points="6,-14 10,-16 6,-12"></polygon>
     <!-- Left wing -->
-    <path d="M -8,-2 Q -30,-15 -35,-5 Q -28,-3 -8,5 Z" />
+    <path d="M -8,-2 Q -30,-15 -35,-5 Q -28,-3 -8,5 Z"></path>
     <!-- Right wing -->
-    <path d="M 8,-2 Q 30,-15 35,-5 Q 28,-3 8,5 Z" />
+    <path d="M 8,-2 Q 30,-15 35,-5 Q 28,-3 8,5 Z"></path>
     <!-- Tail feathers -->
-    <path d="M -6,18 L 0,28 L 6,18 Q 3,22 0,20 Q -3,22 -6,18 Z" />
+    <path d="M -6,18 L 0,28 L 6,18 Q 3,22 0,20 Q -3,22 -6,18 Z"></path>
     <!-- Shield on chest -->
-    <rect x="-4" y="-4" width="8" height="12" rx="1" fill="#0A1628" stroke="#C5A572" stroke-width="0.8" />
-    <line x1="0" y1="-4" x2="0" y2="8" stroke="#C5A572" stroke-width="0.5" />
-    <line x1="-4" y1="1" x2="4" y2="1" stroke="#C5A572" stroke-width="0.5" />
+    <rect
+      x="-4"
+      y="-4"
+      width="8"
+      height="12"
+      rx="1"
+      fill="#0A1628"
+      stroke="#C5A572"
+      stroke-width="0.8"></rect>
+    <line x1="0" y1="-4" x2="0" y2="8" stroke="#C5A572" stroke-width="0.5"></line>
+    <line x1="-4" y1="1" x2="4" y2="1" stroke="#C5A572" stroke-width="0.5"></line>
   </g>
 </svg>

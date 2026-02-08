@@ -16,83 +16,96 @@ const tierRange = tier.range;
 const tierBadge = tier.color.pill;
 ---
 
-{compact ? (
-  <div class="flex items-center gap-2">
-    <span class="text-xs font-sans font-medium text-navy-500">Absurdity</span>
-    <div class="flex gap-0.5 flex-1" role="meter" aria-valuenow={clampedScore} aria-valuemin={1} aria-valuemax={10} aria-label={`Absurdity Index: ${clampedScore} out of 10`}>
-      {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
-        <div
-          class:list={[
-            'h-2 rounded-sm flex-1',
-            seg <= clampedScore ? getSegmentColor(seg) : 'bg-cream-200',
-          ]}
-        />
-      ))}
+{
+  compact ? (
+    <div class="flex items-center gap-2">
+      <span class="text-xs font-sans font-medium text-navy-500">Absurdity</span>
+      <div
+        class="flex gap-0.5 flex-1"
+        role="meter"
+        aria-valuenow={clampedScore}
+        aria-valuemin={1}
+        aria-valuemax={10}
+        aria-label={`Absurdity Index: ${clampedScore} out of 10`}
+      >
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
+          <div
+            class:list={[
+              'h-2 rounded-sm flex-1',
+              seg <= clampedScore ? getSegmentColor(seg) : 'bg-cream-200',
+            ]}
+          />
+        ))}
+      </div>
+      <span
+        class:list={['font-mono text-xs font-bold px-1.5 py-0.5 rounded border', tier.color.badge]}
+      >
+        {clampedScore}
+      </span>
     </div>
-    <span class:list={[
-      'font-mono text-xs font-bold px-1.5 py-0.5 rounded border',
-      tier.color.badge
-    ]}>
-      {clampedScore}
-    </span>
-  </div>
-) : (
-  <div class="absurdity-meter bg-cream-100 border border-gold-300 rounded-lg p-5">
-    {/* Header row */}
-    <div class="flex items-center justify-between mb-3">
-      <div class="flex items-center gap-2">
-        <div class="w-6 h-6 rounded-full bg-gold-100 flex items-center justify-center">
-          <Icon name="zap" size={14} class="text-gold-700" />
+  ) : (
+    <div class="absurdity-meter bg-cream-100 border border-gold-300 rounded-lg p-5">
+      {/* Header row */}
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-full bg-gold-100 flex items-center justify-center">
+            <Icon name="zap" size={14} class="text-gold-700" />
+          </div>
+          <span class="text-sm font-sans font-semibold text-navy-800">Absurdity Index</span>
+          <button
+            type="button"
+            class="absurdity-help-trigger w-6 h-6 rounded-full bg-cream-200 hover:bg-cream-300 flex items-center justify-center transition-colors"
+            aria-label="What is the Absurdity Index?"
+            title="What is this?"
+          >
+            <Icon name="help-circle" size={14} class="text-navy-500" />
+          </button>
         </div>
-        <span class="text-sm font-sans font-semibold text-navy-800">
-          Absurdity Index
-        </span>
-        <button
-          type="button"
-          class="absurdity-help-trigger w-6 h-6 rounded-full bg-cream-200 hover:bg-cream-300 flex items-center justify-center transition-colors"
-          aria-label="What is the Absurdity Index?"
-          title="What is this?"
-        >
-          <Icon name="help-circle" size={14} class="text-navy-500" />
-        </button>
+        <div class="flex items-baseline gap-1">
+          <span class="font-mono text-2xl font-bold text-navy-900">{clampedScore}</span>
+          <span class="font-mono text-sm text-navy-400">/10</span>
+        </div>
       </div>
-      <div class="flex items-baseline gap-1">
-        <span class="font-mono text-2xl font-bold text-navy-900">{clampedScore}</span>
-        <span class="font-mono text-sm text-navy-400">/10</span>
-      </div>
-    </div>
 
-    {/* Score bar */}
-    <div class="flex gap-1 mb-3" role="meter" aria-valuenow={clampedScore} aria-valuemin={1} aria-valuemax={10} aria-label={`Absurdity Index: ${clampedScore} out of 10 — ${label}`}>
-      {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
-        <div
+      {/* Score bar */}
+      <div
+        class="flex gap-1 mb-3"
+        role="meter"
+        aria-valuenow={clampedScore}
+        aria-valuemin={1}
+        aria-valuemax={10}
+        aria-label={`Absurdity Index: ${clampedScore} out of 10 — ${label}`}
+      >
+        {Array.from({ length: 10 }, (_, i) => i + 1).map((seg) => (
+          <div
+            class:list={[
+              'h-3 rounded flex-1 transition-all',
+              seg <= clampedScore ? getSegmentColor(seg) : 'bg-cream-200',
+            ]}
+          />
+        ))}
+      </div>
+
+      {/* Tier badge with label - provides immediate context */}
+      <div class="flex items-center justify-center gap-2">
+        <span
           class:list={[
-            'h-3 rounded flex-1 transition-all',
-            seg <= clampedScore ? getSegmentColor(seg) : 'bg-cream-200',
+            'inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-mono font-bold',
+            tierBadge.bg,
+            tierBadge.text,
           ]}
-        />
-      ))}
+        >
+          {tierRange}
+        </span>
+        <span class="text-sm font-serif font-medium text-navy-700">{label}</span>
+      </div>
     </div>
-
-    {/* Tier badge with label - provides immediate context */}
-    <div class="flex items-center justify-center gap-2">
-      <span class:list={[
-        'inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-mono font-bold',
-        tierBadge.bg,
-        tierBadge.text,
-      ]}>
-        {tierRange}
-      </span>
-      <span class="text-sm font-serif font-medium text-navy-700">
-        {label}
-      </span>
-    </div>
-  </div>
-)}
+  )
+}
 
 <script>
   // Open absurdity help drawer when help button is clicked
-  document.querySelectorAll('.absurdity-help-trigger').forEach(btn => {
+  document.querySelectorAll('.absurdity-help-trigger').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.dispatchEvent(new CustomEvent('open-absurdity-help'));
     });

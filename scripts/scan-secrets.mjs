@@ -19,8 +19,20 @@ function detectRepoRoot() {
 const repoRoot = detectRepoRoot();
 
 const SKIP_EXTENSIONS = new Set([
-  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico',
-  '.pdf', '.woff', '.woff2', '.ttf', '.otf', '.zip', '.gz',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.svg',
+  '.ico',
+  '.pdf',
+  '.woff',
+  '.woff2',
+  '.ttf',
+  '.otf',
+  '.zip',
+  '.gz',
 ]);
 
 const ALLOWLIST_MARKERS = ['codex:allow-secret', 'gitleaks:allow'];
@@ -48,14 +60,16 @@ const PATTERNS = [
   },
   {
     name: 'Generic secret assignment',
-    regex: /\b(?:api[_-]?key|token|secret|password|private[_-]?key)\b\s*[:=]\s*["'](?<value>[A-Za-z0-9+/_=.-]{20,})["']/i,
+    regex:
+      /\b(?:api[_-]?key|token|secret|password|private[_-]?key)\b\s*[:=]\s*["'](?<value>[A-Za-z0-9+/_=.-]{20,})["']/i,
     evaluate(match) {
       const value = match.groups?.value ?? '';
       if (!value) return false;
 
       // Skip obvious env references and placeholders.
       if (/^\$?\{?[A-Z0-9_]+\}?$/.test(value)) return false;
-      if (/^(?:your|example|dummy|test|sample|placeholder|changeme)[A-Za-z0-9._-]*$/i.test(value)) return false;
+      if (/^(?:your|example|dummy|test|sample|placeholder|changeme)[A-Za-z0-9._-]*$/i.test(value))
+        return false;
 
       return true;
     },
@@ -134,7 +148,9 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`Secret scan passed: ${files.length} tracked files checked, no potential secrets detected.`);
+  console.log(
+    `Secret scan passed: ${files.length} tracked files checked, no potential secrets detected.`,
+  );
 }
 
 main();

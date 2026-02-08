@@ -17,30 +17,38 @@ for (const bill of bills) {
 // Build sponsor stats sorted by bill count descending
 const sponsors = Array.from(sponsorMap.entries())
   .map(([sponsor, sponsorBills]) => {
-    const realBills = sponsorBills.filter(b => b.data.billType === 'real');
+    const realBills = sponsorBills.filter((b) => b.data.billType === 'real');
     const absurdityScores = realBills
-      .map(b => b.data.absurdityIndex)
+      .map((b) => b.data.absurdityIndex)
       .filter((s): s is number => s != null);
-    const avgAbsurdity = absurdityScores.length > 0
-      ? (absurdityScores.reduce((a, b) => a + b, 0) / absurdityScores.length).toFixed(1)
-      : null;
+    const avgAbsurdity =
+      absurdityScores.length > 0
+        ? (absurdityScores.reduce((a, b) => a + b, 0) / absurdityScores.length).toFixed(1)
+        : null;
 
     const slug = sponsor
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
 
-    const categories = [...new Set(sponsorBills.map(b => b.data.category))];
+    const categories = [...new Set(sponsorBills.map((b) => b.data.category))];
 
     return { sponsor, slug, bills: sponsorBills, avgAbsurdity, categories };
   })
   .sort((a, b) => b.bills.length - a.bills.length);
 ---
 
-<BaseLayout title="All Sponsors" description="Every sponsor on record at the Absurdity Index, ranked by legislative output.">
+<BaseLayout
+  title="All Sponsors"
+  description="Every sponsor on record at the Absurdity Index, ranked by legislative output."
+>
   <section class="max-w-5xl mx-auto px-4 py-12">
-    <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold mb-2">Congressional Sponsors</h1>
-    <p class="text-navy-600 font-serif italic mb-6">Every legislator on record, ranked by volume of output</p>
+    <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold mb-2">
+      Congressional Sponsors
+    </h1>
+    <p class="text-navy-600 font-serif italic mb-6">
+      Every legislator on record, ranked by volume of output
+    </p>
     <div class="gold-rule"></div>
 
     <div class="overflow-x-auto mt-8">
@@ -49,42 +57,55 @@ const sponsors = Array.from(sponsorMap.entries())
           <tr class="border-b-2 border-navy-200">
             <th class="py-3 px-4 font-serif text-navy-800 text-sm font-bold">Sponsor</th>
             <th class="py-3 px-4 font-serif text-navy-800 text-sm font-bold text-center">Bills</th>
-            <th class="py-3 px-4 font-serif text-navy-800 text-sm font-bold text-center">Avg. Absurdity</th>
-            <th class="py-3 px-4 font-serif text-navy-800 text-sm font-bold hidden md:table-cell">Categories</th>
+            <th class="py-3 px-4 font-serif text-navy-800 text-sm font-bold text-center"
+              >Avg. Absurdity</th
+            >
+            <th class="py-3 px-4 font-serif text-navy-800 text-sm font-bold hidden md:table-cell"
+              >Categories</th
+            >
           </tr>
         </thead>
         <tbody>
-          {sponsors.map((s, i) => (
-            <tr class:list={[
-              'border-b border-cream-200 hover:bg-gold-50 transition-colors',
-              i % 2 === 0 ? 'bg-white' : 'bg-cream-50',
-            ]}>
-              <td class="py-3 px-4">
-                <a href={`/sponsors/${s.slug}`} class="font-sans text-sm text-navy-800 hover:text-gold-600 font-medium transition-colors">
-                  {s.sponsor}
-                </a>
-              </td>
-              <td class="py-3 px-4 text-center">
-                <span class="font-mono text-sm text-navy-700">{s.bills.length}</span>
-              </td>
-              <td class="py-3 px-4 text-center">
-                {s.avgAbsurdity ? (
-                  <span class="font-mono text-sm text-gold-600 font-bold">{s.avgAbsurdity}/10</span>
-                ) : (
-                  <span class="text-xs text-navy-400 italic">N/A</span>
-                )}
-              </td>
-              <td class="py-3 px-4 hidden md:table-cell">
-                <div class="flex flex-wrap gap-1">
-                  {s.categories.map(cat => (
-                    <span class="inline-block text-xs font-sans bg-navy-100 text-navy-600 px-2 py-0.5 rounded">
-                      {cat}
+          {
+            sponsors.map((s, i) => (
+              <tr
+                class:list={[
+                  'border-b border-cream-200 hover:bg-gold-50 transition-colors',
+                  i % 2 === 0 ? 'bg-white' : 'bg-cream-50',
+                ]}
+              >
+                <td class="py-3 px-4">
+                  <a
+                    href={`/sponsors/${s.slug}`}
+                    class="font-sans text-sm text-navy-800 hover:text-gold-600 font-medium transition-colors"
+                  >
+                    {s.sponsor}
+                  </a>
+                </td>
+                <td class="py-3 px-4 text-center">
+                  <span class="font-mono text-sm text-navy-700">{s.bills.length}</span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                  {s.avgAbsurdity ? (
+                    <span class="font-mono text-sm text-gold-600 font-bold">
+                      {s.avgAbsurdity}/10
                     </span>
-                  ))}
-                </div>
-              </td>
-            </tr>
-          ))}
+                  ) : (
+                    <span class="text-xs text-navy-400 italic">N/A</span>
+                  )}
+                </td>
+                <td class="py-3 px-4 hidden md:table-cell">
+                  <div class="flex flex-wrap gap-1">
+                    {s.categories.map((cat) => (
+                      <span class="inline-block text-xs font-sans bg-navy-100 text-navy-600 px-2 py-0.5 rounded">
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            ))
+          }
         </tbody>
       </table>
     </div>

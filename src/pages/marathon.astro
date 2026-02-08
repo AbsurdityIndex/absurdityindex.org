@@ -45,7 +45,10 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
 >
   <main class="bg-parchment min-h-screen">
     <!-- Animated background pages -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none opacity-10 dark:opacity-5" id="page-bg">
+    <div
+      class="fixed inset-0 overflow-hidden pointer-events-none opacity-10 dark:opacity-5"
+      id="page-bg"
+    >
       <div class="page-flip page-1"></div>
       <div class="page-flip page-2"></div>
       <div class="page-flip page-3"></div>
@@ -68,9 +71,10 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
     </section>
 
     <div class="max-w-5xl mx-auto px-4 py-10 sm:py-14 relative z-10">
-
       <!-- Giant Date Display -->
-      <section class="bg-white rounded-xl border-4 border-navy-800 shadow-2xl overflow-hidden mb-10">
+      <section
+        class="bg-white rounded-xl border-4 border-navy-800 shadow-2xl overflow-hidden mb-10"
+      >
         <div class="bg-navy-800 py-4 px-6">
           <h2 class="text-gold-400 font-serif text-xl text-center">
             If you started reading every bill today...
@@ -80,11 +84,16 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
           <p class="text-navy-600 font-mono text-sm uppercase tracking-widest mb-4">
             You'd finish on
           </p>
-          <div id="finish-date" class="font-serif text-4xl sm:text-6xl lg:text-7xl text-navy-900 font-bold leading-tight">
+          <div
+            id="finish-date"
+            class="font-serif text-4xl sm:text-6xl lg:text-7xl text-navy-900 font-bold leading-tight"
+          >
             Loading...
           </div>
           <p class="mt-4 text-navy-500 font-mono text-sm">
-            That's <span id="years-from-now" class="text-red-600 font-bold">{totalYears.toFixed(1)}</span> years from now
+            That's <span id="years-from-now" class="text-red-600 font-bold"
+              >{totalYears.toFixed(1)}</span
+            > years from now
           </p>
           <div class="mt-6 p-4 bg-cream-200 rounded-lg inline-block">
             <p class="text-navy-700 font-sans text-sm">
@@ -97,18 +106,28 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
       <!-- Stats Dashboard -->
       <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
-          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Bills This Session</p>
-          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">{ESTIMATED_SESSION_BILLS.toLocaleString()}</p>
+          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">
+            Bills This Session
+          </p>
+          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">
+            {ESTIMATED_SESSION_BILLS.toLocaleString()}
+          </p>
           <p class="text-navy-400 text-xs mt-1">(estimated)</p>
         </div>
         <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
-          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Avg Bill Length</p>
-          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">{AVG_BILL_LENGTH_WORDS.toLocaleString()}</p>
+          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">
+            Avg Bill Length
+          </p>
+          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">
+            {AVG_BILL_LENGTH_WORDS.toLocaleString()}
+          </p>
           <p class="text-navy-400 text-xs mt-1">words per bill</p>
         </div>
         <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
           <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Total Words</p>
-          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">{(totalWords / 1000000000).toFixed(1)}B</p>
+          <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold">
+            {(totalWords / 1000000000).toFixed(1)}B
+          </p>
           <p class="text-navy-400 text-xs mt-1">billion words</p>
         </div>
         <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
@@ -130,7 +149,9 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
               <span>~79 years</span>
             </div>
             <div class="h-8 bg-green-600 rounded-full relative overflow-hidden">
-              <div class="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+              <div
+                class="absolute inset-0 flex items-center justify-center text-white font-bold text-sm"
+              >
                 Your entire life
               </div>
             </div>
@@ -144,9 +165,16 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
               <div
                 class="h-full bg-red-600 rounded-full"
                 style={`width: ${Math.min((totalYears / 79) * 100, 100)}%`}
-              ></div>
-              <div class="absolute inset-0 flex items-center justify-center text-navy-900 font-bold text-sm">
-                {totalYears > 79 ? `${(totalYears / 79).toFixed(1)}x your lifespan` : `${((totalYears / 79) * 100).toFixed(0)}% of your life`}
+              >
+              </div>
+              <div
+                class="absolute inset-0 flex items-center justify-center text-navy-900 font-bold text-sm"
+              >
+                {
+                  totalYears > 79
+                    ? `${(totalYears / 79).toFixed(1)}x your lifespan`
+                    : `${((totalYears / 79) * 100).toFixed(0)}% of your life`
+                }
               </div>
             </div>
           </div>
@@ -158,9 +186,7 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
 
       <!-- Start Reading Button -->
       <section class="bg-navy-800 rounded-xl p-8 mb-10 text-center">
-        <h3 class="font-serif text-2xl text-gold-400 font-bold mb-4">
-          Ready to Start?
-        </h3>
+        <h3 class="font-serif text-2xl text-gold-400 font-bold mb-4">Ready to Start?</h3>
         <button
           id="start-reading-btn"
           class="px-8 py-4 bg-gold-500 text-navy-900 font-serif text-xl rounded-lg hover:bg-gold-400 transition-colors font-bold shadow-lg"
@@ -169,7 +195,12 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
         </button>
         <div id="fake-progress" class="hidden mt-6">
           <div class="h-4 bg-navy-700 rounded-full overflow-hidden">
-            <div id="progress-bar" class="h-full bg-gold-500 transition-all duration-1000 ease-out" style="width: 0%"></div>
+            <div
+              id="progress-bar"
+              class="h-full bg-gold-500 transition-all duration-1000 ease-out"
+              style="width: 0%"
+            >
+            </div>
           </div>
           <p id="progress-text" class="text-gold-300 font-mono text-sm mt-2">
             0.000000001% complete
@@ -189,19 +220,30 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
         </h3>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
           <div class="text-center p-4 bg-cream-100 rounded-lg">
-            <p class="font-serif text-3xl sm:text-4xl text-red-600 font-bold" id="bills-counter">0</p>
+            <p class="font-serif text-3xl sm:text-4xl text-red-600 font-bold" id="bills-counter">
+              0
+            </p>
             <p class="text-navy-600 font-sans text-sm mt-1">New bills introduced</p>
           </div>
           <div class="text-center p-4 bg-cream-100 rounded-lg">
-            <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold" id="pages-counter">{pagesNeeded.toLocaleString()}</p>
+            <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold" id="pages-counter">
+              {pagesNeeded.toLocaleString()}
+            </p>
             <p class="text-navy-600 font-sans text-sm mt-1">Pages to print</p>
           </div>
           <div class="text-center p-4 bg-cream-100 rounded-lg">
-            <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold" id="coffee-counter">{coffeeNeeded.toLocaleString()}</p>
+            <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold" id="coffee-counter">
+              {coffeeNeeded.toLocaleString()}
+            </p>
             <p class="text-navy-600 font-sans text-sm mt-1">Coffees needed</p>
           </div>
           <div class="text-center p-4 bg-cream-100 rounded-lg">
-            <p class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold" id="bathroom-counter">{bathroomBreaks.toLocaleString()}</p>
+            <p
+              class="font-serif text-3xl sm:text-4xl text-navy-900 font-bold"
+              id="bathroom-counter"
+            >
+              {bathroomBreaks.toLocaleString()}
+            </p>
             <p class="text-navy-600 font-sans text-sm mt-1">Bathroom breaks</p>
           </div>
         </div>
@@ -217,7 +259,9 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
             <Icon name="tv" size={40} class="text-gold-300 shrink-0" />
             <div class="flex-1">
               <p class="text-gold-300 font-sans">
-                Watch the <span class="text-gold-400 font-bold">entire Lord of the Rings extended edition</span>
+                Watch the <span class="text-gold-400 font-bold"
+                  >entire Lord of the Rings extended edition</span
+                >
               </p>
               <p class="text-gold-500 font-serif text-3xl font-bold mt-1">
                 {lotrTimes.toLocaleString()} times
@@ -239,7 +283,9 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
             <Icon name="music" size={40} class="text-gold-300 shrink-0" />
             <div class="flex-1">
               <p class="text-gold-300 font-sans">
-                Listen to <span class="text-gold-400 font-bold">every Beatles song ever recorded</span>
+                Listen to <span class="text-gold-400 font-bold"
+                  >every Beatles song ever recorded</span
+                >
               </p>
               <p class="text-gold-500 font-serif text-3xl font-bold mt-1">
                 {beatlesTimes.toLocaleString()} times
@@ -251,12 +297,10 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
 
       <!-- Fun Fact -->
       <section class="bg-gold-500 rounded-lg p-6 sm:p-8 mb-10 text-center">
-        <h3 class="font-serif text-2xl text-navy-900 font-bold mb-4">
-          Fun Fact
-        </h3>
+        <h3 class="font-serif text-2xl text-navy-900 font-bold mb-4">Fun Fact</h3>
         <p class="font-serif text-lg text-navy-800 max-w-2xl mx-auto">
-          Congress members have <span class="font-bold">staff</span> to read bills for them.
-          You don't. <span class="font-bold">Good luck.</span>
+          Congress members have <span class="font-bold">staff</span> to read bills for them. You don't.
+          <span class="font-bold">Good luck.</span>
         </p>
       </section>
 
@@ -266,8 +310,10 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
           Start Small: Our Collection
         </h3>
         <p class="text-center text-navy-600 mb-6">
-          We've collected <span class="font-bold text-navy-900">{actualBillCount}</span> bills for you to browse.
-          Only <span class="font-bold text-red-600">{(ESTIMATED_SESSION_BILLS - actualBillCount).toLocaleString()}</span> more to go!
+          We've collected <span class="font-bold text-navy-900">{actualBillCount}</span> bills for you
+          to browse. Only <span class="font-bold text-red-600"
+            >{(ESTIMATED_SESSION_BILLS - actualBillCount).toLocaleString()}</span
+          > more to go!
         </p>
         <div class="text-center">
           <a
@@ -280,18 +326,33 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
       </section>
 
       <!-- Disclaimer -->
-      <div class="mt-8 bg-cream-200 border border-gold-300 rounded p-4 text-xs text-navy-600 leading-relaxed text-center">
+      <div
+        class="mt-8 bg-cream-200 border border-gold-300 rounded p-4 text-xs text-navy-600 leading-relaxed text-center"
+      >
         <p>
-          <strong>Methodology:</strong> These calculations assume {ESTIMATED_SESSION_BILLS.toLocaleString()} bills per congressional session
-          with an average length of {AVG_BILL_LENGTH_WORDS.toLocaleString()} words, read at {READING_SPEED_WPM} words per minute.
-          Actual results may vary based on your tolerance for legalese, caffeine intake, and will to live.
-          Side effects may include existential dread and a sudden appreciation for ignorance.
+          <strong>Methodology:</strong> These calculations assume {
+            ESTIMATED_SESSION_BILLS.toLocaleString()
+          } bills per congressional session with an average length of {
+            AVG_BILL_LENGTH_WORDS.toLocaleString()
+          } words, read at {READING_SPEED_WPM} words per minute. Actual results may vary based on your
+          tolerance for legalese, caffeine intake, and will to live. Side effects may include existential
+          dread and a sudden appreciation for ignorance.
         </p>
       </div>
     </div>
   </main>
 
-  <script is:inline define:vars={{ totalYears, totalMinutes, pagesNeeded, coffeeNeeded, bathroomBreaks, AVG_BILL_LENGTH_WORDS }}>
+  <script
+    is:inline
+    define:vars={{
+      totalYears,
+      totalMinutes,
+      pagesNeeded,
+      coffeeNeeded,
+      bathroomBreaks,
+      AVG_BILL_LENGTH_WORDS,
+    }}
+  >
     // Calculate finish date
     function calculateFinishDate() {
       const now = new Date();
@@ -330,9 +391,15 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
         const extraPages = Math.round(extraWords / 250);
         const extraHours = extraWords / 200 / 60;
 
-        document.getElementById('pages-counter').textContent = (currentPages + extraPages).toLocaleString();
-        document.getElementById('coffee-counter').textContent = (currentCoffee + Math.round(extraHours / 2)).toLocaleString();
-        document.getElementById('bathroom-counter').textContent = (currentBathroom + Math.round(extraHours / 1.5)).toLocaleString();
+        document.getElementById('pages-counter').textContent = (
+          currentPages + extraPages
+        ).toLocaleString();
+        document.getElementById('coffee-counter').textContent = (
+          currentCoffee + Math.round(extraHours / 2)
+        ).toLocaleString();
+        document.getElementById('bathroom-counter').textContent = (
+          currentBathroom + Math.round(extraHours / 1.5)
+        ).toLocaleString();
       }
     }, 5000);
 
@@ -357,22 +424,22 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
           progress += 0.0000001;
           const displayProgress = progress.toFixed(9);
           progressBar.style.width = `${Math.min(progress * 100000000, 0.1)}%`;
-	          progressText.textContent = `${displayProgress}% complete`;
+          progressText.textContent = `${displayProgress}% complete`;
 
-	          if (progress > 0.000001) {
-	            clearInterval(interval);
-	            const warning = document.createElement('span');
-	            warning.className = 'text-gold-400';
-	            warning.textContent = "You've been at this for a while. Maybe take a break?";
-	            progressText.replaceChildren(
-	              document.createTextNode(`${displayProgress}% complete`),
-	              document.createElement('br'),
-	              warning,
-	            );
-	          }
-	        }, 1000);
-	      }
-	    });
+          if (progress > 0.000001) {
+            clearInterval(interval);
+            const warning = document.createElement('span');
+            warning.className = 'text-gold-400';
+            warning.textContent = "You've been at this for a while. Maybe take a break?";
+            progressText.replaceChildren(
+              document.createTextNode(`${displayProgress}% complete`),
+              document.createElement('br'),
+              warning,
+            );
+          }
+        }, 1000);
+      }
+    });
   </script>
 
   <style>
@@ -383,7 +450,7 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
       height: 280px;
       background: linear-gradient(135deg, #f5f0e1 0%, #e8d5b0 100%);
       border: 1px solid #c5a572;
-      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     }
 
     .page-1 {
@@ -408,18 +475,33 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
     }
 
     @keyframes float1 {
-      0%, 100% { transform: rotate(-5deg) translateY(0); }
-      50% { transform: rotate(-8deg) translateY(-30px); }
+      0%,
+      100% {
+        transform: rotate(-5deg) translateY(0);
+      }
+      50% {
+        transform: rotate(-8deg) translateY(-30px);
+      }
     }
 
     @keyframes float2 {
-      0%, 100% { transform: rotate(8deg) translateY(0); }
-      50% { transform: rotate(5deg) translateY(-25px); }
+      0%,
+      100% {
+        transform: rotate(8deg) translateY(0);
+      }
+      50% {
+        transform: rotate(5deg) translateY(-25px);
+      }
     }
 
     @keyframes float3 {
-      0%, 100% { transform: rotate(-3deg) translateY(0); }
-      50% { transform: rotate(-6deg) translateY(-35px); }
+      0%,
+      100% {
+        transform: rotate(-3deg) translateY(0);
+      }
+      50% {
+        transform: rotate(-6deg) translateY(-35px);
+      }
     }
 
     /* Counter animation */
@@ -429,14 +511,18 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
 
     /* Progress bar shimmer */
     #progress-bar {
-      background: linear-gradient(90deg, #C5A572 0%, #D4BB8A 50%, #C5A572 100%);
+      background: linear-gradient(90deg, #c5a572 0%, #d4bb8a 50%, #c5a572 100%);
       background-size: 200% 100%;
       animation: shimmer 2s linear infinite;
     }
 
     @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
     }
   </style>
 </BaseLayout>

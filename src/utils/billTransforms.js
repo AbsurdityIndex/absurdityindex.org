@@ -1,10 +1,14 @@
 export function normalizeWhitespace(text) {
-  return String(text ?? '').replace(/\s+/g, ' ').trim();
+  return String(text ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export function stripHtmlTags(html) {
   if (!html) return '';
-  return String(html).replace(/<[^>]+>/g, '').trim();
+  return String(html)
+    .replace(/<[^>]+>/g, '')
+    .trim();
 }
 
 // Congress.gov action text sometimes differs only by whitespace/newlines/HTML.

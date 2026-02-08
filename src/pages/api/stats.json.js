@@ -21,9 +21,7 @@ export async function GET() {
   // Absurdity distribution
   const absurdityDistribution = {};
   for (let i = 1; i <= 10; i++) {
-    absurdityDistribution[i] = billsWithAbsurdity.filter(
-      (b) => b.data.absurdityIndex === i
-    ).length;
+    absurdityDistribution[i] = billsWithAbsurdity.filter((b) => b.data.absurdityIndex === i).length;
   }
 
   // Bills by category
@@ -78,11 +76,12 @@ export async function GET() {
 
   // Snarky commentary based on stats
   const avgScore = averageAbsurdity ? Math.round(averageAbsurdity * 10) / 10 : 0;
-  const commentary = avgScore >= 7
-    ? "Congress is in peak form. Your tax dollars are doing... something."
-    : avgScore >= 5
-    ? "Moderately absurd. About what you'd expect from 535 people who can't agree on lunch."
-    : "Surprisingly reasonable. Check back tomorrow.";
+  const commentary =
+    avgScore >= 7
+      ? 'Congress is in peak form. Your tax dollars are doing... something.'
+      : avgScore >= 5
+        ? "Moderately absurd. About what you'd expect from 535 people who can't agree on lunch."
+        : 'Surprisingly reasonable. Check back tomorrow.';
 
   const funFacts = [
     `At current rates, Congress will pass ${Math.round(realBills.length * 0.1)} of these bills. The rest will die in committee, like your hopes.`,
@@ -95,7 +94,7 @@ export async function GET() {
     _snark: commentary,
     _funFact: funFacts[Math.floor(Math.random() * funFacts.length)],
     generated: new Date().toISOString(),
-    generatedBy: "Definitely not an intern",
+    generatedBy: 'Definitely not an intern',
     totals: {
       all: bills.length,
       real: realBills.length,
@@ -117,13 +116,13 @@ export async function GET() {
     dateRange: {
       oldest: oldestDate,
       newest: newestDate,
-      _observation: "Some of these bills are older than TikTok. Congress moves fast.",
+      _observation: 'Some of these bills are older than TikTok. Congress moves fast.',
     },
     congressNumbers,
     _credits: {
-      poweredBy: "Caffeine and disillusionment",
-      dataSource: "Congress.gov (the real absurdity)",
-      builtWith: "Astro, TypeScript, and a healthy distrust of institutions",
+      poweredBy: 'Caffeine and disillusionment',
+      dataSource: 'Congress.gov (the real absurdity)',
+      builtWith: 'Astro, TypeScript, and a healthy distrust of institutions',
     },
   };
 

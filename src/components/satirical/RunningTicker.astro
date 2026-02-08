@@ -1,19 +1,21 @@
 ---
 const messages = [
-  "BREAKING: Motion to read bills before voting \u2014 DEFEATED 435-0",
+  'BREAKING: Motion to read bills before voting \u2014 DEFEATED 435-0',
   "DEVELOPING: Committee discovers 'common sense' \u2014 Immediately tables it",
-  "ALERT: Congress schedules recess from recess",
-  "UPDATE: Bipartisan agreement reached \u2014 Both sides agree to disagree",
-  "FLASH: New bill proposes making bills shorter \u2014 Bill is 2,000 pages",
+  'ALERT: Congress schedules recess from recess',
+  'UPDATE: Bipartisan agreement reached \u2014 Both sides agree to disagree',
+  'FLASH: New bill proposes making bills shorter \u2014 Bill is 2,000 pages',
 ];
 
-const separator = " \u2022 ";
+const separator = ' \u2022 ';
 const allMessages = messages.join(separator) + separator;
 ---
 
 <div class="bg-navy-900 border-y border-navy-700 overflow-hidden" data-theme-fixed>
   <div class="flex items-center">
-    <div class="shrink-0 bg-red-700 text-white font-mono text-[10px] font-bold px-2 py-2 tracking-wider z-10 min-[430px]:px-3 min-[430px]:text-xs">
+    <div
+      class="shrink-0 bg-red-700 text-white font-mono text-[10px] font-bold px-2 py-2 tracking-wider z-10 min-[430px]:px-3 min-[430px]:text-xs"
+    >
       <span class="min-[430px]:hidden">GAVEL</span>
       <span class="hidden min-[430px]:inline">THE GAVEL CHANNEL</span>
     </div>
@@ -22,7 +24,10 @@ const allMessages = messages.join(separator) + separator;
         <span class="text-gold-400 font-sans text-xs py-2 inline-block min-[430px]:text-sm">
           {allMessages}
         </span>
-        <span class="text-gold-400 font-sans text-xs py-2 inline-block min-[430px]:text-sm" aria-hidden="true">
+        <span
+          class="text-gold-400 font-sans text-xs py-2 inline-block min-[430px]:text-sm"
+          aria-hidden="true"
+        >
           {allMessages}
         </span>
       </div>

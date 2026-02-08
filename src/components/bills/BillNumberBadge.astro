@@ -8,28 +8,28 @@ interface Props {
 
 const { billNumber, size = 'sm' } = Astro.props;
 
-const sizeClasses = size === 'sm'
-  ? 'text-xs px-2.5 py-1 gap-1.5'
-  : 'text-sm px-3 py-1.5 gap-2';
+const sizeClasses = size === 'sm' ? 'text-xs px-2.5 py-1 gap-1.5' : 'text-sm px-3 py-1.5 gap-2';
 
 const iconSize = size === 'sm' ? 12 : 14;
 ---
 
-<span class:list={[
-  'bill-number-badge inline-flex items-center font-mono font-semibold bg-navy-800 text-gold-400 rounded-full tracking-wide',
-  sizeClasses
-]}>
+<span
+  class:list={[
+    'bill-number-badge inline-flex items-center font-mono font-semibold bg-navy-800 text-gold-400 rounded-full tracking-wide',
+    sizeClasses,
+  ]}
+>
   <Icon name="file-text" size={iconSize} class="text-gold-500" strokeWidth={2.5} />
   {billNumber}
 </span>
 
 <style>
   :global(html.dark) .bill-number-badge {
-    background-color: #121F36;
-    color: #F0C86A;
+    background-color: #121f36;
+    color: #f0c86a;
   }
-  :global(html[data-theme="solarized-dark"]) .bill-number-badge {
+  :global(html[data-theme='solarized-dark']) .bill-number-badge {
     background-color: #073642;
-    color: #DBA800;
+    color: #dba800;
   }
 </style>

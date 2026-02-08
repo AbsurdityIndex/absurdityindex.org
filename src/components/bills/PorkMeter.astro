@@ -32,13 +32,64 @@ type PorkTier = {
 };
 
 const tiers: PorkTier[] = [
-  { threshold: 0, label: 'Squeaky Clean', icon: 'sparkles', color: '#22c55e', needleColor: '#16a34a', glowColor: 'rgba(34, 197, 94, 0.4)' },
-  { threshold: 10_000_000, label: 'A Little Bacon', icon: 'bacon', color: '#84cc16', needleColor: '#65a30d', glowColor: 'rgba(132, 204, 22, 0.4)' },
-  { threshold: 100_000_000, label: 'Pork Chops', icon: 'ham', color: '#eab308', needleColor: '#ca8a04', glowColor: 'rgba(234, 179, 8, 0.4)' },
-  { threshold: 1_000_000_000, label: 'Whole Hog', icon: 'pig', color: '#f97316', needleColor: '#ea580c', glowColor: 'rgba(249, 115, 22, 0.4)' },
-  { threshold: 10_000_000_000, label: 'Pig Farm', icon: 'piggy-bank', color: '#ef4444', needleColor: '#dc2626', glowColor: 'rgba(239, 68, 68, 0.4)' },
-  { threshold: 100_000_000_000, label: 'Flying Pigs', icon: 'plane', secondaryIcon: 'pig', color: '#dc2626', needleColor: '#b91c1c', glowColor: 'rgba(220, 38, 38, 0.5)' },
-  { threshold: 1_000_000_000_000, label: 'Hogpocalypse', icon: 'skull', secondaryIcon: 'pig', color: '#991b1b', needleColor: '#7f1d1d', glowColor: 'rgba(153, 27, 27, 0.6)' },
+  {
+    threshold: 0,
+    label: 'Squeaky Clean',
+    icon: 'sparkles',
+    color: '#22c55e',
+    needleColor: '#16a34a',
+    glowColor: 'rgba(34, 197, 94, 0.4)',
+  },
+  {
+    threshold: 10_000_000,
+    label: 'A Little Bacon',
+    icon: 'bacon',
+    color: '#84cc16',
+    needleColor: '#65a30d',
+    glowColor: 'rgba(132, 204, 22, 0.4)',
+  },
+  {
+    threshold: 100_000_000,
+    label: 'Pork Chops',
+    icon: 'ham',
+    color: '#eab308',
+    needleColor: '#ca8a04',
+    glowColor: 'rgba(234, 179, 8, 0.4)',
+  },
+  {
+    threshold: 1_000_000_000,
+    label: 'Whole Hog',
+    icon: 'pig',
+    color: '#f97316',
+    needleColor: '#ea580c',
+    glowColor: 'rgba(249, 115, 22, 0.4)',
+  },
+  {
+    threshold: 10_000_000_000,
+    label: 'Pig Farm',
+    icon: 'piggy-bank',
+    color: '#ef4444',
+    needleColor: '#dc2626',
+    glowColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  {
+    threshold: 100_000_000_000,
+    label: 'Flying Pigs',
+    icon: 'plane',
+    secondaryIcon: 'pig',
+    color: '#dc2626',
+    needleColor: '#b91c1c',
+    glowColor: 'rgba(220, 38, 38, 0.5)',
+  },
+  {
+    threshold: 1_000_000_000_000,
+    label: 'Hogpocalypse',
+    icon: 'skull',
+    secondaryIcon: 'pig',
+    color: '#991b1b',
+    needleColor: '#7f1d1d',
+    glowColor: 'rgba(153, 27, 27, 0.6)',
+  },
 ];
 
 function getCurrentTier(amt: number): PorkTier {
@@ -69,7 +120,7 @@ function getNeedleRotation(amt: number): number {
   const logAmt = Math.log10(Math.max(amt, 1));
   const logMax = Math.log10(1_500_000_000_000); // 1.5 trillion as max
   const percent = Math.min(1, logAmt / logMax);
-  return -135 + (percent * 270);
+  return -135 + percent * 270;
 }
 
 const tier = getCurrentTier(amount);
@@ -89,160 +140,183 @@ function getComparison(amt: number): string | null {
 const comparison = getComparison(amount);
 ---
 
-{compact ? (
-  <!-- Compact inline version -->
-  <div class="pork-compact">
-    <div class="compact-icon" style={`--tier-color: ${tier.color}`}>
-      <Icon name="pig" size={14} />
-    </div>
-    <div class="compact-bar">
-      <div class="compact-fill" style={`width: ${Math.min(100, (getNeedleRotation(amount) + 135) / 2.7)}%; background: ${tier.color}`} />
-    </div>
-    <span class="compact-amount" style={`color: ${tier.color}`}>{formatAmount(amount)}</span>
-  </div>
-) : (
-  <!-- Full gauge version -->
-  <div class="pork-meter" style={`--tier-color: ${tier.color}; --glow-color: ${tier.glowColor}`}>
-    <!-- Header -->
-    <div class="meter-header">
-      <div class="meter-title">
-        <Icon name="pig" size={20} class="title-icon" />
-        <span>Pork Barrel Meter</span>
+{
+  compact ? (
+    <div class="pork-compact">
+      <div class="compact-icon" style={`--tier-color: ${tier.color}`}>
+        <Icon name="pig" size={14} />
       </div>
-      <div class="meter-amount">
-        <span class="amount-value">{formatAmount(amount)}</span>
-        {showPerCapita && amount > 0 && (
-          <span class="amount-per-capita">{formatPerCapita(perCapita)} per taxpayer</span>
-        )}
-      </div>
-    </div>
-
-    <!-- Gauge -->
-    <div class="gauge-wrapper">
-      <svg viewBox="0 0 200 120" class="gauge-svg">
-        <defs>
-          <!-- Gradient for the arc -->
-          <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#22c55e" />
-            <stop offset="25%" stop-color="#eab308" />
-            <stop offset="50%" stop-color="#f97316" />
-            <stop offset="75%" stop-color="#ef4444" />
-            <stop offset="100%" stop-color="#991b1b" />
-          </linearGradient>
-          <!-- Glow filter -->
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-          <!-- Needle shadow -->
-          <filter id="needle-shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.3"/>
-          </filter>
-        </defs>
-
-        <!-- Background arc (track) -->
-        <path
-          d="M 20 100 A 80 80 0 0 1 180 100"
-          fill="none"
-          stroke="var(--color-navy-200)"
-          stroke-width="12"
-          stroke-linecap="round"
-          class="gauge-track"
-        />
-
-        <!-- Colored arc (gradient) -->
-        <path
-          d="M 20 100 A 80 80 0 0 1 180 100"
-          fill="none"
-          stroke="url(#gauge-gradient)"
-          stroke-width="8"
-          stroke-linecap="round"
-          opacity="0.9"
-        />
-
-        <!-- Tick marks -->
-        {[0, 1, 2, 3, 4, 5, 6].map((i) => {
-          const angle = (-135 + (i * 45)) * (Math.PI / 180);
-          const x1 = 100 + 72 * Math.cos(angle);
-          const y1 = 100 + 72 * Math.sin(angle);
-          const x2 = 100 + 80 * Math.cos(angle);
-          const y2 = 100 + 80 * Math.sin(angle);
-          return (
-            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-navy-400)" stroke-width="2" stroke-linecap="round" />
-          );
-        })}
-
-        <!-- Needle -->
-        <g
-          class="gauge-needle"
-          style={`--rotation: ${needleRotation}deg; --prev-rotation: ${prevNeedleRotation}deg`}
-          filter="url(#needle-shadow)"
-        >
-          <!-- Needle body -->
-          <polygon
-            points="100,30 96,98 100,105 104,98"
-            fill={tier.needleColor}
-            class="needle-body"
-          />
-          <!-- Needle cap -->
-          <circle cx="100" cy="100" r="8" fill="var(--color-navy-800)" />
-          <circle cx="100" cy="100" r="5" fill={tier.needleColor} />
-        </g>
-
-        <!-- Center pig icon area -->
-        <circle cx="100" cy="100" r="16" fill="var(--color-cream-100)" stroke="var(--color-navy-200)" stroke-width="1" class="center-circle" />
-      </svg>
-
-      <!-- Tier icon in center -->
-      <div class="gauge-icon" style={`--tier-color: ${tier.color}`}>
-        {tier.secondaryIcon ? (
-          <div class="dual-icon">
-            <Icon name={tier.icon} size={16} class="icon-primary" />
-            <Icon name={tier.secondaryIcon} size={12} class="icon-secondary" />
-          </div>
-        ) : (
-          <Icon name={tier.icon} size={20} class="icon-single" />
-        )}
-      </div>
-
-      <!-- Scale labels - simplified to avoid overlap -->
-      <div class="scale-labels">
-        <span class="scale-label scale-min">$0</span>
-        <span class="scale-label scale-mid">$100B</span>
-        <span class="scale-label scale-max">$1T+</span>
-      </div>
-    </div>
-
-    <!-- Tier badge -->
-    <div class="tier-badge" style={`background: ${tier.color}15; border-color: ${tier.color}40`}>
-      <span class="tier-label" style={`color: ${tier.color}`}>"{tier.label}"</span>
-    </div>
-
-    <!-- Comparison context -->
-    {comparison && (
-      <div class="comparison">
-        <Icon name="lightbulb" size={14} class="comparison-icon" />
-        <span>Equivalent to ~{comparison}</span>
-      </div>
-    )}
-
-    <!-- Bacon strip decoration at bottom -->
-    <div class="bacon-strips" aria-hidden="true">
-      {[...Array(7)].map((_, i) => (
+      <div class="compact-bar">
         <div
-          class="bacon-strip"
-          style={`opacity: ${i < Math.ceil((getNeedleRotation(amount) + 135) / 38.5) ? 1 : 0.2}; background: ${i < Math.ceil((getNeedleRotation(amount) + 135) / 38.5) ? tier.color : 'var(--color-navy-200)'}`}
+          class="compact-fill"
+          style={`width: ${Math.min(100, (getNeedleRotation(amount) + 135) / 2.7)}%; background: ${tier.color}`}
         />
-      ))}
+      </div>
+      <span class="compact-amount" style={`color: ${tier.color}`}>
+        {formatAmount(amount)}
+      </span>
     </div>
+  ) : (
+    <div class="pork-meter" style={`--tier-color: ${tier.color}; --glow-color: ${tier.glowColor}`}>
+      {/* Header */}
+      <div class="meter-header">
+        <div class="meter-title">
+          <Icon name="pig" size={20} class="title-icon" />
+          <span>Pork Barrel Meter</span>
+        </div>
+        <div class="meter-amount">
+          <span class="amount-value">{formatAmount(amount)}</span>
+          {showPerCapita && amount > 0 && (
+            <span class="amount-per-capita">{formatPerCapita(perCapita)} per taxpayer</span>
+          )}
+        </div>
+      </div>
 
-    <!-- Satire disclaimer -->
-    <p class="meter-disclaimer">Satirical estimate for entertainment purposes</p>
-  </div>
-)}
+      {/* Gauge */}
+      <div class="gauge-wrapper">
+        <svg viewBox="0 0 200 120" class="gauge-svg">
+          <defs>
+            {/* Gradient for the arc */}
+            <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#22c55e" />
+              <stop offset="25%" stop-color="#eab308" />
+              <stop offset="50%" stop-color="#f97316" />
+              <stop offset="75%" stop-color="#ef4444" />
+              <stop offset="100%" stop-color="#991b1b" />
+            </linearGradient>
+            {/* Glow filter */}
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Needle shadow */}
+            <filter id="needle-shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.3" />
+            </filter>
+          </defs>
+
+          {/* Background arc (track) */}
+          <path
+            d="M 20 100 A 80 80 0 0 1 180 100"
+            fill="none"
+            stroke="var(--color-navy-200)"
+            stroke-width="12"
+            stroke-linecap="round"
+            class="gauge-track"
+          />
+
+          {/* Colored arc (gradient) */}
+          <path
+            d="M 20 100 A 80 80 0 0 1 180 100"
+            fill="none"
+            stroke="url(#gauge-gradient)"
+            stroke-width="8"
+            stroke-linecap="round"
+            opacity="0.9"
+          />
+
+          {/* Tick marks */}
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+            const angle = (-135 + i * 45) * (Math.PI / 180);
+            const x1 = 100 + 72 * Math.cos(angle);
+            const y1 = 100 + 72 * Math.sin(angle);
+            const x2 = 100 + 80 * Math.cos(angle);
+            const y2 = 100 + 80 * Math.sin(angle);
+            return (
+              <line
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="var(--color-navy-400)"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            );
+          })}
+
+          {/* Needle */}
+          <g
+            class="gauge-needle"
+            style={`--rotation: ${needleRotation}deg; --prev-rotation: ${prevNeedleRotation}deg`}
+            filter="url(#needle-shadow)"
+          >
+            {/* Needle body */}
+            <polygon
+              points="100,30 96,98 100,105 104,98"
+              fill={tier.needleColor}
+              class="needle-body"
+            />
+            {/* Needle cap */}
+            <circle cx="100" cy="100" r="8" fill="var(--color-navy-800)" />
+            <circle cx="100" cy="100" r="5" fill={tier.needleColor} />
+          </g>
+
+          {/* Center pig icon area */}
+          <circle
+            cx="100"
+            cy="100"
+            r="16"
+            fill="var(--color-cream-100)"
+            stroke="var(--color-navy-200)"
+            stroke-width="1"
+            class="center-circle"
+          />
+        </svg>
+
+        {/* Tier icon in center */}
+        <div class="gauge-icon" style={`--tier-color: ${tier.color}`}>
+          {tier.secondaryIcon ? (
+            <div class="dual-icon">
+              <Icon name={tier.icon} size={16} class="icon-primary" />
+              <Icon name={tier.secondaryIcon} size={12} class="icon-secondary" />
+            </div>
+          ) : (
+            <Icon name={tier.icon} size={20} class="icon-single" />
+          )}
+        </div>
+
+        {/* Scale labels - simplified to avoid overlap */}
+        <div class="scale-labels">
+          <span class="scale-label scale-min">$0</span>
+          <span class="scale-label scale-mid">$100B</span>
+          <span class="scale-label scale-max">$1T+</span>
+        </div>
+      </div>
+
+      {/* Tier badge */}
+      <div class="tier-badge" style={`background: ${tier.color}15; border-color: ${tier.color}40`}>
+        <span class="tier-label" style={`color: ${tier.color}`}>
+          "{tier.label}"
+        </span>
+      </div>
+
+      {/* Comparison context */}
+      {comparison && (
+        <div class="comparison">
+          <Icon name="lightbulb" size={14} class="comparison-icon" />
+          <span>Equivalent to ~{comparison}</span>
+        </div>
+      )}
+
+      {/* Bacon strip decoration at bottom */}
+      <div class="bacon-strips" aria-hidden="true">
+        {[...Array(7)].map((_, i) => (
+          <div
+            class="bacon-strip"
+            style={`opacity: ${i < Math.ceil((getNeedleRotation(amount) + 135) / 38.5) ? 1 : 0.2}; background: ${i < Math.ceil((getNeedleRotation(amount) + 135) / 38.5) ? tier.color : 'var(--color-navy-200)'}`}
+          />
+        ))}
+      </div>
+
+      {/* Satire disclaimer */}
+      <p class="meter-disclaimer">Satirical estimate for entertainment purposes</p>
+    </div>
+  )
+}
 
 <style>
   /* ========================
@@ -414,8 +488,13 @@ const comparison = getComparison(amount);
   }
 
   @keyframes icon-bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-2px); }
+    0%,
+    100% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-2px);
+    }
   }
 
   /* Scale labels - simplified 3-point scale */

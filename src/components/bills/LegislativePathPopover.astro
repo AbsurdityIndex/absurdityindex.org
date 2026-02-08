@@ -9,10 +9,7 @@
 import Icon from '../ui/Icon.astro';
 import ProgressTimeline from '../ui/ProgressTimeline.astro';
 import { parseBillType, getAllBillTypes } from '../../utils/billParser';
-import {
-  getBillProgress,
-  type LegislativePath,
-} from '../../utils/billProgress';
+import { getBillProgress, type LegislativePath } from '../../utils/billProgress';
 
 interface Props {
   billNumber: string;
@@ -30,21 +27,24 @@ const { path: currentPath, currentStageIndex, outcome, isFinalWithOutcome } = pr
 
 // Group bill types by their legislative path
 const pathGroups = {
-  unicameral: allTypes.filter(t => !t.needsBothChambers && !t.needsPresident),
-  bicameralNoPresident: allTypes.filter(t => t.needsBothChambers && !t.needsPresident),
-  fullPath: allTypes.filter(t => t.needsBothChambers && t.needsPresident),
+  unicameral: allTypes.filter((t) => !t.needsBothChambers && !t.needsPresident),
+  bicameralNoPresident: allTypes.filter((t) => t.needsBothChambers && !t.needsPresident),
+  fullPath: allTypes.filter((t) => t.needsBothChambers && t.needsPresident),
 };
 
 // Path display configuration
-const pathDescriptions: Record<LegislativePath, {
-  name: string;
-  shortDesc: string;
-  stages: string[];
-  description: string;
-  note: string;
-  icon: string;
-  accentClass: string;
-}> = {
+const pathDescriptions: Record<
+  LegislativePath,
+  {
+    name: string;
+    shortDesc: string;
+    stages: string[];
+    description: string;
+    note: string;
+    icon: string;
+    accentClass: string;
+  }
+> = {
   unicameral: {
     name: 'Single Chamber',
     shortDesc: 'One chamber',
@@ -94,7 +94,12 @@ const timelineStages = currentPathInfo.stages.map((label, i) => ({
     <Icon name="info" size={13} />
   </button>
 
-  <div class={`leg-panel ${currentPathInfo.accentClass}`} role="dialog" aria-label="Legislative Path Information" data-popover-panel>
+  <div
+    class={`leg-panel ${currentPathInfo.accentClass}`}
+    role="dialog"
+    aria-label="Legislative Path Information"
+    data-popover-panel
+  >
     {/* Header */}
     <header class="leg-header" data-theme-fixed>
       <div class="leg-header-content">
@@ -135,22 +140,26 @@ const timelineStages = currentPathInfo.stages.map((label, i) => ({
     <div class="leg-comparison">
       <div class="leg-comparison-header">Compare Paths</div>
       <div class="leg-comparison-grid">
-        {Object.entries(pathDescriptions).map(([key, path]) => (
-          <div class={`leg-comparison-item ${key === currentPath ? 'is-current' : ''}`}>
-            <div class="leg-comparison-title">
-              <Icon name={path.icon} size={12} />
-              <span>{path.name}</span>
+        {
+          Object.entries(pathDescriptions).map(([key, path]) => (
+            <div class={`leg-comparison-item ${key === currentPath ? 'is-current' : ''}`}>
+              <div class="leg-comparison-title">
+                <Icon name={path.icon} size={12} />
+                <span>{path.name}</span>
+              </div>
+              <div class="leg-comparison-chips">
+                {pathGroups[key as keyof typeof pathGroups].slice(0, 3).map((t) => (
+                  <span class="leg-chip">{t.prefix}</span>
+                ))}
+                {pathGroups[key as keyof typeof pathGroups].length > 3 && (
+                  <span class="leg-chip leg-chip-more">
+                    +{pathGroups[key as keyof typeof pathGroups].length - 3}
+                  </span>
+                )}
+              </div>
             </div>
-            <div class="leg-comparison-chips">
-              {pathGroups[key as keyof typeof pathGroups].slice(0, 3).map(t => (
-                <span class="leg-chip">{t.prefix}</span>
-              ))}
-              {pathGroups[key as keyof typeof pathGroups].length > 3 && (
-                <span class="leg-chip leg-chip-more">+{pathGroups[key as keyof typeof pathGroups].length - 3}</span>
-              )}
-            </div>
-          </div>
-        ))}
+          ))
+        }
       </div>
     </div>
 
@@ -218,9 +227,18 @@ const timelineStages = currentPathInfo.stages.map((label, i) => ({
     overflow: hidden;
   }
 
-  .leg-panel.accent-emerald { --accent: #10b981; --accent-bg: #ecfdf5; }
-  .leg-panel.accent-blue { --accent: #3b82f6; --accent-bg: #eff6ff; }
-  .leg-panel.accent-gold { --accent: var(--color-gold-500); --accent-bg: var(--color-gold-50); }
+  .leg-panel.accent-emerald {
+    --accent: #10b981;
+    --accent-bg: #ecfdf5;
+  }
+  .leg-panel.accent-blue {
+    --accent: #3b82f6;
+    --accent-bg: #eff6ff;
+  }
+  .leg-panel.accent-gold {
+    --accent: var(--color-gold-500);
+    --accent-bg: var(--color-gold-50);
+  }
 
   .leg-panel.open {
     opacity: 1;
@@ -472,7 +490,6 @@ const timelineStages = currentPathInfo.stages.map((label, i) => ({
   :global(html.dark) .leg-path-name {
     color: var(--color-navy-900);
   }
-
 
   :global(html.dark) .leg-path-desc {
     color: var(--color-navy-700);

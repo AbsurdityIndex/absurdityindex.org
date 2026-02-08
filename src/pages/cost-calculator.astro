@@ -4,13 +4,20 @@ import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Divider from '../components/ui/Divider.astro';
 ---
 
-<BaseLayout title="Constituent Cost Calculator" description="Find out YOUR share of federal spending. What's a trillion dollars divided by everyone? Spoiler: It's a lot of coffee.">
+<BaseLayout
+  title="Constituent Cost Calculator"
+  description="Find out YOUR share of federal spending. What's a trillion dollars divided by everyone? Spoiler: It's a lot of coffee."
+>
   <div class="max-w-4xl mx-auto px-4 py-12">
     <div class="text-center mb-10">
       <OfficialSeal size="100" />
-      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Fiscal Transparency Tool</p>
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">
+        Fiscal Transparency Tool
+      </p>
       <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">What's YOUR Share?</h1>
-      <p class="text-navy-600 font-serif italic mt-3">Dividing the national debt, one taxpayer at a time</p>
+      <p class="text-navy-600 font-serif italic mt-3">
+        Dividing the national debt, one taxpayer at a time
+      </p>
     </div>
     <div class="gold-rule"></div>
 
@@ -56,21 +63,29 @@ import Divider from '../components/ui/Divider.astro';
 
       <!-- Results Section -->
       <div id="results" class="hidden mt-8 pt-8 border-t-2 border-gold-300">
-        <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4 text-center">Your Fiscal Burden</h2>
+        <h2 class="font-serif text-2xl text-navy-900 font-bold mb-4 text-center">
+          Your Fiscal Burden
+        </h2>
 
         <div class="bg-cream-100 rounded-lg p-6 mb-6">
           <p class="text-navy-600 mb-2 font-sans">Selected State:</p>
           <p class="text-2xl font-serif font-bold text-navy-900" id="result-state">-</p>
-          <p class="text-navy-600 mt-2">Approximate Population: <span id="result-population" class="font-bold">-</span></p>
+          <p class="text-navy-600 mt-2">
+            Approximate Population: <span id="result-population" class="font-bold">-</span>
+          </p>
         </div>
 
         <div class="grid md:grid-cols-2 gap-6 mb-8">
           <div class="bg-cream-100 rounded-lg p-6 text-center">
-            <p class="text-navy-600 font-sans text-sm uppercase tracking-wider mb-2">Your share of a $1 Billion bill</p>
+            <p class="text-navy-600 font-sans text-sm uppercase tracking-wider mb-2">
+              Your share of a $1 Billion bill
+            </p>
             <p class="text-3xl font-serif font-bold text-gold-600" id="share-billion">$0.00</p>
           </div>
           <div class="bg-cream-100 rounded-lg p-6 text-center">
-            <p class="text-navy-600 font-sans text-sm uppercase tracking-wider mb-2">Your share of a $1 Trillion bill</p>
+            <p class="text-navy-600 font-sans text-sm uppercase tracking-wider mb-2">
+              Your share of a $1 Trillion bill
+            </p>
             <p class="text-3xl font-serif font-bold text-red-700" id="share-trillion">$0.00</p>
           </div>
         </div>
@@ -88,7 +103,9 @@ import Divider from '../components/ui/Divider.astro';
 
     <!-- Example Bills Section -->
     <div class="mt-8">
-      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-6 text-center">Real Bill Examples</h2>
+      <h2 class="font-serif text-2xl text-navy-900 font-bold mb-6 text-center">
+        Real Bill Examples
+      </h2>
       <p class="text-navy-600 text-center mb-8">See your share of actual legislation</p>
 
       <div class="grid md:grid-cols-2 gap-6" id="bill-examples">
@@ -100,7 +117,10 @@ import Divider from '../components/ui/Divider.astro';
 
     <div class="bg-cream-200 rounded-lg p-6 mt-8 border-l-4 border-gold-500">
       <p class="font-serif text-navy-700 italic">
-        <strong>Disclaimer:</strong> These calculations assume Congress actually budgets, that money is distributed evenly (it isn't), and that these bills won't add to the national debt (they will). For entertainment purposes only. Your actual tax burden may vary based on income, deductions, and how good your accountant is.
+        <strong>Disclaimer:</strong> These calculations assume Congress actually budgets, that money is
+        distributed evenly (it isn't), and that these bills won't add to the national debt (they will).
+        For entertainment purposes only. Your actual tax burden may vary based on income, deductions,
+        and how good your accountant is.
       </p>
     </div>
   </div>
@@ -108,56 +128,56 @@ import Divider from '../components/ui/Divider.astro';
   <script is:inline>
     // State population data (approximate 2024 estimates)
     const stateData = {
-      'Alabama': { pop: 5108468, districts: 7 },
-      'Alaska': { pop: 733406, districts: 1 },
-      'Arizona': { pop: 7431344, districts: 9 },
-      'Arkansas': { pop: 3067732, districts: 4 },
-      'California': { pop: 38965193, districts: 52 },
-      'Colorado': { pop: 5877610, districts: 8 },
-      'Connecticut': { pop: 3617176, districts: 5 },
-      'Delaware': { pop: 1031890, districts: 1 },
-      'Florida': { pop: 23002651, districts: 28 },
-      'Georgia': { pop: 11029227, districts: 14 },
-      'Hawaii': { pop: 1435138, districts: 2 },
-      'Idaho': { pop: 1964726, districts: 2 },
-      'Illinois': { pop: 12549689, districts: 17 },
-      'Indiana': { pop: 6862199, districts: 9 },
-      'Iowa': { pop: 3207004, districts: 4 },
-      'Kansas': { pop: 2940546, districts: 4 },
-      'Kentucky': { pop: 4526154, districts: 6 },
-      'Louisiana': { pop: 4573749, districts: 6 },
-      'Maine': { pop: 1395722, districts: 2 },
-      'Maryland': { pop: 6180253, districts: 8 },
-      'Massachusetts': { pop: 7001399, districts: 9 },
-      'Michigan': { pop: 10037261, districts: 13 },
-      'Minnesota': { pop: 5737915, districts: 8 },
-      'Mississippi': { pop: 2939690, districts: 4 },
-      'Missouri': { pop: 6196156, districts: 8 },
-      'Montana': { pop: 1132812, districts: 2 },
-      'Nebraska': { pop: 1978379, districts: 3 },
-      'Nevada': { pop: 3194176, districts: 4 },
+      Alabama: { pop: 5108468, districts: 7 },
+      Alaska: { pop: 733406, districts: 1 },
+      Arizona: { pop: 7431344, districts: 9 },
+      Arkansas: { pop: 3067732, districts: 4 },
+      California: { pop: 38965193, districts: 52 },
+      Colorado: { pop: 5877610, districts: 8 },
+      Connecticut: { pop: 3617176, districts: 5 },
+      Delaware: { pop: 1031890, districts: 1 },
+      Florida: { pop: 23002651, districts: 28 },
+      Georgia: { pop: 11029227, districts: 14 },
+      Hawaii: { pop: 1435138, districts: 2 },
+      Idaho: { pop: 1964726, districts: 2 },
+      Illinois: { pop: 12549689, districts: 17 },
+      Indiana: { pop: 6862199, districts: 9 },
+      Iowa: { pop: 3207004, districts: 4 },
+      Kansas: { pop: 2940546, districts: 4 },
+      Kentucky: { pop: 4526154, districts: 6 },
+      Louisiana: { pop: 4573749, districts: 6 },
+      Maine: { pop: 1395722, districts: 2 },
+      Maryland: { pop: 6180253, districts: 8 },
+      Massachusetts: { pop: 7001399, districts: 9 },
+      Michigan: { pop: 10037261, districts: 13 },
+      Minnesota: { pop: 5737915, districts: 8 },
+      Mississippi: { pop: 2939690, districts: 4 },
+      Missouri: { pop: 6196156, districts: 8 },
+      Montana: { pop: 1132812, districts: 2 },
+      Nebraska: { pop: 1978379, districts: 3 },
+      Nevada: { pop: 3194176, districts: 4 },
       'New Hampshire': { pop: 1402054, districts: 2 },
       'New Jersey': { pop: 9290841, districts: 12 },
       'New Mexico': { pop: 2114371, districts: 3 },
       'New York': { pop: 19571216, districts: 26 },
       'North Carolina': { pop: 10835491, districts: 14 },
       'North Dakota': { pop: 783926, districts: 1 },
-      'Ohio': { pop: 11785935, districts: 15 },
-      'Oklahoma': { pop: 4053824, districts: 5 },
-      'Oregon': { pop: 4233358, districts: 6 },
-      'Pennsylvania': { pop: 12961683, districts: 17 },
+      Ohio: { pop: 11785935, districts: 15 },
+      Oklahoma: { pop: 4053824, districts: 5 },
+      Oregon: { pop: 4233358, districts: 6 },
+      Pennsylvania: { pop: 12961683, districts: 17 },
       'Rhode Island': { pop: 1095962, districts: 2 },
       'South Carolina': { pop: 5373555, districts: 7 },
       'South Dakota': { pop: 919318, districts: 1 },
-      'Tennessee': { pop: 7126489, districts: 9 },
-      'Texas': { pop: 30503301, districts: 38 },
-      'Utah': { pop: 3417734, districts: 4 },
-      'Vermont': { pop: 647464, districts: 1 },
-      'Virginia': { pop: 8683619, districts: 11 },
-      'Washington': { pop: 7812880, districts: 10 },
+      Tennessee: { pop: 7126489, districts: 9 },
+      Texas: { pop: 30503301, districts: 38 },
+      Utah: { pop: 3417734, districts: 4 },
+      Vermont: { pop: 647464, districts: 1 },
+      Virginia: { pop: 8683619, districts: 11 },
+      Washington: { pop: 7812880, districts: 10 },
       'West Virginia': { pop: 1770071, districts: 2 },
-      'Wisconsin': { pop: 5910955, districts: 8 },
-      'Wyoming': { pop: 584057, districts: 1 }
+      Wisconsin: { pop: 5910955, districts: 8 },
+      Wyoming: { pop: 584057, districts: 1 },
     };
 
     // US total population
@@ -175,34 +195,36 @@ import Divider from '../components/ui/Divider.astro';
       fuel: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v17"/><path d="M3 22h10"/><path d="M13 6h1a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V5"/><path d="M18 2v3"/><circle cx="18" cy="16" r="3"/></svg>`,
       home: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
     };
-	    const exampleBills = [
-	      { name: 'Infrastructure Investment and Jobs Act (2021)', cost: 1200000000000, icon: 'road' },
-	      { name: 'CHIPS and Science Act (2022)', cost: 280000000000, icon: 'cpu' },
-	      { name: 'American Rescue Plan (2021)', cost: 1900000000000, icon: 'banknote' },
-	      { name: 'Build Back Better (proposed)', cost: 3500000000000, icon: 'hardhat' }
-	    ];
+    const exampleBills = [
+      { name: 'Infrastructure Investment and Jobs Act (2021)', cost: 1200000000000, icon: 'road' },
+      { name: 'CHIPS and Science Act (2022)', cost: 280000000000, icon: 'cpu' },
+      { name: 'American Rescue Plan (2021)', cost: 1900000000000, icon: 'banknote' },
+      { name: 'Build Back Better (proposed)', cost: 3500000000000, icon: 'hardhat' },
+    ];
 
-	    const svgParser = new DOMParser();
-	    const iconTemplates = Object.fromEntries(
-	      Object.entries(iconSvgs).map(([name, svg]) => [
-	        name,
-	        svgParser.parseFromString(svg, 'image/svg+xml').documentElement,
-	      ])
-	    );
+    const svgParser = new DOMParser();
+    const iconTemplates = Object.fromEntries(
+      Object.entries(iconSvgs).map(([name, svg]) => [
+        name,
+        svgParser.parseFromString(svg, 'image/svg+xml').documentElement,
+      ]),
+    );
 
-	    function cloneIcon(name) {
-	      const template = iconTemplates[name];
-	      return template ? document.importNode(template, true) : null;
-	    }
+    function cloneIcon(name) {
+      const template = iconTemplates[name];
+      return template ? document.importNode(template, true) : null;
+    }
 
-	    // Populate state dropdown
-	    const stateSelect = document.getElementById('state-select');
-	    Object.keys(stateData).sort().forEach(state => {
-	      const option = document.createElement('option');
-	      option.value = state;
-      option.textContent = state;
-      stateSelect.appendChild(option);
-    });
+    // Populate state dropdown
+    const stateSelect = document.getElementById('state-select');
+    Object.keys(stateData)
+      .sort()
+      .forEach((state) => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        stateSelect.appendChild(option);
+      });
 
     // Format currency
     function formatCurrency(amount) {
@@ -216,103 +238,103 @@ import Divider from '../components/ui/Divider.astro';
     }
 
     // Format large numbers with commas
-	    function formatNumber(num) {
-	      return num.toLocaleString();
-	    }
+    function formatNumber(num) {
+      return num.toLocaleString();
+    }
 
-	    function renderComparisons(container, shareTrillion) {
-	      container.replaceChildren();
+    function renderComparisons(container, shareTrillion) {
+      container.replaceChildren();
 
-	      const rows = [
-	        {
-	          icon: 'coffee',
-	          prefix: 'cups of overpriced coffee',
-	          value: Math.round(shareTrillion / 5.5).toLocaleString(),
-	        },
-	        {
-	          icon: 'tv',
-	          prefix: 'months of Netflix',
-	          value: Math.round(shareTrillion / 15.99).toLocaleString(),
-	        },
-	        {
-	          icon: 'salad',
-	          prefix: "avocado toasts (the reason millennials can't buy houses, apparently)",
-	          value: Math.round(shareTrillion / 12).toLocaleString(),
-	        },
-	        {
-	          icon: 'fuel',
-	          prefix: 'gallons of gas',
-	          value: Math.round(shareTrillion / 3.5).toLocaleString(),
-	        },
-	      ];
+      const rows = [
+        {
+          icon: 'coffee',
+          prefix: 'cups of overpriced coffee',
+          value: Math.round(shareTrillion / 5.5).toLocaleString(),
+        },
+        {
+          icon: 'tv',
+          prefix: 'months of Netflix',
+          value: Math.round(shareTrillion / 15.99).toLocaleString(),
+        },
+        {
+          icon: 'salad',
+          prefix: "avocado toasts (the reason millennials can't buy houses, apparently)",
+          value: Math.round(shareTrillion / 12).toLocaleString(),
+        },
+        {
+          icon: 'fuel',
+          prefix: 'gallons of gas',
+          value: Math.round(shareTrillion / 3.5).toLocaleString(),
+        },
+      ];
 
-	      rows.forEach((row) => {
-	        const p = document.createElement('p');
-	        p.className = 'flex items-center gap-2';
+      rows.forEach((row) => {
+        const p = document.createElement('p');
+        p.className = 'flex items-center gap-2';
 
-	        const icon = cloneIcon(row.icon);
-	        if (icon) p.appendChild(icon);
+        const icon = cloneIcon(row.icon);
+        if (icon) p.appendChild(icon);
 
-	        const strong = document.createElement('strong');
-	        strong.textContent = row.value;
+        const strong = document.createElement('strong');
+        strong.textContent = row.value;
 
-	        p.append(strong, document.createTextNode(` ${row.prefix}`));
-	        container.appendChild(p);
-	      });
+        p.append(strong, document.createTextNode(` ${row.prefix}`));
+        container.appendChild(p);
+      });
 
-	      const homeP = document.createElement('p');
-	      homeP.className = 'flex items-center gap-2';
-	      const homeIcon = cloneIcon('home');
-	      if (homeIcon) homeP.appendChild(homeIcon);
-	      homeP.append(
-	        document.createTextNode('About '),
-	        Object.assign(document.createElement('strong'), {
-	          textContent: `${(shareTrillion / 350000 * 100).toFixed(3)}%`,
-	        }),
-	        document.createTextNode(' of a median U.S. home'),
-	      );
-	      container.appendChild(homeP);
-	    }
+      const homeP = document.createElement('p');
+      homeP.className = 'flex items-center gap-2';
+      const homeIcon = cloneIcon('home');
+      if (homeIcon) homeP.appendChild(homeIcon);
+      homeP.append(
+        document.createTextNode('About '),
+        Object.assign(document.createElement('strong'), {
+          textContent: `${((shareTrillion / 350000) * 100).toFixed(3)}%`,
+        }),
+        document.createTextNode(' of a median U.S. home'),
+      );
+      container.appendChild(homeP);
+    }
 
-	    function renderBillExamples(container) {
-	      container.replaceChildren();
+    function renderBillExamples(container) {
+      container.replaceChildren();
 
-	      const frag = document.createDocumentFragment();
+      const frag = document.createDocumentFragment();
 
-	      exampleBills.forEach((bill) => {
-	        const perCapita = bill.cost / usPopulation;
+      exampleBills.forEach((bill) => {
+        const perCapita = bill.cost / usPopulation;
 
-	        const card = document.createElement('div');
-	        card.className = 'bg-parchment rounded-lg p-6 shadow';
+        const card = document.createElement('div');
+        card.className = 'bg-parchment rounded-lg p-6 shadow';
 
-	        const iconWrap = document.createElement('div');
-	        iconWrap.className = 'text-navy-700 mb-2';
-	        const icon = cloneIcon(bill.icon);
-	        if (icon) iconWrap.appendChild(icon);
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'text-navy-700 mb-2';
+        const icon = cloneIcon(bill.icon);
+        if (icon) iconWrap.appendChild(icon);
 
-	        const h3 = document.createElement('h3');
-	        h3.className = 'font-serif font-bold text-navy-900 mb-2';
-	        h3.textContent = bill.name;
+        const h3 = document.createElement('h3');
+        h3.className = 'font-serif font-bold text-navy-900 mb-2';
+        h3.textContent = bill.name;
 
-	        const total = document.createElement('p');
-	        total.className = 'text-navy-600 text-sm mb-3';
-	        total.textContent = `Total Cost: ${formatCurrency(bill.cost)}`;
+        const total = document.createElement('p');
+        total.className = 'text-navy-600 text-sm mb-3';
+        total.textContent = `Total Cost: ${formatCurrency(bill.cost)}`;
 
-	        const share = document.createElement('p');
-	        share.className = 'text-lg font-bold text-gold-600';
-	        share.textContent = `Your Share: ${formatCurrency(perCapita)}`;
+        const share = document.createElement('p');
+        share.className = 'text-lg font-bold text-gold-600';
+        share.textContent = `Your Share: ${formatCurrency(perCapita)}`;
 
-	        card.append(iconWrap, h3, total, share);
-	        frag.appendChild(card);
-	      });
+        card.append(iconWrap, h3, total, share);
+        frag.appendChild(card);
+      });
 
-	      container.appendChild(frag);
-	    }
+      container.appendChild(frag);
+    }
 
-	    // Calculate and display results
-	    function calculateShare() {
-	      const state = stateSelect.value;
-	      if (!state) return;
+    // Calculate and display results
+    function calculateShare() {
+      const state = stateSelect.value;
+      if (!state) return;
 
       const data = stateData[state];
       const statePop = data.pop;
@@ -327,16 +349,16 @@ import Divider from '../components/ui/Divider.astro';
       document.getElementById('share-billion').textContent = formatCurrency(shareBillion);
       document.getElementById('share-trillion').textContent = formatCurrency(shareTrillion);
 
-	      const comparisons = document.getElementById('comparisons');
-	      if (comparisons) renderComparisons(comparisons, shareTrillion);
+      const comparisons = document.getElementById('comparisons');
+      if (comparisons) renderComparisons(comparisons, shareTrillion);
 
-	      // Show results
-	      document.getElementById('results').classList.remove('hidden');
+      // Show results
+      document.getElementById('results').classList.remove('hidden');
 
-	      // Update bill examples with per-capita cost
-	      const examplesContainer = document.getElementById('bill-examples');
-	      if (examplesContainer) renderBillExamples(examplesContainer);
-	    }
+      // Update bill examples with per-capita cost
+      const examplesContainer = document.getElementById('bill-examples');
+      if (examplesContainer) renderBillExamples(examplesContainer);
+    }
 
     // Form submission
     document.getElementById('cost-form').addEventListener('submit', (e) => {
@@ -351,8 +373,8 @@ import Divider from '../components/ui/Divider.astro';
       }
     });
 
-	    // Initialize bill examples on load
-	    const examplesContainer = document.getElementById('bill-examples');
-	    if (examplesContainer) renderBillExamples(examplesContainer);
-	  </script>
+    // Initialize bill examples on load
+    const examplesContainer = document.getElementById('bill-examples');
+    if (examplesContainer) renderBillExamples(examplesContainer);
+  </script>
 </BaseLayout>

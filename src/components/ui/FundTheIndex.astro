@@ -44,11 +44,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
       <Icon name="landmark" size={20} />
       <h2>Fund the Index</h2>
     </div>
-    <button
-      id="fund-drawer-close"
-      class="fund-drawer-close"
-      aria-label="Close drawer"
-    >
+    <button id="fund-drawer-close" class="fund-drawer-close" aria-label="Close drawer">
       <Icon name="x" size={20} />
     </button>
   </header>
@@ -57,10 +53,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
   <div class="fund-drawer-content">
     <div class="fund-bill">
       {/* "UNFUNDED" stamp watermark */}
-      <div
-        class="fund-watermark"
-        aria-hidden="true"
-      >
+      <div class="fund-watermark" aria-hidden="true">
         <span>UNFUNDED</span>
       </div>
 
@@ -70,29 +63,26 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
           <div class="fund-seal">
             <OfficialSeal size="64" />
           </div>
-          <p class="fund-committee">
-            119th Absurdity Index &mdash; Appropriations Committee
-          </p>
-          <p class="fund-resolution">
-            H.Res. 000
-          </p>
+          <p class="fund-committee">119th Absurdity Index &mdash; Appropriations Committee</p>
+          <p class="fund-resolution">H.Res. 000</p>
           <h3 class="fund-title">
             The Keep The Lights On<br class="hidden sm:block" />
             Without Selling Our Souls Act
           </h3>
         </div>
 
-        <div class="gold-rule fund-rule" />
+        <div class="gold-rule fund-rule"></div>
 
         {/* WHEREAS clauses */}
         <div class="fund-clauses">
           <p>
-            <span class="fund-clause-label">WHEREAS</span> the operators of the Absurdity Index
-            receive exactly <span class="fund-amount-zero">$0.00</span> in lobbyist money,
-            dark money, PAC contributions, or suspiciously timed &ldquo;charitable donations&rdquo;;
+            <span class="fund-clause-label">WHEREAS</span> the operators of the Absurdity Index receive
+            exactly <span class="fund-amount-zero">$0.00</span> in lobbyist money, dark money, PAC contributions,
+            or suspiciously timed &ldquo;charitable donations&rdquo;;
           </p>
           <p>
-            <span class="fund-clause-label">WHEREAS</span> unlike actual members of Congress, we do not earn
+            <span class="fund-clause-label">WHEREAS</span> unlike actual members of Congress, we do not
+            earn
             <span class="fund-amount">$174,000/year</span> to not read the bills we write about;
           </p>
           <p>
@@ -100,9 +90,9 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
             caffeine, spite, and the faint hope that someone will notice;
           </p>
           <p>
-            <span class="fund-clause-label">NOW, THEREFORE, BE IT RESOLVED</span> that the general
-            public may fund this operation through small-dollar donations, thereby proving that civic
-            engagement doesn&rsquo;t require a K&nbsp;Street address.
+            <span class="fund-clause-label">NOW, THEREFORE, BE IT RESOLVED</span> that the general public
+            may fund this operation through small-dollar donations, thereby proving that civic engagement
+            doesn&rsquo;t require a K&nbsp;Street address.
           </p>
         </div>
 
@@ -133,12 +123,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
             Cast Your Vote
           </h4>
           <div class="fund-tiers-grid">
-            <a
-              href={DONATE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="fund-tier"
-            >
+            <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" class="fund-tier">
               <Icon name="coffee" size={20} class="fund-tier-icon" />
               <span class="fund-tier-name">Yea</span>
               <span class="fund-tier-amount">$5</span>
@@ -156,12 +141,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
               <span class="fund-tier-amount">$25</span>
               <span class="fund-tier-desc">Fund a whole session</span>
             </a>
-            <a
-              href={DONATE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="fund-tier"
-            >
+            <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" class="fund-tier">
               <Icon name="trophy" size={20} class="fund-tier-icon" />
               <span class="fund-tier-name">Unanimous Consent</span>
               <span class="fund-tier-amount">$100</span>
@@ -186,12 +166,7 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
 
   <!-- Drawer footer -->
   <footer class="fund-drawer-footer" data-theme-fixed>
-    <a
-      href={DONATE_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="fund-footer-link"
-    >
+    <a href={DONATE_URL} target="_blank" rel="noopener noreferrer" class="fund-footer-link">
       <span>Donate on GoFundMe</span>
       <Icon name="external-link" size={12} />
     </a>
@@ -357,7 +332,13 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
     background:
       radial-gradient(ellipse at 20% 30%, rgba(139, 119, 85, 0.08) 0%, transparent 40%),
       radial-gradient(ellipse at 80% 70%, rgba(139, 119, 85, 0.06) 0%, transparent 35%),
-      linear-gradient(90deg, rgba(120, 100, 70, 0.12) 0%, transparent 8%, transparent 92%, rgba(120, 100, 70, 0.12) 100%),
+      linear-gradient(
+        90deg,
+        rgba(120, 100, 70, 0.12) 0%,
+        transparent 8%,
+        transparent 92%,
+        rgba(120, 100, 70, 0.12) 100%
+      ),
       linear-gradient(180deg, #f5ead4 0%, #efe4cc 30%, #e8dcc2 70%, #ddd0b5 100%);
   }
 

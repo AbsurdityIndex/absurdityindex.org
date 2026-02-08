@@ -38,11 +38,23 @@ const textCount = textVersions?.length || 0;
 // Determine which tabs to show
 const tabs = [
   { id: 'actions', label: 'Actions', count: actionsCount, icon: 'clock', show: actionsCount > 0 },
-  { id: 'amendments', label: 'Amendments', count: amendmentsTotal, icon: 'edit', show: amendmentsTotal > 0 },
-  { id: 'cosponsors', label: 'Cosponsors', count: cosponsorsTotal, icon: 'users', show: cosponsorsTotal > 0 },
+  {
+    id: 'amendments',
+    label: 'Amendments',
+    count: amendmentsTotal,
+    icon: 'edit',
+    show: amendmentsTotal > 0,
+  },
+  {
+    id: 'cosponsors',
+    label: 'Cosponsors',
+    count: cosponsorsTotal,
+    icon: 'users',
+    show: cosponsorsTotal > 0,
+  },
   { id: 'related', label: 'Related', count: relatedCount, icon: 'link', show: relatedCount > 0 },
   { id: 'text', label: 'Text', count: textCount, icon: 'file-text', show: textCount > 0 },
-].filter(t => t.show);
+].filter((t) => t.show);
 
 // If no tabs to show, return nothing
 if (tabs.length === 0) {
@@ -53,50 +65,52 @@ if (tabs.length === 0) {
 <div class="bill-tabs" data-tabs>
   {/* Tab navigation */}
   <div class="flex gap-1 p-1 bg-cream-200 rounded-lg mb-4 overflow-x-auto">
-    {tabs.map((tab, i) => (
-      <button
-        type="button"
-        class:list={[
-          'tab-btn flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
-          i === 0 ? 'bg-white text-navy-900 shadow-sm' : 'text-navy-600 hover:text-navy-900 hover:bg-cream-100'
-        ]}
-        data-tab={tab.id}
-        aria-selected={i === 0 ? 'true' : 'false'}
-      >
-        <Icon name={tab.icon} size={14} />
-        {tab.label}
-        <span class="text-xs px-1.5 py-0.5 rounded bg-gold-100 text-gold-800 font-mono">
-          {tab.count}
-        </span>
-      </button>
-    ))}
+    {
+      tabs.map((tab, i) => (
+        <button
+          type="button"
+          class:list={[
+            'tab-btn flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
+            i === 0
+              ? 'bg-white text-navy-900 shadow-sm'
+              : 'text-navy-600 hover:text-navy-900 hover:bg-cream-100',
+          ]}
+          data-tab={tab.id}
+          aria-selected={i === 0 ? 'true' : 'false'}
+        >
+          <Icon name={tab.icon} size={14} />
+          {tab.label}
+          <span class="text-xs px-1.5 py-0.5 rounded bg-gold-100 text-gold-800 font-mono">
+            {tab.count}
+          </span>
+        </button>
+      ))
+    }
   </div>
 
   {/* Tab panels */}
   <div class="tab-panels">
-    {tabs.map((tab, i) => (
-      <div
-        class:list={['tab-panel', i === 0 ? '' : 'hidden']}
-        data-panel={tab.id}
-        role="tabpanel"
-      >
-        {tab.id === 'actions' && (
-          <ActionsTimeline actions={actions} maxItems={25} />
-        )}
-        {tab.id === 'amendments' && (
-          <AmendmentsList amendments={amendments} amendmentCount={amendmentCount} maxItems={15} />
-        )}
-        {tab.id === 'cosponsors' && (
-          <CosponsorsList cosponsors={cosponsors} cosponsorCount={cosponsorCount} maxItems={30} />
-        )}
-        {tab.id === 'related' && (
-          <RelatedBillsList relatedBills={relatedBills} />
-        )}
-        {tab.id === 'text' && (
-          <TextVersions textVersions={textVersions} congressDotGovUrl={congressDotGovUrl} />
-        )}
-      </div>
-    ))}
+    {
+      tabs.map((tab, i) => (
+        <div
+          class:list={['tab-panel', i === 0 ? '' : 'hidden']}
+          data-panel={tab.id}
+          role="tabpanel"
+        >
+          {tab.id === 'actions' && <ActionsTimeline actions={actions} maxItems={25} />}
+          {tab.id === 'amendments' && (
+            <AmendmentsList amendments={amendments} amendmentCount={amendmentCount} maxItems={15} />
+          )}
+          {tab.id === 'cosponsors' && (
+            <CosponsorsList cosponsors={cosponsors} cosponsorCount={cosponsorCount} maxItems={30} />
+          )}
+          {tab.id === 'related' && <RelatedBillsList relatedBills={relatedBills} />}
+          {tab.id === 'text' && (
+            <TextVersions textVersions={textVersions} congressDotGovUrl={congressDotGovUrl} />
+          )}
+        </div>
+      ))
+    }
   </div>
 </div>
 
@@ -104,16 +118,16 @@ if (tabs.length === 0) {
   function initTabs() {
     const tabContainers = document.querySelectorAll('[data-tabs]');
 
-    tabContainers.forEach(container => {
+    tabContainers.forEach((container) => {
       const buttons = container.querySelectorAll('.tab-btn');
       const panels = container.querySelectorAll('.tab-panel');
 
-      buttons.forEach(btn => {
+      buttons.forEach((btn) => {
         btn.addEventListener('click', () => {
           const tabId = btn.getAttribute('data-tab');
 
           // Update button states
-          buttons.forEach(b => {
+          buttons.forEach((b) => {
             b.classList.remove('bg-white', 'text-navy-900', 'shadow-sm');
             b.classList.add('text-navy-600');
             b.setAttribute('aria-selected', 'false');
@@ -123,7 +137,7 @@ if (tabs.length === 0) {
           btn.setAttribute('aria-selected', 'true');
 
           // Update panel visibility
-          panels.forEach(p => {
+          panels.forEach((p) => {
             if (p.getAttribute('data-panel') === tabId) {
               p.classList.remove('hidden');
             } else {

@@ -18,11 +18,20 @@ interface Props {
   isExpanded?: boolean;
 }
 
-const { number, title, shortTitle, spending, totalSpending, description, content, isExpanded = false } = Astro.props;
+const {
+  number,
+  title,
+  shortTitle,
+  spending,
+  totalSpending,
+  description,
+  content,
+  isExpanded = false,
+} = Astro.props;
 
 const divisionLetter = String.fromCharCode(64 + number);
 const slug = `division-${number}`;
-const percent = totalSpending > 0 ? (spending / totalSpending * 100) : 0;
+const percent = totalSpending > 0 ? (spending / totalSpending) * 100 : 0;
 ---
 
 <details
@@ -32,9 +41,14 @@ const percent = totalSpending > 0 ? (spending / totalSpending * 100) : 0;
   data-division={number}
   open={isExpanded}
 >
-  <summary class="flex items-center justify-between px-4 py-3 md:px-5 md:py-4 cursor-pointer select-none hover:bg-cream-200 transition-colors">
+  <summary
+    class="flex items-center justify-between px-4 py-3 md:px-5 md:py-4 cursor-pointer select-none hover:bg-cream-200 transition-colors"
+  >
     <div class="flex items-center gap-3 min-w-0">
-      <span class="font-mono text-xs font-bold text-gold-600 bg-navy-800 px-2.5 py-1 rounded shrink-0" data-theme-fixed>
+      <span
+        class="font-mono text-xs font-bold text-gold-600 bg-navy-800 px-2.5 py-1 rounded shrink-0"
+        data-theme-fixed
+      >
         DIV {divisionLetter}
       </span>
       <div class="min-w-0">
@@ -65,23 +79,26 @@ const percent = totalSpending > 0 ? (spending / totalSpending * 100) : 0;
         <div
           class="h-full bg-gradient-to-r from-gold-500 to-gold-600 rounded-full"
           style={`width: ${Math.min(percent * 2, 100)}%`}
-        />
+        >
+        </div>
       </div>
     </div>
 
-    {shortTitle && shortTitle !== title && (
-      <p class="text-xs text-navy-500 italic mb-2">{title}</p>
-    )}
+    {shortTitle && shortTitle !== title && <p class="text-xs text-navy-500 italic mb-2">{title}</p>}
 
-    {description && (
-      <p class="font-serif text-sm text-navy-700 leading-relaxed mb-3">{description}</p>
-    )}
+    {
+      description && (
+        <p class="font-serif text-sm text-navy-700 leading-relaxed mb-3">{description}</p>
+      )
+    }
 
-    {content && (
-      <div class="prose prose-sm max-w-none text-navy-700">
-        <Fragment set:html={content} />
-      </div>
-    )}
+    {
+      content && (
+        <div class="prose prose-sm max-w-none text-navy-700">
+          <Fragment set:html={content} />
+        </div>
+      )
+    }
 
     <slot />
 

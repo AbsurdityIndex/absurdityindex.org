@@ -26,12 +26,14 @@ const collectionItems = [
   {
     icon: 'edit',
     title: 'Local browser settings',
-    detail: 'We store a small set of settings in your browser to keep preferences consistent across visits.',
+    detail:
+      'We store a small set of settings in your browser to keep preferences consistent across visits.',
   },
   {
     icon: 'bar-chart',
     title: 'Aggregate pageview counter',
-    detail: 'We maintain a running site-wide visit total without user accounts, ad IDs, or cross-site profiles.',
+    detail:
+      'We maintain a running site-wide visit total without user accounts, ad IDs, or cross-site profiles.',
   },
 ];
 
@@ -39,15 +41,24 @@ const storageKeys = [
   { key: 'theme', description: 'Saves your selected color theme.' },
   { key: 'font-pairing', description: 'Saves your selected font pairing.' },
   { key: 'filibuster-best', description: 'Saves your best Filibuster Simulator score.' },
-  { key: 'absurdity.perf', description: 'Optional debug flag for client-side performance logging.' },
+  {
+    key: 'absurdity.perf',
+    description: 'Optional debug flag for client-side performance logging.',
+  },
 ];
 ---
 
-<BaseLayout title="Privacy Policy" description="Privacy policy for Absurdity Index, including what data we collect, what we do not collect, and how local browser storage is used.">
+<BaseLayout
+  title="Privacy Policy"
+  description="Privacy policy for Absurdity Index, including what data we collect, what we do not collect, and how local browser storage is used."
+>
   <div class="max-w-5xl mx-auto px-4 py-10 md:py-14">
-    <section class="relative overflow-hidden rounded-2xl border border-gold-300 bg-parchment px-6 py-8 shadow-lg md:px-10">
+    <section
+      class="relative overflow-hidden rounded-2xl border border-gold-300 bg-parchment px-6 py-8 shadow-lg md:px-10"
+    >
       <div class="absolute -top-20 -right-16 h-56 w-56 rounded-full bg-gold-300/20 blur-3xl"></div>
-      <div class="absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-navy-300/20 blur-3xl"></div>
+      <div class="absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-navy-300/20 blur-3xl">
+      </div>
 
       <div class="relative">
         <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mb-4">Privacy</p>
@@ -56,7 +67,9 @@ const storageKeys = [
             <OfficialSeal size="88" />
           </div>
           <div>
-            <h1 class="font-serif text-3xl md:text-[3.35rem] text-navy-900 font-bold leading-[1.05]">
+            <h1
+              class="font-serif text-3xl md:text-[3.35rem] text-navy-900 font-bold leading-[1.05]"
+            >
               Privacy Policy
             </h1>
             <p class="mt-2 inline-flex items-center gap-2 text-navy-600 font-sans text-sm">
@@ -64,7 +77,8 @@ const storageKeys = [
               Last updated: {lastUpdated}
             </p>
             <p class="mt-4 text-navy-700 font-sans leading-relaxed max-w-3xl">
-              AbsurdityIndex.org is a satirical editorial project, not a government service. We keep data collection intentionally minimal.
+              AbsurdityIndex.org is a satirical editorial project, not a government service. We keep
+              data collection intentionally minimal.
             </p>
           </div>
         </div>
@@ -104,16 +118,18 @@ const storageKeys = [
           What We Collect
         </h2>
         <ul class="mt-4 space-y-3">
-          {collectionItems.map((item) => (
-            <li class="flex items-start gap-3 rounded-lg border border-gold-200 bg-cream-50/70 px-3 py-2.5">
-              <span class="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gold-100 text-gold-700 shrink-0">
-                <Icon name={item.icon} size={14} />
-              </span>
-              <p class="text-sm text-navy-800 leading-relaxed">
-                <strong class="font-semibold">{item.title}:</strong> {item.detail}
-              </p>
-            </li>
-          ))}
+          {
+            collectionItems.map((item) => (
+              <li class="flex items-start gap-3 rounded-lg border border-gold-200 bg-cream-50/70 px-3 py-2.5">
+                <span class="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gold-100 text-gold-700 shrink-0">
+                  <Icon name={item.icon} size={14} />
+                </span>
+                <p class="text-sm text-navy-800 leading-relaxed">
+                  <strong class="font-semibold">{item.title}:</strong> {item.detail}
+                </p>
+              </li>
+            ))
+          }
         </ul>
       </section>
 
@@ -127,12 +143,14 @@ const storageKeys = [
         </p>
         <div class="mt-4 overflow-hidden rounded-lg border border-gold-200">
           <dl class="divide-y divide-gold-200">
-            {storageKeys.map((item) => (
-              <div class="bg-cream-50/70 px-4 py-3">
-                <dt class="font-mono text-sm font-bold text-gold-700">{item.key}</dt>
-                <dd class="mt-1 text-sm text-navy-800">{item.description}</dd>
-              </div>
-            ))}
+            {
+              storageKeys.map((item) => (
+                <div class="bg-cream-50/70 px-4 py-3">
+                  <dt class="font-mono text-sm font-bold text-gold-700">{item.key}</dt>
+                  <dd class="mt-1 text-sm text-navy-800">{item.description}</dd>
+                </div>
+              ))
+            }
           </dl>
         </div>
       </section>
@@ -143,7 +161,9 @@ const storageKeys = [
           Cookies
         </h2>
         <p class="mt-4 text-navy-800 leading-relaxed">
-          As of {lastUpdated}, Absurdity Index does not set first-party analytics or advertising cookies in site code. Infrastructure providers may still use strictly necessary mechanisms for security and platform operations.
+          As of {lastUpdated}, Absurdity Index does not set first-party analytics or advertising
+          cookies in site code. Infrastructure providers may still use strictly necessary mechanisms
+          for security and platform operations.
         </p>
       </section>
 
@@ -154,8 +174,14 @@ const storageKeys = [
         </h2>
         <ul class="mt-4 space-y-2 text-navy-800">
           <li><strong>Google Fonts:</strong> We load fonts from Google-hosted endpoints.</li>
-          <li><strong>Cloudflare Pages:</strong> Hosts and serves the site and may process request metadata for performance and security.</li>
-          <li><strong>External links:</strong> Sites like Congress.gov, social networks, and GoFundMe apply their own privacy practices.</li>
+          <li>
+            <strong>Cloudflare Pages:</strong> Hosts and serves the site and may process request metadata
+            for performance and security.
+          </li>
+          <li>
+            <strong>External links:</strong> Sites like Congress.gov, social networks, and GoFundMe apply
+            their own privacy practices.
+          </li>
         </ul>
       </section>
 
@@ -166,7 +192,9 @@ const storageKeys = [
         </h2>
         <ul class="mt-4 space-y-2 text-navy-800">
           <li>Clear browser storage to remove saved preferences and game stats.</li>
-          <li>Block third-party resources (such as remote fonts) using browser settings or extensions.</li>
+          <li>
+            Block third-party resources (such as remote fonts) using browser settings or extensions.
+          </li>
           <li>Use private browsing mode if you do not want settings to persist.</li>
         </ul>
       </section>
@@ -177,18 +205,22 @@ const storageKeys = [
           Policy Updates
         </h2>
         <p class="mt-4 text-navy-800 leading-relaxed">
-          We may revise this policy as features change. Material updates are reflected by the "Last updated" date on this page.
+          We may revise this policy as features change. Material updates are reflected by the "Last
+          updated" date on this page.
         </p>
       </section>
 
-      <section class="rounded-xl border border-gold-300 bg-navy-900 text-gold-100 p-6 md:col-span-2" data-theme-fixed>
+      <section
+        class="rounded-xl border border-gold-300 bg-navy-900 text-gold-100 p-6 md:col-span-2"
+        data-theme-fixed
+      >
         <h2 class="font-serif text-2xl font-bold text-gold-300 flex items-center gap-2">
           <Icon name="message-square" size={18} class="text-gold-400" />
           Contact
         </h2>
         <p class="mt-4 leading-relaxed text-gold-100/90">
-          For questions, complaints, or constitutional crises, please contact your local representative.
-          If they are in recess (they are), file a strongly worded memo via our
+          For questions, complaints, or constitutional crises, please contact your local
+          representative. If they are in recess (they are), file a strongly worded memo via our
           <a href="/submit" class="underline text-gold-300 hover:text-gold-200">submission form</a>.
         </p>
       </section>

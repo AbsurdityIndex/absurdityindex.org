@@ -16,21 +16,33 @@ const recentBills = allBills
 >
   <div class="mx-auto max-w-6xl px-4 py-10">
     <header class="mb-8 text-center">
-      <p class="mb-2 font-mono text-xs uppercase tracking-[0.2em] text-gold-600">Live Daily Dispatch</p>
-      <h1 class="font-serif text-3xl font-bold text-navy-900 md:text-4xl">What Did Congress Do Today?</h1>
+      <p class="mb-2 font-mono text-xs uppercase tracking-[0.2em] text-gold-600">
+        Live Daily Dispatch
+      </p>
+      <h1 class="font-serif text-3xl font-bold text-navy-900 md:text-4xl">
+        What Did Congress Do Today?
+      </h1>
       <p class="mt-3 font-sans text-sm text-navy-600">
         Official public sources, updated throughout the legislative day.
       </p>
     </header>
 
     <section class="rounded-xl border-2 border-gold-300 bg-cream-100/90 p-5 shadow-sm md:p-7">
-      <p id="today-live-date" class="font-serif text-xl text-navy-800">Loading current day data...</p>
+      <p id="today-live-date" class="font-serif text-xl text-navy-800">
+        Loading current day data...
+      </p>
 
-      <div id="today-live-loading" class="mt-4 rounded-lg bg-cream-200 p-3 font-sans text-sm text-navy-700">
+      <div
+        id="today-live-loading"
+        class="mt-4 rounded-lg bg-cream-200 p-3 font-sans text-sm text-navy-700"
+      >
         Fetching House floor proceedings, Senate floor schedule, and committee calendars.
       </div>
 
-      <div id="today-live-error" class="mt-4 hidden rounded-lg border border-red-600/40 bg-red-600/10 p-3 font-sans text-sm text-red-700">
+      <div
+        id="today-live-error"
+        class="mt-4 hidden rounded-lg border border-red-600/40 bg-red-600/10 p-3 font-sans text-sm text-red-700"
+      >
         Unable to load live congressional data right now.
       </div>
 
@@ -38,7 +50,11 @@ const recentBills = allBills
         <section>
           <h2 class="font-serif text-2xl font-bold text-navy-900">Today&apos;s Summary</h2>
           <p id="today-live-headline" class="mt-2 font-sans text-base text-navy-800"></p>
-          <p id="today-live-deck" class="mt-2 rounded-lg border border-gold-200 bg-cream-100 px-3 py-2 font-serif text-base italic text-navy-800"></p>
+          <p
+            id="today-live-deck"
+            class="mt-2 rounded-lg border border-gold-200 bg-cream-100 px-3 py-2 font-serif text-base italic text-navy-800"
+          >
+          </p>
           <ul id="today-live-bullets" class="mt-3 space-y-2 font-sans text-sm text-navy-700"></ul>
         </section>
 
@@ -47,14 +63,24 @@ const recentBills = allBills
           <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
             <article class="rounded-lg border border-gold-200 bg-cream-100 p-4">
               <p class="font-mono text-xs uppercase tracking-[0.16em] text-gold-700">House</p>
-              <p id="today-live-house-status" class="mt-1 font-serif text-2xl font-bold text-navy-900">-</p>
+              <p
+                id="today-live-house-status"
+                class="mt-1 font-serif text-2xl font-bold text-navy-900"
+              >
+                -
+              </p>
               <p id="today-live-house-line1" class="mt-2 font-sans text-sm text-navy-700">-</p>
               <p id="today-live-house-line2" class="mt-1 font-sans text-sm text-navy-700">-</p>
             </article>
 
             <article class="rounded-lg border border-gold-200 bg-cream-100 p-4">
               <p class="font-mono text-xs uppercase tracking-[0.16em] text-gold-700">Senate</p>
-              <p id="today-live-senate-status" class="mt-1 font-serif text-2xl font-bold text-navy-900">-</p>
+              <p
+                id="today-live-senate-status"
+                class="mt-1 font-serif text-2xl font-bold text-navy-900"
+              >
+                -
+              </p>
               <p id="today-live-senate-line1" class="mt-2 font-sans text-sm text-navy-700">-</p>
               <p id="today-live-senate-line2" class="mt-1 font-sans text-sm text-navy-700">-</p>
             </article>
@@ -90,15 +116,19 @@ const recentBills = allBills
         </a>
       </div>
 
-      {recentBills.length > 0 ? (
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {recentBills.map((bill) => (
-            <BillCard bill={bill} />
-          ))}
-        </div>
-      ) : (
-        <p class="font-sans text-sm text-navy-600">No bills available in the local content collection.</p>
-      )}
+      {
+        recentBills.length > 0 ? (
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {recentBills.map((bill) => (
+              <BillCard bill={bill} />
+            ))}
+          </div>
+        ) : (
+          <p class="font-sans text-sm text-navy-600">
+            No bills available in the local content collection.
+          </p>
+        )
+      }
     </section>
   </div>
 </BaseLayout>
@@ -140,22 +170,23 @@ const recentBills = allBills
     return 'text-navy-900';
   }
 
-	  function listItems(target, values) {
-	    target.replaceChildren();
-	    values.forEach((value) => {
-	      const li = document.createElement('li');
-	      li.textContent = value;
-	      target.appendChild(li);
-	    });
-	  }
+  function listItems(target, values) {
+    target.replaceChildren();
+    values.forEach((value) => {
+      const li = document.createElement('li');
+      li.textContent = value;
+      target.appendChild(li);
+    });
+  }
 
-	  function renderMeetings(meetings) {
-	    committeesEl.replaceChildren();
+  function renderMeetings(meetings) {
+    committeesEl.replaceChildren();
 
-	    if (!Array.isArray(meetings) || meetings.length === 0) {
-	      const empty = document.createElement('li');
-	      empty.className = 'rounded-lg border border-gold-200 bg-cream-100 p-3 font-sans text-sm text-navy-700';
-	      empty.textContent = 'No House or Senate committee meetings are listed for today.';
+    if (!Array.isArray(meetings) || meetings.length === 0) {
+      const empty = document.createElement('li');
+      empty.className =
+        'rounded-lg border border-gold-200 bg-cream-100 p-3 font-sans text-sm text-navy-700';
+      empty.textContent = 'No House or Senate committee meetings are listed for today.';
       committeesEl.appendChild(empty);
       return;
     }
@@ -178,19 +209,24 @@ const recentBills = allBills
       const detailParts = [];
       if (meeting.focus) detailParts.push(`Focus: ${meeting.focus}.`);
       if (Number.isFinite(meeting.relatedBillCount) && meeting.relatedBillCount > 0) {
-        detailParts.push(`${meeting.relatedBillCount} related bill${meeting.relatedBillCount === 1 ? '' : 's'}.`);
+        detailParts.push(
+          `${meeting.relatedBillCount} related bill${meeting.relatedBillCount === 1 ? '' : 's'}.`,
+        );
       }
       if (Number.isFinite(meeting.relatedNominationCount) && meeting.relatedNominationCount > 0) {
-        detailParts.push(`${meeting.relatedNominationCount} nomination item${meeting.relatedNominationCount === 1 ? '' : 's'}.`);
+        detailParts.push(
+          `${meeting.relatedNominationCount} nomination item${meeting.relatedNominationCount === 1 ? '' : 's'}.`,
+        );
       }
       if (meeting.isClosed) {
         detailParts.push('Closed session.');
       }
       const location = meeting.location ? `Location: ${meeting.location}.` : '';
       const fallback = meeting.title || meeting.type || 'Meeting';
-      const detailText = detailParts.length > 0
-        ? `${detailParts.join(' ')} ${location}`.trim()
-        : `${fallback}${location ? ` (${meeting.location})` : ''}`;
+      const detailText =
+        detailParts.length > 0
+          ? `${detailParts.join(' ')} ${location}`.trim()
+          : `${fallback}${location ? ` (${meeting.location})` : ''}`;
       detail.textContent = truncate(detailText, 200);
 
       item.appendChild(heading);
@@ -198,15 +234,15 @@ const recentBills = allBills
       item.appendChild(detail);
       committeesEl.appendChild(item);
     });
-	  }
+  }
 
-	  function renderWeekAgenda(agenda) {
-	    weekSectionsEl.replaceChildren();
+  function renderWeekAgenda(agenda) {
+    weekSectionsEl.replaceChildren();
 
-	    if (!agenda || !Array.isArray(agenda.sections) || agenda.sections.length === 0) {
-	      weekOfEl.textContent = 'No House floor agenda sections were parsed.';
-	      return;
-	    }
+    if (!agenda || !Array.isArray(agenda.sections) || agenda.sections.length === 0) {
+      weekOfEl.textContent = 'No House floor agenda sections were parsed.';
+      return;
+    }
 
     weekOfEl.textContent = agenda.weekOf
       ? `Week of ${agenda.weekOf}`
@@ -257,7 +293,7 @@ const recentBills = allBills
       const rawError = String(source?.error || '');
       const safeError = /missing key/i.test(rawError)
         ? 'Not configured in this deployment.'
-        : (rawError || 'Unknown issue.');
+        : rawError || 'Unknown issue.';
 
       if (status === 'ok') return 'operational';
       if (status === 'unavailable') return `unavailable (${safeError})`;
@@ -268,7 +304,7 @@ const recentBills = allBills
       sourcesEl,
       sources.map((source) => {
         return `${sourceLabel(source?.key)}: ${sourceStatus(source)}`;
-      })
+      }),
     );
   }
 

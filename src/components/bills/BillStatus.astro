@@ -17,13 +17,21 @@ type StatusConfig = {
 };
 
 function getStatusConfig(): StatusConfig {
-  if (statusLower.includes('enacted') || statusLower.includes('became law') || statusLower.includes('signed')) {
+  if (
+    statusLower.includes('enacted') ||
+    statusLower.includes('became law') ||
+    statusLower.includes('signed')
+  ) {
     return { icon: 'check-circle', colors: 'text-green-700 border-green-700 bg-green-50' };
   }
   if (statusLower.includes('passed') || statusLower.includes('agreed')) {
     return { icon: 'check-circle', colors: 'text-green-600 border-green-600 bg-green-50' };
   }
-  if (statusLower.includes('vetoed') || statusLower.includes('failed') || statusLower.includes('rejected')) {
+  if (
+    statusLower.includes('vetoed') ||
+    statusLower.includes('failed') ||
+    statusLower.includes('rejected')
+  ) {
     return { icon: 'x-circle', colors: 'text-red-700 border-red-700 bg-red-50' };
   }
   if (statusLower.includes('committee') || statusLower.includes('referred')) {
@@ -45,7 +53,7 @@ const iconSize = size === 'sm' ? 12 : 14;
   class:list={[
     'inline-flex items-center gap-1.5 font-mono font-bold uppercase tracking-wide border-2 rounded -rotate-1',
     config.colors,
-    sizeClasses
+    sizeClasses,
   ]}
 >
   <Icon name={config.icon} size={iconSize} strokeWidth={2.5} />

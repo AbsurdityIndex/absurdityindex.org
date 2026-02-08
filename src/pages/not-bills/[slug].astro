@@ -26,14 +26,22 @@ const d = bill.data;
 const readingTimeContent = [d.summary || '', ' '.repeat(300)].join(' ');
 
 const billSchema = {
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": d.title,
-  "description": d.summary,
-  "datePublished": d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
-  "author": { "@type": "Organization", "name": "Absurdity Index" },
-  "publisher": { "@type": "Organization", "name": "Absurdity Index", "url": "https://absurdityindex.org" },
-  "mainEntityOfPage": { "@type": "WebPage", "@id": `https://absurdityindex.org/not-bills/${bill.id}` },
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.summary,
+  datePublished:
+    d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
+  author: { '@type': 'Organization', name: 'Absurdity Index' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Absurdity Index',
+    url: 'https://absurdityindex.org',
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': `https://absurdityindex.org/not-bills/${bill.id}`,
+  },
 };
 
 // Share URLs
@@ -42,7 +50,17 @@ const encodedUrl = encodeURIComponent(shareUrl);
 const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.summary}`);
 ---
 
-<BaseLayout title={`${d.billNumber} — ${d.title}`} description={d.summary} ogType="article" article={{ publishedTime: d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced), section: d.category, tags: d.tags }}>
+<BaseLayout
+  title={`${d.billNumber} — ${d.title}`}
+  description={d.summary}
+  ogType="article"
+  article={{
+    publishedTime:
+      d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced),
+    section: d.category,
+    tags: d.tags,
+  }}
+>
   <style slot="head">
     .bill-content :global(h2) {
       margin-top: 2rem;
@@ -82,40 +100,69 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
       {/* Metadata strip with icons */}
       <div class="mx-6 md:mx-10 my-8">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-cream-100 rounded-lg border border-gold-300">
+        <div
+          class="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-cream-100 rounded-lg border border-gold-300"
+        >
           <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+            <div
+              class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"
+            >
               <Icon name="user" size={14} class="text-green-700" />
             </div>
             <div class="min-w-0">
-              <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">Sponsor</dt>
-              <dd class="font-serif text-navy-900 text-sm truncate" title={d.sponsor}>{d.sponsor}</dd>
+              <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">
+                Sponsor
+              </dt>
+              <dd class="font-serif text-navy-900 text-sm truncate" title={d.sponsor}>
+                {d.sponsor}
+              </dd>
             </div>
           </div>
           <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+            <div
+              class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"
+            >
               <Icon name="building" size={14} class="text-green-700" />
             </div>
             <div class="min-w-0">
-              <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">Committee</dt>
+              <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">
+                Committee
+              </dt>
               <dd class="font-serif text-navy-900 text-sm">{d.committee}</dd>
             </div>
           </div>
           <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+            <div
+              class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"
+            >
               <Icon name="calendar" size={14} class="text-green-700" />
             </div>
-              <div class="min-w-0">
-                <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">Introduced</dt>
-              <dd class="font-serif text-navy-900 text-sm">{d.dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</dd>
-              </div>
+            <div class="min-w-0">
+              <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">
+                Introduced
+              </dt>
+              <dd class="font-serif text-navy-900 text-sm">
+                {
+                  d.dateIntroduced.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    timeZone: 'UTC',
+                  })
+                }
+              </dd>
             </div>
+          </div>
           <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+            <div
+              class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0"
+            >
               <Icon name="check-circle" size={14} class="text-green-700" />
             </div>
             <div class="min-w-0">
-              <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">Status</dt>
+              <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">
+                Status
+              </dt>
               <dd class="font-serif text-navy-900 text-sm">{d.status}</dd>
             </div>
           </div>
@@ -123,32 +170,38 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </div>
 
       {/* Absurdity Meter */}
-      {d.absurdityIndex !== undefined && (
-        <div class="mx-6 md:mx-10 mb-8">
-          <AbsurdityMeter score={d.absurdityIndex} />
-        </div>
-      )}
+      {
+        d.absurdityIndex !== undefined && (
+          <div class="mx-6 md:mx-10 mb-8">
+            <AbsurdityMeter score={d.absurdityIndex} />
+          </div>
+        )
+      }
 
       {/* Party Balance */}
-      {(d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
-        <div class="mx-6 md:mx-10 mb-8">
-          <PartyBalance
-            sponsor={d.sponsor}
-            sponsorParty={d.sponsorParty}
-            cosponsors={d.cosponsors}
-            cosponsorCount={d.cosponsorCount}
-            billEvolution={d.billEvolution}
-            totalPork={d.totalPork}
-          />
-        </div>
-      )}
+      {
+        (d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
+          <div class="mx-6 md:mx-10 mb-8">
+            <PartyBalance
+              sponsor={d.sponsor}
+              sponsorParty={d.sponsorParty}
+              cosponsors={d.cosponsors}
+              cosponsorCount={d.cosponsorCount}
+              billEvolution={d.billEvolution}
+              totalPork={d.totalPork}
+            />
+          </div>
+        )
+      }
 
       {/* Divider */}
       <div class="mx-6 md:mx-10 border-t border-gold-200 mb-8"></div>
 
       {/* Main content */}
       <div class="px-6 md:px-10">
-        <div class="bill-content prose prose-navy max-w-none prose-headings:font-serif prose-headings:text-navy-900 prose-h2:text-xl prose-h2:border-l-4 prose-h2:border-green-500 prose-h2:pl-4 prose-h2:py-1 prose-h2:font-bold prose-h3:text-lg">
+        <div
+          class="bill-content prose prose-navy max-w-none prose-headings:font-serif prose-headings:text-navy-900 prose-h2:text-xl prose-h2:border-l-4 prose-h2:border-green-500 prose-h2:pl-4 prose-h2:py-1 prose-h2:font-bold prose-h3:text-lg"
+        >
           <Content />
         </div>
       </div>
@@ -159,7 +212,9 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       {/* Satirical vote tally */}
       <div class="mx-6 md:mx-10 mb-8">
         <div class="p-6 bg-cream-100 border border-gold-300 rounded-lg">
-          <h3 class="font-serif font-bold text-navy-900 text-lg mb-4 text-center flex items-center justify-center gap-2">
+          <h3
+            class="font-serif font-bold text-navy-900 text-lg mb-4 text-center flex items-center justify-center gap-2"
+          >
             <Icon name="vote" size={20} class="text-gold-600" />
             Official Congressional Vote
           </h3>
@@ -178,7 +233,8 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
             </div>
           </div>
           <p class="text-center text-xs text-navy-500 mt-4 italic">
-            *Results may not reflect actual congressional voting patterns, though they probably should.
+            *Results may not reflect actual congressional voting patterns, though they probably
+            should.
           </p>
         </div>
       </div>
@@ -188,7 +244,9 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Share buttons */}
           <div class="flex items-center gap-3">
-            <span class="text-xs font-sans font-medium text-green-200 uppercase tracking-wide">Share</span>
+            <span class="text-xs font-sans font-medium text-green-200 uppercase tracking-wide"
+              >Share</span
+            >
             <div class="flex gap-2">
               <a
                 href={`https://twitter.com/intent/tweet?text=${twitterText}&url=${encodedUrl}`}
@@ -198,7 +256,9 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
                 aria-label="Share on X"
               >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  <path
+                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                  ></path>
                 </svg>
               </a>
               <a
@@ -209,7 +269,9 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
                 aria-label="Share on Reddit"
               >
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+                  <path
+                    d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"
+                  ></path>
                 </svg>
               </a>
               <button
@@ -225,41 +287,48 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
           </div>
 
           {/* Real source link if available */}
-          {d.realSource && (
-            <a
-              href={d.realSource}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-white text-green-800 rounded font-mono text-sm font-semibold hover:bg-green-50 transition-colors"
-            >
-              <Icon name="lightbulb" size={14} />
-              View Real-World Inspiration
-              <Icon name="external-link" size={12} />
-            </a>
-          )}
+          {
+            d.realSource && (
+              <a
+                href={d.realSource}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white text-green-800 rounded font-mono text-sm font-semibold hover:bg-green-50 transition-colors"
+              >
+                <Icon name="lightbulb" size={14} />
+                View Real-World Inspiration
+                <Icon name="external-link" size={12} />
+              </a>
+            )
+          }
         </div>
       </div>
 
       {/* Paired bill callout */}
-      {d.pairedBillId && (
-        <div class="px-6 md:px-10 mb-8">
-          <PairedBillCallout pairedBillId={d.pairedBillId} currentBillType={d.billType} />
-        </div>
-      )}
+      {
+        d.pairedBillId && (
+          <div class="px-6 md:px-10 mb-8">
+            <PairedBillCallout pairedBillId={d.pairedBillId} currentBillType={d.billType} />
+          </div>
+        )
+      }
 
       {/* Footer disclaimer */}
       <div class="bg-green-50 px-6 md:px-10 py-4 border-t border-green-200">
         <p class="text-xs text-green-800 leading-relaxed text-center">
           <Icon name="lightbulb" size={12} class="inline -mt-0.5 mr-1" />
-          This is a satirical "Not Bill" — legislation that makes too much sense to ever pass.
-          Any resemblance to actual congressional behavior is purely coincidental (and unfortunate).
+          This is a satirical "Not Bill" — legislation that makes too much sense to ever pass. Any resemblance
+          to actual congressional behavior is purely coincidental (and unfortunate).
         </p>
       </div>
     </article>
 
     {/* Back link */}
     <div class="text-center mt-8">
-      <a href="/not-bills" class="inline-flex items-center gap-2 text-navy-600 hover:text-green-600 font-serif transition-colors">
+      <a
+        href="/not-bills"
+        class="inline-flex items-center gap-2 text-navy-600 hover:text-green-600 font-serif transition-colors"
+      >
         <Icon name="chevron-right" size={16} class="rotate-180" />
         Back to Not Bills
       </a>

@@ -12,4 +12,3 @@ test('toSponsorSlug produces stable URL-safe slugs', () => {
   assert.equal(toSponsorSlug('Rep. Wifi McRouterface (D-CA)'), 'rep-wifi-mcrouterface-d-ca');
   assert.equal(toSponsorSlug('Sen. Ada Lovelace (I-NY)'), 'sen-ada-lovelace-i-ny');
 });
-

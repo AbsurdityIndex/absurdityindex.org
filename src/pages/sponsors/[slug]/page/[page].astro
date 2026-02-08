@@ -37,9 +37,12 @@ export async function getStaticPaths() {
     const absurdityScores = realBills
       .map((bill) => bill.data.absurdityIndex)
       .filter((score) => typeof score === 'number');
-    const avgAbsurdity = absurdityScores.length > 0
-      ? (absurdityScores.reduce((sum, score) => sum + score, 0) / absurdityScores.length).toFixed(1)
-      : null;
+    const avgAbsurdity =
+      absurdityScores.length > 0
+        ? (absurdityScores.reduce((sum, score) => sum + score, 0) / absurdityScores.length).toFixed(
+            1,
+          )
+        : null;
 
     const categories = [...new Set(sortedBills.map((bill) => bill.data.category))];
 
@@ -79,32 +82,52 @@ const {
 } = Astro.props;
 ---
 
-<BaseLayout title={`${sponsor} - Page ${currentPage}`} description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}>
+<BaseLayout
+  title={`${sponsor} - Page ${currentPage}`}
+  description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}
+>
   <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-2">
-      <a href="/sponsors" class="text-sm font-sans text-gold-600 transition-colors hover:text-gold-500">&larr; All Sponsors</a>
+      <a
+        href="/sponsors"
+        class="text-sm font-sans text-gold-600 transition-colors hover:text-gold-500"
+        >&larr; All Sponsors</a
+      >
     </div>
 
     <h1 class="mb-4 font-serif text-3xl font-bold text-navy-900 md:text-4xl">{sponsor}</h1>
     <div class="gold-rule"></div>
 
-    <div class="mt-6 mb-10 flex flex-wrap gap-6 rounded-sm border border-cream-200 bg-white px-5 py-4 shadow-sm">
+    <div
+      class="mt-6 mb-10 flex flex-wrap gap-6 rounded-sm border border-cream-200 bg-white px-5 py-4 shadow-sm"
+    >
       <div class="flex flex-col">
         <span class="text-xs font-sans uppercase tracking-wide text-navy-500">Total Bills</span>
         <span class="font-mono text-2xl font-bold text-navy-900">{totalCount}</span>
       </div>
-      {avgAbsurdity && (
-        <div class="flex flex-col">
-          <span class="text-xs font-sans uppercase tracking-wide text-navy-500">Avg. Absurdity</span>
-          <span class="font-mono text-2xl font-bold text-gold-600">{avgAbsurdity}<span class="text-sm text-navy-400">/10</span></span>
-        </div>
-      )}
+      {
+        avgAbsurdity && (
+          <div class="flex flex-col">
+            <span class="text-xs font-sans uppercase tracking-wide text-navy-500">
+              Avg. Absurdity
+            </span>
+            <span class="font-mono text-2xl font-bold text-gold-600">
+              {avgAbsurdity}
+              <span class="text-sm text-navy-400">/10</span>
+            </span>
+          </div>
+        )
+      }
       <div class="flex flex-col">
         <span class="text-xs font-sans uppercase tracking-wide text-navy-500">Categories</span>
         <div class="mt-1 flex flex-wrap gap-1">
-          {categories.map((category) => (
-            <span class="inline-block rounded bg-navy-100 px-2 py-0.5 text-xs font-sans text-navy-600">{category}</span>
-          ))}
+          {
+            categories.map((category) => (
+              <span class="inline-block rounded bg-navy-100 px-2 py-0.5 text-xs font-sans text-navy-600">
+                {category}
+              </span>
+            ))
+          }
         </div>
       </div>
     </div>
@@ -135,40 +158,55 @@ const {
       directoryLabel="sponsor bills"
     />
 
-    <div class="mt-4 flex flex-col gap-1 text-xs font-sans text-navy-500 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
+    <div
+      class="mt-4 flex flex-col gap-1 text-xs font-sans text-navy-500 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between"
+    >
       <p>Page {currentPage} of {totalPages}</p>
       <p>{totalCount} total bills by this sponsor</p>
     </div>
 
-    <div id="bills-grid" class="mt-5 grid grid-cols-1 gap-4 min-[375px]:mt-6 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3">
-      {bills.map((bill) => (
-        <div
-          class="bill-item"
-          data-title={bill.data.title.toLowerCase()}
-          data-category={bill.data.category.toLowerCase()}
-          data-category-slug={toCategorySlug(bill.data.category)}
-          data-type={bill.data.billType}
-          data-sponsor={bill.data.sponsor.toLowerCase()}
-          data-committee={(bill.data.committee ?? '').toLowerCase()}
-          data-tags={bill.data.tags.join(',').toLowerCase()}
-          data-score={bill.data.absurdityIndex ?? 0}
-          data-featured={bill.data.featured ? '1' : '0'}
-          data-date={bill.data.dateIntroduced.getTime()}
-        >
-          <BillCard bill={bill} />
-        </div>
-      ))}
+    <div
+      id="bills-grid"
+      class="mt-5 grid grid-cols-1 gap-4 min-[375px]:mt-6 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3"
+    >
+      {
+        bills.map((bill) => (
+          <div
+            class="bill-item"
+            data-title={bill.data.title.toLowerCase()}
+            data-category={bill.data.category.toLowerCase()}
+            data-category-slug={toCategorySlug(bill.data.category)}
+            data-type={bill.data.billType}
+            data-sponsor={bill.data.sponsor.toLowerCase()}
+            data-committee={(bill.data.committee ?? '').toLowerCase()}
+            data-tags={bill.data.tags.join(',').toLowerCase()}
+            data-score={bill.data.absurdityIndex ?? 0}
+            data-featured={bill.data.featured ? '1' : '0'}
+            data-date={bill.data.dateIntroduced.getTime()}
+          >
+            <BillCard bill={bill} />
+          </div>
+        ))
+      }
     </div>
 
     <div id="no-results" class="hidden py-12 text-center min-[430px]:py-16">
       <p class="mb-2 font-serif text-2xl text-navy-600">No bills found.</p>
-      <p class="italic text-navy-400">No matching records for this sponsor with the current filters.</p>
+      <p class="italic text-navy-400">
+        No matching records for this sponsor with the current filters.
+      </p>
     </div>
 
-    {totalPages > 1 && (
-      <div class="mt-10">
-        <Pagination currentPage={currentPage} totalPages={totalPages} basePath={`/sponsors/${sponsorSlug}`} />
-      </div>
-    )}
+    {
+      totalPages > 1 && (
+        <div class="mt-10">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            basePath={`/sponsors/${sponsorSlug}`}
+          />
+        </div>
+      )
+    }
   </section>
 </BaseLayout>

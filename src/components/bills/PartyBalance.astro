@@ -124,9 +124,13 @@ function countCosponsorsByParty(cosponsors: (string | Cosponsor)[]): Record<stri
     } else if (c.party) {
       const p = c.party.toUpperCase();
       const normalized =
-        p === 'REPUBLICAN' ? 'R' :
-        p === 'DEMOCRAT' || p === 'DEMOCRATIC' ? 'D' :
-        p === 'INDEPENDENT' ? 'I' : p;
+        p === 'REPUBLICAN'
+          ? 'R'
+          : p === 'DEMOCRAT' || p === 'DEMOCRATIC'
+            ? 'D'
+            : p === 'INDEPENDENT'
+              ? 'I'
+              : p;
       counts[normalized] = (counts[normalized] || 0) + 1;
     } else {
       counts.unknown++;
@@ -171,7 +175,7 @@ const sponsorPartyValue = parseSponsorParty(sponsor, sponsorParty);
 const cosponsorCounts = countCosponsorsByParty(cosponsors);
 const totalCosponsors = cosponsorCount ?? cosponsors.length;
 const porkByParty = aggregatePorkByParty(billEvolution);
-const hasPorkData = Object.values(porkByParty).some(v => v > 0);
+const hasPorkData = Object.values(porkByParty).some((v) => v > 0);
 
 // Determine if bipartisan (both R and D present among sponsor + cosponsors)
 const parties = new Set<string>();
@@ -213,173 +217,231 @@ if (!hasData) {
       <Icon name="scale" size={16} class="text-gold-600" />
       Party Balance
     </h4>
-    {isBipartisan && (
-      <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-sans font-medium rounded-full bg-gradient-to-r from-blue-100 to-red-100 text-navy-700 border border-gold-300">
-        <Icon name="users" size={12} />
-        Bipartisan
-      </span>
-    )}
+    {
+      isBipartisan && (
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-sans font-medium rounded-full bg-gradient-to-r from-blue-100 to-red-100 text-navy-700 border border-gold-300">
+          <Icon name="users" size={12} />
+          Bipartisan
+        </span>
+      )
+    }
   </div>
 
   {/* Sponsor Section - Enhanced layout */}
-  {sponsor && (
-    <div class="flex items-center gap-4 p-3 bg-cream-50 rounded-lg border border-gold-200 mb-4">
-      <span class:list={[
-        'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border-2',
-        getPartyBgColor(sponsorPartyValue),
-        getPartyTextColor(sponsorPartyValue),
-        sponsorPartyValue === 'R' ? 'border-red-200' :
-        sponsorPartyValue === 'D' ? 'border-blue-200' :
-        sponsorPartyValue === 'I' ? 'border-purple-200' : 'border-navy-200'
-      ]}>
-        {formatPartyLetter(sponsorPartyValue)}
-      </span>
-      <div class="flex-1 min-w-0">
-        <span class="text-[10px] text-navy-400 uppercase tracking-wide font-medium block">Primary Sponsor</span>
-        <span class="text-sm text-navy-800 font-semibold truncate block" title={sponsor}>
-          {sponsor.replace(/^(Rep\.|Sen\.)\s*/, '').replace(/\s*\([^)]+\)$/, '')}
+  {
+    sponsor && (
+      <div class="flex items-center gap-4 p-3 bg-cream-50 rounded-lg border border-gold-200 mb-4">
+        <span
+          class:list={[
+            'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border-2',
+            getPartyBgColor(sponsorPartyValue),
+            getPartyTextColor(sponsorPartyValue),
+            sponsorPartyValue === 'R'
+              ? 'border-red-200'
+              : sponsorPartyValue === 'D'
+                ? 'border-blue-200'
+                : sponsorPartyValue === 'I'
+                  ? 'border-purple-200'
+                  : 'border-navy-200',
+          ]}
+        >
+          {formatPartyLetter(sponsorPartyValue)}
         </span>
+        <div class="flex-1 min-w-0">
+          <span class="text-[10px] text-navy-400 uppercase tracking-wide font-medium block">
+            Primary Sponsor
+          </span>
+          <span class="text-sm text-navy-800 font-semibold truncate block" title={sponsor}>
+            {sponsor.replace(/^(Rep\.|Sen\.)\s*/, '').replace(/\s*\([^)]+\)$/, '')}
+          </span>
+        </div>
+        <div
+          class:list={[
+            'text-[10px] font-mono font-bold px-2 py-1 rounded',
+            sponsorPartyValue === 'R'
+              ? 'bg-red-100 text-red-700'
+              : sponsorPartyValue === 'D'
+                ? 'bg-blue-100 text-blue-700'
+                : sponsorPartyValue === 'I'
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'bg-navy-100 text-navy-600',
+          ]}
+        >
+          {sponsorPartyValue === 'R'
+            ? 'Republican'
+            : sponsorPartyValue === 'D'
+              ? 'Democrat'
+              : sponsorPartyValue === 'I'
+                ? 'Independent'
+                : 'Unknown'}
+        </div>
       </div>
-      <div class:list={[
-        'text-[10px] font-mono font-bold px-2 py-1 rounded',
-        sponsorPartyValue === 'R' ? 'bg-red-100 text-red-700' :
-        sponsorPartyValue === 'D' ? 'bg-blue-100 text-blue-700' :
-        sponsorPartyValue === 'I' ? 'bg-purple-100 text-purple-700' : 'bg-navy-100 text-navy-600'
-      ]}>
-        {sponsorPartyValue === 'R' ? 'Republican' :
-         sponsorPartyValue === 'D' ? 'Democrat' :
-         sponsorPartyValue === 'I' ? 'Independent' : 'Unknown'}
-      </div>
-    </div>
-  )}
+    )
+  }
 
   {/* Cosponsor Section */}
-  {totalCosponsors > 0 ? (
-    <div class="p-3 bg-cream-50 rounded-lg border border-gold-200">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs text-navy-500 uppercase tracking-wide font-medium flex items-center gap-1.5">
-          <Icon name="users" size={12} class="text-gold-600" />
-          Cosponsors ({totalCosponsors} total)
-        </span>
-        <div class="flex items-center gap-2 text-xs font-mono">
-          {cosponsorCounts.R > 0 && (
-            <span class="px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-semibold">R:{cosponsorCounts.R}</span>
-          )}
-          {cosponsorCounts.D > 0 && (
-            <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">D:{cosponsorCounts.D}</span>
-          )}
-          {cosponsorCounts.I > 0 && (
-            <span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-semibold">I:{cosponsorCounts.I}</span>
-          )}
-          {cosponsorCounts.unknown > 0 && (
-            <span class="px-1.5 py-0.5 rounded bg-navy-100 text-navy-500 font-semibold">?:{cosponsorCounts.unknown}</span>
-          )}
+  {
+    totalCosponsors > 0 ? (
+      <div class="p-3 bg-cream-50 rounded-lg border border-gold-200">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs text-navy-500 uppercase tracking-wide font-medium flex items-center gap-1.5">
+            <Icon name="users" size={12} class="text-gold-600" />
+            Cosponsors ({totalCosponsors} total)
+          </span>
+          <div class="flex items-center gap-2 text-xs font-mono">
+            {cosponsorCounts.R > 0 && (
+              <span class="px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-semibold">
+                R:{cosponsorCounts.R}
+              </span>
+            )}
+            {cosponsorCounts.D > 0 && (
+              <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">
+                D:{cosponsorCounts.D}
+              </span>
+            )}
+            {cosponsorCounts.I > 0 && (
+              <span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-semibold">
+                I:{cosponsorCounts.I}
+              </span>
+            )}
+            {cosponsorCounts.unknown > 0 && (
+              <span class="px-1.5 py-0.5 rounded bg-navy-100 text-navy-500 font-semibold">
+                ?:{cosponsorCounts.unknown}
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* Stacked Bar */}
+        {cosponsorTotal > 0 && (
+          <div class="flex h-3 rounded-full overflow-hidden border border-gold-200 shadow-inner bg-cream-200">
+            {cosponsorPercents.R > 0 && (
+              <div
+                class="bg-red-500 transition-all"
+                style={`width: ${cosponsorPercents.R}%`}
+                title={`Republican: ${cosponsorCounts.R}`}
+              />
+            )}
+            {cosponsorPercents.D > 0 && (
+              <div
+                class="bg-blue-500 transition-all"
+                style={`width: ${cosponsorPercents.D}%`}
+                title={`Democrat: ${cosponsorCounts.D}`}
+              />
+            )}
+            {cosponsorPercents.I > 0 && (
+              <div
+                class="bg-purple-500 transition-all"
+                style={`width: ${cosponsorPercents.I}%`}
+                title={`Independent: ${cosponsorCounts.I}`}
+              />
+            )}
+            {cosponsorPercents.unknown > 0 && (
+              <div
+                class="bg-navy-300 transition-all"
+                style={`width: ${cosponsorPercents.unknown}%`}
+                title={`Unknown: ${cosponsorCounts.unknown}`}
+              />
+            )}
+          </div>
+        )}
+
+        {/* If only count known, show note */}
+        {cosponsorTotal === 0 && totalCosponsors > 0 && (
+          <p class="text-xs text-navy-500 italic mt-1">Party breakdown data not available</p>
+        )}
       </div>
-
-      {/* Stacked Bar */}
-      {cosponsorTotal > 0 && (
-        <div class="flex h-3 rounded-full overflow-hidden border border-gold-200 shadow-inner bg-cream-200">
-          {cosponsorPercents.R > 0 && (
-            <div class="bg-red-500 transition-all" style={`width: ${cosponsorPercents.R}%`} title={`Republican: ${cosponsorCounts.R}`}></div>
-          )}
-          {cosponsorPercents.D > 0 && (
-            <div class="bg-blue-500 transition-all" style={`width: ${cosponsorPercents.D}%`} title={`Democrat: ${cosponsorCounts.D}`}></div>
-          )}
-          {cosponsorPercents.I > 0 && (
-            <div class="bg-purple-500 transition-all" style={`width: ${cosponsorPercents.I}%`} title={`Independent: ${cosponsorCounts.I}`}></div>
-          )}
-          {cosponsorPercents.unknown > 0 && (
-            <div class="bg-navy-300 transition-all" style={`width: ${cosponsorPercents.unknown}%`} title={`Unknown: ${cosponsorCounts.unknown}`}></div>
-          )}
-        </div>
-      )}
-
-      {/* If only count known, show note */}
-      {cosponsorTotal === 0 && totalCosponsors > 0 && (
-        <p class="text-xs text-navy-500 italic mt-1">Party breakdown data not available</p>
-      )}
-    </div>
-  ) : (
-    <div class="p-3 bg-cream-50 rounded-lg border border-gold-200 border-dashed">
-      <p class="text-xs text-navy-400 italic flex items-center gap-1.5">
-        <Icon name="user" size={12} />
-        No cosponsors on this bill
-      </p>
-    </div>
-  )}
+    ) : (
+      <div class="p-3 bg-cream-50 rounded-lg border border-gold-200 border-dashed">
+        <p class="text-xs text-navy-400 italic flex items-center gap-1.5">
+          <Icon name="user" size={12} />
+          No cosponsors on this bill
+        </p>
+      </div>
+    )
+  }
 
   {/* Pork by Party Section */}
-  {hasPorkData && (
-    <div class="mt-4 pt-4 border-t border-gold-200">
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-xs text-navy-500 uppercase tracking-wide font-medium flex items-center gap-1">
-          <Icon name="piggy-bank" size={12} class="text-gold-600" />
-          Pork by Party
-          <span class="normal-case tracking-normal italic font-normal text-navy-400">(satirical estimates)</span>
-        </span>
-        <span class="text-xs font-mono text-navy-600">
-          {formatAmount(porkTotal)} total
-        </span>
+  {
+    hasPorkData && (
+      <div class="mt-4 pt-4 border-t border-gold-200">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs text-navy-500 uppercase tracking-wide font-medium flex items-center gap-1">
+            <Icon name="piggy-bank" size={12} class="text-gold-600" />
+            Pork by Party
+            <span class="normal-case tracking-normal italic font-normal text-navy-400">
+              (satirical estimates)
+            </span>
+          </span>
+          <span class="text-xs font-mono text-navy-600">{formatAmount(porkTotal)} total</span>
+        </div>
+
+        <div class="space-y-2">
+          {porkByParty.R > 0 && (
+            <div class="flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-red-100 text-red-700">
+                R
+              </span>
+              <div class="flex-1">
+                <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
+                  <div class="bg-red-500" style={`width: ${porkPercents.R}%`} />
+                </div>
+              </div>
+              <span class="text-xs font-mono text-red-700 w-20 text-right">
+                {formatAmount(porkByParty.R)} ({porkPercents.R.toFixed(0)}%)
+              </span>
+            </div>
+          )}
+
+          {porkByParty.D > 0 && (
+            <div class="flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-blue-100 text-blue-700">
+                D
+              </span>
+              <div class="flex-1">
+                <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
+                  <div class="bg-blue-500" style={`width: ${porkPercents.D}%`} />
+                </div>
+              </div>
+              <span class="text-xs font-mono text-blue-700 w-20 text-right">
+                {formatAmount(porkByParty.D)} ({porkPercents.D.toFixed(0)}%)
+              </span>
+            </div>
+          )}
+
+          {porkByParty.I > 0 && (
+            <div class="flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-purple-100 text-purple-700">
+                I
+              </span>
+              <div class="flex-1">
+                <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
+                  <div class="bg-purple-500" style={`width: ${porkPercents.I}%`} />
+                </div>
+              </div>
+              <span class="text-xs font-mono text-purple-700 w-20 text-right">
+                {formatAmount(porkByParty.I)} ({porkPercents.I.toFixed(0)}%)
+              </span>
+            </div>
+          )}
+
+          {porkByParty.unknown > 0 && (
+            <div class="flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-navy-100 text-navy-600">
+                ?
+              </span>
+              <div class="flex-1">
+                <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
+                  <div class="bg-navy-300" style={`width: ${porkPercents.unknown}%`} />
+                </div>
+              </div>
+              <span class="text-xs font-mono text-navy-600 w-20 text-right">
+                {formatAmount(porkByParty.unknown)} ({porkPercents.unknown.toFixed(0)}%)
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-
-      <div class="space-y-2">
-        {porkByParty.R > 0 && (
-          <div class="flex items-center gap-3">
-            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-red-100 text-red-700">R</span>
-            <div class="flex-1">
-              <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
-                <div class="bg-red-500" style={`width: ${porkPercents.R}%`}></div>
-              </div>
-            </div>
-            <span class="text-xs font-mono text-red-700 w-20 text-right">
-              {formatAmount(porkByParty.R)} ({porkPercents.R.toFixed(0)}%)
-            </span>
-          </div>
-        )}
-
-        {porkByParty.D > 0 && (
-          <div class="flex items-center gap-3">
-            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-blue-100 text-blue-700">D</span>
-            <div class="flex-1">
-              <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
-                <div class="bg-blue-500" style={`width: ${porkPercents.D}%`}></div>
-              </div>
-            </div>
-            <span class="text-xs font-mono text-blue-700 w-20 text-right">
-              {formatAmount(porkByParty.D)} ({porkPercents.D.toFixed(0)}%)
-            </span>
-          </div>
-        )}
-
-        {porkByParty.I > 0 && (
-          <div class="flex items-center gap-3">
-            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-purple-100 text-purple-700">I</span>
-            <div class="flex-1">
-              <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
-                <div class="bg-purple-500" style={`width: ${porkPercents.I}%`}></div>
-              </div>
-            </div>
-            <span class="text-xs font-mono text-purple-700 w-20 text-right">
-              {formatAmount(porkByParty.I)} ({porkPercents.I.toFixed(0)}%)
-            </span>
-          </div>
-        )}
-
-        {porkByParty.unknown > 0 && (
-          <div class="flex items-center gap-3">
-            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-navy-100 text-navy-600">?</span>
-            <div class="flex-1">
-              <div class="flex h-3 rounded-full overflow-hidden bg-cream-200 border border-gold-200">
-                <div class="bg-navy-300" style={`width: ${porkPercents.unknown}%`}></div>
-              </div>
-            </div>
-            <span class="text-xs font-mono text-navy-600 w-20 text-right">
-              {formatAmount(porkByParty.unknown)} ({porkPercents.unknown.toFixed(0)}%)
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  )}
+    )
+  }
 </div>

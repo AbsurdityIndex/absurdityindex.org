@@ -58,51 +58,71 @@ const sponsorParty = sponsor.match(/\(([^)]+)\)/)?.[1] || '';
   <dl class="space-y-4 text-sm">
     {/* Sponsor */}
     <div class="flex items-start gap-3">
-      <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <div
+        class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5"
+      >
         <Icon name="user" size={16} class="text-navy-600" />
       </div>
       <div>
-        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Sponsor</dt>
+        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">
+          Sponsor
+        </dt>
         <dd class="font-serif text-navy-900">
           {sponsorName}
-          {sponsorParty && <span class="font-mono text-sm text-navy-500 ml-1">({sponsorParty})</span>}
+          {
+            sponsorParty && (
+              <span class="font-mono text-sm text-navy-500 ml-1">({sponsorParty})</span>
+            )
+          }
         </dd>
       </div>
     </div>
 
     {/* Cosponsors */}
-    {cosponsors.length > 0 && (
-      <div class="flex items-start gap-3">
-        <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Icon name="users" size={16} class="text-navy-600" />
+    {
+      cosponsors.length > 0 && (
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Icon name="users" size={16} class="text-navy-600" />
+          </div>
+          <div>
+            <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">
+              Cosponsors
+            </dt>
+            <dd class="font-serif text-navy-900">{cosponsors.join(', ')}</dd>
+          </div>
         </div>
-        <div>
-          <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Cosponsors</dt>
-          <dd class="font-serif text-navy-900">{cosponsors.join(', ')}</dd>
-        </div>
-      </div>
-    )}
+      )
+    }
 
     {/* Committee */}
-    {committee && (
-      <div class="flex items-start gap-3">
-        <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Icon name="building" size={16} class="text-navy-600" />
+    {
+      committee && (
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Icon name="building" size={16} class="text-navy-600" />
+          </div>
+          <div>
+            <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">
+              Committee
+            </dt>
+            <dd class="font-serif text-navy-900">{committee}</dd>
+          </div>
         </div>
-        <div>
-          <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Committee</dt>
-          <dd class="font-serif text-navy-900">{committee}</dd>
-        </div>
-      </div>
-    )}
+      )
+    }
 
     {/* Status */}
     <div class="flex items-start gap-3">
-      <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <div
+        class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5"
+      >
         <Icon name="check-circle" size={16} class="text-navy-600" />
       </div>
       <div>
-        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-1">Status</dt>
+        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-1">
+          Status
+        </dt>
         <dd>
           <BillStatus status={status} />
         </dd>
@@ -111,79 +131,99 @@ const sponsorParty = sponsor.match(/\(([^)]+)\)/)?.[1] || '';
 
     {/* Dates */}
     <div class="flex items-start gap-3">
-      <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <div
+        class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5"
+      >
         <Icon name="calendar" size={16} class="text-navy-600" />
       </div>
       <div>
-        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Date Introduced</dt>
+        <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">
+          Date Introduced
+        </dt>
         <dd class="font-serif text-navy-900">{formatDate(dateIntroduced)}</dd>
-        {dateUpdated && (
-          <dd class="font-serif text-navy-600 text-sm mt-1">Updated: {formatDate(dateUpdated)}</dd>
-        )}
+        {
+          dateUpdated && (
+            <dd class="font-serif text-navy-600 text-sm mt-1">
+              Updated: {formatDate(dateUpdated)}
+            </dd>
+          )
+        }
       </div>
     </div>
 
     {/* Jurisdiction */}
-    {realJurisdiction && (
-      <div class="flex items-start gap-3">
-        <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Icon name="landmark" size={16} class="text-navy-600" />
+    {
+      realJurisdiction && (
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Icon name="landmark" size={16} class="text-navy-600" />
+          </div>
+          <div>
+            <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">
+              Real Jurisdiction
+            </dt>
+            <dd class="font-serif text-navy-900">{realJurisdiction}</dd>
+          </div>
         </div>
-        <div>
-          <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Real Jurisdiction</dt>
-          <dd class="font-serif text-navy-900">{realJurisdiction}</dd>
-        </div>
-      </div>
-    )}
+      )
+    }
 
     {/* Congress */}
-    {congressNumber && (
-      <div class="flex items-start gap-3">
-        <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Icon name="landmark" size={16} class="text-navy-600" />
+    {
+      congressNumber && (
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Icon name="landmark" size={16} class="text-navy-600" />
+          </div>
+          <div>
+            <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">
+              Congress
+            </dt>
+            <dd class="font-serif text-navy-900">{congressNumber}th Congress</dd>
+          </div>
         </div>
-        <div>
-          <dt class="font-sans font-medium text-navy-500 text-xs uppercase tracking-wide mb-0.5">Congress</dt>
-          <dd class="font-serif text-navy-900">{congressNumber}th Congress</dd>
-        </div>
-      </div>
-    )}
+      )
+    }
   </dl>
 
   {/* Absurdity Meter */}
-  {absurdityIndex && (
-    <div class="pt-4 border-t border-gold-300">
-      <AbsurdityMeter score={absurdityIndex} />
-    </div>
-  )}
+  {
+    absurdityIndex && (
+      <div class="pt-4 border-t border-gold-300">
+        <AbsurdityMeter score={absurdityIndex} />
+      </div>
+    )
+  }
 
   {/* External Links */}
-  {(realSource || congressDotGovUrl) && (
-    <div class="pt-4 border-t border-gold-300 space-y-2">
-      {realSource && (
-        <a
-          href={realSource}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex items-center gap-2 text-sm font-sans font-medium text-navy-600 hover:text-gold-700 transition-colors"
-        >
-          <Icon name="link" size={14} />
-          Real Source
-          <Icon name="external-link" size={12} class="ml-auto" />
-        </a>
-      )}
-      {congressDotGovUrl && (
-        <a
-          href={congressDotGovUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex items-center gap-2 text-sm font-sans font-medium text-navy-600 hover:text-gold-700 transition-colors"
-        >
-          <Icon name="landmark" size={14} />
-          View on Congress.gov
-          <Icon name="external-link" size={12} class="ml-auto" />
-        </a>
-      )}
-    </div>
-  )}
+  {
+    (realSource || congressDotGovUrl) && (
+      <div class="pt-4 border-t border-gold-300 space-y-2">
+        {realSource && (
+          <a
+            href={realSource}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-2 text-sm font-sans font-medium text-navy-600 hover:text-gold-700 transition-colors"
+          >
+            <Icon name="link" size={14} />
+            Real Source
+            <Icon name="external-link" size={12} class="ml-auto" />
+          </a>
+        )}
+        {congressDotGovUrl && (
+          <a
+            href={congressDotGovUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-2 text-sm font-sans font-medium text-navy-600 hover:text-gold-700 transition-colors"
+          >
+            <Icon name="landmark" size={14} />
+            View on Congress.gov
+            <Icon name="external-link" size={12} class="ml-auto" />
+          </a>
+        )}
+      </div>
+    )
+  }
 </aside>

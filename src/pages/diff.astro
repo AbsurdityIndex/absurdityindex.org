@@ -4,13 +4,20 @@ import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Divider from '../components/ui/Divider.astro';
 ---
 
-<BaseLayout title="Bill Diff Tool" description="Compare bill versions and see what changed when you weren't looking. Track additions, deletions, and sneaky amendments.">
+<BaseLayout
+  title="Bill Diff Tool"
+  description="Compare bill versions and see what changed when you weren't looking. Track additions, deletions, and sneaky amendments."
+>
   <div class="max-w-6xl mx-auto px-4 py-12">
     <div class="text-center mb-10">
       <OfficialSeal size="100" />
-      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Legislative Analysis Tool</p>
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">
+        Legislative Analysis Tool
+      </p>
       <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Bill Diff Tool</h1>
-      <p class="text-navy-600 font-serif italic mt-3">See what they changed when you weren't looking</p>
+      <p class="text-navy-600 font-serif italic mt-3">
+        See what they changed when you weren't looking
+      </p>
     </div>
     <div class="gold-rule"></div>
 
@@ -102,7 +109,10 @@ import Divider from '../components/ui/Divider.astro';
         </div>
 
         <!-- Diff Output -->
-        <div id="diff-output" class="bg-cream-100 border-2 border-gold-300 rounded-lg p-4 font-mono text-sm overflow-x-auto max-h-[600px] overflow-y-auto">
+        <div
+          id="diff-output"
+          class="bg-cream-100 border-2 border-gold-300 rounded-lg p-4 font-mono text-sm overflow-x-auto max-h-[600px] overflow-y-auto"
+        >
           <!-- Filled by JavaScript -->
         </div>
       </div>
@@ -112,7 +122,9 @@ import Divider from '../components/ui/Divider.astro';
 
     <div class="bg-cream-200 rounded-lg p-6 mt-8 border-l-4 border-gold-500">
       <p class="font-serif text-navy-700 italic">
-        <strong>Fun fact:</strong> The average bill is amended 47 times before anyone reads it. By the time it passes, even its sponsors aren't entirely sure what's in it. But hey, at least they got the naming rights.
+        <strong>Fun fact:</strong> The average bill is amended 47 times before anyone reads it. By the
+        time it passes, even its sponsors aren't entirely sure what's in it. But hey, at least they got
+        the naming rights.
       </p>
     </div>
   </div>
@@ -186,7 +198,11 @@ For purposes of this Act:
       let lcsIdx = 0;
 
       while (origIdx < originalLines.length || amendIdx < amendedLines.length) {
-        if (lcsIdx < lcs.length && origIdx < originalLines.length && originalLines[origIdx] === lcs[lcsIdx]) {
+        if (
+          lcsIdx < lcs.length &&
+          origIdx < originalLines.length &&
+          originalLines[origIdx] === lcs[lcsIdx]
+        ) {
           if (amendIdx < amendedLines.length && amendedLines[amendIdx] === lcs[lcsIdx]) {
             // Line unchanged
             results.push({ type: 'unchanged', content: originalLines[origIdx] });
@@ -199,17 +215,28 @@ For purposes of this Act:
             added++;
             amendIdx++;
           }
-        } else if (lcsIdx < lcs.length && amendIdx < amendedLines.length && amendedLines[amendIdx] === lcs[lcsIdx]) {
+        } else if (
+          lcsIdx < lcs.length &&
+          amendIdx < amendedLines.length &&
+          amendedLines[amendIdx] === lcs[lcsIdx]
+        ) {
           // Line removed from original
           results.push({ type: 'removed', content: originalLines[origIdx] });
           removed++;
           origIdx++;
         } else if (origIdx < originalLines.length && amendIdx < amendedLines.length) {
           // Both lines differ - check if it's a change or add/remove
-          if (originalLines[origIdx].trim() !== '' && amendedLines[amendIdx].trim() !== '' &&
-              similarity(originalLines[origIdx], amendedLines[amendIdx]) > 0.3) {
+          if (
+            originalLines[origIdx].trim() !== '' &&
+            amendedLines[amendIdx].trim() !== '' &&
+            similarity(originalLines[origIdx], amendedLines[amendIdx]) > 0.3
+          ) {
             // Lines are similar enough to be considered a change
-            results.push({ type: 'changed', oldContent: originalLines[origIdx], newContent: amendedLines[amendIdx] });
+            results.push({
+              type: 'changed',
+              oldContent: originalLines[origIdx],
+              newContent: amendedLines[amendIdx],
+            });
             changed++;
             origIdx++;
             amendIdx++;
@@ -237,7 +264,9 @@ For purposes of this Act:
     function computeLCS(arr1, arr2) {
       const m = arr1.length;
       const n = arr2.length;
-      const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+      const dp = Array(m + 1)
+        .fill(null)
+        .map(() => Array(n + 1).fill(0));
 
       for (let i = 1; i <= m; i++) {
         for (let j = 1; j <= n; j++) {
@@ -251,7 +280,8 @@ For purposes of this Act:
 
       // Backtrack to find LCS
       const lcs = [];
-      let i = m, j = n;
+      let i = m,
+        j = n;
       while (i > 0 && j > 0) {
         if (arr1[i - 1] === arr2[j - 1]) {
           lcs.unshift(arr1[i - 1]);
@@ -271,107 +301,107 @@ For purposes of this Act:
     function similarity(str1, str2) {
       const words1 = new Set(str1.toLowerCase().split(/\s+/));
       const words2 = new Set(str2.toLowerCase().split(/\s+/));
-      const intersection = [...words1].filter(w => words2.has(w)).length;
+      const intersection = [...words1].filter((w) => words2.has(w)).length;
       const union = new Set([...words1, ...words2]).size;
       return union > 0 ? intersection / union : 0;
     }
 
-	    // Render diff output
-	    function renderDiff(diffResults) {
-	      const output = document.getElementById('diff-output');
-	      let lineNum = 1;
+    // Render diff output
+    function renderDiff(diffResults) {
+      const output = document.getElementById('diff-output');
+      let lineNum = 1;
 
-	      output.replaceChildren();
-	      const frag = document.createDocumentFragment();
+      output.replaceChildren();
+      const frag = document.createDocumentFragment();
 
-	      diffResults.results.forEach(item => {
-	        const lineNumStr = String(lineNum).padStart(3, ' ');
-	        const row = document.createElement('div');
-	        row.className = 'flex';
+      diffResults.results.forEach((item) => {
+        const lineNumStr = String(lineNum).padStart(3, ' ');
+        const row = document.createElement('div');
+        row.className = 'flex';
 
-	        switch (item.type) {
-	          case 'unchanged': {
-	            const ln = document.createElement('span');
-	            ln.className = 'text-navy-400 select-none mr-4';
-	            ln.textContent = lineNumStr;
+        switch (item.type) {
+          case 'unchanged': {
+            const ln = document.createElement('span');
+            ln.className = 'text-navy-400 select-none mr-4';
+            ln.textContent = lineNumStr;
 
-	            const text = document.createElement('span');
-	            text.className = 'text-navy-900';
-	            text.textContent = item.content || ' ';
+            const text = document.createElement('span');
+            text.className = 'text-navy-900';
+            text.textContent = item.content || ' ';
 
-	            row.append(ln, text);
-	            frag.appendChild(row);
-	            lineNum++;
-	            break;
-	          }
-	          case 'added': {
-	            row.className = 'flex bg-green-200 -mx-4 px-4';
+            row.append(ln, text);
+            frag.appendChild(row);
+            lineNum++;
+            break;
+          }
+          case 'added': {
+            row.className = 'flex bg-green-200 -mx-4 px-4';
 
-	            const ln = document.createElement('span');
-	            ln.className = 'text-green-800 select-none mr-4';
-	            ln.textContent = `${lineNumStr}+`;
+            const ln = document.createElement('span');
+            ln.className = 'text-green-800 select-none mr-4';
+            ln.textContent = `${lineNumStr}+`;
 
-	            const text = document.createElement('span');
-	            text.className = 'text-green-800 font-medium';
-	            text.textContent = item.content || ' ';
+            const text = document.createElement('span');
+            text.className = 'text-green-800 font-medium';
+            text.textContent = item.content || ' ';
 
-	            row.append(ln, text);
-	            frag.appendChild(row);
-	            lineNum++;
-	            break;
-	          }
-	          case 'removed': {
-	            row.className = 'flex bg-red-200 -mx-4 px-4';
+            row.append(ln, text);
+            frag.appendChild(row);
+            lineNum++;
+            break;
+          }
+          case 'removed': {
+            row.className = 'flex bg-red-200 -mx-4 px-4';
 
-	            const ln = document.createElement('span');
-	            ln.className = 'text-red-800 select-none mr-4';
-	            ln.textContent = '   -';
+            const ln = document.createElement('span');
+            ln.className = 'text-red-800 select-none mr-4';
+            ln.textContent = '   -';
 
-	            const text = document.createElement('span');
-	            text.className = 'text-red-800 line-through';
-	            text.textContent = item.content || ' ';
+            const text = document.createElement('span');
+            text.className = 'text-red-800 line-through';
+            text.textContent = item.content || ' ';
 
-	            row.append(ln, text);
-	            frag.appendChild(row);
-	            break;
-	          }
-	          case 'changed': {
-	            row.className = 'flex bg-yellow-200 -mx-4 px-4';
+            row.append(ln, text);
+            frag.appendChild(row);
+            break;
+          }
+          case 'changed': {
+            row.className = 'flex bg-yellow-200 -mx-4 px-4';
 
-	            const ln = document.createElement('span');
-	            ln.className = 'text-yellow-800 select-none mr-4';
-	            ln.textContent = `${lineNumStr}~`;
+            const ln = document.createElement('span');
+            ln.className = 'text-yellow-800 select-none mr-4';
+            ln.textContent = `${lineNumStr}~`;
 
-	            const text = document.createElement('span');
-	            text.className = 'text-yellow-800';
+            const text = document.createElement('span');
+            text.className = 'text-yellow-800';
 
-	            const del = document.createElement('del');
-	            del.className = 'bg-red-300/50';
-	            del.textContent = item.oldContent || '';
+            const del = document.createElement('del');
+            del.className = 'bg-red-300/50';
+            del.textContent = item.oldContent || '';
 
-	            const ins = document.createElement('ins');
-	            ins.className = 'bg-green-300/50 no-underline';
-	            ins.textContent = item.newContent || '';
+            const ins = document.createElement('ins');
+            ins.className = 'bg-green-300/50 no-underline';
+            ins.textContent = item.newContent || '';
 
-	            text.append(del, document.createTextNode(' '), ins);
-	            row.append(ln, text);
-	            frag.appendChild(row);
-	            lineNum++;
-	            break;
-	          }
-	        }
-	      });
+            text.append(del, document.createTextNode(' '), ins);
+            row.append(ln, text);
+            frag.appendChild(row);
+            lineNum++;
+            break;
+          }
+        }
+      });
 
-	      if (frag.childNodes.length === 0) {
-	        const empty = document.createElement('p');
-	        empty.className = 'text-navy-400 italic';
-	        empty.textContent = 'No differences found. The bills are identical.';
-	        output.appendChild(empty);
-	        return;
-	      }
+      if (frag.childNodes.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'text-navy-400 italic';
+        empty.textContent = 'No differences found. The bills are identical.';
+        output.appendChild(empty);
+        return;
+      }
 
-	      output.appendChild(frag);
-	    }
+      output.appendChild(frag);
+    }
 
     // Event handlers
     document.getElementById('compare-btn').addEventListener('click', () => {

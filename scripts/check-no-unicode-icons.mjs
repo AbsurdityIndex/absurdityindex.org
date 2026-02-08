@@ -21,9 +21,22 @@ const repoRoot = detectRepoRoot();
 // Skip obvious binary formats. We intentionally DO scan .svg because
 // Unicode "icon" glyphs can sneak into SVG text nodes.
 const SKIP_EXTENSIONS = new Set([
-  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico',
-  '.pdf', '.woff', '.woff2', '.ttf', '.otf', '.zip', '.gz',
-  '.mp3', '.mp4', '.mov',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.ico',
+  '.pdf',
+  '.woff',
+  '.woff2',
+  '.ttf',
+  '.otf',
+  '.zip',
+  '.gz',
+  '.mp3',
+  '.mp4',
+  '.mov',
 ]);
 
 function shouldSkipFile(file) {
@@ -106,7 +119,7 @@ function scanLineForHtmlEntities(line, file, lineNo) {
   const findings = [];
 
   const dec = /&#(\d{1,7});/g;
-  for (let m; (m = dec.exec(line));) {
+  for (let m; (m = dec.exec(line)); ) {
     const cp = Number(m[1]);
     if (!Number.isFinite(cp) || !isBannedCodePoint(cp)) continue;
     findings.push({
@@ -121,7 +134,7 @@ function scanLineForHtmlEntities(line, file, lineNo) {
   }
 
   const hex = /&#x([0-9a-fA-F]{1,6});/g;
-  for (let m; (m = hex.exec(line));) {
+  for (let m; (m = hex.exec(line)); ) {
     const cp = parseInt(m[1], 16);
     if (!Number.isFinite(cp) || !isBannedCodePoint(cp)) continue;
     findings.push({
@@ -167,7 +180,7 @@ function scanLineForJsUnicodeEscapes(line, file, lineNo) {
 
   // \u{1F4A1}
   const brace = /\\u\{([0-9a-fA-F]+)\}/g;
-  for (let m; (m = brace.exec(line));) {
+  for (let m; (m = brace.exec(line)); ) {
     const cp = parseInt(m[1], 16);
     if (!Number.isFinite(cp) || !isBannedCodePoint(cp)) continue;
     findings.push({
@@ -183,7 +196,7 @@ function scanLineForJsUnicodeEscapes(line, file, lineNo) {
 
   // \u2713
   const u4 = /\\u([0-9a-fA-F]{4})/g;
-  for (let m; (m = u4.exec(line));) {
+  for (let m; (m = u4.exec(line)); ) {
     const cp = parseInt(m[1], 16);
     if (!Number.isFinite(cp) || !isBannedCodePoint(cp)) continue;
     findings.push({
@@ -199,7 +212,7 @@ function scanLineForJsUnicodeEscapes(line, file, lineNo) {
 
   // Surrogate pairs: \uD83D\uDCA1
   const sur = /\\u(D[89ABab][0-9a-fA-F]{2})\\u(D[CDEFcdef][0-9a-fA-F]{2})/g;
-  for (let m; (m = sur.exec(line));) {
+  for (let m; (m = sur.exec(line)); ) {
     const high = parseInt(m[1], 16);
     const low = parseInt(m[2], 16);
     const cp = (high - 0xd800) * 0x400 + (low - 0xdc00) + 0x10000;
@@ -251,7 +264,9 @@ function main() {
   const findings = files.flatMap(scanFile);
 
   if (findings.length > 0) {
-    console.error('Unicode icon check failed. Use Lucide (Icon.astro) or inline SVG instead of Unicode glyphs.');
+    console.error(
+      'Unicode icon check failed. Use Lucide (Icon.astro) or inline SVG instead of Unicode glyphs.',
+    );
     findings.slice(0, 60).forEach((f) => {
       console.error(`- ${f.file}:${f.line}:${f.col} [${f.kind}] ${f.detail}`);
       if (f.snippet) console.error(`  ${f.snippet}`);
@@ -266,4 +281,3 @@ function main() {
 }
 
 main();
-

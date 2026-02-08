@@ -39,32 +39,39 @@ const originChamber = d.billNumber.startsWith('S.') ? 'senate' : 'house';
 const divisionSum = omnibus.divisions.reduce((sum, div) => sum + div.spending, 0);
 
 // Build callout from timeline (if text release exists)
-const textRelease = omnibus.timeline?.find(e => e.event.toLowerCase().includes('released'));
-const callout = textRelease
-  ? textRelease.event
-  : d.subtitle || undefined;
+const textRelease = omnibus.timeline?.find((e) => e.event.toLowerCase().includes('released'));
+const callout = textRelease ? textRelease.event : d.subtitle || undefined;
 
 // Calculate hours between text release and first vote
-const firstVote = omnibus.timeline?.find(e =>
-  e.event.toLowerCase().includes('passes') || e.event.toLowerCase().includes('passed') || e.event.toLowerCase().includes('cloture')
+const firstVote = omnibus.timeline?.find(
+  (e) =>
+    e.event.toLowerCase().includes('passes') ||
+    e.event.toLowerCase().includes('passed') ||
+    e.event.toLowerCase().includes('cloture'),
 );
-const hoursToVote = textRelease && firstVote
-  ? Math.round((firstVote.date.getTime() - textRelease.date.getTime()) / (1000 * 60 * 60))
-  : undefined;
+const hoursToVote =
+  textRelease && firstVote
+    ? Math.round((firstVote.date.getTime() - textRelease.date.getTime()) / (1000 * 60 * 60))
+    : undefined;
 
 const hasRiders = !!(omnibus.riders && omnibus.riders.length > 0);
 const hasTimeline = !!(omnibus.timeline && omnibus.timeline.length > 0);
 const hasBillEvolution = !!(d.billEvolution && d.billEvolution.length > 0);
 
 const billSchema = {
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": d.title,
-  "description": d.summary,
-  "datePublished": d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
-  "author": { "@type": "Organization", "name": "Absurdity Index" },
-  "publisher": { "@type": "Organization", "name": "Absurdity Index", "url": "https://absurdityindex.org" },
-  "mainEntityOfPage": { "@type": "WebPage", "@id": `https://absurdityindex.org/omnibus/${bill.id}` },
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.summary,
+  datePublished:
+    d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
+  author: { '@type': 'Organization', name: 'Absurdity Index' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Absurdity Index',
+    url: 'https://absurdityindex.org',
+  },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': `https://absurdityindex.org/omnibus/${bill.id}` },
 };
 ---
 
@@ -73,7 +80,8 @@ const billSchema = {
   description={d.summary}
   ogType="article"
   article={{
-    publishedTime: d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced),
+    publishedTime:
+      d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced),
     section: d.category,
     tags: d.tags,
   }}
@@ -86,7 +94,12 @@ const billSchema = {
       <span class="text-gold-400 font-serif text-sm italic">
         This is satire. Some of it's real. We'll let you figure out which.
       </span>
-      <a href={d.congressDotGovUrl || "https://www.congress.gov"} target="_blank" rel="noopener noreferrer" class="text-gold-500 hover:text-gold-300 text-xs font-mono underline underline-offset-2 whitespace-nowrap">
+      <a
+        href={d.congressDotGovUrl || 'https://www.congress.gov'}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-gold-500 hover:text-gold-300 text-xs font-mono underline underline-offset-2 whitespace-nowrap"
+      >
         Verify it yourself
       </a>
     </div>
@@ -95,41 +108,51 @@ const billSchema = {
   {/* Main layout wrapper */}
   <div class="max-w-5xl mx-auto px-4 py-8">
     <div class="lg:grid lg:grid-cols-[1fr_240px] lg:gap-8">
-
       {/* ============ MAIN COLUMN ============ */}
       <div class="max-w-3xl">
-
         {/* 2. Compact header bar */}
         <div class="flex flex-wrap items-center gap-2 mb-4">
           <span class="font-mono text-sm font-bold text-navy-700">{d.billNumber}</span>
-          <span class="px-2 py-0.5 bg-red-700 text-cream-100 text-xs font-mono rounded">OMNIBUS</span>
+          <span class="px-2 py-0.5 bg-red-700 text-cream-100 text-xs font-mono rounded"
+            >OMNIBUS</span
+          >
           <ChamberBadge chamber={originChamber} size="sm" />
           <span class="text-xs text-navy-500">{d.status}</span>
-          {d.congressNumber && (
-            <span class="text-xs font-mono text-navy-400">{d.congressNumber}th Congress</span>
-          )}
+          {
+            d.congressNumber && (
+              <span class="text-xs font-mono text-navy-400">{d.congressNumber}th Congress</span>
+            )
+          }
         </div>
 
         {/* 3. Title + subtitle */}
         <h1 class="font-serif text-2xl md:text-3xl font-bold text-navy-900 mb-2">
           {d.title}
         </h1>
-        {d.subtitle && (
-          <p class="font-serif italic text-navy-600 mb-6">{d.subtitle}</p>
-        )}
+        {d.subtitle && <p class="font-serif italic text-navy-600 mb-6">{d.subtitle}</p>}
 
         {/* Satire notice */}
-        {d.billEvolution && d.billEvolution.length > 0 && (
-          <div class="flex items-start gap-3 bg-cream-200 border border-gold-300 rounded-lg p-3 mb-6">
-            <Icon name="alert-triangle" size={16} class="text-gold-600 flex-shrink-0 mt-0.5" />
-            <p class="text-xs text-navy-700 leading-relaxed">
-              <strong class="font-semibold">Satire notice:</strong> Spending figures, pork tracking, and editorial commentary are
-              satirical estimates for entertainment purposes.
-              Legislative history and vote records are real &mdash;
-              <a href={d.congressDotGovUrl || "https://www.congress.gov"} target="_blank" rel="noopener noreferrer" class="text-gold-700 underline hover:text-gold-800">verify at Congress.gov</a>.
-            </p>
-          </div>
-        )}
+        {
+          d.billEvolution && d.billEvolution.length > 0 && (
+            <div class="flex items-start gap-3 bg-cream-200 border border-gold-300 rounded-lg p-3 mb-6">
+              <Icon name="alert-triangle" size={16} class="text-gold-600 flex-shrink-0 mt-0.5" />
+              <p class="text-xs text-navy-700 leading-relaxed">
+                <strong class="font-semibold">Satire notice:</strong> Spending figures, pork
+                tracking, and editorial commentary are satirical estimates for entertainment
+                purposes. Legislative history and vote records are real &mdash;
+                <a
+                  href={d.congressDotGovUrl || 'https://www.congress.gov'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-gold-700 underline hover:text-gold-800"
+                >
+                  verify at Congress.gov
+                </a>
+                .
+              </p>
+            </div>
+          )
+        }
 
         {/* 4. At A Glance */}
         <div class="mb-8">
@@ -146,40 +169,37 @@ const billSchema = {
 
         {/* 5. Spending Breakdown */}
         <div class="mb-8">
-          <OmnibusSpendingBreakdown
-            divisions={omnibus.divisions}
-            totalSpending={divisionSum}
-          />
+          <OmnibusSpendingBreakdown divisions={omnibus.divisions} totalSpending={divisionSum} />
         </div>
 
         {/* 6. AbsurdityMeter + PorkMeter side by side */}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          {d.absurdityIndex !== undefined && (
-            <AbsurdityMeter score={d.absurdityIndex} />
-          )}
-          {d.totalPork !== undefined && d.totalPork > 0 && (
-            <PorkMeter amount={d.totalPork} />
-          )}
+          {d.absurdityIndex !== undefined && <AbsurdityMeter score={d.absurdityIndex} />}
+          {d.totalPork !== undefined && d.totalPork > 0 && <PorkMeter amount={d.totalPork} />}
         </div>
 
         {/* 7. Party Balance */}
-        {(d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
-          <div class="mb-8">
-            <PartyBalance
-              sponsor={d.sponsor}
-              sponsorParty={d.sponsorParty}
-              cosponsors={d.cosponsors}
-              cosponsorCount={d.cosponsorCount}
-            />
-          </div>
-        )}
+        {
+          (d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
+            <div class="mb-8">
+              <PartyBalance
+                sponsor={d.sponsor}
+                sponsorParty={d.sponsorParty}
+                cosponsors={d.cosponsors}
+                cosponsorCount={d.cosponsorCount}
+              />
+            </div>
+          )
+        }
 
         {/* 8. Timeline */}
-        {hasTimeline && (
-          <div class="mb-8">
-            <OmnibusTimeline timeline={omnibus.timeline!} />
-          </div>
-        )}
+        {
+          hasTimeline && (
+            <div class="mb-8">
+              <OmnibusTimeline timeline={omnibus.timeline!} />
+            </div>
+          )
+        }
 
         {/* 9. Divisions */}
         <section class="mb-8" id="divisions-section" data-section="divisions-section">
@@ -189,47 +209,58 @@ const billSchema = {
             <span class="text-sm font-normal text-navy-500">({omnibus.divisions.length})</span>
           </h2>
           <div class="space-y-3">
-            {omnibus.divisions.map((div, i) => (
-              <OmnibusDivision
-                number={i + 1}
-                title={div.title}
-                shortTitle={div.shortTitle}
-                spending={div.spending}
-                totalSpending={divisionSum}
-                description={div.description}
-                isExpanded={i === 0}
-              />
-            ))}
+            {
+              omnibus.divisions.map((div, i) => (
+                <OmnibusDivision
+                  number={i + 1}
+                  title={div.title}
+                  shortTitle={div.shortTitle}
+                  spending={div.spending}
+                  totalSpending={divisionSum}
+                  description={div.description}
+                  isExpanded={i === 0}
+                />
+              ))
+            }
           </div>
         </section>
 
         {/* 10. Riders */}
-        {hasRiders && (
-          <div class="mb-8">
-            <OmnibusRiders riders={omnibus.riders!} />
-          </div>
-        )}
+        {
+          hasRiders && (
+            <div class="mb-8">
+              <OmnibusRiders riders={omnibus.riders!} />
+            </div>
+          )
+        }
 
         {/* 11. Bill Evolution */}
-        {hasBillEvolution && (
-          <div class="mb-8 bg-cream-100 border border-gold-300 rounded-lg p-5" id="evolution" data-section="evolution">
-            <h2 class="font-serif text-lg font-bold text-navy-900 mb-3 flex items-center gap-2">
-              <Icon name="history" size={18} class="text-gold-600" />
-              Watch the Sausage Get Made
-            </h2>
-            <p class="text-sm text-navy-600 mb-4">
-              See how this {omnibus.pageCount.toLocaleString()}-page bill evolved through the legislative process, with pork tracking at every stage.
-            </p>
-            <BillEvolutionModal
-              billNumber={d.billNumber}
-              billTitle={d.title}
-              stages={d.billEvolution!}
-              totalPork={d.totalPork}
-              congressDotGovUrl={d.congressDotGovUrl}
-              originChamber={originChamber}
-            />
-          </div>
-        )}
+        {
+          hasBillEvolution && (
+            <div
+              class="mb-8 bg-cream-100 border border-gold-300 rounded-lg p-5"
+              id="evolution"
+              data-section="evolution"
+            >
+              <h2 class="font-serif text-lg font-bold text-navy-900 mb-3 flex items-center gap-2">
+                <Icon name="history" size={18} class="text-gold-600" />
+                Watch the Sausage Get Made
+              </h2>
+              <p class="text-sm text-navy-600 mb-4">
+                See how this {omnibus.pageCount.toLocaleString()}-page bill evolved through the
+                legislative process, with pork tracking at every stage.
+              </p>
+              <BillEvolutionModal
+                billNumber={d.billNumber}
+                billTitle={d.title}
+                stages={d.billEvolution!}
+                totalPork={d.totalPork}
+                congressDotGovUrl={d.congressDotGovUrl}
+                originChamber={originChamber}
+              />
+            </div>
+          )
+        }
 
         {/* 12. MDX Content */}
         <div class="bg-parchment rounded-lg shadow-lg p-6 md:p-8 relative overflow-hidden mb-8">
@@ -240,38 +271,49 @@ const billSchema = {
         </div>
 
         {/* 13. Action bar */}
-        <div class="bg-navy-800 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4 mb-6" data-theme-fixed>
+        <div
+          class="bg-navy-800 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4 mb-6"
+          data-theme-fixed
+        >
           <ShareButtons
             title={`${d.billNumber} — ${d.title}`}
             summary={d.summary}
             url={`https://absurdityindex.org/omnibus/${bill.id}/`}
           />
-          {d.congressDotGovUrl && (
-            <a
-              href={d.congressDotGovUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 text-sm text-gold-400 hover:text-gold-300 font-mono"
-            >
-              <Icon name="external-link" size={14} />
-              Congress.gov
-            </a>
-          )}
+          {
+            d.congressDotGovUrl && (
+              <a
+                href={d.congressDotGovUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 text-sm text-gold-400 hover:text-gold-300 font-mono"
+              >
+                <Icon name="external-link" size={14} />
+                Congress.gov
+              </a>
+            )
+          }
         </div>
 
         {/* 14. Disclaimer + back nav */}
         <Disclaimer context="bill-detail" />
 
         <div class="text-center mt-6 flex flex-wrap justify-center gap-4">
-          <a href="/bills" class="text-navy-600 hover:text-gold-600 font-serif text-sm transition-colors">
+          <a
+            href="/bills"
+            class="text-navy-600 hover:text-gold-600 font-serif text-sm transition-colors"
+          >
             &larr; All Real Bills
           </a>
-          <a href="/omnibus" class="text-navy-600 hover:text-gold-600 font-serif text-sm transition-colors">
+          <a
+            href="/omnibus"
+            class="text-navy-600 hover:text-gold-600 font-serif text-sm transition-colors"
+          >
             All Omnibus Bills
           </a>
         </div>
-
-      </div> {/* end main column */}
+      </div>
+      {/* end main column */}
 
       {/* ============ SIDEBAR ============ */}
       <OmnibusSidebar
@@ -283,33 +325,53 @@ const billSchema = {
         hasTimeline={hasTimeline}
         hasBillEvolution={hasBillEvolution}
       />
-
-    </div> {/* end grid */}
-  </div> {/* end max-w-5xl */}
+    </div>
+    {/* end grid */}
+  </div>
+  {/* end max-w-5xl */}
 
   {/* Mobile bottom nav (below lg) */}
-  <div class="fixed bottom-0 inset-x-0 bg-navy-900 border-t-2 border-gold-500 lg:hidden z-40" data-theme-fixed>
+  <div
+    class="fixed bottom-0 inset-x-0 bg-navy-900 border-t-2 border-gold-500 lg:hidden z-40"
+    data-theme-fixed
+  >
     <div class="flex items-center justify-around py-2 px-1">
-      <button type="button" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-3 py-1 text-gold-400 hover:text-gold-300 transition-colors" data-scroll-to="overview">
+      <button
+        type="button"
+        class="mobile-nav-btn flex flex-col items-center gap-0.5 px-3 py-1 text-gold-400 hover:text-gold-300 transition-colors"
+        data-scroll-to="overview"
+      >
         <Icon name="clipboard-list" size={18} />
         <span class="text-[10px] font-mono">Overview</span>
       </button>
-      <button type="button" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-3 py-1 text-gold-400 hover:text-gold-300 transition-colors" data-scroll-to="divisions-section">
+      <button
+        type="button"
+        class="mobile-nav-btn flex flex-col items-center gap-0.5 px-3 py-1 text-gold-400 hover:text-gold-300 transition-colors"
+        data-scroll-to="divisions-section"
+      >
         <Icon name="book-open" size={18} />
         <span class="text-[10px] font-mono">Divisions</span>
       </button>
-      <button type="button" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-3 py-1 text-gold-400 hover:text-gold-300 transition-colors" data-scroll-to="riders">
+      <button
+        type="button"
+        class="mobile-nav-btn flex flex-col items-center gap-0.5 px-3 py-1 text-gold-400 hover:text-gold-300 transition-colors"
+        data-scroll-to="riders"
+      >
         <Icon name="gift" size={18} />
         <span class="text-[10px] font-mono">Riders</span>
       </button>
-      <button type="button" class="mobile-nav-btn flex flex-col items-center gap-0.5 px-3 py-1 text-gold-400 hover:text-gold-300 transition-colors" data-scroll-to="timeline">
+      <button
+        type="button"
+        class="mobile-nav-btn flex flex-col items-center gap-0.5 px-3 py-1 text-gold-400 hover:text-gold-300 transition-colors"
+        data-scroll-to="timeline"
+      >
         <Icon name="calendar-days" size={18} />
         <span class="text-[10px] font-mono">Timeline</span>
       </button>
     </div>
   </div>
   {/* Spacer for mobile bottom nav */}
-  <div class="h-16 lg:hidden" />
+  <div class="h-16 lg:hidden"></div>
 </BaseLayout>
 
 <script>
@@ -344,14 +406,14 @@ const billSchema = {
             const divNum = parseInt(currentSection.split('-')[1], 10);
             spendingBars.forEach((bar) => {
               (bar as HTMLElement).dataset.active = String(
-                parseInt((bar as HTMLElement).dataset.divisionTarget || '0', 10) === divNum
+                parseInt((bar as HTMLElement).dataset.divisionTarget || '0', 10) === divNum,
               );
             });
           }
         }
       }
     },
-    { rootMargin: '-20% 0px -60% 0px', threshold: 0 }
+    { rootMargin: '-20% 0px -60% 0px', threshold: 0 },
   );
 
   sections.forEach((section) => observer.observe(section));
@@ -400,7 +462,7 @@ const billSchema = {
 
 <style>
   /* Mobile bottom nav active state */
-  .mobile-nav-btn[data-active="true"] {
+  .mobile-nav-btn[data-active='true'] {
     color: var(--color-gold-300);
   }
 </style>

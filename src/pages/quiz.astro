@@ -7,126 +7,164 @@ const quizQuestions = [
   {
     question: "What is a 'cloture vote'?",
     options: [
-      { text: "A vote to end debate and move to a final vote on legislation", correct: true },
-      { text: "A vote taken with all doors closed to the public", correct: false },
-      { text: "A vote on whether to permanently close a federal building", correct: false },
-      { text: "A ceremonial vote where everyone wears robes", correct: false }
+      { text: 'A vote to end debate and move to a final vote on legislation', correct: true },
+      { text: 'A vote taken with all doors closed to the public', correct: false },
+      { text: 'A vote on whether to permanently close a federal building', correct: false },
+      { text: 'A ceremonial vote where everyone wears robes', correct: false },
     ],
-    explanation: "Cloture is a Senate procedure to end a filibuster. It requires 60 votes (three-fifths of senators) to invoke, and once passed, debate is limited to 30 additional hours before a final vote must occur."
+    explanation:
+      'Cloture is a Senate procedure to end a filibuster. It requires 60 votes (three-fifths of senators) to invoke, and once passed, debate is limited to 30 additional hours before a final vote must occur.',
   },
   {
     question: "What does 'pork barrel' spending mean?",
     options: [
-      { text: "Federal funding specifically for agricultural pig farming", correct: false },
-      { text: "Government funds directed to a specific district to benefit constituents (and help re-election)", correct: true },
-      { text: "Emergency food assistance programs", correct: false },
-      { text: "Spending on congressional cafeteria improvements", correct: false }
+      { text: 'Federal funding specifically for agricultural pig farming', correct: false },
+      {
+        text: 'Government funds directed to a specific district to benefit constituents (and help re-election)',
+        correct: true,
+      },
+      { text: 'Emergency food assistance programs', correct: false },
+      { text: 'Spending on congressional cafeteria improvements', correct: false },
     ],
-    explanation: "Pork barrel spending refers to appropriations designed to benefit a politician's home district or state, often slipped into larger bills. The term comes from the pre-Civil War practice of distributing salt pork to enslaved people from wooden barrels."
+    explanation:
+      "Pork barrel spending refers to appropriations designed to benefit a politician's home district or state, often slipped into larger bills. The term comes from the pre-Civil War practice of distributing salt pork to enslaved people from wooden barrels.",
   },
   {
     question: "What is a 'poison pill amendment'?",
     options: [
-      { text: "An amendment added to kill a bill by making it unacceptable to its original supporters", correct: true },
-      { text: "An amendment related to pharmaceutical regulations", correct: false },
-      { text: "A secret amendment that only takes effect if the bill fails", correct: false },
-      { text: "An amendment that automatically expires after one year", correct: false }
+      {
+        text: 'An amendment added to kill a bill by making it unacceptable to its original supporters',
+        correct: true,
+      },
+      { text: 'An amendment related to pharmaceutical regulations', correct: false },
+      { text: 'A secret amendment that only takes effect if the bill fails', correct: false },
+      { text: 'An amendment that automatically expires after one year', correct: false },
     ],
-    explanation: "A poison pill amendment is strategically added by opponents of a bill to make it unpalatable to its original supporters, essentially killing the legislation without having to vote against it directly."
+    explanation:
+      'A poison pill amendment is strategically added by opponents of a bill to make it unpalatable to its original supporters, essentially killing the legislation without having to vote against it directly.',
   },
   {
     question: "What happens during a 'quorum call'?",
     options: [
-      { text: "The sergeant-at-arms physically retrieves absent members", correct: false },
-      { text: "A roll call to establish whether enough members are present to conduct business", correct: true },
-      { text: "A special vote requiring unanimous consent", correct: false },
-      { text: "A formal dinner where attendance is mandatory", correct: false }
+      { text: 'The sergeant-at-arms physically retrieves absent members', correct: false },
+      {
+        text: 'A roll call to establish whether enough members are present to conduct business',
+        correct: true,
+      },
+      { text: 'A special vote requiring unanimous consent', correct: false },
+      { text: 'A formal dinner where attendance is mandatory', correct: false },
     ],
-    explanation: "A quorum call is used to verify that a majority of members (a quorum) are present. In practice, quorum calls are often used as procedural delay tactics while negotiations happen behind the scenes."
+    explanation:
+      'A quorum call is used to verify that a majority of members (a quorum) are present. In practice, quorum calls are often used as procedural delay tactics while negotiations happen behind the scenes.',
   },
   {
     question: "What is 'logrolling' in Congress?",
     options: [
-      { text: "The practice of rolling paper logs to transport legislation between chambers", correct: false },
-      { text: "A fitness program for congressional staff", correct: false },
+      {
+        text: 'The practice of rolling paper logs to transport legislation between chambers',
+        correct: false,
+      },
+      { text: 'A fitness program for congressional staff', correct: false },
       { text: "Trading votes: 'I'll support your bill if you support mine'", correct: true },
-      { text: "The process of removing old laws from the books", correct: false }
+      { text: 'The process of removing old laws from the books', correct: false },
     ],
-    explanation: "Logrolling is the practice of exchanging political favors, especially trading votes. 'You scratch my back, I'll scratch yours' but with federal legislation. The term comes from neighbors helping each other roll logs for cabin construction."
+    explanation:
+      "Logrolling is the practice of exchanging political favors, especially trading votes. 'You scratch my back, I'll scratch yours' but with federal legislation. The term comes from neighbors helping each other roll logs for cabin construction.",
   },
   {
     question: "What is a 'discharge petition'?",
     options: [
-      { text: "A document releasing a member of Congress from their duties", correct: false },
-      { text: "A medical form for congressional healthcare", correct: false },
-      { text: "A procedure to force a bill out of committee onto the floor for a vote", correct: true },
-      { text: "A formal request to leave a congressional hearing early", correct: false }
+      { text: 'A document releasing a member of Congress from their duties', correct: false },
+      { text: 'A medical form for congressional healthcare', correct: false },
+      {
+        text: 'A procedure to force a bill out of committee onto the floor for a vote',
+        correct: true,
+      },
+      { text: 'A formal request to leave a congressional hearing early', correct: false },
     ],
-    explanation: "A discharge petition, signed by a majority of House members (218), can force a bill out of a committee that refuses to act on it. It's rarely successful but serves as a threat to committee chairs who are sitting on popular legislation."
+    explanation:
+      "A discharge petition, signed by a majority of House members (218), can force a bill out of a committee that refuses to act on it. It's rarely successful but serves as a threat to committee chairs who are sitting on popular legislation.",
   },
   {
     question: "What does 'germane' mean when discussing amendments?",
     options: [
-      { text: "The amendment must be written in German", correct: false },
-      { text: "The amendment must be relevant to the subject matter of the bill", correct: true },
-      { text: "The amendment must have bipartisan support", correct: false },
-      { text: "The amendment must be sponsored by a senior member", correct: false }
+      { text: 'The amendment must be written in German', correct: false },
+      { text: 'The amendment must be relevant to the subject matter of the bill', correct: true },
+      { text: 'The amendment must have bipartisan support', correct: false },
+      { text: 'The amendment must be sponsored by a senior member', correct: false },
     ],
-    explanation: "An amendment is 'germane' if it relates to the same subject as the bill being amended. The House has strict germaneness rules; the Senate generally does not, which is why unrelated provisions often get attached to Senate bills."
+    explanation:
+      "An amendment is 'germane' if it relates to the same subject as the bill being amended. The House has strict germaneness rules; the Senate generally does not, which is why unrelated provisions often get attached to Senate bills.",
   },
   {
     question: "What is a 'continuing resolution' (CR)?",
     options: [
-      { text: "A resolution stating Congress will continue to meet", correct: false },
-      { text: "Temporary funding that keeps the government running when regular appropriations haven't passed", correct: true },
-      { text: "A promise to revisit legislation in the next session", correct: false },
-      { text: "A resolution that automatically renews every year", correct: false }
+      { text: 'A resolution stating Congress will continue to meet', correct: false },
+      {
+        text: "Temporary funding that keeps the government running when regular appropriations haven't passed",
+        correct: true,
+      },
+      { text: 'A promise to revisit legislation in the next session', correct: false },
+      { text: 'A resolution that automatically renews every year', correct: false },
     ],
-    explanation: "A continuing resolution is a stopgap funding measure that keeps the government operating when Congress hasn't passed regular appropriations bills by the fiscal year deadline. CR funding typically mirrors previous spending levels."
+    explanation:
+      "A continuing resolution is a stopgap funding measure that keeps the government operating when Congress hasn't passed regular appropriations bills by the fiscal year deadline. CR funding typically mirrors previous spending levels.",
   },
   {
     question: "What is 'unanimous consent' in Congress?",
     options: [
-      { text: "When every single member votes yes on a bill", correct: false },
-      { text: "A procedural agreement where no member objects, allowing action without a formal vote", correct: true },
-      { text: "A special type of constitutional amendment", correct: false },
-      { text: "The requirement for all members to be present for a vote", correct: false }
+      { text: 'When every single member votes yes on a bill', correct: false },
+      {
+        text: 'A procedural agreement where no member objects, allowing action without a formal vote',
+        correct: true,
+      },
+      { text: 'A special type of constitutional amendment', correct: false },
+      { text: 'The requirement for all members to be present for a vote', correct: false },
     ],
-    explanation: "Unanimous consent is a procedural shortcut where the presiding officer asks if there's any objection to a request. If no one objects, the action proceeds without a vote. A single senator can block unanimous consent requests."
+    explanation:
+      "Unanimous consent is a procedural shortcut where the presiding officer asks if there's any objection to a request. If no one objects, the action proceeds without a vote. A single senator can block unanimous consent requests.",
   },
   {
     question: "What is a 'rider' on a bill?",
     options: [
-      { text: "A member of Congress who commutes by bicycle", correct: false },
-      { text: "The official who delivers bills between the House and Senate", correct: false },
-      { text: "An unrelated provision attached to a bill, often to ensure its passage", correct: true },
-      { text: "A secondary sponsor who 'rides along' with the primary sponsor", correct: false }
+      { text: 'A member of Congress who commutes by bicycle', correct: false },
+      { text: 'The official who delivers bills between the House and Senate', correct: false },
+      {
+        text: 'An unrelated provision attached to a bill, often to ensure its passage',
+        correct: true,
+      },
+      { text: "A secondary sponsor who 'rides along' with the primary sponsor", correct: false },
     ],
-    explanation: "A rider is an additional provision attached to a bill that often has little or no connection to the bill's subject. Riders are commonly used to pass unpopular or controversial measures by attaching them to must-pass legislation."
-  }
+    explanation:
+      "A rider is an additional provision attached to a bill that often has little or no connection to the bill's subject. Riders are commonly used to pass unpopular or controversial measures by attaching them to must-pass legislation.",
+  },
 ];
 
 const scoreMessages = {
   perfect: {
-    title: "You could run for office",
+    title: 'You could run for office',
     subtitle: "(please don't)",
-    description: "You know more about congressional procedures than most members of Congress. This is either impressive or concerning."
+    description:
+      'You know more about congressional procedures than most members of Congress. This is either impressive or concerning.',
   },
   high: {
-    title: "Congressional aide material",
-    subtitle: "Your resume is on file",
-    description: "You have an alarming familiarity with legislative arcana. Consider using this knowledge for good, not evil."
+    title: 'Congressional aide material',
+    subtitle: 'Your resume is on file',
+    description:
+      'You have an alarming familiarity with legislative arcana. Consider using this knowledge for good, not evil.',
   },
   medium: {
-    title: "Average American",
-    subtitle: "Better than expected",
-    description: "You know roughly as much about Congress as Congress seems to know about most things. Congratulations?"
+    title: 'Average American',
+    subtitle: 'Better than expected',
+    description:
+      'You know roughly as much about Congress as Congress seems to know about most things. Congratulations?',
   },
   low: {
-    title: "You might actually be in Congress",
+    title: 'You might actually be in Congress',
     subtitle: "Don't worry, neither do they",
-    description: "Your knowledge of congressional procedures is on par with several elected officials we could name. Take comfort in good company."
-  }
+    description:
+      'Your knowledge of congressional procedures is on par with several elected officials we could name. Take comfort in good company.',
+  },
 };
 ---
 
@@ -138,8 +176,12 @@ const scoreMessages = {
     <!-- Header -->
     <div class="text-center mb-10">
       <OfficialSeal size="120" />
-      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Interactive Quiz</p>
-      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Do You Speak Congress?</h1>
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">
+        Interactive Quiz
+      </p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">
+        Do You Speak Congress?
+      </h1>
       <p class="text-navy-600 font-serif italic mt-3">Test your knowledge of legislative jargon</p>
     </div>
     <div class="gold-rule"></div>
@@ -148,9 +190,12 @@ const scoreMessages = {
     <div id="quiz-container" class="mt-8">
       <!-- Start Screen -->
       <div id="start-screen" class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 text-center">
-        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-4">Ready to Test Your Knowledge?</h2>
+        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-4">
+          Ready to Test Your Knowledge?
+        </h2>
         <p class="font-sans text-navy-700 mb-6 leading-relaxed">
-          Congressional jargon can make anyone feel like they're reading a foreign language. Take this 10-question quiz to see if you can decode the mysterious vocabulary of Capitol Hill.
+          Congressional jargon can make anyone feel like they're reading a foreign language. Take
+          this 10-question quiz to see if you can decode the mysterious vocabulary of Capitol Hill.
         </p>
         <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-8 text-left">
           <div class="flex items-center gap-2">
@@ -183,17 +228,29 @@ const scoreMessages = {
         <!-- Progress Bar -->
         <div class="mb-6">
           <div class="flex justify-between items-center mb-2">
-            <span class="font-mono text-sm text-navy-600">Question <span id="current-question">1</span> of 10</span>
-            <span class="font-mono text-sm text-gold-600">Score: <span id="current-score">0</span></span>
+            <span class="font-mono text-sm text-navy-600"
+              >Question <span id="current-question">1</span> of 10</span
+            >
+            <span class="font-mono text-sm text-gold-600"
+              >Score: <span id="current-score">0</span></span
+            >
           </div>
           <div class="h-2 rounded-full bg-cream-200 overflow-hidden">
-            <div id="progress-bar" class="h-full bg-gold-500 transition-all duration-300" style="width: 10%;"></div>
+            <div
+              id="progress-bar"
+              class="h-full bg-gold-500 transition-all duration-300"
+              style="width: 10%;"
+            >
+            </div>
           </div>
         </div>
 
         <!-- Question Card -->
         <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-10">
-          <h2 id="question-text" class="font-serif text-xl md:text-2xl font-bold text-navy-900 mb-8">
+          <h2
+            id="question-text"
+            class="font-serif text-xl md:text-2xl font-bold text-navy-900 mb-8"
+          >
             What is a 'cloture vote'?
           </h2>
 
@@ -210,7 +267,10 @@ const scoreMessages = {
               </div>
               <div>
                 <p id="feedback-result" class="font-serif text-lg font-bold mb-2">Correct!</p>
-                <p id="feedback-explanation" class="font-sans text-navy-700 text-sm leading-relaxed">
+                <p
+                  id="feedback-explanation"
+                  class="font-sans text-navy-700 text-sm leading-relaxed"
+                >
                   Explanation will appear here.
                 </p>
               </div>
@@ -241,7 +301,10 @@ const scoreMessages = {
           </div>
 
           <!-- Result Message -->
-          <h2 id="result-title" class="font-serif text-2xl md:text-3xl font-bold text-navy-900 mb-2">
+          <h2
+            id="result-title"
+            class="font-serif text-2xl md:text-3xl font-bold text-navy-900 mb-2"
+          >
             You could run for office
           </h2>
           <p id="result-subtitle" class="font-mono text-gold-600 uppercase tracking-wide mb-4">
@@ -266,7 +329,12 @@ const scoreMessages = {
           <!-- Performance Meter -->
           <div class="max-w-md mx-auto mb-8">
             <div class="h-4 rounded-full overflow-hidden bg-cream-200">
-              <div id="results-meter" class="h-full rounded-full transition-all duration-1000" style="width: 0%; background: linear-gradient(to right, #DC2626, #F97316, #EAB308, #228B4A);"></div>
+              <div
+                id="results-meter"
+                class="h-full rounded-full transition-all duration-1000"
+                style="width: 0%; background: linear-gradient(to right, #DC2626, #F97316, #EAB308, #228B4A);"
+              >
+              </div>
             </div>
             <div class="flex justify-between text-xs font-mono text-navy-500 mt-2">
               <span>In Congress</span>
@@ -294,7 +362,9 @@ const scoreMessages = {
           <!-- Disclaimer -->
           <div class="mt-8 p-4 border-2 border-dashed border-gold-400 rounded-lg bg-gold-100/50">
             <p class="font-mono text-xs text-navy-600">
-              DISCLAIMER: This quiz is for entertainment purposes only. Your score does not actually qualify or disqualify you for public office. Though based on some congressional testimony we've seen, it probably should.
+              DISCLAIMER: This quiz is for entertainment purposes only. Your score does not actually
+              qualify or disqualify you for public office. Though based on some congressional
+              testimony we've seen, it probably should.
             </p>
           </div>
         </div>
@@ -309,33 +379,35 @@ const scoreMessages = {
     </div>
   </div>
 
-	  <script is:inline define:vars={{ quizQuestions, scoreMessages }}>
-	    const questions = quizQuestions;
-	    const messages = scoreMessages;
+  <script is:inline define:vars={{ quizQuestions, scoreMessages }}>
+    const questions = quizQuestions;
+    const messages = scoreMessages;
 
-	    let currentQuestionIndex = 0;
-	    let score = 0;
-	    let answered = false;
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answered = false;
 
-	    // Inline Lucide SVG strings for dynamic UI (no Unicode icons)
-	    const ICON_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-	    const ICON_X = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-	    const svgParser = new DOMParser();
-	    const iconTemplates = {
-	      check: svgParser.parseFromString(ICON_CHECK, 'image/svg+xml').documentElement,
-	      x: svgParser.parseFromString(ICON_X, 'image/svg+xml').documentElement,
-	    };
+    // Inline Lucide SVG strings for dynamic UI (no Unicode icons)
+    const ICON_CHECK =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    const ICON_X =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    const svgParser = new DOMParser();
+    const iconTemplates = {
+      check: svgParser.parseFromString(ICON_CHECK, 'image/svg+xml').documentElement,
+      x: svgParser.parseFromString(ICON_X, 'image/svg+xml').documentElement,
+    };
 
-	    function setFeedbackIcon(name) {
-	      const template = iconTemplates[name];
-	      if (!template) return;
-	      feedbackIcon.replaceChildren(document.importNode(template, true));
-	    }
+    function setFeedbackIcon(name) {
+      const template = iconTemplates[name];
+      if (!template) return;
+      feedbackIcon.replaceChildren(document.importNode(template, true));
+    }
 
-	    // DOM Elements
-	    const startScreen = document.getElementById('start-screen');
-	    const questionScreen = document.getElementById('question-screen');
-	    const resultsScreen = document.getElementById('results-screen');
+    // DOM Elements
+    const startScreen = document.getElementById('start-screen');
+    const questionScreen = document.getElementById('question-screen');
+    const resultsScreen = document.getElementById('results-screen');
     const startBtn = document.getElementById('start-btn');
     const nextBtn = document.getElementById('next-btn');
     const retakeBtn = document.getElementById('retake-btn');
@@ -368,32 +440,34 @@ const scoreMessages = {
       return shuffled;
     }
 
-	    function showQuestion() {
-	      const question = questions[currentQuestionIndex];
+    function showQuestion() {
+      const question = questions[currentQuestionIndex];
 
-	      // Update progress
-	      currentQuestionEl.textContent = currentQuestionIndex + 1;
-	      currentScoreEl.textContent = score;
-	      progressBar.style.width = ((currentQuestionIndex + 1) / questions.length * 100) + '%';
+      // Update progress
+      currentQuestionEl.textContent = currentQuestionIndex + 1;
+      currentScoreEl.textContent = score;
+      progressBar.style.width = ((currentQuestionIndex + 1) / questions.length) * 100 + '%';
 
-	      // Set question text
-	      questionText.textContent = question.question;
+      // Set question text
+      questionText.textContent = question.question;
 
-	      // Shuffle and display options
-	      const shuffledOptions = shuffleArray(question.options);
-	      optionsContainer.replaceChildren();
+      // Shuffle and display options
+      const shuffledOptions = shuffleArray(question.options);
+      optionsContainer.replaceChildren();
 
-	      shuffledOptions.forEach((option, index) => {
-	        const button = document.createElement('button');
-	        button.className = 'option-btn w-full text-left p-4 rounded-lg border-2 border-gold-300 bg-cream-100 hover:border-gold-500 hover:bg-gold-100/50 transition-all font-sans text-navy-800';
-	        const label = document.createElement('span');
-	        label.className = 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-navy-800 text-gold-400 font-mono text-sm mr-3';
-	        label.textContent = String.fromCharCode(65 + index);
-	        button.append(label, document.createTextNode(option.text));
-	        button.dataset.correct = option.correct;
-	        button.addEventListener('click', () => selectAnswer(button, option.correct));
-	        optionsContainer.appendChild(button);
-	      });
+      shuffledOptions.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className =
+          'option-btn w-full text-left p-4 rounded-lg border-2 border-gold-300 bg-cream-100 hover:border-gold-500 hover:bg-gold-100/50 transition-all font-sans text-navy-800';
+        const label = document.createElement('span');
+        label.className =
+          'inline-flex items-center justify-center w-8 h-8 rounded-full bg-navy-800 text-gold-400 font-mono text-sm mr-3';
+        label.textContent = String.fromCharCode(65 + index);
+        button.append(label, document.createTextNode(option.text));
+        button.dataset.correct = option.correct;
+        button.addEventListener('click', () => selectAnswer(button, option.correct));
+        optionsContainer.appendChild(button);
+      });
 
       // Hide feedback and next button
       feedbackContainer.classList.add('hidden');
@@ -407,7 +481,7 @@ const scoreMessages = {
 
       // Disable all option buttons
       const allButtons = optionsContainer.querySelectorAll('.option-btn');
-      allButtons.forEach(btn => {
+      allButtons.forEach((btn) => {
         btn.disabled = true;
         btn.classList.remove('hover:border-gold-500', 'hover:bg-gold-100/50');
 
@@ -428,27 +502,28 @@ const scoreMessages = {
       const question = questions[currentQuestionIndex];
       feedbackContainer.classList.remove('hidden');
 
-	      if (isCorrect) {
-	        feedbackContainer.classList.remove('border-red-500', 'bg-red-100/50');
-	        feedbackContainer.classList.add('border-green-500', 'bg-green-100/50');
-	        setFeedbackIcon('check');
-	        feedbackIcon.className = 'text-3xl shrink-0 text-green-600';
-	        feedbackResult.textContent = 'Correct!';
-	        feedbackResult.className = 'font-serif text-lg font-bold mb-2 text-green-700';
-	      } else {
-	        feedbackContainer.classList.remove('border-green-500', 'bg-green-100/50');
-	        feedbackContainer.classList.add('border-red-500', 'bg-red-100/50');
-	        setFeedbackIcon('x');
-	        feedbackIcon.className = 'text-3xl shrink-0 text-red-600';
-	        feedbackResult.textContent = 'Not quite!';
-	        feedbackResult.className = 'font-serif text-lg font-bold mb-2 text-red-700';
-	      }
+      if (isCorrect) {
+        feedbackContainer.classList.remove('border-red-500', 'bg-red-100/50');
+        feedbackContainer.classList.add('border-green-500', 'bg-green-100/50');
+        setFeedbackIcon('check');
+        feedbackIcon.className = 'text-3xl shrink-0 text-green-600';
+        feedbackResult.textContent = 'Correct!';
+        feedbackResult.className = 'font-serif text-lg font-bold mb-2 text-green-700';
+      } else {
+        feedbackContainer.classList.remove('border-green-500', 'bg-green-100/50');
+        feedbackContainer.classList.add('border-red-500', 'bg-red-100/50');
+        setFeedbackIcon('x');
+        feedbackIcon.className = 'text-3xl shrink-0 text-red-600';
+        feedbackResult.textContent = 'Not quite!';
+        feedbackResult.className = 'font-serif text-lg font-bold mb-2 text-red-700';
+      }
 
       feedbackExplanation.textContent = question.explanation;
 
       // Show next button
       nextBtnContainer.classList.remove('hidden');
-      nextBtn.textContent = currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'See Results';
+      nextBtn.textContent =
+        currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'See Results';
     }
 
     function showResults() {
@@ -462,7 +537,7 @@ const scoreMessages = {
 
       // Animate the meter
       setTimeout(() => {
-        resultsMeter.style.width = (score / questions.length * 100) + '%';
+        resultsMeter.style.width = (score / questions.length) * 100 + '%';
       }, 100);
 
       // Determine message based on score

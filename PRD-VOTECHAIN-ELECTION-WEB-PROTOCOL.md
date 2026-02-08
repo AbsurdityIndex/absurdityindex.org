@@ -1,22 +1,28 @@
-# PRD: VoteChain Election Web Protocol (EWP) - Remote Ballot Casting Profile (Preview)
+# PRD: VoteChain Election Web Protocol (EWP) — Ballot Integrity Protocol
 
-> Status: **Preview / Draft (EWP/0.1)**  
-> Date: 2026-02-08  
-> Scope: Optional remote-casting track that layers on top of **VoteChain** voter verification.  
-> Non-claim: This document is not an endorsement of immediate nationwide Internet voting. It is a buildable protocol profile intended for controlled pilots, red teaming, and standards work (NIST/EAC/CISA + external review).
+> Status: **Preview / Draft (EWP/0.1)**
+> Date: 2026-02-08
+> Scope: End-to-end ballot integrity layer that completes **VoteChain** voter verification — the cryptographic chain of custody from cast to tally.
+> Non-claim: This document is not an endorsement of immediate nationwide unsupervised Internet voting. It is a buildable protocol for ensuring every ballot — whether cast at a polling place, a supervised kiosk, or (with appropriate gating) a remote device — is encrypted, recorded, included, and counted correctly. Intended for controlled pilots, red teaming, and standards work (NIST/EAC/CISA + external review).
 
 ## 0. Relationship To The VoteChain PRD
 
-This protocol is designed to integrate with the existing VoteChain blueprint in `PRD-VOTER-VERIFICATION-CHAIN.md`.
+This protocol **completes** the VoteChain blueprint defined in `PRD-VOTER-VERIFICATION-CHAIN.md`.
 
-VoteChain (as defined there) answers four questions and records verification events on a permissioned ledger:
+VoteChain answers four questions and records verification events on a permissioned ledger:
 
 1. Citizen?
 2. Eligible (for this jurisdiction + election)?
 3. Alive / liveness satisfied?
 4. Already voted (nullifier uniqueness)?
 
-**EWP** adds a remote-casting "ballot transport + public verifiability" layer while keeping the VoteChain invariants:
+VoteChain deliberately stops at verification — it does not touch ballot casting or counting. But a verified voter's ballot still has to go somewhere. Today, that "somewhere" is a physical chain of custody: sealed boxes, transport vans, counting rooms, certified machines. Every link in that chain is a trust assumption, not a mathematical proof. The result is a system where the front door is cryptographically sealed and the back door runs on honor.
+
+**EWP is the back door.** It provides the cryptographic chain of custody from the moment a ballot is cast to the final published tally — ensuring every ballot is encrypted, recorded on a public append-only log, provably included in the tally set, and counted correctly via verifiable decryption proofs.
+
+EWP applies to **every deployment mode** — polling-place devices, supervised kiosks, and (with appropriate gating) remote personal devices. The protocol machinery is the same regardless of where the voter client runs. What changes between modes is the trust model for the physical environment, not the cryptography.
+
+EWP preserves all VoteChain invariants:
 
 - No PII on-chain.
 - Ballot secrecy is preserved: VoteChain learns *that* you voted (or attempted), not *how* you voted.
@@ -26,60 +32,69 @@ VoteChain (as defined there) answers four questions and records verification eve
 
 ### 1.1 Goals
 
-- **G1: Eligibility without identity disclosure.** A voter proves eligibility for `election_id` + `jurisdiction_id` without revealing who they are.
-- **G2: Ballot secrecy.** No single gateway operator can learn vote selections from protocol transcripts.
-- **G3: End-to-end verifiability (E2E-V).** Voters and auditors can verify:
+- **G1: Complete the VoteChain system.** Provide the cryptographic chain of custody from ballot cast to published tally — the ballot integrity layer that VoteChain's verification layer was designed to feed into.
+- **G2: Eligibility without identity disclosure.** A voter proves eligibility for `election_id` + `jurisdiction_id` without revealing who they are.
+- **G3: Ballot secrecy.** No single gateway operator can learn vote selections from protocol transcripts.
+- **G4: End-to-end verifiability (E2E-V).** Voters and auditors can verify:
   - (a) their encrypted ballot was recorded (inclusion), and
   - (b) the final tally corresponds to the recorded encrypted ballots (counted-as-recorded).
-- **G4: Anti-replay + anti-duplication.** Prevent replay of cast requests; prevent counting more than one ballot per eligible credential per election (with optional revoting extension).
-- **G5: Transparency without a public blockchain.** Use a public bulletin board (append-only log) whose signed checkpoints are anchored into VoteChain.
-- **G6: Interoperability.** Provide an HTTP(S) profile with explicit message schemas, versioning, and algorithm agility.
+- **G5: Anti-replay + anti-duplication.** Prevent replay of cast requests; prevent counting more than one ballot per eligible credential per election (with optional revoting extension).
+- **G6: Transparency without a public blockchain.** Use a public bulletin board (append-only log) whose signed checkpoints are anchored into VoteChain.
+- **G7: Interoperability.** Provide an HTTP(S) profile with explicit message schemas, versioning, and algorithm agility.
+- **G8: Deployment-mode agnostic.** The same protocol primitives — encrypted ballots, bulletin board recording, threshold decryption, tally proofs — work identically whether the voter client is a polling-place device, a supervised kiosk, or a personal device. Only the physical-environment trust model changes.
 
 ### 1.2 Non-Goals (Explicit)
 
-- **NG1: Perfect coercion resistance in hostile home environments.** Remote casting cannot fully prevent coercion and device malware. EWP defines mitigations and a "safe override" model, not magic.
-- **NG2: Replacing in-person voting.** The default and most robust path remains in-person with a physical ballot.
+- **NG1: Perfect coercion resistance in uncontrolled environments.** Unsupervised remote casting (Mode 3) cannot fully prevent coercion and device malware. EWP defines mitigations and a "safe override" model for that mode, not magic. In-person and supervised modes handle coercion through the physical environment.
+- **NG2: Eliminating in-person voting.** In-person voting with EWP ballot integrity is the primary and most robust deployment mode. Remote modes extend reach; they do not replace the default.
 - **NG3: A single nationwide implementation.** The protocol is a profile; implementations may vary as long as they pass conformance requirements.
 - **NG4: Storing ballots on VoteChain.** Only *commitments/hashes* and audit anchors belong on the chain; ciphertext storage is off-chain in an append-only bulletin board.
+- **NG5: Replacing physical ballot backups where required.** Jurisdictions may choose to maintain paper ballot records alongside EWP's cryptographic record. EWP provides the verifiability layer; it does not mandate the elimination of physical backups.
 
 ## 2. Threat Model (What We Defend Against)
 
 ### 2.1 Adversaries
 
-- **A1: Network attacker** (MITM, replay, traffic analysis).
-- **A2: Malicious or compromised gateway** (drops ballots, serves different manifests, attempts to correlate voters, attempts to accept invalid ballots).
-- **A3: Insider operator** (key theft, log manipulation, selective suppression).
-- **A4: Malicious voter** (double-vote attempts, malformed ballots).
-- **A5: Coercer** (demands vote proof; observes voter while voting).
-- **A6: Client malware** (modifies selections before encryption; steals credentials).
-- **A7: Trustee compromise** (tries to decrypt individual ballots).
+EWP defends against these adversaries across all deployment modes. Where a threat is specific to a deployment mode, it is annotated.
+
+- **A1: Network attacker** (MITM, replay, traffic analysis). *All modes.*
+- **A2: Malicious or compromised gateway** (drops ballots, serves different manifests, attempts to correlate voters, attempts to accept invalid ballots). *All modes.*
+- **A3: Insider operator** (key theft, log manipulation, selective suppression). *All modes.*
+- **A4: Malicious voter** (double-vote attempts, malformed ballots). *All modes.*
+- **A5: Coercer** (demands vote proof; observes voter while voting). *Primarily Mode 3 (unsupervised remote). In Mode 1 (polling place) and Mode 2 (supervised), coercion is mitigated by the physical environment — privacy booths, poll worker oversight, and controlled access.*
+- **A6: Client malware** (modifies selections before encryption; steals credentials). *Primarily Mode 3. In Mode 1, devices are institution-controlled with HSM attestation. In Mode 2, devices are supervised with controlled software loads.*
+- **A7: Trustee compromise** (tries to decrypt individual ballots). *All modes.*
+- **A8: Physical chain-of-custody attacker** (tampers with ballots between casting and counting — the threat EWP exists to eliminate). *This adversary is the primary motivation for the protocol. Traditional physical ballot transport relies on sealed boxes, transport vans, and counting-room access control. EWP replaces these trust assumptions with cryptographic proof.*
 
 ### 2.2 Security Properties Claimed (And Boundaries)
 
-EWP targets these properties under explicit assumptions:
+EWP targets these properties under explicit assumptions. Properties P1–P6 are claimed across all deployment modes. Coercion resistance varies by mode.
 
 - **P1: Eligibility soundness.** Only holders of valid VoteChain credentials can produce an accepted cast.
 - **P2: Uniqueness.** At most one ballot per (credential, election) is *counted* (strict mode) or *final* (revoting extension).
 - **P3: Ballot privacy.** If fewer than `t` trustees collude (threshold model), no party learns individual votes.
 - **P4: Recorded-as-cast.** Voter can verify their ballot ciphertext appears on the bulletin board (BB) and is anchored on VoteChain.
 - **P5: Counted-as-recorded.** Anyone can verify that the published tally is computed from the set of BB-recorded ballots.
-- **P6: Non-equivocation of the BB.** A BB operator cannot present inconsistent views without detection by monitors.
+- **P6: Non-equivocation of the BB.** A BB operator cannot present inconsistent views without detection by monitors. Monitor diversity and SLA requirements are specified in Section 10.
 
 Not claimed:
 
-- Full coercion resistance against A5 + A6 in uncontrolled environments.
+- Full coercion resistance against A5 + A6 in uncontrolled environments (Mode 3). In-person (Mode 1) and supervised (Mode 2) deployments mitigate coercion through the physical environment.
 
 ## 3. Actors And Trust Boundaries
 
 ### 3.1 Actors
 
-- **Voter Client (VC):** Browser app or native app (or kiosk for controlled pilots).
+- **Voter Client (VC):** The device and software where the voter makes selections and the ballot is encrypted. Depending on deployment mode:
+  - *Mode 1 (polling place):* Institution-controlled device with HSM attestation, code signing, and physical tamper-evident housing.
+  - *Mode 2 (supervised):* Supervised kiosk or controlled device at a UOCAVA facility, consulate, or base.
+  - *Mode 3 (unsupervised remote):* Browser app or native app on the voter's personal device.
 - **VoteChain Credential (VCC):** Voter-held private material enabling eligibility ZK proofs (as defined in the VoteChain PRD).
 - **Election Web Gateway (EWG):** HTTPS API that accepts proofs, validates ballots, and writes audit anchors to VoteChain.
 - **Bulletin Board (BB):** Public append-only log of encrypted ballots and election artifacts.
 - **Trustees / Guardians (T[1..n]):** Threshold key holders for tally decryption.
 - **VoteChain Ledger (VCL):** Permissioned consortium chain used as an audit anchor and nullifier uniqueness oracle.
-- **Monitors (MON):** Independent parties that watch BB and VCL for equivocation or missing artifacts.
+- **Monitors (MON):** Independent parties that watch BB and VCL for equivocation or missing artifacts. Monitor diversity and uptime requirements are specified in Section 10.
 
 ### 3.2 Separation (Privacy By Design)
 
@@ -89,6 +104,50 @@ To reduce correlation risk, EWP assumes **logical separation** between:
 - The **ballot content** plane (encrypted ballot, BB publication, tally proofs).
 
 Even if a gateway sees both, it must not learn vote content because ballots are encrypted under a **threshold election key**.
+
+### 3.3 Deployment Modes
+
+EWP defines three deployment modes. The protocol primitives — encrypted ballots, bulletin board recording, threshold decryption, tally proofs — are identical across all modes. What changes is the trust model for the physical environment in which the voter client operates.
+
+#### Mode 1: In-Person (Polling Place)
+
+The voter is physically present at a polling place. The voter client is an institution-controlled device.
+
+| Property | Value |
+|----------|-------|
+| **Voter client** | Polling-place device (kiosk/tablet) with HSM attestation, code signing, and tamper-evident housing |
+| **Coercion resistance** | Handled by physical environment: privacy booth, poll worker oversight, controlled access |
+| **Client integrity** | Institution-controlled hardware with device DID and boot-time attestation (VoteChain Pillar 5) |
+| **Network** | Polling-place network infrastructure; devices may operate in offline-capable mode with delayed sync |
+| **Deployment gate** | Standard EWP conformance testing + VoteChain integration certification |
+
+This is the **primary deployment mode** and the one that should be deployed first. It replaces the physical chain of custody (sealed boxes, transport, counting rooms) with cryptographic proof while preserving the controlled physical environment that makes coercion resistance tractable.
+
+#### Mode 2: Supervised Remote (UOCAVA, Kiosks, Consular/Base)
+
+The voter is in a semi-controlled environment with institutional oversight.
+
+| Property | Value |
+|----------|-------|
+| **Voter client** | Supervised device at a consulate, military installation, or designated facility |
+| **Coercion resistance** | Managed by physical setting: supervised access, designated voting areas |
+| **Client integrity** | Controlled device with supervised software load; attestation required |
+| **Network** | Facility network; may require satellite or delayed-sync support for deployed/shipboard environments |
+| **Deployment gate** | EWP conformance + UOCAVA operational readiness (see VoteChain PRD Section 7.4) |
+
+#### Mode 3: Unsupervised Remote (Future, Gated)
+
+The voter is in an uncontrolled environment using a personal device. This is the hardest mode and carries the highest risk.
+
+| Property | Value |
+|----------|-------|
+| **Voter client** | Browser app or native app on voter's personal phone/computer |
+| **Coercion resistance** | **Not fully achievable.** Mitigations: revoting extension, in-person override, challenge/spoil auditing. See Section 9. |
+| **Client integrity** | **Not guaranteed.** Malware, phishing overlays, and device compromise are realistic threats (A6). |
+| **Network** | Public internet; IP correlation is a voter-anonymity risk unless OHTTP or proxy layers are deployed. |
+| **Deployment gate** | **Hard gate: all Section 11 open questions must be resolved, independently tested in controlled pilots, and certified by federal election and cybersecurity authorities before any Mode 3 deployment.** |
+
+Mode 3 extends reach to voters who cannot be physically present — but it must not be deployed until its unique risks are independently validated. Modes 1 and 2 are deployable under standard EWP conformance without waiting for Mode 3 gate clearance.
 
 ## 4. Crypto Building Blocks (Protocol Primitives)
 
@@ -116,7 +175,7 @@ Requirements:
 
 ### 4.3 Eligibility Proof (ZK)
 
-EWP reuses the VoteChain "five-pillar" ZK proof concept. For remote casting, the proof MUST additionally bind to a server-provided **challenge** to prevent replay.
+EWP reuses the VoteChain "five-pillar" ZK proof concept. In all deployment modes, the proof MUST additionally bind to a server-provided **challenge** to prevent replay.
 
 Public inputs (minimum):
 
@@ -126,7 +185,7 @@ Public inputs (minimum):
 - `challenge` (nonce from EWG)
 - `timestamp` (optional; for freshness windows)
 
-Remote-casting liveness requirement:
+Liveness requirement (all modes):
 
 - The proof MUST assert that a liveness factor was satisfied within a bounded freshness window (for example: <= 5 minutes) as defined by the election manifest policy.
 - The liveness factor MAY be biometric or non-biometric (per the VoteChain PRD), but the proof MUST NOT reveal which path was used.
@@ -247,6 +306,8 @@ JSON-only encodings are permitted for prototypes but SHOULD NOT be the long-term
 
 ## 5. Protocol Overview (Happy Path)
 
+This flow is identical across all deployment modes. The Voter Client (VC) may be a polling-place device (Mode 1), a supervised kiosk (Mode 2), or a personal device (Mode 3). The cryptographic steps and gateway interactions are the same.
+
 ```mermaid
 sequenceDiagram
   participant VC as Voter Client
@@ -267,7 +328,7 @@ sequenceDiagram
   VC->>EWG: POST /cast (nullifier, ZK proof, encrypted ballot, validity proof)
   EWG->>BB: Append encrypted ballot leaf
   BB-->>EWG: leaf_hash + sth
-  EWG->>VCL: Submit remote_ballot_cast (nullifier + BB leaf hash + STH hash)
+  EWG->>VCL: Submit ewp_ballot_cast (nullifier + BB leaf hash + STH hash)
   VCL-->>EWG: tx_id (finalized)
   EWG-->>VC: Cast receipt (tx_id, leaf_hash, sth, manifest_id)
 
@@ -444,7 +505,7 @@ Response (success):
     },
     "votechain_anchor": {
       "tx_id": "0x...",
-      "event_type": "remote_ballot_cast",
+      "event_type": "ewp_ballot_cast",
       "sth_root_hash": "b64u(...)"
     },
     "sig": "b64u(...)"
@@ -527,17 +588,18 @@ EWP assumes VoteChain chaincode enforces the critical invariants. New event type
 
 Published prior to voting. Payload includes `manifest_id` and signer.
 
-### 7.2 `remote_ballot_cast`
+### 7.2 `ewp_ballot_cast`
 
-Written when a cast is accepted and recorded.
+Written when a cast is accepted and recorded, regardless of deployment mode.
 
 Minimum payload:
 
 ```json
 {
-  "type": "remote_ballot_cast",
+  "type": "ewp_ballot_cast",
   "election_id": "2026-general-federal",
   "jurisdiction_id": "state_hash_0x9c1d",
+  "deployment_mode": "mode_1",
   "nullifier": "0x....",
   "ballot_hash": "b64u(...)",
   "bb_leaf_hash": "b64u(...)",
@@ -546,6 +608,8 @@ Minimum payload:
   "recorded_at": "2026-11-03T15:02:01Z"
 }
 ```
+
+The `deployment_mode` field (`mode_1`, `mode_2`, `mode_3`) is included for audit and oversight purposes. It does not affect the cryptographic validity of the cast — the same verification and tally proofs apply regardless of mode.
 
 Chaincode MUST enforce:
 
@@ -578,7 +642,7 @@ Replay protection comes from the server-issued `challenge` included as a public 
 
 ### 8.2 Uniqueness (P2)
 
-Strict mode: chaincode rejects any second `remote_ballot_cast` with the same `nullifier`.
+Strict mode: chaincode rejects any second `ewp_ballot_cast` with the same `nullifier`.
 
 Reduces to:
 
@@ -642,18 +706,43 @@ Reduces to:
 
 ## 9. Coercion, Receipt-Freeness, And Mitigations
 
-Remote casting is vulnerable to coercion and client malware. EWP therefore treats remote casting as a **constrained pilot profile** with explicit mitigations:
+### 9.1 How Deployment Mode Shapes Coercion Risk
 
-- **M1: Revoting extension (optional):** allow multiple casts; only the last valid cast before close is counted. This reduces coercion but does not eliminate it.
-- **M2: In-person override:** a verified in-person ballot can override any remote cast (jurisdiction policy), with an on-chain audit trail.
-- **M3: Controlled environments first:** UOCAVA, supervised kiosks, or consular/base voting rooms before general unsupervised home voting.
-- **M4: Challenge/spoil auditing (optional):** allow voters to generate "test ballots" that are decrypted immediately (and not counted) to audit client correctness. This deters large-scale client-side manipulation when combined with randomized selection.
+Coercion and receipt-freeness are the hardest problems in e-voting, but their severity varies dramatically by deployment mode:
 
-The protocol intentionally avoids giving the voter a receipt that proves vote selections; receipts only prove inclusion of an encrypted artifact.
+**Mode 1 (in-person):** Coercion resistance is handled by the physical environment — privacy booths, poll worker presence, and controlled facility access. This is the same coercion model as paper ballots today. EWP does not change this; it only adds cryptographic verifiability to what happens after the ballot is cast.
+
+**Mode 2 (supervised):** Similar to Mode 1 but in a facility setting (consulate, military base, supervised kiosk). The supervising authority provides the coercion-resistant environment. Risk is slightly elevated compared to Mode 1 due to smaller, less standardized facilities, but still manageable through physical controls.
+
+**Mode 3 (unsupervised remote):** This is where coercion becomes a protocol-level concern. The voter is in an uncontrolled environment — at home, at work, under potential observation by a coercer. No protocol can fully solve this. EWP defines mitigations, not magic.
+
+### 9.2 Mode 3 Mitigations
+
+The following mitigations apply specifically to unsupervised remote deployments:
+
+- **M1: Revoting extension (optional):** allow multiple casts; only the last valid cast before close is counted. This reduces coercion (voter can later re-cast privately) but does not eliminate it. See Appendix B for protocol details.
+- **M2: In-person override:** a verified in-person ballot can override any remote cast (jurisdiction policy), with an on-chain audit trail. This provides a guaranteed escape path for coerced voters.
+- **M3: Challenge/spoil auditing (optional):** allow voters to generate "test ballots" that are decrypted immediately (and not counted) to audit client correctness. This deters large-scale client-side manipulation (A6) when combined with randomized selection.
+
+### 9.3 Receipt-Freeness (All Modes)
+
+The protocol intentionally avoids giving the voter a receipt that proves vote selections in any deployment mode. Receipts only prove inclusion of an encrypted artifact on the bulletin board. This is a fundamental design invariant:
+
+- The cast receipt contains `bb_leaf_hash`, `bb_sth`, and `votechain_anchor` — none of which reveal ballot content.
+- Even if a voter shares their receipt with a coercer, the coercer cannot determine vote selections from it.
+- Threshold decryption ensures no single party can decrypt an individual ballot to produce a selection proof.
 
 ## 10. Implementation Guidance (Reference Build)
 
-### 10.1 Recommended Minimal Reference Architecture
+### 10.1 Deployment Priority
+
+EWP deployment follows the deployment modes defined in Section 3.3, in order of priority:
+
+1. **Mode 1 (in-person) is the primary target.** Deploy EWP at polling places first. This provides E2E ballot verifiability with the strongest physical security model and replaces physical chain-of-custody trust assumptions with cryptographic proof. Polling-place deployment does not require resolving Mode 3 open questions.
+2. **Mode 2 (supervised remote) deploys alongside or shortly after Mode 1.** UOCAVA and supervised kiosk environments run the same protocol with the same gateway infrastructure. Operational readiness depends on UOCAVA-specific requirements in the VoteChain PRD (Section 7.4).
+3. **Mode 3 (unsupervised remote) is gated.** Deployment requires all Section 11 gate criteria to be independently validated. Mode 3 must not block or delay Mode 1/2 deployment.
+
+### 10.2 Recommended Minimal Reference Architecture
 
 - `ewp-gateway`:
   - HTTPS API implementing discovery, manifest, challenge, cast, cast status
@@ -669,34 +758,68 @@ The protocol intentionally avoids giving the voter a receipt that proves vote se
   - Tally/decrypt proof generation
 - `monitor`:
   - Fetches STHs, checks consistency proofs, cross-checks VoteChain anchors
+  - **Minimum diversity requirement:** at least 3 independent monitor operators from at least 2 different organizational categories (e.g., academic, NGO, government, media) must be active per election
+  - **Uptime SLA:** monitors must collectively provide >= 99.9% coverage during voting windows; individual monitor downtime must not exceed 15 minutes without alerting
 
-### 10.2 Key Management
+### 10.3 Key Management
 
 - BB STH signing key MUST be HSM-backed with rotation and public transparency of `kid`.
 - Gateway signing key (for receipts) MUST be HSM-backed; receipts MUST be verifiable offline.
 - Trustee keys MUST be generated via a public, recorded key ceremony with published transcripts and hashes anchored on VoteChain.
 
-### 10.3 Client Hardening (Pilot Baseline)
+### 10.4 Client Hardening (By Deployment Mode)
 
-- Prefer native app or kiosk with:
-  - secure enclave/TPM where available
-  - code signing, attestation where available
-  - strong update controls during the voting window
-- Browser-only is possible for prototypes but is not a serious security baseline for high-stakes elections.
+**Mode 1 (polling place):**
+- Institution-controlled device with HSM-backed device DID
+- Code signing and boot-time attestation (VoteChain Pillar 5)
+- Tamper-evident physical housing
+- No external network access except to gateway endpoints
+- Strong update controls: no software changes during voting window
 
-### 10.4 Operational Requirements
+**Mode 2 (supervised):**
+- Supervised device with controlled software load
+- Attestation required before session start
+- Facility operator responsible for physical device security
+
+**Mode 3 (unsupervised remote — future, gated):**
+- Prefer native app with secure enclave/TPM where available
+- Code signing and remote attestation where platform supports it
+- Browser-only is possible for prototypes but is not a serious security baseline for high-stakes elections
+- Phishing gateway defense: voter client MUST verify manifest signature and cross-check `manifest_id` against VoteChain before presenting ballot to voter
+
+### 10.5 Operational Requirements
 
 - Multiple gateways per election (different operator categories) so voters can fail over.
 - DDoS protection and rate limiting, with careful handling to avoid disenfranchisement.
 - Public uptime and incident reporting.
+- Gateway operator diversity: no single operator category may run more than 40% of active gateways for a given election.
 
-## 11. Open Questions (To Resolve In Standards Sprint)
+## 11. Open Questions And Gate Criteria
 
-1. Which concrete ballot encryption suite and proofs are acceptable for pilot certification?
-2. Should revoting be mandatory for any unsupervised remote casting?
-3. What is the minimum "network privacy" requirement (proxy/OHTTP) for protecting voter anonymity from IP correlation?
-4. What is the acceptable trustee threshold and governance model at federal vs state elections?
-5. What conformance tests and test vectors are required for independent implementations?
+### 11.1 Open Questions (All Modes)
+
+These apply to all deployment modes and should be resolved during the standards and POC phases:
+
+1. **Which concrete ballot encryption suite and proofs are acceptable for pilot certification?** The baseline suite (`ewp_suite_eg_elgamal_v1`) is well-studied but alternatives (lattice-based, mixnet-based) may offer different tradeoff profiles. Certification requires published test vectors and independent verification.
+2. **What is the acceptable trustee threshold and governance model at federal vs state elections?** Threshold `t` and total `n` affect both security (collusion resistance) and operational complexity (key ceremony logistics, availability during tally).
+3. **What conformance tests and test vectors are required for independent implementations?** Without a conformance suite, interoperability is aspirational. This must be resolved before any multi-vendor deployment.
+4. **What is the monitor diversity and SLA enforcement mechanism?** Section 10.2 defines minimums, but the governance structure for monitor selection, rotation, and accountability needs specification.
+
+### 11.2 Mode 3 Gate Criteria (Hard Requirements)
+
+These are **go/no-go requirements** for unsupervised remote deployment (Mode 3). They are not "things to resolve in a standards sprint" — they are conditions that must be independently validated before any Mode 3 deployment proceeds. Mode 1 and Mode 2 do not depend on these gates.
+
+| # | Gate | Validation Method | Status |
+|---|------|-------------------|--------|
+| G1 | **Coercion mitigation effectiveness.** Revoting extension and/or in-person override must demonstrably reduce coercion success rates in controlled adversarial testing. | Red-team exercises with simulated coercion scenarios; published results with methodology. | Open |
+| G2 | **Network privacy.** Minimum OHTTP or equivalent proxy layer must prevent IP-to-voter correlation by gateway operators. | Independent traffic analysis audit; published threat model for IP correlation under proxy. | Open |
+| G3 | **Client integrity for uncontrolled devices.** Define minimum device attestation requirements and quantify residual risk from A6 (client malware). Accept that this risk cannot be eliminated — quantify it, bound it, publish it. | Platform-specific security analysis (iOS, Android, browser); adversarial testing of client-side ballot manipulation; published residual risk assessment. | Open |
+| G4 | **Revoting policy.** Should revoting be mandatory for any unsupervised remote casting? If so, what is the maximum number of revotes, and how does this interact with tally computation and BB storage? | Policy analysis + protocol impact assessment; UX testing with real voters to validate that revoting is understood and usable. | Open |
+| G5 | **Phishing gateway defense.** Voter client must reliably authenticate the gateway and detect phishing. TLS alone is insufficient (certificate transparency helps but is not voter-facing). | Usability testing: can real voters distinguish a legitimate gateway from a phishing one? What client-side UX and manifest verification flows are needed? | Open |
+| G6 | **Equity and access parity.** Mode 3 must not create a two-tier system where remote voters have weaker verifiability or higher failure rates than in-person voters. | Demographic testing: failure rates, verification times, and verifiability experience across device types, network conditions, and user populations. | Open |
+| G7 | **Independent certification.** All of the above must be independently tested and certified by federal election and cybersecurity authorities (NIST/EAC/CISA) before any production Mode 3 deployment. | Published certification framework with pass/fail criteria. | Open |
+
+No Mode 3 deployment may proceed until all gates are marked **Cleared** with published evidence.
 
 ---
 

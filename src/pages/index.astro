@@ -20,8 +20,7 @@ const realBills = allBills
   .slice(0, 3);
 
 // Not bills — featured first, then recent
-const notBills = allBills
-  .filter((b) => b.data.billType !== 'real');
+const notBills = allBills.filter((b) => b.data.billType !== 'real');
 const featuredNotBills = notBills
   .filter((b) => b.data.featured)
   .sort((a, b) => b.data.dateIntroduced.getTime() - a.data.dateIntroduced.getTime())
@@ -34,51 +33,66 @@ const recentNotBills = notBills
 const showcaseNotBills = featuredNotBills.length > 0 ? featuredNotBills : recentNotBills;
 ---
 
-<BaseLayout title="Real Bills. Real Absurdity. Satirical Common Sense." description="Where the bills make sense and the laws don't. Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.">
+<BaseLayout
+  title="Real Bills. Real Absurdity. Satirical Common Sense."
+  description="Where the bills make sense and the laws don't. Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense."
+>
   <RunningTicker />
   <TodayFrontAndCenter />
   <HeroBanner />
   <BillOfTheDay />
 
-  {realBills.length > 0 && (
-    <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
-      <div class="mb-2 flex items-start justify-between gap-3 min-[430px]:items-center">
-        <h2 class="font-serif text-xl font-bold text-navy-900 min-[375px]:text-2xl md:text-3xl">Most Absurd Real Bills</h2>
-        <QuorumCounter />
-      </div>
-      <p class="mb-6 font-serif text-sm italic text-navy-600 min-[375px]:text-base">Real legislation from Congress, ranked by absurdity</p>
-      <div class="gold-rule"></div>
-      <div class="mt-6 grid grid-cols-1 gap-4 min-[430px]:mt-8 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3">
-        {realBills.map((bill) => (
-          <BillCard bill={bill} />
-        ))}
-      </div>
-      <div class="mt-8 text-center min-[430px]:mt-10">
-        <a
-          href="/bills"
-          class="inline-block rounded bg-navy-800 px-6 py-2.5 font-serif text-base text-gold-300 transition-colors hover:bg-navy-700 min-[430px]:px-8 min-[430px]:py-3 min-[430px]:text-lg"
-        >
-          View All Real Bills &rarr;
-        </a>
-      </div>
-    </section>
-  )}
+  {
+    realBills.length > 0 && (
+      <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
+        <div class="mb-2 flex items-start justify-between gap-3 min-[430px]:items-center">
+          <h2 class="font-serif text-xl font-bold text-navy-900 min-[375px]:text-2xl md:text-3xl">
+            Most Absurd Real Bills
+          </h2>
+          <QuorumCounter />
+        </div>
+        <p class="mb-6 font-serif text-sm italic text-navy-600 min-[375px]:text-base">
+          Real legislation from Congress, ranked by absurdity
+        </p>
+        <div class="gold-rule" />
+        <div class="mt-6 grid grid-cols-1 gap-4 min-[430px]:mt-8 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3">
+          {realBills.map((bill) => (
+            <BillCard bill={bill} />
+          ))}
+        </div>
+        <div class="mt-8 text-center min-[430px]:mt-10">
+          <a
+            href="/bills"
+            class="inline-block rounded bg-navy-800 px-6 py-2.5 font-serif text-base text-gold-300 transition-colors hover:bg-navy-700 min-[430px]:px-8 min-[430px]:py-3 min-[430px]:text-lg"
+          >
+            View All Real Bills &rarr;
+          </a>
+        </div>
+      </section>
+    )
+  }
 
-  {realBills.length === 0 && (
-    <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
-      <div class="mb-2 flex items-start justify-between gap-3 min-[430px]:items-center">
-        <h2 class="font-serif text-xl font-bold text-navy-900 min-[375px]:text-2xl md:text-3xl">Featured Legislation</h2>
-        <QuorumCounter />
-      </div>
-      <p class="mb-6 font-serif text-sm italic text-navy-600 min-[375px]:text-base">Bills of particular importance to nobody in particular</p>
-      <div class="gold-rule"></div>
-      <div class="mt-6 grid grid-cols-1 gap-4 min-[430px]:mt-8 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3">
-        {showcaseNotBills.map((bill) => (
-          <BillCard bill={bill} />
-        ))}
-      </div>
-    </section>
-  )}
+  {
+    realBills.length === 0 && (
+      <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
+        <div class="mb-2 flex items-start justify-between gap-3 min-[430px]:items-center">
+          <h2 class="font-serif text-xl font-bold text-navy-900 min-[375px]:text-2xl md:text-3xl">
+            Featured Legislation
+          </h2>
+          <QuorumCounter />
+        </div>
+        <p class="mb-6 font-serif text-sm italic text-navy-600 min-[375px]:text-base">
+          Bills of particular importance to nobody in particular
+        </p>
+        <div class="gold-rule" />
+        <div class="mt-6 grid grid-cols-1 gap-4 min-[430px]:mt-8 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3">
+          {showcaseNotBills.map((bill) => (
+            <BillCard bill={bill} />
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   <Divider withSeal={true} />
 
@@ -88,18 +102,41 @@ const showcaseNotBills = featuredNotBills.length > 0 ? featuredNotBills : recent
 
   <!-- VoteChain Spotlight -->
   <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
-    <div class="overflow-hidden rounded-xl border-2 border-gold-500/40 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900" data-theme-fixed>
-      <div class="flex flex-col items-center gap-6 px-6 py-8 text-center min-[430px]:px-8 min-[430px]:py-10 md:flex-row md:text-left">
-        <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-gold-500/60 bg-navy-800 min-[430px]:h-20 min-[430px]:w-20">
-          <svg class="h-8 w-8 text-gold-500 min-[430px]:h-10 min-[430px]:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+    <div
+      class="overflow-hidden rounded-xl border-2 border-gold-500/40 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900"
+      data-theme-fixed
+    >
+      <div
+        class="flex flex-col items-center gap-6 px-6 py-8 text-center min-[430px]:px-8 min-[430px]:py-10 md:flex-row md:text-left"
+      >
+        <div
+          class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-gold-500/60 bg-navy-800 min-[430px]:h-20 min-[430px]:w-20"
+        >
+          <svg
+            class="h-8 w-8 text-gold-500 min-[430px]:h-10 min-[430px]:w-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+            ></path>
           </svg>
         </div>
         <div class="flex-1">
-          <h2 class="font-serif text-xl font-bold text-gold-400 min-[375px]:text-2xl md:text-3xl">VoteChain</h2>
-          <p class="mt-1 font-sans text-xs uppercase tracking-widest text-gold-500/80">A Voter Verification Blueprint</p>
+          <h2 class="font-serif text-xl font-bold text-gold-400 min-[375px]:text-2xl md:text-3xl">
+            VoteChain
+          </h2>
+          <p class="mt-1 font-sans text-xs uppercase tracking-widest text-gold-500/80">
+            A Voter Verification Blueprint
+          </p>
           <p class="mt-3 font-sans text-sm leading-relaxed text-gold-300/90 md:text-base">
-            What if we could verify every voter's eligibility with math instead of paperwork? VoteChain is a blueprint for cryptographic voter verification &mdash; no partisan games, no suppression, just proof.
+            What if we could verify every voter's eligibility with math instead of paperwork?
+            VoteChain is a blueprint for cryptographic voter verification &mdash; no partisan games,
+            no suppression, just proof.
           </p>
         </div>
         <a
@@ -113,13 +150,17 @@ const showcaseNotBills = featuredNotBills.length > 0 ? featuredNotBills : recent
   </section>
 
   <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
-    <h2 class="mb-2 font-serif text-xl font-bold text-navy-900 min-[375px]:text-2xl md:text-3xl">From the Absurdity Index</h2>
-    <p class="mb-6 font-serif text-sm italic text-navy-600 min-[375px]:text-base">Satirical bills that actually make sense — fresh from the floor (or possibly the floor drain)</p>
+    <h2 class="mb-2 font-serif text-xl font-bold text-navy-900 min-[375px]:text-2xl md:text-3xl">
+      From the Absurdity Index
+    </h2>
+    <p class="mb-6 font-serif text-sm italic text-navy-600 min-[375px]:text-base">
+      Satirical bills that actually make sense — fresh from the floor (or possibly the floor drain)
+    </p>
     <div class="gold-rule"></div>
-    <div class="mt-6 grid grid-cols-1 gap-4 min-[430px]:mt-8 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3">
-      {showcaseNotBills.map((bill) => (
-        <BillCard bill={bill} />
-      ))}
+    <div
+      class="mt-6 grid grid-cols-1 gap-4 min-[430px]:mt-8 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3"
+    >
+      {showcaseNotBills.map((bill) => <BillCard bill={bill} />)}
     </div>
     <div class="mt-8 text-center min-[430px]:mt-10">
       <a

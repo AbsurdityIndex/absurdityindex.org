@@ -15,11 +15,12 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
   {
     billNumber: 'H.R. 1161',
     title: 'Red, White, and Blueland Act of 2025',
-    sponsor: 'Rep. Anthony D\'Esposito (R-NY)',
+    sponsor: "Rep. Anthony D'Esposito (R-NY)",
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/1161',
-    description: 'Authorizes negotiations to purchase Greenland from Denmark and rename it "Red, White, and Blueland."',
+    description:
+      'Authorizes negotiations to purchase Greenland from Denmark and rename it "Red, White, and Blueland."',
     category: 'Territorial Expansion',
     absurdityIndex: 9,
   },
@@ -41,7 +42,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/283',
-    description: 'Authorizes the President to negotiate the repurchase of the Panama Canal from Panama.',
+    description:
+      'Authorizes the President to negotiate the repurchase of the Panama Canal from Panama.',
     category: 'Territorial Expansion',
     absurdityIndex: 8,
   },
@@ -54,7 +56,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Passed House 211-206',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/276',
-    description: 'Renames the Gulf of Mexico as the "Gulf of America" on all federal maps and documents.',
+    description:
+      'Renames the Gulf of Mexico as the "Gulf of America" on all federal maps and documents.',
     category: 'Geographic Renaming',
     absurdityIndex: 8,
   },
@@ -67,7 +70,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/25',
-    description: 'Abolishes the IRS and replaces the entire federal tax code with a 23% national sales tax. Introduced every Congress since 1999.',
+    description:
+      'Abolishes the IRS and replaces the entire federal tax code with a 23% national sales tax. Introduced every Congress since 1999.',
     category: 'Agency Abolition',
     absurdityIndex: 8,
   },
@@ -100,7 +104,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/899',
-    description: 'One-sentence bill: "The Department of Education shall terminate on December 31, 2026."',
+    description:
+      'One-sentence bill: "The Department of Education shall terminate on December 31, 2026."',
     category: 'Agency Abolition',
     absurdityIndex: 7,
   },
@@ -122,7 +127,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/1846',
-    description: 'Abolishes the Federal Reserve System and repeals the Federal Reserve Act of 1913.',
+    description:
+      'Abolishes the Federal Reserve System and repeals the Federal Reserve Act of 1913.',
     category: 'Agency Abolition',
     absurdityIndex: 8,
   },
@@ -146,7 +152,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/800',
-    description: 'Enacts executive order ending DEI programs in the federal government. The acronym reversal is the point.',
+    description:
+      'Enacts executive order ending DEI programs in the federal government. The acronym reversal is the point.',
     category: 'Culture War',
     absurdityIndex: 7,
   },
@@ -157,7 +164,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/925',
-    description: 'Terminates the Office of Diversity, Equity, Inclusion, and Accessibility across the federal government.',
+    description:
+      'Terminates the Office of Diversity, Equity, Inclusion, and Accessibility across the federal government.',
     category: 'Culture War',
     absurdityIndex: 5,
   },
@@ -168,7 +176,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/93',
-    description: 'Prohibits funding for State Department\'s Special Representative for Racial Equity and Justice.',
+    description:
+      "Prohibits funding for State Department's Special Representative for Racial Equity and Justice.",
     category: 'Culture War',
     absurdityIndex: 5,
   },
@@ -223,7 +232,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/1282',
-    description: 'Prohibits federal funding for colleges with diversity, equity, and inclusion initiatives.',
+    description:
+      'Prohibits federal funding for colleges with diversity, equity, and inclusion initiatives.',
     category: 'Culture War',
     absurdityIndex: 5,
   },
@@ -247,7 +257,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-bill/954',
-    description: 'Creates a Strategic Bitcoin Reserve and directs the Treasury to acquire 1 million Bitcoin over 5 years.',
+    description:
+      'Creates a Strategic Bitcoin Reserve and directs the Treasury to acquire 1 million Bitcoin over 5 years.',
     category: 'Cryptocurrency',
     absurdityIndex: 8,
   },
@@ -271,7 +282,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-bill/669',
-    description: 'Terminates U.S. membership in the United Nations and all affiliated bodies. Introduced periodically since 1997.',
+    description:
+      'Terminates U.S. membership in the United Nations and all affiliated bodies. Introduced periodically since 1997.',
     category: 'Foreign Policy',
     absurdityIndex: 7,
   },
@@ -282,7 +294,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/6395',
-    description: 'Implements a strategy to move the United Nations headquarters out of the United States.',
+    description:
+      'Implements a strategy to move the United Nations headquarters out of the United States.',
     category: 'Foreign Policy',
     absurdityIndex: 7,
   },
@@ -306,7 +319,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/569',
-    description: 'Limits birthright citizenship to children of citizens, permanent residents, or active military — challenging the 14th Amendment.',
+    description:
+      'Limits birthright citizenship to children of citizens, permanent residents, or active military — challenging the 14th Amendment.',
     category: 'Immigration',
     absurdityIndex: 7,
   },
@@ -328,7 +342,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-bill/293',
-    description: 'Appropriates $25 billion for border wall construction, funded by restricting tax credits.',
+    description:
+      'Appropriates $25 billion for border wall construction, funded by restricting tax credits.',
     category: 'Immigration',
     absurdityIndex: 6,
   },
@@ -341,7 +356,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/564',
-    description: 'Repeals the TikTok ban that was signed into law in 2024, just months after Congress banned it.',
+    description:
+      'Repeals the TikTok ban that was signed into law in 2024, just months after Congress banned it.',
     category: 'Technology',
     absurdityIndex: 7,
   },
@@ -352,7 +368,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/1907',
-    description: 'Authorizes property owners to shoot down drones over their property with shotguns.',
+    description:
+      'Authorizes property owners to shoot down drones over their property with shotguns.',
     category: 'Technology',
     absurdityIndex: 8,
   },
@@ -363,7 +380,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/1058',
-    description: '"Directing Resources for Officers Navigating Emergencies" — another tortured acronym for law enforcement drone policy.',
+    description:
+      '"Directing Resources for Officers Navigating Emergencies" — another tortured acronym for law enforcement drone policy.',
     category: 'Acronym Abuse',
     absurdityIndex: 5,
   },
@@ -376,7 +394,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/139',
-    description: 'Makes daylight saving time permanent. Senate passed a version unanimously in 2022 but the House never voted on it.',
+    description:
+      'Makes daylight saving time permanent. Senate passed a version unanimously in 2022 but the House never voted on it.',
     category: 'Time Zone',
     absurdityIndex: 4,
   },
@@ -387,7 +406,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/300',
-    description: 'Allows states to observe year-round daylight saving time — a different approach to the same decades-old problem.',
+    description:
+      'Allows states to observe year-round daylight saving time — a different approach to the same decades-old problem.',
     category: 'Time Zone',
     absurdityIndex: 4,
   },
@@ -400,7 +420,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-joint-resolution/12',
-    description: 'Constitutional amendment limiting House to 6 terms and Senate to 2. Introduced every Congress; never passes because members won\'t limit themselves.',
+    description:
+      "Constitutional amendment limiting House to 6 terms and Senate to 2. Introduced every Congress; never passes because members won't limit themselves.",
     category: 'Constitutional',
     absurdityIndex: 5,
   },
@@ -411,7 +432,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-joint-resolution/101',
-    description: 'Constitutional amendment to prohibit flag desecration. Introduced repeatedly since the 1990s despite Supreme Court rulings.',
+    description:
+      'Constitutional amendment to prohibit flag desecration. Introduced repeatedly since the 1990s despite Supreme Court rulings.',
     category: 'Constitutional',
     absurdityIndex: 5,
   },
@@ -435,7 +457,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-bill/117',
-    description: '"Allowing Military Exemptions, Recognizing Individual Concerns About New Shots Act" — a tortured backronym about vaccine mandates.',
+    description:
+      '"Allowing Military Exemptions, Recognizing Individual Concerns About New Shots Act" — a tortured backronym about vaccine mandates.',
     category: 'Acronym Abuse',
     absurdityIndex: 6,
   },
@@ -448,7 +471,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-resolution/24',
-    description: 'Retroactively expunges the December 2019 impeachment of President Trump from the Congressional Record.',
+    description:
+      'Retroactively expunges the December 2019 impeachment of President Trump from the Congressional Record.',
     category: 'Impeachment',
     absurdityIndex: 7,
   },
@@ -459,7 +483,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-resolution/25',
-    description: 'Retroactively expunges the January 2021 impeachment of President Trump from the Congressional Record.',
+    description:
+      'Retroactively expunges the January 2021 impeachment of President Trump from the Congressional Record.',
     category: 'Impeachment',
     absurdityIndex: 7,
   },
@@ -472,7 +497,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-resolution/420',
-    description: 'Designates September 19, 2025 as "National Concussion Awareness Day." The resolution number (420) is an unintentional internet culture crossover.',
+    description:
+      'Designates September 19, 2025 as "National Concussion Awareness Day." The resolution number (420) is an unintentional internet culture crossover.',
     category: 'Commemorative',
     absurdityIndex: 4,
   },
@@ -483,7 +509,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-resolution/56',
-    description: 'Senate resolution congratulating a semi-professional soccer team on winning the USL Two championship.',
+    description:
+      'Senate resolution congratulating a semi-professional soccer team on winning the USL Two championship.',
     category: 'Commemorative',
     absurdityIndex: 5,
   },
@@ -496,7 +523,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-bill/2079',
-    description: 'Enhances criminal penalties for flag burning despite multiple Supreme Court rulings protecting it as free speech.',
+    description:
+      'Enhances criminal penalties for flag burning despite multiple Supreme Court rulings protecting it as free speech.',
     category: 'Constitutional',
     absurdityIndex: 6,
   },
@@ -507,7 +535,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/79',
-    description: 'Nullifies COVID-19 vaccine mandate executive orders — which already expired years ago.',
+    description:
+      'Nullifies COVID-19 vaccine mandate executive orders — which already expired years ago.',
     category: 'Public Health',
     absurdityIndex: 6,
   },
@@ -518,7 +547,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/5388',
-    description: 'Temporary moratorium preempting all state AI laws to create uniform federal regulation.',
+    description:
+      'Temporary moratorium preempting all state AI laws to create uniform federal regulation.',
     category: 'Technology',
     absurdityIndex: 5,
   },
@@ -529,7 +559,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-bill/1845',
-    description: 'Prohibits student loan forgiveness for individuals designated as terrorists — solving a problem that does not exist.',
+    description:
+      'Prohibits student loan forgiveness for individuals designated as terrorists — solving a problem that does not exist.',
     category: 'Education',
     absurdityIndex: 7,
   },
@@ -540,7 +571,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/485',
-    description: 'Posthumously awards Congressional Gold Medal to Muhammad Ali — who already received the Presidential Medal of Freedom.',
+    description:
+      'Posthumously awards Congressional Gold Medal to Muhammad Ali — who already received the Presidential Medal of Freedom.',
     category: 'Commemorative',
     absurdityIndex: 3,
   },
@@ -551,7 +583,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/4444',
-    description: 'Makes student loans dischargeable in bankruptcy — a reasonable idea stuck in committee purgatory since the 1970s.',
+    description:
+      'Makes student loans dischargeable in bankruptcy — a reasonable idea stuck in committee purgatory since the 1970s.',
     category: 'Education',
     absurdityIndex: 4,
   },
@@ -562,7 +595,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/1074',
-    description: 'Establishes 18-year term limits for Supreme Court justices with regular appointments every two years.',
+    description:
+      'Establishes 18-year term limits for Supreme Court justices with regular appointments every two years.',
     category: 'Constitutional',
     absurdityIndex: 5,
   },
@@ -573,7 +607,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/senate-bill/42',
-    description: 'Creates a Southern Border Wall Construction Fund. Senate Bill number 42 — the answer to everything, apparently.',
+    description:
+      'Creates a Southern Border Wall Construction Fund. Senate Bill number 42 — the answer to everything, apparently.',
     category: 'Immigration',
     absurdityIndex: 6,
   },
@@ -584,7 +619,8 @@ export const billsUnderConsideration: BillUnderConsideration[] = [
     status: 'Referred to Committee',
     congress: 119,
     url: 'https://www.congress.gov/bill/119th-congress/house-bill/3368',
-    description: 'Prohibits federal funds to carry out the executive order restricting birthright citizenship. Named after a Bruce Springsteen song.',
+    description:
+      'Prohibits federal funds to carry out the executive order restricting birthright citizenship. Named after a Bruce Springsteen song.',
     category: 'Immigration',
     absurdityIndex: 5,
   },

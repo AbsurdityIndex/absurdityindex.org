@@ -24,7 +24,7 @@ const isCompact = variant === 'compact';
 <details
   class:list={[
     'collapsible-section group',
-    isCompact ? 'border-b border-gold-200' : 'bg-cream-100 rounded-lg border border-gold-300'
+    isCompact ? 'border-b border-gold-200' : 'bg-cream-100 rounded-lg border border-gold-300',
   ]}
   open={defaultOpen}
 >
@@ -32,26 +32,29 @@ const isCompact = variant === 'compact';
     class:list={[
       'flex items-center justify-between cursor-pointer select-none',
       'hover:bg-cream-200 transition-colors',
-      isCompact ? 'py-3 px-1' : 'p-4'
+      isCompact ? 'py-3 px-1' : 'p-4',
     ]}
   >
     <div class="flex items-center gap-3">
-      {icon && (
-        <div class="w-6 h-6 rounded bg-gold-100 flex items-center justify-center flex-shrink-0">
-          <Icon name={icon} size={12} class="text-gold-700" />
-        </div>
-      )}
-      <span class:list={[
-        'font-sans font-medium text-navy-800',
-        isCompact ? 'text-sm' : 'text-base'
-      ]}>
+      {
+        icon && (
+          <div class="w-6 h-6 rounded bg-gold-100 flex items-center justify-center flex-shrink-0">
+            <Icon name={icon} size={12} class="text-gold-700" />
+          </div>
+        )
+      }
+      <span
+        class:list={['font-sans font-medium text-navy-800', isCompact ? 'text-sm' : 'text-base']}
+      >
         {title}
       </span>
-      {count !== undefined && (
-        <span class="px-2 py-0.5 text-xs font-mono font-semibold bg-navy-100 text-navy-600 rounded-full">
-          {count}
-        </span>
-      )}
+      {
+        count !== undefined && (
+          <span class="px-2 py-0.5 text-xs font-mono font-semibold bg-navy-100 text-navy-600 rounded-full">
+            {count}
+          </span>
+        )
+      }
     </div>
     <div class="flex-shrink-0 ml-4">
       <Icon
@@ -62,10 +65,7 @@ const isCompact = variant === 'compact';
     </div>
   </summary>
 
-  <div class:list={[
-    'collapsible-content',
-    isCompact ? 'pb-4 px-1' : 'px-4 pb-4'
-  ]}>
+  <div class:list={['collapsible-content', isCompact ? 'pb-4 px-1' : 'px-4 pb-4']}>
     <slot />
   </div>
 </details>

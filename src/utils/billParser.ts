@@ -5,15 +5,7 @@
  * about the bill type, origin chamber, and legislative path requirements.
  */
 
-export type BillTypeCode =
-  | 'hr'
-  | 's'
-  | 'hres'
-  | 'sres'
-  | 'hjres'
-  | 'sjres'
-  | 'hconres'
-  | 'sconres';
+export type BillTypeCode = 'hr' | 's' | 'hres' | 'sres' | 'hjres' | 'sjres' | 'hconres' | 'sconres';
 
 export type Chamber = 'house' | 'senate';
 
@@ -72,7 +64,8 @@ const BILL_TYPE_CONFIG: Record<BillTypeCode, Omit<BillTypeInfo, 'type'>> = {
     needsPresident: true,
     displayName: 'House Bill',
     prefix: 'H.R.',
-    description: 'A legislative proposal that, if passed by both chambers and signed by the President, becomes law.',
+    description:
+      'A legislative proposal that, if passed by both chambers and signed by the President, becomes law.',
   },
   s: {
     originChamber: 'senate',
@@ -80,7 +73,8 @@ const BILL_TYPE_CONFIG: Record<BillTypeCode, Omit<BillTypeInfo, 'type'>> = {
     needsPresident: true,
     displayName: 'Senate Bill',
     prefix: 'S.',
-    description: 'A legislative proposal that, if passed by both chambers and signed by the President, becomes law.',
+    description:
+      'A legislative proposal that, if passed by both chambers and signed by the President, becomes law.',
   },
   hres: {
     originChamber: 'house',
@@ -88,7 +82,8 @@ const BILL_TYPE_CONFIG: Record<BillTypeCode, Omit<BillTypeInfo, 'type'>> = {
     needsPresident: false,
     displayName: 'House Resolution',
     prefix: 'H.Res.',
-    description: 'Addresses matters entirely within the House, such as rules or expressing House sentiment.',
+    description:
+      'Addresses matters entirely within the House, such as rules or expressing House sentiment.',
   },
   sres: {
     originChamber: 'senate',
@@ -96,7 +91,8 @@ const BILL_TYPE_CONFIG: Record<BillTypeCode, Omit<BillTypeInfo, 'type'>> = {
     needsPresident: false,
     displayName: 'Senate Resolution',
     prefix: 'S.Res.',
-    description: 'Addresses matters entirely within the Senate, such as rules or expressing Senate sentiment.',
+    description:
+      'Addresses matters entirely within the Senate, such as rules or expressing Senate sentiment.',
   },
   hjres: {
     originChamber: 'house',
@@ -104,7 +100,8 @@ const BILL_TYPE_CONFIG: Record<BillTypeCode, Omit<BillTypeInfo, 'type'>> = {
     needsPresident: true,
     displayName: 'House Joint Resolution',
     prefix: 'H.J.Res.',
-    description: 'Has the force of law if passed. Used for constitutional amendments (which bypass the President) or continuing resolutions.',
+    description:
+      'Has the force of law if passed. Used for constitutional amendments (which bypass the President) or continuing resolutions.',
   },
   sjres: {
     originChamber: 'senate',
@@ -112,7 +109,8 @@ const BILL_TYPE_CONFIG: Record<BillTypeCode, Omit<BillTypeInfo, 'type'>> = {
     needsPresident: true,
     displayName: 'Senate Joint Resolution',
     prefix: 'S.J.Res.',
-    description: 'Has the force of law if passed. Used for constitutional amendments (which bypass the President) or continuing resolutions.',
+    description:
+      'Has the force of law if passed. Used for constitutional amendments (which bypass the President) or continuing resolutions.',
   },
   hconres: {
     originChamber: 'house',
@@ -120,7 +118,8 @@ const BILL_TYPE_CONFIG: Record<BillTypeCode, Omit<BillTypeInfo, 'type'>> = {
     needsPresident: false,
     displayName: 'House Concurrent Resolution',
     prefix: 'H.Con.Res.',
-    description: 'Requires passage by both chambers but does not go to the President. Used for budget resolutions and expressing Congressional sentiment.',
+    description:
+      'Requires passage by both chambers but does not go to the President. Used for budget resolutions and expressing Congressional sentiment.',
   },
   sconres: {
     originChamber: 'senate',
@@ -128,7 +127,8 @@ const BILL_TYPE_CONFIG: Record<BillTypeCode, Omit<BillTypeInfo, 'type'>> = {
     needsPresident: false,
     displayName: 'Senate Concurrent Resolution',
     prefix: 'S.Con.Res.',
-    description: 'Requires passage by both chambers but does not go to the President. Used for budget resolutions and expressing Congressional sentiment.',
+    description:
+      'Requires passage by both chambers but does not go to the President. Used for budget resolutions and expressing Congressional sentiment.',
   },
 };
 
@@ -237,7 +237,7 @@ const ACTION_KEYWORDS = {
  */
 export function analyzeChamberProgress(
   actions: Array<{ date: Date; text: string; chamber?: 'house' | 'senate' | 'both' }>,
-  billType: BillTypeInfo
+  billType: BillTypeInfo,
 ): ChamberProgress {
   const progress: ChamberProgress = {
     originPhase: 'none',
@@ -291,7 +291,9 @@ export function analyzeChamberProgress(
 
   // Determine origin chamber progress
   const isHouseOrigin = billType.originChamber === 'house';
-  const originPassedKeywords = isHouseOrigin ? ACTION_KEYWORDS.passedHouse : ACTION_KEYWORDS.passedSenate;
+  const originPassedKeywords = isHouseOrigin
+    ? ACTION_KEYWORDS.passedHouse
+    : ACTION_KEYWORDS.passedSenate;
 
   if (hasKeyword(originPassedKeywords)) {
     progress.originPhase = 'passed';
@@ -305,8 +307,12 @@ export function analyzeChamberProgress(
 
   // Determine receiving chamber progress (for bicameral bills)
   if (billType.needsBothChambers) {
-    const receivedKeywords = isHouseOrigin ? ACTION_KEYWORDS.receivedSenate : ACTION_KEYWORDS.receivedHouse;
-    const receivingPassedKeywords = isHouseOrigin ? ACTION_KEYWORDS.passedSenate : ACTION_KEYWORDS.passedHouse;
+    const receivedKeywords = isHouseOrigin
+      ? ACTION_KEYWORDS.receivedSenate
+      : ACTION_KEYWORDS.receivedHouse;
+    const receivingPassedKeywords = isHouseOrigin
+      ? ACTION_KEYWORDS.passedSenate
+      : ACTION_KEYWORDS.passedHouse;
 
     if (hasKeyword(receivingPassedKeywords)) {
       progress.receivingPhase = 'passed';

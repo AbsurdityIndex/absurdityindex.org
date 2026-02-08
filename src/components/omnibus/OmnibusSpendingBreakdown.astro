@@ -46,7 +46,10 @@ const barColors = [
 ];
 ---
 
-<section class="bg-cream-100 border border-gold-300 rounded-lg overflow-hidden" data-section="spending">
+<section
+  class="bg-cream-100 border border-gold-300 rounded-lg overflow-hidden"
+  data-section="spending"
+>
   <div class="px-5 py-4 border-b border-gold-200 flex items-center justify-between">
     <h2 class="font-serif text-lg font-bold text-navy-900 flex items-center gap-2">
       <Icon name="bar-chart-2" size={18} class="text-gold-600" />
@@ -56,38 +59,39 @@ const barColors = [
   </div>
 
   <div class="p-5 space-y-2.5">
-    {sorted.map((div, sortIdx) => {
-      const pct = totalSpending > 0 ? (div.spending / totalSpending * 100) : 0;
-      const barWidth = maxSpending > 0 ? (div.spending / maxSpending * 100) : 0;
-      const divLetter = String.fromCharCode(65 + div.index);
-      const color = barColors[div.index % barColors.length];
+    {
+      sorted.map((div, sortIdx) => {
+        const pct = totalSpending > 0 ? (div.spending / totalSpending) * 100 : 0;
+        const barWidth = maxSpending > 0 ? (div.spending / maxSpending) * 100 : 0;
+        const divLetter = String.fromCharCode(65 + div.index);
+        const color = barColors[div.index % barColors.length];
 
-      return (
-        <button
-          type="button"
-          class="spending-bar w-full text-left group cursor-pointer hover:bg-cream-200 rounded-lg p-2 -mx-2 transition-colors"
-          data-division-target={div.index + 1}
-          title={`${div.title}: $${div.spending}B (${pct.toFixed(1)}%)`}
-        >
-          <div class="flex items-baseline justify-between mb-1">
-            <span class="text-sm font-sans text-navy-800 group-hover:text-navy-900 truncate pr-2">
-              <span class="font-mono text-xs text-gold-600 mr-1">{divLetter}.</span>
-              {div.shortTitle || div.title}
-            </span>
-            <span class="text-xs font-mono text-navy-600 shrink-0">
-              ${div.spending}B
-              <span class="text-navy-400 ml-1">({pct.toFixed(1)}%)</span>
-            </span>
-          </div>
-          <div class="h-3 bg-cream-300 rounded-full overflow-hidden">
-            <div
-              class:list={['h-full rounded-full transition-all duration-300', color]}
-              style={`width: ${barWidth}%`}
-            />
-          </div>
-        </button>
-      );
-    })}
+        return (
+          <button
+            type="button"
+            class="spending-bar w-full text-left group cursor-pointer hover:bg-cream-200 rounded-lg p-2 -mx-2 transition-colors"
+            data-division-target={div.index + 1}
+            title={`${div.title}: $${div.spending}B (${pct.toFixed(1)}%)`}
+          >
+            <div class="flex items-baseline justify-between mb-1">
+              <span class="text-sm font-sans text-navy-800 group-hover:text-navy-900 truncate pr-2">
+                <span class="font-mono text-xs text-gold-600 mr-1">{divLetter}.</span>
+                {div.shortTitle || div.title}
+              </span>
+              <span class="text-xs font-mono text-navy-600 shrink-0">
+                ${div.spending}B<span class="text-navy-400 ml-1">({pct.toFixed(1)}%)</span>
+              </span>
+            </div>
+            <div class="h-3 bg-cream-300 rounded-full overflow-hidden">
+              <div
+                class:list={['h-full rounded-full transition-all duration-300', color]}
+                style={`width: ${barWidth}%`}
+              />
+            </div>
+          </button>
+        );
+      })
+    }
   </div>
 
   <div class="px-5 py-3 bg-cream-200 border-t border-gold-200 text-center">
@@ -100,7 +104,7 @@ const barColors = [
 
 <style>
   /* Scroll-spy active state — set by page JS */
-  .spending-bar[data-active="true"] {
+  .spending-bar[data-active='true'] {
     background-color: var(--color-gold-100);
     box-shadow: inset 3px 0 0 var(--color-gold-500);
   }

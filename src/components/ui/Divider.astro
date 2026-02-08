@@ -8,14 +8,16 @@ interface Props {
 const { withSeal = false } = Astro.props;
 ---
 
-{withSeal ? (
-  <div class="relative flex items-center justify-center my-8">
-    <div class="flex-1 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
-    <div class="mx-4 shrink-0">
-      <OfficialSeal size="36" />
+{
+  withSeal ? (
+    <div class="relative flex items-center justify-center my-8">
+      <div class="flex-1 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
+      <div class="mx-4 shrink-0">
+        <OfficialSeal size="36" />
+      </div>
+      <div class="flex-1 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
     </div>
-    <div class="flex-1 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
-  </div>
-) : (
-  <hr class="gold-rule my-8" />
-)}
+  ) : (
+    <hr class="gold-rule my-8" />
+  )
+}

@@ -7,7 +7,10 @@ import { onRequestGet } from '../../../functions/api/today.json.js';
  * - In static builds, Astro prerenders this as `/api/today-fallback.json`.
  */
 export async function GET() {
-  return onRequestGet({}, {
-    apiKey: import.meta.env.CONGRESS_GOV_API_KEY || process.env.CONGRESS_GOV_API_KEY,
-  });
+  return onRequestGet(
+    {},
+    {
+      apiKey: import.meta.env.CONGRESS_GOV_API_KEY || process.env.CONGRESS_GOV_API_KEY,
+    },
+  );
 }

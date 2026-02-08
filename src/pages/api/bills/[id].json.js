@@ -39,16 +39,13 @@ export async function getStaticPaths() {
 
 export async function GET({ props }) {
   if (!props?.bill) {
-    return new Response(
-      JSON.stringify({ error: 'Bill not found' }, null, 2),
-      {
-        status: 404,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    return new Response(JSON.stringify({ error: 'Bill not found' }, null, 2), {
+      status: 404,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }
 
   return new Response(
@@ -58,13 +55,13 @@ export async function GET({ props }) {
         bill: props.bill,
       },
       null,
-      2
+      2,
     ),
     {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
-    }
+    },
   );
 }

@@ -14,7 +14,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dedupeCongressApiActions, normalizeActionText, toDateOnlyString } from '../src/utils/billTransforms.js';
+import {
+  dedupeCongressApiActions,
+  normalizeActionText,
+  toDateOnlyString,
+} from '../src/utils/billTransforms.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BILLS_DIR = path.resolve(__dirname, '../src/data/bills');
@@ -53,8 +57,22 @@ if (!API_KEY) {
 
 // Bills to fetch — hand-picked for absurdity + variety
 const BILL_LIST = [
-  { congress: 112, type: 'hr', number: 2112, absurdityIndex: 9, category: 'Food & Drink', featured: true },
-  { congress: 109, type: 'hr', number: 3, absurdityIndex: 9, category: 'Transportation', featured: true },
+  {
+    congress: 112,
+    type: 'hr',
+    number: 2112,
+    absurdityIndex: 9,
+    category: 'Food & Drink',
+    featured: true,
+  },
+  {
+    congress: 109,
+    type: 'hr',
+    number: 3,
+    absurdityIndex: 9,
+    category: 'Transportation',
+    featured: true,
+  },
   { congress: 118, type: 'hr', number: 8752, absurdityIndex: 8, category: 'Science' },
   { congress: 118, type: 'hr', number: 6174, absurdityIndex: 7, category: 'Food & Drink' },
   { congress: 118, type: 'hr', number: 3684, absurdityIndex: 6, category: 'Technology' },
@@ -118,7 +136,9 @@ function parseBillSelectorArg(args) {
 }
 
 // Parse --bill argument (supports both --bill=119/hr/25 and --bill 119/hr/25)
-const { value: billSelector, error: billSelectorError } = parseBillSelectorArg(process.argv.slice(2));
+const { value: billSelector, error: billSelectorError } = parseBillSelectorArg(
+  process.argv.slice(2),
+);
 if (billSelectorError) {
   console.error(billSelectorError);
   process.exit(1);
@@ -139,7 +159,9 @@ if (billSelector) {
     Number.isNaN(number) ||
     number <= 0
   ) {
-    console.error('Error: --bill must be in format <congress>/<type>/<number> (example: 119/hr/25).');
+    console.error(
+      'Error: --bill must be in format <congress>/<type>/<number> (example: 119/hr/25).',
+    );
     console.error(`Supported bill types: ${Array.from(VALID_BILL_TYPES).join(', ')}`);
     process.exit(1);
   }
@@ -155,7 +177,7 @@ if (billSelector) {
 }
 
 function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 async function apiFetch(endpoint, options = {}) {
@@ -182,11 +204,6 @@ function formatBillNumber(type, number) {
 
 function congressGovPathSegment(type) {
   return CONGRESS_GOV_PATH_BY_TYPE[type] || null;
-}
-
-function escapeMdx(text) {
-  if (!text) return '';
-  return text.replace(/[{}]/g, ch => `\\${ch}`).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function stripHtml(html) {
@@ -226,7 +243,7 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/summaries`);
     data.summaries = res?.summaries || [];
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (summaries not available)`);
   }
 
@@ -236,7 +253,7 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/actions`, { limit: 500 });
     data.actions = dedupeCongressApiActions(res?.actions || []);
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (actions not available)`);
   }
 
@@ -246,7 +263,7 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/amendments`, { limit: 500 });
     data.amendments = res?.amendments || [];
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (amendments not available)`);
   }
 
@@ -256,7 +273,7 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/committees`);
     data.committees = res?.committees || [];
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (committees not available)`);
   }
 
@@ -266,7 +283,7 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/cosponsors`, { limit: 500 });
     data.cosponsors = res?.cosponsors || [];
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (cosponsors not available)`);
   }
 
@@ -276,7 +293,7 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/relatedbills`);
     data.relatedBills = res?.relatedBills || [];
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (related bills not available)`);
   }
 
@@ -289,7 +306,7 @@ async function fetchBillData(congress, type, number) {
     data.subjects = subjectsData?.legislativeSubjects || [];
     data.policyArea = subjectsData?.policyArea || null;
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (subjects not available)`);
   }
 
@@ -299,7 +316,7 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/titles`);
     data.titles = res?.titles || [];
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (titles not available)`);
   }
 
@@ -309,7 +326,7 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/text`);
     data.textVersions = res?.textVersions || [];
     await sleep(DELAY_MS);
-  } catch (e) {
+  } catch (_err) {
     console.log(`    (text versions not available)`);
   }
 
@@ -320,19 +337,29 @@ async function fetchBillData(congress, type, number) {
 // AI SUMMARIZATION
 // ============================================================================
 
-async function aiSummarize(crsSummary, billTitle, billNumber, actions, absurdityIndex, committees, textVersions) {
+async function aiSummarize(
+  crsSummary,
+  billTitle,
+  billNumber,
+  actions,
+  absurdityIndex,
+  committees,
+  textVersions,
+) {
   if (!crsSummary && actions.length === 0) return null;
 
   // Build context from actions
-  const actionsSummary = actions.slice(0, 15).map(a =>
-    `${a.actionDate}: ${a.text}`
-  ).join('\n');
+  const actionsSummary = actions
+    .slice(0, 15)
+    .map((a) => `${a.actionDate}: ${a.text}`)
+    .join('\n');
 
-  const absurdityContext = absurdityIndex >= 7
-    ? 'This bill has a HIGH absurdity score. Focus on what makes it ridiculous, wasteful, or head-scratching.'
-    : absurdityIndex >= 4
-    ? 'This bill has a MODERATE absurdity score. There may be some questionable provisions or bureaucratic oddities.'
-    : 'This bill has a LOW absurdity score. It may be fairly straightforward, but find any interesting angles.';
+  const absurdityContext =
+    absurdityIndex >= 7
+      ? 'This bill has a HIGH absurdity score. Focus on what makes it ridiculous, wasteful, or head-scratching.'
+      : absurdityIndex >= 4
+        ? 'This bill has a MODERATE absurdity score. There may be some questionable provisions or bureaucratic oddities.'
+        : 'This bill has a LOW absurdity score. It may be fairly straightforward, but find any interesting angles.';
 
   const promptText = `You are a writer for AbsurdityIndex.org — a satirical editorial site that covers real congressional legislation with wit and accessibility.
 
@@ -347,7 +374,12 @@ RECENT ACTIONS:
 ${actionsSummary || '(None)'}
 
 BILL FACTS:
-- Committees referred to: ${(committees || []).length} (${(committees || []).map(c => c.name).filter(Boolean).join(', ') || 'None'})
+- Committees referred to: ${(committees || []).length} (${
+    (committees || [])
+      .map((c) => c.name)
+      .filter(Boolean)
+      .join(', ') || 'None'
+  })
 - Bill text available: ${(textVersions || []).length > 0 ? 'Yes' : 'No'} (${(textVersions || []).length} version(s))
 
 Write THREE things:
@@ -382,7 +414,7 @@ WHY_IT_MATTERS: [your impact summary]`;
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
           'HTTP-Referer': 'https://absurdityindex.org',
           'X-Title': 'AbsurdityIndex Bill Fetcher',
         },
@@ -454,9 +486,10 @@ async function aiExtractMilestones(actions, billNumber, billType) {
   if (!OPENROUTER_API_KEY && !ANTHROPIC_API_KEY) return null;
 
   // Format actions for the prompt
-  const actionsText = actions.slice(0, 50).map(a =>
-    `${a.actionDate}: ${a.text}`
-  ).join('\n');
+  const actionsText = actions
+    .slice(0, 50)
+    .map((a) => `${a.actionDate}: ${a.text}`)
+    .join('\n');
 
   const billTypeContext = billType.toLowerCase().includes('res')
     ? 'This is a resolution (not a bill), so "passing" may mean adoption/agreement rather than the typical bill process.'
@@ -504,7 +537,7 @@ Respond in this exact JSON format (no markdown, just JSON):
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
           'HTTP-Referer': 'https://absurdityindex.org',
           'X-Title': 'Absurdity Index Bill Fetcher',
         },
@@ -576,9 +609,7 @@ function parsePrimaryCommittee(statusText, committees) {
   if (match) {
     const parsed = match[1].trim();
     // Find matching committee from API data, or use parsed name directly
-    const found = committees.find(c =>
-      c.name?.toLowerCase().includes(parsed.toLowerCase())
-    );
+    const found = committees.find((c) => c.name?.toLowerCase().includes(parsed.toLowerCase()));
     return found?.name || `Committee on ${parsed}`;
   }
   return committees[0]?.name || 'Not assigned';
@@ -617,9 +648,8 @@ function generateMdx(data, meta, aiSummary, aiMilestones) {
   const congressUrl = `https://www.congress.gov/bill/${meta.congress}th-congress/${congressTypePath}/${meta.number}`;
 
   // CRS Summary
-  const crsSummary = data.summaries.length > 0
-    ? stripHtml(data.summaries[data.summaries.length - 1].text)
-    : '';
+  const crsSummary =
+    data.summaries.length > 0 ? stripHtml(data.summaries[data.summaries.length - 1].text) : '';
 
   // Short summary for card - prefer AI-generated card summary
   let shortSummary = aiSummary?.cardSummary || crsSummary;
@@ -633,73 +663,99 @@ function generateMdx(data, meta, aiSummary, aiMilestones) {
 
   const uniqueActions = Array.isArray(data.actions) ? data.actions : [];
 
-  const actionsYaml = uniqueActions.slice(0, 50).map(a => {
-    const actionText = normalizeActionText(a.text).replace(/"/g, '\\"');
-    return `  - date: ${toDateOnlyString(a.actionDate) || '2000-01-01'}
+  const actionsYaml = uniqueActions
+    .slice(0, 50)
+    .map((a) => {
+      const actionText = normalizeActionText(a.text).replace(/"/g, '\\"');
+      return `  - date: ${toDateOnlyString(a.actionDate) || '2000-01-01'}
     text: "${actionText}"
     chamber: ${a.actionCode?.startsWith('H') ? 'house' : a.actionCode?.startsWith('S') ? 'senate' : 'both'}`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Titles
-  const titlesYaml = data.titles.slice(0, 10).map(t => {
-    const titleText = (t.title || '').replace(/"/g, '\\"');
-    return `  - title: "${titleText}"
+  const titlesYaml = data.titles
+    .slice(0, 10)
+    .map((t) => {
+      const titleText = (t.title || '').replace(/"/g, '\\"');
+      return `  - title: "${titleText}"
     type: ${t.titleType?.includes('Short') ? 'short' : t.titleType?.includes('Official') ? 'official' : 'display'}`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Amendments
-  const amendmentsYaml = data.amendments.slice(0, 20).map(a => {
-    const desc = (a.description || a.purpose || '').replace(/"/g, '\\"').slice(0, 200);
-    return `  - number: "${a.number || 'Unknown'}"
+  const amendmentsYaml = data.amendments
+    .slice(0, 20)
+    .map((a) => {
+      const desc = (a.description || a.purpose || '').replace(/"/g, '\\"').slice(0, 200);
+      return `  - number: "${a.number || 'Unknown'}"
     description: "${desc}"`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Cosponsors
-  const cosponsorsYaml = data.cosponsors.slice(0, 30).map(c => {
-    const name = (c.fullName || `${c.firstName} ${c.lastName}`).replace(/"/g, '\\"');
-    return `  - name: "${name}"
+  const cosponsorsYaml = data.cosponsors
+    .slice(0, 30)
+    .map((c) => {
+      const name = (c.fullName || `${c.firstName} ${c.lastName}`).replace(/"/g, '\\"');
+      return `  - name: "${name}"
     party: "${c.party || ''}"
     state: "${c.state || ''}"`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Committees
-  const committeesYaml = data.committees.map(c => {
-    const name = (c.name || '').replace(/"/g, '\\"');
-    return `  - name: "${name}"
+  const committeesYaml = data.committees
+    .map((c) => {
+      const name = (c.name || '').replace(/"/g, '\\"');
+      return `  - name: "${name}"
     chamber: ${c.chamber?.toLowerCase() || 'house'}`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Related bills
-  const relatedBillsYaml = data.relatedBills.slice(0, 10).map(r => {
-    const num = (r.number || '').toString();
-    const relTitle = (r.title || '').replace(/"/g, '\\"').slice(0, 100);
-    return `  - billNumber: "${r.type?.toUpperCase() || ''} ${num}"
+  const relatedBillsYaml = data.relatedBills
+    .slice(0, 10)
+    .map((r) => {
+      const num = (r.number || '').toString();
+      const relTitle = (r.title || '').replace(/"/g, '\\"').slice(0, 100);
+      return `  - billNumber: "${r.type?.toUpperCase() || ''} ${num}"
     title: "${relTitle}"
     relationship: "${r.relationshipDetails?.[0]?.type || 'Related'}"`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Text versions
-  const textVersionsYaml = data.textVersions.map(t => {
-    const date = toDateOnlyString(t.date) || '2000-01-01';
-    return `  - type: "${t.type || 'Unknown'}"
+  const textVersionsYaml = data.textVersions
+    .map((t) => {
+      const date = toDateOnlyString(t.date) || '2000-01-01';
+      return `  - type: "${t.type || 'Unknown'}"
     date: ${date}`;
-  }).join('\n');
+    })
+    .join('\n');
 
   // Policy area / subjects
   const subjects = Array.isArray(data.subjects) ? data.subjects : [];
-  const policyArea = data.policyArea?.name || b.policyArea?.name || subjects?.[0]?.name || meta.category;
-  const tags = subjects.slice(0, 10).map(s => `"${(s.name || '').replace(/"/g, '\\"')}"`).join(', ');
+  const policyArea =
+    data.policyArea?.name || b.policyArea?.name || subjects?.[0]?.name || meta.category;
+  const tags = subjects
+    .slice(0, 10)
+    .map((s) => `"${(s.name || '').replace(/"/g, '\\"')}"`)
+    .join(', ');
 
   // Key milestones (AI-extracted)
-  const keyMilestonesYaml = aiMilestones && aiMilestones.length > 0
-    ? aiMilestones.map(m => {
-        const milestoneText = (m.text || '').replace(/"/g, '\\"').replace(/\n/g, ' ');
-        return `  - type: "${m.type}"
+  const keyMilestonesYaml =
+    aiMilestones && aiMilestones.length > 0
+      ? aiMilestones
+          .map((m) => {
+            const milestoneText = (m.text || '').replace(/"/g, '\\"').replace(/\n/g, ' ');
+            return `  - type: "${m.type}"
     date: ${m.date}
     text: "${milestoneText}"
     icon: "${m.icon}"`;
-      }).join('\n')
-    : '';
+          })
+          .join('\n')
+      : '';
 
   // Build frontmatter
   const frontmatter = `---
@@ -794,20 +850,35 @@ async function main() {
       const data = await fetchBillData(meta.congress, meta.type, meta.number);
 
       // Stats
-      console.log(`    Stats: Actions: ${data.actions.length}, Amendments: ${data.amendments.length}, Cosponsors: ${data.cosponsors.length}`);
+      console.log(
+        `    Stats: Actions: ${data.actions.length}, Amendments: ${data.amendments.length}, Cosponsors: ${data.cosponsors.length}`,
+      );
 
       // AI summarization and milestone extraction
       let aiResult = null;
       let aiMilestones = null;
       if (USE_AI) {
-        const crsSummary = data.summaries.length > 0
-          ? stripHtml(data.summaries[data.summaries.length - 1].text)
-          : '';
+        const crsSummary =
+          data.summaries.length > 0
+            ? stripHtml(data.summaries[data.summaries.length - 1].text)
+            : '';
         console.log(`    AI summarizing...`);
-        aiResult = await aiSummarize(crsSummary, data.bill.title, formatBillNumber(meta.type, meta.number), data.actions, meta.absurdityIndex, data.committees, data.textVersions);
+        aiResult = await aiSummarize(
+          crsSummary,
+          data.bill.title,
+          formatBillNumber(meta.type, meta.number),
+          data.actions,
+          meta.absurdityIndex,
+          data.committees,
+          data.textVersions,
+        );
 
         console.log(`    AI extracting milestones...`);
-        aiMilestones = await aiExtractMilestones(data.actions, formatBillNumber(meta.type, meta.number), meta.type);
+        aiMilestones = await aiExtractMilestones(
+          data.actions,
+          formatBillNumber(meta.type, meta.number),
+          meta.type,
+        );
         if (aiMilestones) {
           console.log(`    Extracted ${aiMilestones.length} milestones`);
         }
@@ -832,7 +903,9 @@ async function main() {
     console.log();
   }
 
-  console.log(`\nSummary: Created ${created}, Updated ${updated}, Skipped ${skipped}, Errors ${errors}`);
+  console.log(
+    `\nSummary: Created ${created}, Updated ${updated}, Skipped ${skipped}, Errors ${errors}`,
+  );
 }
 
 main();

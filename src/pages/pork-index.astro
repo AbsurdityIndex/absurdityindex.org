@@ -15,12 +15,12 @@ const allBills = await getCollection('bills');
 
 // Create a map of bill IDs to their status for quick lookup
 const billStatusMap = new Map(
-  allBills.map(b => [b.id, { status: b.data.status, title: b.data.title }])
+  allBills.map((b) => [b.id, { status: b.data.status, title: b.data.title }]),
 );
 
 // Sort by total pork amount (descending)
 const sortedReps = [...representatives].sort(
-  (a, b) => b.data.totalPorkAmount - a.data.totalPorkAmount
+  (a, b) => b.data.totalPorkAmount - a.data.totalPorkAmount,
 );
 
 function formatAmount(amt: number): string {
@@ -42,27 +42,27 @@ function getPartyColor(party: string): string {
 }
 
 // Prepare data for client-side interactivity
-const repsData = sortedReps.map(rep => ({
+const repsData = sortedReps.map((rep) => ({
   id: rep.id,
   name: rep.data.name,
   party: rep.data.party,
   state: rep.data.state,
   totalPork: rep.data.totalPorkAmount,
-  porkContributions: rep.data.porkContributions.map(p => ({
+  porkContributions: rep.data.porkContributions.map((p) => ({
     ...p,
-    date: p.date.toISOString()
+    date: p.date.toISOString(),
   })),
   financialDisclosures: rep.data.financialDisclosures || [],
   congressUrl: rep.data.congressDotGovUrl,
-  terms: rep.data.terms.map(t => ({
+  terms: rep.data.terms.map((t) => ({
     ...t,
     startDate: t.startDate.toISOString(),
-    endDate: t.endDate?.toISOString()
-  }))
+    endDate: t.endDate?.toISOString(),
+  })),
 }));
 
 // Get date range for slider
-const allDates = sortedReps.flatMap(r => r.data.porkContributions.map(p => p.date.getTime()));
+const allDates = sortedReps.flatMap((r) => r.data.porkContributions.map((p) => p.date.getTime()));
 const minDate = allDates.length > 0 ? new Date(Math.min(...allDates)) : new Date('2000-01-01');
 const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date();
 ---
@@ -84,7 +84,7 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
       margin-bottom: 0.5rem;
     }
 
-    input[type="range"]::-webkit-slider-thumb {
+    input[type='range']::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 16px;
       height: 16px;
@@ -95,7 +95,7 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
-    input[type="range"]::-moz-range-thumb {
+    input[type='range']::-moz-range-thumb {
       width: 16px;
       height: 16px;
       border-radius: 50%;
@@ -123,11 +123,10 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
           <Icon name="pig" size={28} class="text-gold-700" />
         </div>
       </div>
-      <h1 class="text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-3">
-        Rep Pork Index
-      </h1>
+      <h1 class="text-3xl md:text-4xl font-serif font-bold text-navy-900 mb-3">Rep Pork Index</h1>
       <p class="text-lg text-navy-600 max-w-2xl mx-auto">
-        Track which members of Congress have added the most "pork" to legislation—and how their personal finances have grown alongside their spending power.
+        Track which members of Congress have added the most "pork" to legislation—and how their
+        personal finances have grown alongside their spending power.
       </p>
     </div>
 
@@ -189,7 +188,11 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
       <div class="p-4 bg-white rounded-lg border border-cream-200 text-center">
         <p class="text-xs font-sans text-navy-500 uppercase tracking-wide mb-1">Avg Per Rep</p>
         <p class="text-2xl font-mono font-bold text-orange-600" id="avg-pork">
-          {formatAmount(sortedReps.reduce((sum, r) => sum + r.data.totalPorkAmount, 0) / sortedReps.length)}
+          {
+            formatAmount(
+              sortedReps.reduce((sum, r) => sum + r.data.totalPorkAmount, 0) / sortedReps.length,
+            )
+          }
         </p>
       </div>
       <div class="p-4 bg-white rounded-lg border border-cream-200 text-center">
@@ -202,158 +205,173 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
 
     <!-- Leaderboard -->
     <div class="space-y-4" id="leaderboard">
-      {sortedReps.map((rep, index) => {
-        const latestDisclosure = rep.data.financialDisclosures?.slice(-1)[0];
-        const firstDisclosure = rep.data.financialDisclosures?.[0];
+      {
+        sortedReps.map((rep, index) => {
+          const latestDisclosure = rep.data.financialDisclosures?.slice(-1)[0];
+          const firstDisclosure = rep.data.financialDisclosures?.[0];
 
-        return (
-          <div
-            class="rep-card p-5 bg-white rounded-lg border border-cream-200 shadow-sm hover:shadow-md transition-shadow"
-            data-rep-id={rep.id}
-          >
-            <div class="flex items-start gap-4">
-              {/* Rank */}
-              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gold-100 flex items-center justify-center">
-                <span class="font-mono text-lg font-bold text-gold-700">#{index + 1}</span>
-              </div>
+          return (
+            <div
+              class="rep-card p-5 bg-white rounded-lg border border-cream-200 shadow-sm hover:shadow-md transition-shadow"
+              data-rep-id={rep.id}
+            >
+              <div class="flex items-start gap-4">
+                {/* Rank */}
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gold-100 flex items-center justify-center">
+                  <span class="font-mono text-lg font-bold text-gold-700">#{index + 1}</span>
+                </div>
 
-              {/* Rep Info */}
-              <div class="flex-1 min-w-0">
-                <div class="flex flex-wrap items-center gap-2 mb-1">
-                  <h3 class="font-serif text-lg font-bold text-navy-900">
-                    {rep.data.name}
-                  </h3>
-                  <span class:list={[
-                    'px-2 py-0.5 text-xs font-sans font-medium rounded border',
-                    getPartyColor(rep.data.party)
-                  ]}>
-                    {rep.data.party.charAt(0)}-{rep.data.state}
-                  </span>
-                  {rep.data.congressDotGovUrl && (
-                    <a
-                      href={rep.data.congressDotGovUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-gold-600 hover:text-gold-500"
-                      title="View on Congress.gov"
+                {/* Rep Info */}
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 class="font-serif text-lg font-bold text-navy-900">{rep.data.name}</h3>
+                    <span
+                      class:list={[
+                        'px-2 py-0.5 text-xs font-sans font-medium rounded border',
+                        getPartyColor(rep.data.party),
+                      ]}
                     >
-                      <Icon name="external-link" size={14} />
-                    </a>
-                  )}
-                </div>
-
-                {/* Terms */}
-                <p class="text-xs text-navy-500 mb-3">
-                  {rep.data.terms.map(t =>
-                    `${t.chamber === 'senate' ? 'Senator' : 'Rep.'} ${t.startDate.getFullYear()}–${t.endDate?.getFullYear() || 'Present'}`
-                  ).join(', ')}
-                </p>
-
-                {/* Pork Contributions Preview */}
-                <div class="flex flex-wrap gap-2">
-                  {rep.data.porkContributions.slice(0, 3).map(p => {
-                    const billInfo = billStatusMap.get(p.billId);
-                    return (
-                      <span class="inline-flex items-center gap-1.5 text-xs bg-cream-100 text-navy-600 px-2 py-1 rounded">
-                        {billInfo && <BillStageBadge status={billInfo.status} size="xs" />}
-                        {formatAmount(p.amount)} — {p.description.slice(0, 25)}...
-                      </span>
-                    );
-                  })}
-                  {rep.data.porkContributions.length > 3 && (
-                    <span class="text-xs text-navy-400">
-                      +{rep.data.porkContributions.length - 3} more
+                      {rep.data.party.charAt(0)}-{rep.data.state}
                     </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div class="flex-shrink-0 text-right">
-                <p class="font-mono text-xl font-bold text-red-600 rep-pork-total">
-                  {formatAmount(rep.data.totalPorkAmount)}
-                </p>
-                <p class="text-xs text-navy-500">Total Pork</p>
-
-                {latestDisclosure && firstDisclosure && (
-                  <div class="mt-2 pt-2 border-t border-cream-200">
-                    <p class="text-xs text-navy-500">Net Worth Growth</p>
-                    <p class="font-mono text-sm text-green-600">
-                      {formatAmount(firstDisclosure.minNetWorth)} → {formatAmount(latestDisclosure.maxNetWorth)}
-                    </p>
+                    {rep.data.congressDotGovUrl && (
+                      <a
+                        href={rep.data.congressDotGovUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-gold-600 hover:text-gold-500"
+                        title="View on Congress.gov"
+                      >
+                        <Icon name="external-link" size={14} />
+                      </a>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Expandable Details */}
-            <details class="mt-4 pt-4 border-t border-cream-200">
-              <summary class="cursor-pointer text-sm font-sans font-medium text-gold-700 hover:text-gold-600">
-                View all pork contributions & financial disclosures
-              </summary>
-              <div class="mt-4 grid md:grid-cols-2 gap-6">
-                {/* Pork Timeline */}
-                <div>
-                  <h4 class="text-xs font-sans font-semibold text-navy-500 uppercase tracking-wide mb-3">
-                    <Icon name="pig" size={12} class="inline -mt-0.5 mr-1" />
-                    Pork Contributions
-                  </h4>
-                  <div class="space-y-2 max-h-64 overflow-y-auto">
-                    {rep.data.porkContributions.map(p => {
+                  {/* Terms */}
+                  <p class="text-xs text-navy-500 mb-3">
+                    {rep.data.terms
+                      .map(
+                        (t) =>
+                          `${t.chamber === 'senate' ? 'Senator' : 'Rep.'} ${t.startDate.getFullYear()}–${t.endDate?.getFullYear() || 'Present'}`,
+                      )
+                      .join(', ')}
+                  </p>
+
+                  {/* Pork Contributions Preview */}
+                  <div class="flex flex-wrap gap-2">
+                    {rep.data.porkContributions.slice(0, 3).map((p) => {
                       const billInfo = billStatusMap.get(p.billId);
                       return (
-                        <div class="p-2 bg-cream-50 rounded text-sm">
-                          <div class="flex justify-between items-start gap-2">
-                            <span class="font-medium text-navy-800">{p.description}</span>
-                            <span class="font-mono text-red-600 flex-shrink-0">{formatAmount(p.amount)}</span>
-                          </div>
-                          <div class="flex justify-between items-center mt-1 text-xs text-navy-500">
-                            <div class="flex items-center gap-2">
-                              <span>{p.billNumber}</span>
-                              {billInfo && <BillStageBadge status={billInfo.status} size="xs" />}
-                            </div>
-                            <span>{p.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', timeZone: 'UTC' })}</span>
-                          </div>
-                        </div>
+                        <span class="inline-flex items-center gap-1.5 text-xs bg-cream-100 text-navy-600 px-2 py-1 rounded">
+                          {billInfo && <BillStageBadge status={billInfo.status} size="xs" />}
+                          {formatAmount(p.amount)} — {p.description.slice(0, 25)}...
+                        </span>
                       );
                     })}
+                    {rep.data.porkContributions.length > 3 && (
+                      <span class="text-xs text-navy-400">
+                        +{rep.data.porkContributions.length - 3} more
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Financial Disclosures */}
-                {rep.data.financialDisclosures && rep.data.financialDisclosures.length > 0 && (
+                {/* Stats */}
+                <div class="flex-shrink-0 text-right">
+                  <p class="font-mono text-xl font-bold text-red-600 rep-pork-total">
+                    {formatAmount(rep.data.totalPorkAmount)}
+                  </p>
+                  <p class="text-xs text-navy-500">Total Pork</p>
+
+                  {latestDisclosure && firstDisclosure && (
+                    <div class="mt-2 pt-2 border-t border-cream-200">
+                      <p class="text-xs text-navy-500">Net Worth Growth</p>
+                      <p class="font-mono text-sm text-green-600">
+                        {formatAmount(firstDisclosure.minNetWorth)} →{' '}
+                        {formatAmount(latestDisclosure.maxNetWorth)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Expandable Details */}
+              <details class="mt-4 pt-4 border-t border-cream-200">
+                <summary class="cursor-pointer text-sm font-sans font-medium text-gold-700 hover:text-gold-600">
+                  View all pork contributions & financial disclosures
+                </summary>
+                <div class="mt-4 grid md:grid-cols-2 gap-6">
+                  {/* Pork Timeline */}
                   <div>
                     <h4 class="text-xs font-sans font-semibold text-navy-500 uppercase tracking-wide mb-3">
-                      <Icon name="dollar-sign" size={12} class="inline -mt-0.5 mr-1" />
-                      Financial Disclosures
+                      <Icon name="pig" size={12} class="inline -mt-0.5 mr-1" />
+                      Pork Contributions
                     </h4>
-                    <div class="space-y-2">
-                      {rep.data.financialDisclosures.map(d => (
-                        <div class="flex justify-between items-center p-2 bg-cream-50 rounded text-sm">
-                          <span class="font-mono text-navy-600">{d.year}</span>
-                          <span class="font-mono text-green-600">{formatNetWorth(d.minNetWorth, d.maxNetWorth)}</span>
-                        </div>
-                      ))}
+                    <div class="space-y-2 max-h-64 overflow-y-auto">
+                      {rep.data.porkContributions.map((p) => {
+                        const billInfo = billStatusMap.get(p.billId);
+                        return (
+                          <div class="p-2 bg-cream-50 rounded text-sm">
+                            <div class="flex justify-between items-start gap-2">
+                              <span class="font-medium text-navy-800">{p.description}</span>
+                              <span class="font-mono text-red-600 flex-shrink-0">
+                                {formatAmount(p.amount)}
+                              </span>
+                            </div>
+                            <div class="flex justify-between items-center mt-1 text-xs text-navy-500">
+                              <div class="flex items-center gap-2">
+                                <span>{p.billNumber}</span>
+                                {billInfo && <BillStageBadge status={billInfo.status} size="xs" />}
+                              </div>
+                              <span>
+                                {p.date.toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  timeZone: 'UTC',
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <p class="text-xs text-navy-400 italic mt-2">
-                      Source: Public financial disclosure reports
-                    </p>
                   </div>
-                )}
-              </div>
-            </details>
-          </div>
-        );
-      })}
+
+                  {/* Financial Disclosures */}
+                  {rep.data.financialDisclosures && rep.data.financialDisclosures.length > 0 && (
+                    <div>
+                      <h4 class="text-xs font-sans font-semibold text-navy-500 uppercase tracking-wide mb-3">
+                        <Icon name="dollar-sign" size={12} class="inline -mt-0.5 mr-1" />
+                        Financial Disclosures
+                      </h4>
+                      <div class="space-y-2">
+                        {rep.data.financialDisclosures.map((d) => (
+                          <div class="flex justify-between items-center p-2 bg-cream-50 rounded text-sm">
+                            <span class="font-mono text-navy-600">{d.year}</span>
+                            <span class="font-mono text-green-600">
+                              {formatNetWorth(d.minNetWorth, d.maxNetWorth)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p class="text-xs text-navy-400 italic mt-2">
+                        Source: Public financial disclosure reports
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </details>
+            </div>
+          );
+        })
+      }
     </div>
 
     {/* Disclaimer */}
     <div class="mt-10 p-4 bg-cream-100 rounded-lg border border-gold-200 text-center">
       <p class="text-xs text-navy-600">
         <Icon name="info" size={12} class="inline -mt-0.5 mr-1" />
-        Pork amounts are estimates based on public records and CBO analyses.
-        Financial disclosure data from official congressional filings.
-        This is editorial commentary, not financial advice.
+        Pork amounts are estimates based on public records and CBO analyses. Financial disclosure data
+        from official congressional filings. This is editorial commentary, not financial advice.
       </p>
     </div>
   </div>
@@ -389,8 +407,8 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
       let totalPork = 0;
       let totalItems = 0;
 
-      repsData.forEach(rep => {
-        const filteredPork = rep.porkContributions.filter(p => {
+      repsData.forEach((rep) => {
+        const filteredPork = rep.porkContributions.filter((p) => {
           const porkTime = new Date(p.date).getTime();
           return porkTime >= startTime && porkTime <= endTime;
         });

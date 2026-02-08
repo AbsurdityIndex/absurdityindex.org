@@ -54,53 +54,61 @@ const hasPrev = currentPage > 1;
 const hasNext = currentPage < totalPages;
 ---
 
-{totalPages > 1 && (
-  <nav class="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5" aria-label="Pagination">
-    <a
-      href={hasPrev ? pageUrl(currentPage - 1) : undefined}
-      class:list={[
-        'inline-flex items-center rounded-md border px-2.5 py-1.5 text-[13px] font-sans transition-colors min-[375px]:px-3 min-[375px]:py-2 min-[375px]:text-sm',
-        hasPrev
-          ? 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100'
-          : 'border-cream-300 bg-cream-100 text-navy-300 pointer-events-none',
-      ]}
-      aria-disabled={!hasPrev}
+{
+  totalPages > 1 && (
+    <nav
+      class="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5"
+      aria-label="Pagination"
     >
-      Previous
-    </a>
+      <a
+        href={hasPrev ? pageUrl(currentPage - 1) : undefined}
+        class:list={[
+          'inline-flex items-center rounded-md border px-2.5 py-1.5 text-[13px] font-sans transition-colors min-[375px]:px-3 min-[375px]:py-2 min-[375px]:text-sm',
+          hasPrev
+            ? 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100'
+            : 'border-cream-300 bg-cream-100 text-navy-300 pointer-events-none',
+        ]}
+        aria-disabled={!hasPrev}
+      >
+        Previous
+      </a>
 
-    {pageSequence.map((page, index) =>
-      page === 'ellipsis' ? (
-        <span class="inline-flex min-w-8 items-center justify-center px-1 text-[13px] text-navy-400 min-[375px]:min-w-9 min-[375px]:text-sm" aria-hidden="true">
-          ...
-        </span>
-      ) : (
-        <a
-          href={pageUrl(page)}
-          class:list={[
-            'inline-flex min-w-8 items-center justify-center rounded-md border px-2.5 py-1.5 text-[13px] font-sans transition-colors min-[375px]:min-w-9 min-[375px]:px-3 min-[375px]:py-2 min-[375px]:text-sm',
-            page === currentPage
-              ? 'border-navy-800 bg-navy-800 font-semibold text-white'
-              : 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100',
-          ]}
-          aria-current={page === currentPage ? 'page' : undefined}
-        >
-          {page}
-        </a>
-      )
-    )}
+      {pageSequence.map((page, index) =>
+        page === 'ellipsis' ? (
+          <span
+            class="inline-flex min-w-8 items-center justify-center px-1 text-[13px] text-navy-400 min-[375px]:min-w-9 min-[375px]:text-sm"
+            aria-hidden="true"
+          >
+            ...
+          </span>
+        ) : (
+          <a
+            href={pageUrl(page)}
+            class:list={[
+              'inline-flex min-w-8 items-center justify-center rounded-md border px-2.5 py-1.5 text-[13px] font-sans transition-colors min-[375px]:min-w-9 min-[375px]:px-3 min-[375px]:py-2 min-[375px]:text-sm',
+              page === currentPage
+                ? 'border-navy-800 bg-navy-800 font-semibold text-white'
+                : 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100',
+            ]}
+            aria-current={page === currentPage ? 'page' : undefined}
+          >
+            {page}
+          </a>
+        ),
+      )}
 
-    <a
-      href={hasNext ? pageUrl(currentPage + 1) : undefined}
-      class:list={[
-        'inline-flex items-center rounded-md border px-2.5 py-1.5 text-[13px] font-sans transition-colors min-[375px]:px-3 min-[375px]:py-2 min-[375px]:text-sm',
-        hasNext
-          ? 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100'
-          : 'border-cream-300 bg-cream-100 text-navy-300 pointer-events-none',
-      ]}
-      aria-disabled={!hasNext}
-    >
-      Next
-    </a>
-  </nav>
-)}
+      <a
+        href={hasNext ? pageUrl(currentPage + 1) : undefined}
+        class:list={[
+          'inline-flex items-center rounded-md border px-2.5 py-1.5 text-[13px] font-sans transition-colors min-[375px]:px-3 min-[375px]:py-2 min-[375px]:text-sm',
+          hasNext
+            ? 'border-gold-300 bg-white text-navy-700 hover:border-gold-500 hover:bg-cream-100'
+            : 'border-cream-300 bg-cream-100 text-navy-300 pointer-events-none',
+        ]}
+        aria-disabled={!hasNext}
+      >
+        Next
+      </a>
+    </nav>
+  )
+}

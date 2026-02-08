@@ -8,7 +8,10 @@ const monthYearFormatter = new Intl.DateTimeFormat('en-US', {
 });
 
 export function toCategorySlug(value) {
-  return value.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+  return value
+    .toLowerCase()
+    .replace(/\s+&\s+/g, '-')
+    .replace(/\s+/g, '-');
 }
 
 export function toSponsorSlug(value) {
@@ -90,13 +93,7 @@ export function toApiBill(bill) {
   };
 }
 
-export function buildPaginatedApiPayload({
-  page,
-  total,
-  totalPages,
-  bills,
-  endpointPath,
-}) {
+export function buildPaginatedApiPayload({ page, total, totalPages, bills, endpointPath }) {
   const hasMore = page < totalPages;
   const nextPage = hasMore ? page + 1 : null;
   const prevPage = page > 1 ? page - 1 : null;

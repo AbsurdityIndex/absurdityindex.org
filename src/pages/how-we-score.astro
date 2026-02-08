@@ -16,14 +16,17 @@ import { ABSURDITY_TIERS } from '../utils/absurdity-tiers';
         How We Score Absurdity
       </h1>
       <p class="font-sans text-lg text-navy-600 max-w-2xl mx-auto">
-        A completely scientific methodology developed by people who read too many congressional records
+        A completely scientific methodology developed by people who read too many congressional
+        records
       </p>
       <hr class="gold-rule max-w-xs mx-auto mt-8" />
     </header>
 
     <!-- The Scale Section -->
     <section class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mb-10">
-      <h2 class="font-serif text-2xl font-bold text-navy-900 mb-8 text-center uppercase tracking-wide">
+      <h2
+        class="font-serif text-2xl font-bold text-navy-900 mb-8 text-center uppercase tracking-wide"
+      >
         The Absurdity Scale
       </h2>
 
@@ -39,53 +42,66 @@ import { ABSURDITY_TIERS } from '../utils/absurdity-tiers';
               <div class="flex-[2] bg-red-600"></div>
             </div>
             <!-- Number markers -->
-            <div class="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <span class="font-mono text-white text-sm font-bold drop-shadow-md">{n}</span>
-              ))}
+            <div
+              class="absolute inset-0 flex items-center justify-between px-2 pointer-events-none"
+            >
+              {
+                [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <span class="font-mono text-white text-sm font-bold drop-shadow-md">{n}</span>
+                ))
+              }
             </div>
           </div>
           <!-- Labels beneath -->
           <div class="flex text-center">
-            {ABSURDITY_TIERS.map((tier) => (
-              <div class={tier.min <= 6 ? 'flex-[3] px-1' : 'flex-[2] px-1'}>
-                <span class={`text-xs font-sans font-semibold ${tier.color.label}`}>{tier.name}</span>
-              </div>
-            ))}
+            {
+              ABSURDITY_TIERS.map((tier) => (
+                <div class={tier.min <= 6 ? 'flex-[3] px-1' : 'flex-[2] px-1'}>
+                  <span class={`text-xs font-sans font-semibold ${tier.color.label}`}>
+                    {tier.name}
+                  </span>
+                </div>
+              ))
+            }
           </div>
         </div>
       </div>
 
       <!-- Tier explanations -->
       <div class="space-y-8">
-        {ABSURDITY_TIERS.map((tier) => (
-          <div class="tier-card bg-cream-100 border-l-4 rounded-r-lg p-6" style={`border-left-color: ${tier.color.hex}`}>
-            <div class="flex items-start gap-4">
-              <div class="shrink-0">
-                <div class="w-16 text-center">
-                  <AbsurdityMeter score={tier.min} compact />
+        {
+          ABSURDITY_TIERS.map((tier) => (
+            <div
+              class="tier-card bg-cream-100 border-l-4 rounded-r-lg p-6"
+              style={`border-left-color: ${tier.color.hex}`}
+            >
+              <div class="flex items-start gap-4">
+                <div class="shrink-0">
+                  <div class="w-16 text-center">
+                    <AbsurdityMeter score={tier.min} compact />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h3 class="font-serif text-xl font-bold text-navy-900 mb-2">
-                  {tier.range}: {tier.name}
-                </h3>
-                <p class="font-sans text-navy-700 mb-3">
-                  {tier.description}
-                </p>
-                <div class="font-sans text-sm text-navy-600">
-                  <span class="font-semibold">Examples:</span> {tier.examples}
+                <div>
+                  <h3 class="font-serif text-xl font-bold text-navy-900 mb-2">
+                    {tier.range}: {tier.name}
+                  </h3>
+                  <p class="font-sans text-navy-700 mb-3">{tier.description}</p>
+                  <div class="font-sans text-sm text-navy-600">
+                    <span class="font-semibold">Examples:</span> {tier.examples}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        }
       </div>
     </section>
 
     <!-- Methodology Section -->
     <section class="bg-parchment rounded-lg shadow-lg p-8 md:p-12 mb-10">
-      <h2 class="font-serif text-2xl font-bold text-navy-900 mb-8 text-center uppercase tracking-wide">
+      <h2
+        class="font-serif text-2xl font-bold text-navy-900 mb-8 text-center uppercase tracking-wide"
+      >
         Our Methodology
       </h2>
 
@@ -96,7 +112,8 @@ import { ABSURDITY_TIERS } from '../utils/absurdity-tiers';
             <h3 class="font-serif text-lg font-bold text-navy-900">We Read the Bills</h3>
           </div>
           <p class="font-sans text-navy-700 text-sm leading-relaxed">
-            Yes, we actually read them. The full text. The amendments. The committee reports. So you don't have to experience that particular form of existential dread.
+            Yes, we actually read them. The full text. The amendments. The committee reports. So you
+            don't have to experience that particular form of existential dread.
           </p>
         </div>
 
@@ -106,7 +123,8 @@ import { ABSURDITY_TIERS } from '../utils/absurdity-tiers';
             <h3 class="font-serif text-lg font-bold text-navy-900">Editorial Opinion</h3>
           </div>
           <p class="font-sans text-navy-700 text-sm leading-relaxed">
-            Our scores are editorial opinion, not objective fact. Reasonable people can disagree about what constitutes absurdity. Unreasonable people can disagree more loudly.
+            Our scores are editorial opinion, not objective fact. Reasonable people can disagree
+            about what constitutes absurdity. Unreasonable people can disagree more loudly.
           </p>
         </div>
 
@@ -130,7 +148,8 @@ import { ABSURDITY_TIERS } from '../utils/absurdity-tiers';
             <h3 class="font-serif text-lg font-bold text-navy-900">Non-Partisan Absurdity</h3>
           </div>
           <p class="font-sans text-navy-700 text-sm leading-relaxed">
-            Absurdity knows no party. We critique bills from all political persuasions because wasteful legislation is a truly bipartisan achievement.
+            Absurdity knows no party. We critique bills from all political persuasions because
+            wasteful legislation is a truly bipartisan achievement.
           </p>
         </div>
       </div>
@@ -142,7 +161,9 @@ import { ABSURDITY_TIERS } from '../utils/absurdity-tiers';
         Important Disclaimer
       </h2>
       <p class="font-sans text-gold-300/90 text-sm leading-relaxed max-w-2xl mx-auto mb-4">
-        This is satire and commentary. While we base our analysis on real legislation, our scores and commentary are intended to entertain and provoke thought, not serve as legal or policy guidance.
+        This is satire and commentary. While we base our analysis on real legislation, our scores
+        and commentary are intended to entertain and provoke thought, not serve as legal or policy
+        guidance.
       </p>
       <p class="font-sans text-gold-300/70 text-sm">
         For official bill text and status, visit{' '}

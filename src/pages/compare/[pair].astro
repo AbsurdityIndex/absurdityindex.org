@@ -10,7 +10,7 @@ export async function getStaticPaths() {
 
   for (const bill of bills) {
     if (!bill.data.pairedBillId) continue;
-    const paired = bills.find(b => b.id === bill.data.pairedBillId);
+    const paired = bills.find((b) => b.id === bill.data.pairedBillId);
     if (!paired) continue;
 
     // Only create one comparison page per pair (use the real bill as the key)
@@ -33,10 +33,16 @@ const realHref = `/bills/${realBill.id}`;
 const notHref = `/not-bills/${notBill.id}`;
 
 const formattedRealDate = rd.dateIntroduced.toLocaleDateString('en-US', {
-  month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
 });
 const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
-  month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
 });
 ---
 
@@ -48,17 +54,18 @@ const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
     <!-- Page title -->
     <div class="text-center mb-10">
       <h1 class="font-serif text-3xl md:text-4xl font-bold text-navy-900 mb-3">
-        Congress Proposed <span class="text-red-700">THIS</span>...
-        We Proposed <span class="text-green-700">THIS</span>.
+        Congress Proposed <span class="text-red-700">THIS</span>... We Proposed <span
+          class="text-green-700">THIS</span
+        >.
       </h1>
       <p class="text-navy-600 font-sans text-lg max-w-2xl mx-auto">
-        One of these bills was introduced in the United States Congress. The other one actually makes sense.
+        One of these bills was introduced in the United States Congress. The other one actually
+        makes sense.
       </p>
     </div>
 
     <!-- Comparison grid -->
     <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-start">
-
       <!-- Real bill card -->
       <div class="bg-white rounded-lg shadow-lg overflow-hidden border-t-4 border-t-navy-800">
         <div class="bg-navy-800 text-white px-6 py-4">
@@ -71,11 +78,13 @@ const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
         <div class="p-6 space-y-4">
           <p class="text-sm text-navy-700 leading-relaxed">{rd.summary}</p>
 
-          {rd.absurdityIndex && (
-            <div>
-              <AbsurdityMeter score={rd.absurdityIndex} />
-            </div>
-          )}
+          {
+            rd.absurdityIndex && (
+              <div>
+                <AbsurdityMeter score={rd.absurdityIndex} />
+              </div>
+            )
+          }
 
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
@@ -88,7 +97,9 @@ const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
             </div>
             <div class="flex justify-between">
               <span class="font-sans font-semibold text-navy-600">Introduced</span>
-              <time class="text-navy-800" datetime={rd.dateIntroduced.toISOString()}>{formattedRealDate}</time>
+              <time class="text-navy-800" datetime={rd.dateIntroduced.toISOString()}
+                >{formattedRealDate}</time
+              >
             </div>
           </div>
 
@@ -104,14 +115,18 @@ const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
       <!-- VS divider -->
       <div class="hidden md:flex flex-col items-center justify-center self-center">
         <div class="w-px h-16 bg-navy-300"></div>
-        <div class="bg-gold-500 text-navy-900 font-serif font-bold text-2xl w-14 h-14 rounded-full flex items-center justify-center shadow-md my-2">
+        <div
+          class="bg-gold-500 text-navy-900 font-serif font-bold text-2xl w-14 h-14 rounded-full flex items-center justify-center shadow-md my-2"
+        >
           VS
         </div>
         <div class="w-px h-16 bg-navy-300"></div>
       </div>
       <div class="md:hidden flex items-center justify-center py-2">
         <div class="h-px w-16 bg-navy-300"></div>
-        <div class="bg-gold-500 text-navy-900 font-serif font-bold text-xl w-12 h-12 rounded-full flex items-center justify-center shadow-md mx-4">
+        <div
+          class="bg-gold-500 text-navy-900 font-serif font-bold text-xl w-12 h-12 rounded-full flex items-center justify-center shadow-md mx-4"
+        >
           VS
         </div>
         <div class="h-px w-16 bg-navy-300"></div>
@@ -129,11 +144,13 @@ const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
         <div class="p-6 space-y-4">
           <p class="text-sm text-navy-700 leading-relaxed">{nd.summary}</p>
 
-          {nd.absurdityIndex && (
-            <div>
-              <AbsurdityMeter score={nd.absurdityIndex} />
-            </div>
-          )}
+          {
+            nd.absurdityIndex && (
+              <div>
+                <AbsurdityMeter score={nd.absurdityIndex} />
+              </div>
+            )
+          }
 
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
@@ -146,7 +163,9 @@ const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
             </div>
             <div class="flex justify-between">
               <span class="font-sans font-semibold text-navy-600">Introduced</span>
-              <time class="text-navy-800" datetime={nd.dateIntroduced.toISOString()}>{formattedNotDate}</time>
+              <time class="text-navy-800" datetime={nd.dateIntroduced.toISOString()}
+                >{formattedNotDate}</time
+              >
             </div>
           </div>
 
@@ -161,7 +180,9 @@ const formattedNotDate = nd.dateIntroduced.toLocaleDateString('en-US', {
     </div>
 
     <!-- Footer navigation -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mt-12 pt-8 border-t border-cream-300">
+    <div
+      class="flex flex-col sm:flex-row items-center justify-center gap-6 mt-12 pt-8 border-t border-cream-300"
+    >
       <a href="/compare" class="text-navy-600 hover:text-gold-600 font-serif transition-colors">
         &larr; All Comparisons
       </a>

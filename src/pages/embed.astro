@@ -20,9 +20,7 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
       <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">
         Developer Resources
       </p>
-      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">
-        API & Embed Widget
-      </h1>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">API & Embed Widget</h1>
       <p class="text-navy-600 font-serif italic mt-3">
         Bring congressional absurdity to your own website
       </p>
@@ -35,8 +33,8 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
         <span class="text-gold-600">1.</span> Embed Widget
       </h2>
       <p class="text-navy-700 mb-6">
-        Add interactive bill cards to your website with a simple script tag. The widget automatically
-        fetches bill data and displays a styled card that matches your site.
+        Add interactive bill cards to your website with a simple script tag. The widget
+        automatically fetches bill data and displays a styled card that matches your site.
       </p>
 
       <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Basic Usage</h3>
@@ -44,7 +42,8 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
         Add this script tag where you want the bill card to appear:
       </p>
       <div class="bg-navy-900 rounded-lg p-4 mb-6 overflow-x-auto">
-        <pre class="text-gold-300 font-mono text-sm"><code>&lt;script
+        <pre
+          class="text-gold-300 font-mono text-sm"><code>&lt;script
   src="https://absurdityindex.org/embed.js"
   data-bill="{sampleRealBill?.id || 'real-hr-25'}"
 &gt;&lt;/script&gt;</code></pre>
@@ -82,9 +81,7 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
       </div>
 
       <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Live Preview</h3>
-      <p class="text-navy-600 text-sm mb-4">
-        Here's what the embed looks like with a real bill:
-      </p>
+      <p class="text-navy-600 text-sm mb-4">Here's what the embed looks like with a real bill:</p>
       <div class="flex flex-col lg:flex-row gap-6 mb-6">
         <div class="flex-1">
           <p class="text-xs font-mono text-navy-500 mb-2 uppercase tracking-wide">Light Theme</p>
@@ -95,21 +92,22 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
         <div class="flex-1">
           <p class="text-xs font-mono text-navy-500 mb-2 uppercase tracking-wide">Dark Theme</p>
           <div class="bg-navy-800 p-4 rounded">
-            <script src="/embed.js" data-bill={sampleRealBill?.id || 'real-hr-25'} data-theme="dark"></script>
+            <script src="/embed.js" data-bill={sampleRealBill?.id || 'real-hr-25'} data-theme="dark"
+            ></script>
           </div>
         </div>
       </div>
 
-      {sampleNotBill && (
-        <>
-          <p class="text-navy-600 text-sm mb-4">
-            And here's a satirical "not-bill":
-          </p>
-          <div class="bg-white p-4 rounded border border-cream-300 max-w-md">
-            <script src="/embed.js" data-bill={sampleNotBill.id}></script>
-          </div>
-        </>
-      )}
+      {
+        sampleNotBill && (
+          <>
+            <p class="text-navy-600 text-sm mb-4">And here's a satirical "not-bill":</p>
+            <div class="bg-white p-4 rounded border border-cream-300 max-w-md">
+              <script src="/embed.js" data-bill={sampleNotBill.id} />
+            </div>
+          </>
+        )
+      }
     </section>
 
     <Divider />
@@ -176,11 +174,10 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
       </div>
 
       <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Response Format</h3>
-      <p class="text-navy-600 text-sm mb-3">
-        Bill endpoints return data in this structure:
-      </p>
+      <p class="text-navy-600 text-sm mb-3">Bill endpoints return data in this structure:</p>
       <div class="bg-navy-900 rounded-lg p-4 overflow-x-auto mb-6">
-        <pre class="text-gold-300 font-mono text-sm"><code>{`{
+        <pre
+          class="text-gold-300 font-mono text-sm"><code>{`{
   "generated": "2025-01-15T12:00:00.000Z",
   "count": 42,
   "bills": [
@@ -203,9 +200,12 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
 }`}</code></pre>
       </div>
 
-      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Example: Fetch with JavaScript</h3>
+      <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">
+        Example: Fetch with JavaScript
+      </h3>
       <div class="bg-navy-900 rounded-lg p-4 overflow-x-auto mb-6">
-        <pre class="text-gold-300 font-mono text-sm"><code>{`fetch('https://absurdityindex.org/api/bills.json')
+        <pre
+          class="text-gold-300 font-mono text-sm"><code>{`fetch('https://absurdityindex.org/api/bills.json')
   .then(res => res.json())
   .then(data => {
     console.log(\`Found \${data.count} bills\`);
@@ -220,11 +220,10 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
       </div>
 
       <h3 class="font-serif text-lg text-navy-900 font-bold mb-3">Stats Response</h3>
-      <p class="text-navy-600 text-sm mb-3">
-        The stats endpoint provides aggregate data:
-      </p>
+      <p class="text-navy-600 text-sm mb-3">The stats endpoint provides aggregate data:</p>
       <div class="bg-navy-900 rounded-lg p-4 overflow-x-auto">
-        <pre class="text-gold-300 font-mono text-sm"><code>{`{
+        <pre
+          class="text-gold-300 font-mono text-sm"><code>{`{
   "generated": "2025-01-15T12:00:00.000Z",
   "totals": {
     "all": 42,

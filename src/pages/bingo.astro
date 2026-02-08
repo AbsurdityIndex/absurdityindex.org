@@ -6,70 +6,75 @@ import Icon from '../components/ui/Icon.astro';
 
 // Bingo squares (excluding free space - we'll always put that in the center)
 const bingoSquares = [
-  "Bill acronym spells a word",
-  "Unanimous vote on something meaningless",
-  "15+ word bill title",
+  'Bill acronym spells a word',
+  'Unanimous vote on something meaningless',
+  '15+ word bill title',
   'Someone says "the American people"',
-  "Recess announced",
-  "Filibuster threatened",
-  "Bipartisan on naming a post office",
-  "Committee hearing runs overtime",
+  'Recess announced',
+  'Filibuster threatened',
+  'Bipartisan on naming a post office',
+  'Committee hearing runs overtime',
   "Member reads from notes they clearly didn't write",
-  "Reference to the Founding Fathers",
+  'Reference to the Founding Fathers',
   "Appeal to children's futures",
-  "Mentions the Constitution without reading it",
-  "Dramatic pause before vote",
+  'Mentions the Constitution without reading it',
+  'Dramatic pause before vote',
   'Uses "unprecedented" incorrectly',
-  "Technical difficulties during virtual testimony",
-  "Someone yields their time",
+  'Technical difficulties during virtual testimony',
+  'Someone yields their time',
   'Invokes "common sense"',
-  "Charts that prove nothing",
-  "Awkward attempt at humor",
-  "Member clearly on wrong camera",
-  "Constituent letter that sounds suspiciously scripted",
-  "Bipartisan photo op",
-  "Bill renamed to be more patriotic",
-  "Expert testimony ignored",
-  "Deadline extended again",
-  "Hearing adjourned before anything decided",
-  "Member asks question unrelated to topic",
-  "Reference to Reagan (any context)",
-  "Vague promise of future legislation",
-  "Someone thanks colleagues for their service",
-  "Bill number contains symbolic digits",
-  "Amendment that contradicts the bill",
-  "Procedural motion to delay",
-  "Member arrives late, asks question already answered",
-  "Staff member does all the work",
+  'Charts that prove nothing',
+  'Awkward attempt at humor',
+  'Member clearly on wrong camera',
+  'Constituent letter that sounds suspiciously scripted',
+  'Bipartisan photo op',
+  'Bill renamed to be more patriotic',
+  'Expert testimony ignored',
+  'Deadline extended again',
+  'Hearing adjourned before anything decided',
+  'Member asks question unrelated to topic',
+  'Reference to Reagan (any context)',
+  'Vague promise of future legislation',
+  'Someone thanks colleagues for their service',
+  'Bill number contains symbolic digits',
+  'Amendment that contradicts the bill',
+  'Procedural motion to delay',
+  'Member arrives late, asks question already answered',
+  'Staff member does all the work',
   "Mention of 'working families'",
-  "Completely empty chamber",
-  "Someone speaks past their time",
-  "Budget figure rounded to nearest billion",
-  "Appeal to small business owners",
+  'Completely empty chamber',
+  'Someone speaks past their time',
+  'Budget figure rounded to nearest billion',
+  'Appeal to small business owners',
   "Reference to 'my good friend across the aisle'",
-  "Vague threats about the deficit",
-  "Roll call takes longer than debate",
-  "Someone cites a study without naming it",
-  "Bill passed without being read",
-  "Motion to table indefinitely",
+  'Vague threats about the deficit',
+  'Roll call takes longer than debate',
+  'Someone cites a study without naming it',
+  'Bill passed without being read',
+  'Motion to table indefinitely',
   "Member confused about which bill they're discussing",
-  "Viewer falls asleep watching congressional coverage",
+  'Viewer falls asleep watching congressional coverage',
 ];
 ---
 
-<BaseLayout title="Congressional Bingo" description="Play along at home! Print your bingo card and cross off squares as Congress does Congress things.">
+<BaseLayout
+  title="Congressional Bingo"
+  description="Play along at home! Print your bingo card and cross off squares as Congress does Congress things."
+>
   <main class="bg-parchment min-h-screen print:bg-white">
-
     <!-- Hero (hidden in print) -->
     <section class="bg-navy-900 py-12 sm:py-16 print:hidden">
       <div class="max-w-5xl mx-auto px-4 text-center">
         <OfficialSeal size="100" />
-        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-6 mb-2">A Civic Engagement Activity</p>
+        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-6 mb-2">
+          A Civic Engagement Activity
+        </p>
         <h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl text-gold-400 font-bold">
           Congressional Bingo
         </h1>
         <p class="mt-4 text-gold-300/80 font-sans text-lg max-w-2xl mx-auto">
-          The only bipartisan game in Washington. Watch any congressional coverage, tune into a hearing, or just follow along on social media.
+          The only bipartisan game in Washington. Watch any congressional coverage, tune into a
+          hearing, or just follow along on social media.
         </p>
         <p class="mt-2 text-navy-400 font-mono text-sm">
           {bingoSquares.length} possible squares | Endless entertainment value
@@ -78,7 +83,6 @@ const bingoSquares = [
     </section>
 
     <div class="max-w-4xl mx-auto px-4 py-10 sm:py-14 print:py-0 print:px-0 print:max-w-none">
-
       <!-- Print Header (only visible in print) -->
       <div class="hidden print:block text-center mb-6">
         <h1 class="font-serif text-3xl font-bold">Congressional Bingo</h1>
@@ -91,27 +95,47 @@ const bingoSquares = [
           id="generate-btn"
           class="px-6 py-3 bg-gold-500 text-navy-900 font-serif text-lg rounded hover:bg-gold-400 transition-colors font-bold flex items-center justify-center gap-2"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+              clip-rule="evenodd"></path>
           </svg>
           Generate New Card
         </button>
-	        <button
-	          id="print-btn"
-	          class="px-6 py-3 bg-navy-700 text-cream-100 font-serif text-lg rounded hover:bg-navy-600 transition-colors font-bold flex items-center justify-center gap-2"
-	        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"/>
+        <button
+          id="print-btn"
+          class="px-6 py-3 bg-navy-700 text-cream-100 font-serif text-lg rounded hover:bg-navy-600 transition-colors font-bold flex items-center justify-center gap-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z"
+              clip-rule="evenodd"></path>
           </svg>
           Print Card
         </button>
       </div>
 
       <!-- Bingo Card -->
-      <div class="bg-white rounded-lg border-4 border-navy-800 shadow-xl overflow-hidden print:shadow-none print:rounded-none print:border-2">
+      <div
+        class="bg-white rounded-lg border-4 border-navy-800 shadow-xl overflow-hidden print:shadow-none print:rounded-none print:border-2"
+      >
         <!-- Header -->
         <div class="bg-navy-800 text-gold-400 text-center py-3 print:py-2">
-          <h2 class="font-serif text-2xl sm:text-3xl font-bold tracking-wide print:text-xl">B I N G O</h2>
+          <h2 class="font-serif text-2xl sm:text-3xl font-bold tracking-wide print:text-xl">
+            B I N G O
+          </h2>
         </div>
 
         <!-- Grid -->
@@ -131,26 +155,51 @@ const bingoSquares = [
         </h2>
         <div class="space-y-4 text-navy-700 font-sans">
           <div class="flex gap-4">
-            <span class="shrink-0 w-8 h-8 bg-gold-500 text-navy-900 rounded-full flex items-center justify-center font-bold">1</span>
-            <p><strong>Generate a card</strong> by clicking the button above. Each card is randomly generated with 24 unique squares plus the free center space.</p>
+            <span
+              class="shrink-0 w-8 h-8 bg-gold-500 text-navy-900 rounded-full flex items-center justify-center font-bold"
+              >1</span
+            >
+            <p>
+              <strong>Generate a card</strong> by clicking the button above. Each card is randomly generated
+              with 24 unique squares plus the free center space.
+            </p>
           </div>
           <div class="flex gap-4">
-            <span class="shrink-0 w-8 h-8 bg-gold-500 text-navy-900 rounded-full flex items-center justify-center font-bold">2</span>
-            <p><strong>Watch any congressional proceeding</strong> — live floor coverage, committee hearings, press conferences, or just follow along on social media. It all counts.</p>
+            <span
+              class="shrink-0 w-8 h-8 bg-gold-500 text-navy-900 rounded-full flex items-center justify-center font-bold"
+              >2</span
+            >
+            <p>
+              <strong>Watch any congressional proceeding</strong> — live floor coverage, committee hearings,
+              press conferences, or just follow along on social media. It all counts.
+            </p>
           </div>
           <div class="flex gap-4">
-            <span class="shrink-0 w-8 h-8 bg-gold-500 text-navy-900 rounded-full flex items-center justify-center font-bold">3</span>
-            <p><strong>Mark your squares</strong> when you witness the described event. Click a square to toggle it, or print the card and use a good old-fashioned pen.</p>
+            <span
+              class="shrink-0 w-8 h-8 bg-gold-500 text-navy-900 rounded-full flex items-center justify-center font-bold"
+              >3</span
+            >
+            <p>
+              <strong>Mark your squares</strong> when you witness the described event. Click a square
+              to toggle it, or print the card and use a good old-fashioned pen.
+            </p>
           </div>
           <div class="flex gap-4">
-            <span class="shrink-0 w-8 h-8 bg-gold-500 text-navy-900 rounded-full flex items-center justify-center font-bold">4</span>
-            <p><strong>Get five in a row</strong> (horizontal, vertical, or diagonal) and shout "BINGO!" — or just sigh deeply, which is also an acceptable response.</p>
+            <span
+              class="shrink-0 w-8 h-8 bg-gold-500 text-navy-900 rounded-full flex items-center justify-center font-bold"
+              >4</span
+            >
+            <p>
+              <strong>Get five in a row</strong> (horizontal, vertical, or diagonal) and shout "BINGO!"
+              — or just sigh deeply, which is also an acceptable response.
+            </p>
           </div>
         </div>
 
         <div class="mt-6 p-4 bg-cream-200 rounded-lg border border-gold-300">
           <p class="font-serif text-sm text-navy-700 italic text-center">
-            <strong>Pro tip:</strong> The center square is always free because, well, that's pretty much guaranteed before lunch.
+            <strong>Pro tip:</strong> The center square is always free because, well, that's pretty much
+            guaranteed before lunch.
           </p>
         </div>
       </section>
@@ -158,35 +207,48 @@ const bingoSquares = [
       <!-- Fun Rules (hidden in print) -->
       <section class="mt-6 bg-navy-800 rounded-lg p-6 sm:p-8 border border-navy-700 print:hidden">
         <h2 class="font-serif text-2xl text-gold-400 font-bold mb-4">House Rules</h2>
-          <ul class="space-y-3 text-gold-300/90 font-sans text-sm">
-            <li class="flex gap-3">
+        <ul class="space-y-3 text-gold-300/90 font-sans text-sm">
+          <li class="flex gap-3">
             <Icon name="star" size={16} class="text-gold-500 shrink-0 mt-0.5" />
-            <span><strong class="text-gold-400">Speed Round:</strong> Try to fill your card during a single committee hearing. Warning: may induce existential dread.</span>
-            </li>
-            <li class="flex gap-3">
+            <span
+              ><strong class="text-gold-400">Speed Round:</strong> Try to fill your card during a single
+              committee hearing. Warning: may induce existential dread.</span
+            >
+          </li>
+          <li class="flex gap-3">
             <Icon name="star" size={16} class="text-gold-500 shrink-0 mt-0.5" />
-            <span><strong class="text-gold-400">Multiplayer Mode:</strong> Generate multiple cards and race your friends. Loser has to read the full text of the next omnibus bill.</span>
-            </li>
-            <li class="flex gap-3">
+            <span
+              ><strong class="text-gold-400">Multiplayer Mode:</strong> Generate multiple cards and race
+              your friends. Loser has to read the full text of the next omnibus bill.</span
+            >
+          </li>
+          <li class="flex gap-3">
             <Icon name="star" size={16} class="text-gold-500 shrink-0 mt-0.5" />
-            <span><strong class="text-gold-400">Blackout Round:</strong> Fill every square. Estimated completion time: one filibuster.</span>
-            </li>
-            <li class="flex gap-3">
+            <span
+              ><strong class="text-gold-400">Blackout Round:</strong> Fill every square. Estimated completion
+              time: one filibuster.</span
+            >
+          </li>
+          <li class="flex gap-3">
             <Icon name="star" size={16} class="text-gold-500 shrink-0 mt-0.5" />
-            <span><strong class="text-gold-400">Drinking Game Variant:</strong> We legally cannot recommend this, but we also can't stop you.</span>
-            </li>
-          </ul>
-        </section>
+            <span
+              ><strong class="text-gold-400">Drinking Game Variant:</strong> We legally cannot recommend
+              this, but we also can't stop you.</span
+            >
+          </li>
+        </ul>
+      </section>
 
       <!-- Disclaimer -->
-      <div class="mt-6 bg-cream-200 border border-gold-300 rounded p-4 text-xs text-navy-600 leading-relaxed text-center print:hidden">
+      <div
+        class="mt-6 bg-cream-200 border border-gold-300 rounded p-4 text-xs text-navy-600 leading-relaxed text-center print:hidden"
+      >
         <p>
           <strong>Satire Notice:</strong> This game is satirical entertainment. No actual members of Congress
-          were consulted, though we're pretty sure they'd fill multiple cards daily if they played.
-          Side effects may include increased civic awareness and decreased faith in institutions.
+          were consulted, though we're pretty sure they'd fill multiple cards daily if they played. Side
+          effects may include increased civic awareness and decreased faith in institutions.
         </p>
       </div>
-
     </div>
   </main>
 
@@ -208,61 +270,62 @@ const bingoSquares = [
       return shuffled;
     }
 
-	    function renderCard(squares) {
-	      const grid = document.getElementById('bingo-grid');
-	      if (!grid) return;
+    function renderCard(squares) {
+      const grid = document.getElementById('bingo-grid');
+      if (!grid) return;
 
-	      grid.replaceChildren();
+      grid.replaceChildren();
 
-	      squares.forEach((text, i) => {
-	        const isFree = text === 'FREE';
-	        const baseClasses = 'aspect-square flex items-center justify-center p-2 text-center cursor-pointer transition-all duration-200 select-none';
-	        const freeClasses = isFree
-	          ? 'bg-gold-500 text-navy-900'
-	          : 'bg-cream-100 text-navy-800 hover:bg-gold-100';
+      squares.forEach((text, i) => {
+        const isFree = text === 'FREE';
+        const baseClasses =
+          'aspect-square flex items-center justify-center p-2 text-center cursor-pointer transition-all duration-200 select-none';
+        const freeClasses = isFree
+          ? 'bg-gold-500 text-navy-900'
+          : 'bg-cream-100 text-navy-800 hover:bg-gold-100';
 
-	        const square = document.createElement('div');
-	        square.className = `${baseClasses} ${freeClasses}`;
-	        square.dataset.index = String(i);
-	        square.dataset.marked = isFree ? 'true' : 'false';
-	        square.dataset.free = isFree ? 'true' : 'false';
+        const square = document.createElement('div');
+        square.className = `${baseClasses} ${freeClasses}`;
+        square.dataset.index = String(i);
+        square.dataset.marked = isFree ? 'true' : 'false';
+        square.dataset.free = isFree ? 'true' : 'false';
 
-	        const textWrap = document.createElement('span');
-	        textWrap.className = 'text-xs sm:text-sm font-sans leading-tight print:text-[10px]';
+        const textWrap = document.createElement('span');
+        textWrap.className = 'text-xs sm:text-sm font-sans leading-tight print:text-[10px]';
 
-	        if (isFree) {
-	          const freeTitle = document.createElement('span');
-	          freeTitle.className = 'font-bold text-sm sm:text-base print:text-xs';
-	          freeTitle.textContent = 'FREE';
+        if (isFree) {
+          const freeTitle = document.createElement('span');
+          freeTitle.className = 'font-bold text-sm sm:text-base print:text-xs';
+          freeTitle.textContent = 'FREE';
 
-	          const br = document.createElement('br');
+          const br = document.createElement('br');
 
-	          const freeSub = document.createElement('span');
-	          freeSub.className = 'text-[10px] sm:text-xs print:text-[8px]';
-	          freeSub.textContent = 'Congress Does Nothing';
+          const freeSub = document.createElement('span');
+          freeSub.className = 'text-[10px] sm:text-xs print:text-[8px]';
+          freeSub.textContent = 'Congress Does Nothing';
 
-	          textWrap.append(freeTitle, br, freeSub);
-	        } else {
-	          textWrap.textContent = text;
-	          square.addEventListener('click', () => {
-	            toggleSquare(square);
-	          });
-	        }
+          textWrap.append(freeTitle, br, freeSub);
+        } else {
+          textWrap.textContent = text;
+          square.addEventListener('click', () => {
+            toggleSquare(square);
+          });
+        }
 
-	        square.appendChild(textWrap);
-	        grid.appendChild(square);
-	      });
-	    }
+        square.appendChild(textWrap);
+        grid.appendChild(square);
+      });
+    }
 
-	    // Toggle square marking
-	    function toggleSquare(el) {
-	      const isMarked = el.dataset.marked === 'true';
-	      const isFree = el.dataset.free === 'true';
+    // Toggle square marking
+    function toggleSquare(el) {
+      const isMarked = el.dataset.marked === 'true';
+      const isFree = el.dataset.free === 'true';
 
-	      if (isFree) return; // Free space is always marked
+      if (isFree) return; // Free space is always marked
 
-	      if (isMarked) {
-	        el.dataset.marked = 'false';
+      if (isMarked) {
+        el.dataset.marked = 'false';
         el.classList.remove('bg-gold-400', 'text-navy-900', 'ring-2', 'ring-gold-600');
         el.classList.add('bg-cream-100', 'text-navy-800', 'hover:bg-gold-100');
       } else {
@@ -271,13 +334,13 @@ const bingoSquares = [
         el.classList.add('bg-gold-400', 'text-navy-900', 'ring-2', 'ring-gold-600');
       }
 
-	      checkBingo();
-	    }
+      checkBingo();
+    }
 
     // Check for bingo
     function checkBingo() {
       const squares = document.querySelectorAll('#bingo-grid > div');
-      const marked = Array.from(squares).map(el => el.dataset.marked === 'true');
+      const marked = Array.from(squares).map((el) => el.dataset.marked === 'true');
 
       // Winning combinations (indices)
       const lines = [
@@ -298,7 +361,7 @@ const bingoSquares = [
         [4, 8, 12, 16, 20],
       ];
 
-      const hasBingo = lines.some(line => line.every(i => marked[i]));
+      const hasBingo = lines.some((line) => line.every((i) => marked[i]));
 
       if (hasBingo) {
         // Add subtle celebration
@@ -311,26 +374,26 @@ const bingoSquares = [
     }
 
     // Initialize
-	    document.addEventListener('DOMContentLoaded', () => {
-	      renderCard(generateCard());
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCard(generateCard());
 
-	      const btn = document.getElementById('generate-btn');
-	      if (btn) {
+      const btn = document.getElementById('generate-btn');
+      if (btn) {
         btn.addEventListener('click', () => {
           const grid = document.getElementById('bingo-grid');
           if (grid) grid.classList.remove('bingo-winner');
-	          renderCard(generateCard());
-	        });
-	      }
+          renderCard(generateCard());
+        });
+      }
 
-	      const printBtn = document.getElementById('print-btn');
-	      if (printBtn) {
-	        printBtn.addEventListener('click', () => {
-	          window.print();
-	        });
-	      }
-	    });
-	  </script>
+      const printBtn = document.getElementById('print-btn');
+      if (printBtn) {
+        printBtn.addEventListener('click', () => {
+          window.print();
+        });
+      }
+    });
+  </script>
 
   <style>
     /* Print-specific styles for bingo card */
@@ -343,7 +406,7 @@ const bingoSquares = [
         font-size: 9pt !important;
       }
 
-      #bingo-grid > div[data-marked="true"] {
+      #bingo-grid > div[data-marked='true'] {
         background: #f0e4ca !important;
       }
 
@@ -365,8 +428,13 @@ const bingoSquares = [
     }
 
     @keyframes winner-pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.02); }
+      0%,
+      100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.02);
+      }
     }
   </style>
 </BaseLayout>

@@ -16,7 +16,7 @@ test('toDateOnlyString normalizes timestamps to YYYY-MM-DD', () => {
 test('normalizeActionText strips tags, decodes nbsp, and collapses whitespace', () => {
   assert.equal(
     normalizeActionText(' Referred&nbsp;to <b>the</b>   Committee  '),
-    'Referred to the Committee'
+    'Referred to the Committee',
   );
 });
 
@@ -43,4 +43,3 @@ test('dedupeCongressApiActions normalizes actionDate to date-only and dedupes', 
   assert.equal(out[0].actionDate, '2026-02-02');
   assert.equal(out[0].text, 'Referred to the Committee');
 });
-

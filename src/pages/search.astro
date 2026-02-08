@@ -2,18 +2,21 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="Search" description="Search across all bills, not-bills, and legislation on the Absurdity Index.">
+<BaseLayout
+  title="Search"
+  description="Search across all bills, not-bills, and legislation on the Absurdity Index."
+>
   <link slot="head" href="/pagefind/pagefind-ui.css" rel="stylesheet" />
 
   <style slot="head">
     /* Override Pagefind UI styles to match site theme */
     :root {
       --pagefind-ui-scale: 1;
-      --pagefind-ui-primary: #0A1628;
-      --pagefind-ui-text: #0A1628;
-      --pagefind-ui-background: #F5F0E8;
-      --pagefind-ui-border: #C5A572;
-      --pagefind-ui-tag: #C5A572;
+      --pagefind-ui-primary: #0a1628;
+      --pagefind-ui-text: #0a1628;
+      --pagefind-ui-background: #f5f0e8;
+      --pagefind-ui-border: #c5a572;
+      --pagefind-ui-tag: #c5a572;
       --pagefind-ui-border-width: 2px;
       --pagefind-ui-border-radius: 6px;
       --pagefind-ui-font: 'Inter', sans-serif;
@@ -21,19 +24,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     /* Dark mode for Pagefind */
     :global(html.dark) {
-      --pagefind-ui-primary: #E8B85A;
-      --pagefind-ui-text: #F5F0E8;
-      --pagefind-ui-background: #0F1A2E;
-      --pagefind-ui-border: #C5A572;
-      --pagefind-ui-tag: #C5A572;
+      --pagefind-ui-primary: #e8b85a;
+      --pagefind-ui-text: #f5f0e8;
+      --pagefind-ui-background: #0f1a2e;
+      --pagefind-ui-border: #c5a572;
+      --pagefind-ui-tag: #c5a572;
     }
   </style>
 
   <div class="max-w-4xl mx-auto px-4 py-12">
     <div class="text-center mb-10">
-      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mb-2">Congressional Search</p>
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mb-2">
+        Congressional Search
+      </p>
       <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Search the Record</h1>
-      <p class="text-navy-600 font-serif italic mt-3">Find any bill faster than Congress finds consensus</p>
+      <p class="text-navy-600 font-serif italic mt-3">
+        Find any bill faster than Congress finds consensus
+      </p>
     </div>
     <div class="gold-rule"></div>
 

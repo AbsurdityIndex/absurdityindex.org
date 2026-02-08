@@ -20,8 +20,10 @@ const { cosponsors = [], cosponsorCount, maxItems = 12 } = Astro.props;
 
 // Handle mixed array of strings and objects
 const normalizedCosponsors: Cosponsor[] = cosponsors
-  .filter(c => c && typeof c !== 'string' || (typeof c === 'string' && !c.includes('cosponsor')))
-  .map(c => typeof c === 'string' ? { name: c } : c);
+  .filter(
+    (c) => (c && typeof c !== 'string') || (typeof c === 'string' && !c.includes('cosponsor')),
+  )
+  .map((c) => (typeof c === 'string' ? { name: c } : c));
 
 const total = cosponsorCount ?? normalizedCosponsors.length;
 
@@ -60,33 +62,37 @@ function formatParty(party?: string) {
     </span>
   </h4>
 
-  {displayCosponsors.length > 0 ? (
-    <div class="flex flex-wrap gap-2">
-      {displayCosponsors.map((cosponsor) => (
-        <div class="inline-flex items-center gap-1.5 px-2 py-1 bg-white rounded border border-gold-200 text-sm">
-          {cosponsor.party && (
-            <span class={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${getPartyColor(cosponsor.party)}`}>
-              {formatParty(cosponsor.party)}
-            </span>
-          )}
-          <span class="text-navy-800">{cosponsor.name}</span>
-          {cosponsor.state && (
-            <span class="text-xs text-navy-500">({cosponsor.state})</span>
-          )}
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p class="text-sm text-navy-500 italic">
-      {total} cosponsors, but detailed data is not available.
-    </p>
-  )}
-
-  {hasMore && (
-    <div class="mt-4 pt-4 border-t border-gold-200 text-center">
-      <p class="text-xs text-navy-500">
-        Showing {maxItems} of {normalizedCosponsors.length} cosponsors
+  {
+    displayCosponsors.length > 0 ? (
+      <div class="flex flex-wrap gap-2">
+        {displayCosponsors.map((cosponsor) => (
+          <div class="inline-flex items-center gap-1.5 px-2 py-1 bg-white rounded border border-gold-200 text-sm">
+            {cosponsor.party && (
+              <span
+                class={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${getPartyColor(cosponsor.party)}`}
+              >
+                {formatParty(cosponsor.party)}
+              </span>
+            )}
+            <span class="text-navy-800">{cosponsor.name}</span>
+            {cosponsor.state && <span class="text-xs text-navy-500">({cosponsor.state})</span>}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p class="text-sm text-navy-500 italic">
+        {total} cosponsors, but detailed data is not available.
       </p>
-    </div>
-  )}
+    )
+  }
+
+  {
+    hasMore && (
+      <div class="mt-4 pt-4 border-t border-gold-200 text-center">
+        <p class="text-xs text-navy-500">
+          Showing {maxItems} of {normalizedCosponsors.length} cosponsors
+        </p>
+      </div>
+    )
+  }
 </div>

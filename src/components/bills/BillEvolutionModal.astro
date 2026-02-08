@@ -78,7 +78,14 @@ interface Props {
   originChamber?: 'house' | 'senate'; // For resolving origin/receiving labels
 }
 
-const { billNumber, billTitle, stages, totalPork, congressDotGovUrl, originChamber = 'house' } = Astro.props;
+const {
+  billNumber,
+  billTitle,
+  stages,
+  totalPork,
+  congressDotGovUrl,
+  originChamber = 'house',
+} = Astro.props;
 
 // Resolve chamber-agnostic names to display labels
 const receivingChamber = originChamber === 'house' ? 'Senate' : 'House';
@@ -87,7 +94,7 @@ const originLabel = originChamber === 'house' ? 'House' : 'Senate';
 // Comprehensive stage label mapping for chamber-agnostic schema
 const stageLabels: Record<string, string> = {
   // Introduction
-  'introduced': 'Introduced',
+  introduced: 'Introduced',
 
   // Origin chamber stages
   'origin-committee': `${originLabel} Committee`,
@@ -116,12 +123,12 @@ const stageLabels: Record<string, string> = {
   'conference-senate-adopts': 'Senate Adopts Report',
 
   // Enrollment
-  'enrolled': 'Enrolled',
+  enrolled: 'Enrolled',
 
   // Presidential action
   'presented-to-president': 'Sent to President',
-  'signed': 'Signed',
-  'vetoed': 'Vetoed',
+  signed: 'Signed',
+  vetoed: 'Vetoed',
   'pocket-vetoed': 'Pocket Vetoed',
 
   // Veto override
@@ -135,23 +142,28 @@ const stageLabels: Record<string, string> = {
   'died-in-committee': 'Died in Committee',
   'died-on-floor': 'Died on Floor',
   'died-in-conference': 'Died in Conference',
-  'expired': 'Expired',
+  expired: 'Expired',
 
   // Legacy stage names (for backwards compatibility)
   'committee-markup': 'Committee Markup',
   'house-passed': 'Passed House',
   'senate-amended': 'Senate Amended',
-  'conference': 'Conference Committee',
-  'final': 'Signed into Law',
+  conference: 'Conference Committee',
+  final: 'Signed into Law',
 };
 
 // Fallback for unknown stages
 function getStageLabel(stage: string): string {
-  return stageLabels[stage] || stage.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return stageLabels[stage] || stage.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 // Pork Meter helper functions
@@ -206,9 +218,9 @@ function getTierIndex(amt: number): number {
 }
 
 // Stage pork data for JavaScript
-const stagePorkData = stages.map(s => ({
+const stagePorkData = stages.map((s) => ({
   cumulativePork: s.cumulativePork,
-  porkAddedThisStage: s.porkAddedThisStage
+  porkAddedThisStage: s.porkAddedThisStage,
 }));
 
 // Generate unique ID for this modal instance
@@ -252,12 +264,7 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
       </div>
       <p class="header-subtitle">{billNumber} — {billTitle}</p>
     </div>
-    <button
-      type="button"
-      id={`${modalId}-close`}
-      class="modal-close"
-      aria-label="Close modal"
-    >
+    <button type="button" id={`${modalId}-close`} class="modal-close" aria-label="Close modal">
       <Icon name="x" size={20} />
     </button>
   </header>
@@ -277,79 +284,86 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
 
     <!-- Center: Stage content -->
     <main class="stage-content">
-      {stages.map((stage, index) => (
-        <article
-          class:list={['stage-panel', { 'active': index === 0 }]}
-          id={`${modalId}-stage-${index}`}
-          data-stage-index={index}
-          aria-hidden={index !== 0}
-        >
-          {/* Stage header */}
-          <div class="stage-header">
-            <h3 class="stage-title">{getStageLabel(stage.stage)}</h3>
-            <time class="stage-date" datetime={stage.date.toISOString()}>
-              {formatDate(stage.date)}
-            </time>
-          </div>
-
-          {/* Paraphrased content */}
-          <div class="paraphrased-text">
-            <p>{stage.paraphrasedText}</p>
-          </div>
-
-          {/* Key changes */}
-          {stage.keyChanges.length > 0 && (
-            <div class="key-changes">
-              <h4 class="changes-title">
-                <Icon name="edit-3" size={14} />
-                Key Changes
-              </h4>
-              <ul class="changes-list">
-                {stage.keyChanges.map((change) => (
-                  <li>{change}</li>
-                ))}
-              </ul>
+      {
+        stages.map((stage, index) => (
+          <article
+            class:list={['stage-panel', { active: index === 0 }]}
+            id={`${modalId}-stage-${index}`}
+            data-stage-index={index}
+            aria-hidden={index !== 0}
+          >
+            {/* Stage header */}
+            <div class="stage-header">
+              <h3 class="stage-title">{getStageLabel(stage.stage)}</h3>
+              <time class="stage-date" datetime={stage.date.toISOString()}>
+                {formatDate(stage.date)}
+              </time>
             </div>
-          )}
 
-          {/* Pork added this stage */}
-          {stage.porkItems && stage.porkItems.length > 0 && (
-            <div class="pork-section">
-              <h4 class="pork-title">
-                <Icon name="pig" size={14} />
-                Pork Added This Stage
-                <span class="pork-count">{stage.porkItems.length} item{stage.porkItems.length !== 1 ? 's' : ''}</span>
-              </h4>
-              <div class="pork-list">
-                {stage.porkItems.map((item) => (
-                  <PorkBreakdownCard item={item} />
-                ))}
+            {/* Paraphrased content */}
+            <div class="paraphrased-text">
+              <p>{stage.paraphrasedText}</p>
+            </div>
+
+            {/* Key changes */}
+            {stage.keyChanges.length > 0 && (
+              <div class="key-changes">
+                <h4 class="changes-title">
+                  <Icon name="edit-3" size={14} />
+                  Key Changes
+                </h4>
+                <ul class="changes-list">
+                  {stage.keyChanges.map((change) => (
+                    <li>{change}</li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Amendments included */}
-          {stage.amendmentsIncluded && stage.amendmentsIncluded.length > 0 && (
-            <div class="amendments-section">
-              <h4 class="amendments-title">
-                <Icon name="file-text" size={14} />
-                Amendments Included
-              </h4>
-              <div class="amendments-list">
-                {stage.amendmentsIncluded.map((amend) => (
-                  <span class="amendment-badge">{amend}</span>
-                ))}
+            {/* Pork added this stage */}
+            {stage.porkItems && stage.porkItems.length > 0 && (
+              <div class="pork-section">
+                <h4 class="pork-title">
+                  <Icon name="pig" size={14} />
+                  Pork Added This Stage
+                  <span class="pork-count">
+                    {stage.porkItems.length} item{stage.porkItems.length !== 1 ? 's' : ''}
+                  </span>
+                </h4>
+                <div class="pork-list">
+                  {stage.porkItems.map((item) => (
+                    <PorkBreakdownCard item={item} />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </article>
-      ))}
+            )}
+
+            {/* Amendments included */}
+            {stage.amendmentsIncluded && stage.amendmentsIncluded.length > 0 && (
+              <div class="amendments-section">
+                <h4 class="amendments-title">
+                  <Icon name="file-text" size={14} />
+                  Amendments Included
+                </h4>
+                <div class="amendments-list">
+                  {stage.amendmentsIncluded.map((amend) => (
+                    <span class="amendment-badge">{amend}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </article>
+        ))
+      }
     </main>
 
     <!-- Right: Pork Meter (dynamic) -->
     <aside class="meter-sidebar">
       <div class="meter-container" id={`${modalId}-meter`}>
-        <div class={`pork-meter-modal tier-${getTierIndex(stages[0].cumulativePork)}`} id={`${modalId}-pork-meter`}>
+        <div
+          class={`pork-meter-modal tier-${getTierIndex(stages[0].cumulativePork)}`}
+          id={`${modalId}-pork-meter`}
+        >
           <!-- Header -->
           <div class="meter-modal-header">
             <div class="meter-modal-title">
@@ -358,7 +372,8 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
             </div>
             <div class="meter-modal-amount">
               <span class="pork-amount">{formatAmount(stages[0].cumulativePork)}</span>
-              <span class="pork-per-capita">{formatPerCapita(stages[0].cumulativePork)}/person</span>
+              <span class="pork-per-capita">{formatPerCapita(stages[0].cumulativePork)}/person</span
+              >
             </div>
           </div>
 
@@ -367,55 +382,96 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
             <svg viewBox="0 0 200 110" class="gauge-modal-svg">
               <defs>
                 <linearGradient id="modal-gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#22c55e" />
-                  <stop offset="25%" stop-color="#eab308" />
-                  <stop offset="50%" stop-color="#f97316" />
-                  <stop offset="75%" stop-color="#ef4444" />
-                  <stop offset="100%" stop-color="#991b1b" />
+                  <stop offset="0%" stop-color="#22c55e"></stop>
+                  <stop offset="25%" stop-color="#eab308"></stop>
+                  <stop offset="50%" stop-color="#f97316"></stop>
+                  <stop offset="75%" stop-color="#ef4444"></stop>
+                  <stop offset="100%" stop-color="#991b1b"></stop>
                 </linearGradient>
               </defs>
               <!-- Background arc -->
-              <path d="M 20 95 A 80 80 0 0 1 180 95" fill="none" stroke="var(--color-navy-200)" stroke-width="10" stroke-linecap="round" class="gauge-modal-track" />
+              <path
+                d="M 20 95 A 80 80 0 0 1 180 95"
+                fill="none"
+                stroke="var(--color-navy-200)"
+                stroke-width="10"
+                stroke-linecap="round"
+                class="gauge-modal-track"></path>
               <!-- Gradient arc -->
-              <path d="M 20 95 A 80 80 0 0 1 180 95" fill="none" stroke="url(#modal-gauge-gradient)" stroke-width="7" stroke-linecap="round" opacity="0.85" />
+              <path
+                d="M 20 95 A 80 80 0 0 1 180 95"
+                fill="none"
+                stroke="url(#modal-gauge-gradient)"
+                stroke-width="7"
+                stroke-linecap="round"
+                opacity="0.85"></path>
               <!-- Tick marks -->
-              {[0, 1, 2, 3, 4, 5, 6].map((i) => {
-                const angle = (-135 + (i * 45)) * (Math.PI / 180);
-                const x1 = 100 + 68 * Math.cos(angle);
-                const y1 = 95 + 68 * Math.sin(angle);
-                const x2 = 100 + 78 * Math.cos(angle);
-                const y2 = 95 + 78 * Math.sin(angle);
-                return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-navy-300)" stroke-width="1.5" stroke-linecap="round" />;
-              })}
+              {
+                [0, 1, 2, 3, 4, 5, 6].map((i) => {
+                  const angle = (-135 + i * 45) * (Math.PI / 180);
+                  const x1 = 100 + 68 * Math.cos(angle);
+                  const y1 = 95 + 68 * Math.sin(angle);
+                  const x2 = 100 + 78 * Math.cos(angle);
+                  const y2 = 95 + 78 * Math.sin(angle);
+                  return (
+                    <line
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      stroke="var(--color-navy-300)"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
+                  );
+                })
+              }
               <!-- Needle -->
-              <g class="gauge-modal-needle" style={`--rotation: ${-135 + (getFillPercentage(stages[0].cumulativePork) / 100 * 270)}deg`}>
-                <polygon points="100,25 97,93 100,98 103,93" class="needle-modal-body" />
-                <circle cx="100" cy="95" r="6" fill="var(--color-navy-800)" />
-                <circle cx="100" cy="95" r="3.5" class="needle-modal-cap" />
+              <g
+                class="gauge-modal-needle"
+                style={`--rotation: ${-135 + (getFillPercentage(stages[0].cumulativePork) / 100) * 270}deg`}
+              >
+                <polygon points="100,25 97,93 100,98 103,93" class="needle-modal-body"></polygon>
+                <circle cx="100" cy="95" r="6" fill="var(--color-navy-800)"></circle>
+                <circle cx="100" cy="95" r="3.5" class="needle-modal-cap"></circle>
               </g>
             </svg>
             <!-- Tier icon -->
-            <div class="gauge-modal-icon" id={`${modalId}-tier-icon`} data-tier={getTierIndex(stages[0].cumulativePork)}>
+            <div
+              class="gauge-modal-icon"
+              id={`${modalId}-tier-icon`}
+              data-tier={getTierIndex(stages[0].cumulativePork)}
+            >
               <span class="tier-icon" data-tier="0"><Icon name="sparkles" size={16} /></span>
               <span class="tier-icon" data-tier="1"><Icon name="bacon" size={16} /></span>
               <span class="tier-icon" data-tier="2"><Icon name="ham" size={16} /></span>
               <span class="tier-icon" data-tier="3"><Icon name="pig" size={16} /></span>
               <span class="tier-icon" data-tier="4"><Icon name="piggy-bank" size={16} /></span>
-              <span class="tier-icon tier-dual" data-tier="5"><Icon name="plane" size={14} /><Icon name="pig" size={12} /></span>
-              <span class="tier-icon tier-dual" data-tier="6"><Icon name="skull" size={14} /><Icon name="pig" size={12} /></span>
+              <span class="tier-icon tier-dual" data-tier="5"
+                ><Icon name="plane" size={14} /><Icon name="pig" size={12} /></span
+              >
+              <span class="tier-icon tier-dual" data-tier="6"
+                ><Icon name="skull" size={14} /><Icon name="pig" size={12} /></span
+              >
             </div>
           </div>
 
           <!-- Tier badge -->
           <div class="tier-modal-badge">
-            <span class="tier-modal-label">&ldquo;{getTierLabel(stages[0].cumulativePork)}&rdquo;</span>
+            <span class="tier-modal-label"
+              >&ldquo;{getTierLabel(stages[0].cumulativePork)}&rdquo;</span
+            >
           </div>
 
           <!-- Bacon strips -->
           <div class="bacon-modal-strips" aria-hidden="true">
-            {[...Array(7)].map((_, i) => (
-              <div class={`bacon-modal-strip ${i < Math.ceil(getFillPercentage(stages[0].cumulativePork) / 14.3) ? 'active' : ''}`} />
-            ))}
+            {
+              [...Array(7)].map((_, i) => (
+                <div
+                  class={`bacon-modal-strip ${i < Math.ceil(getFillPercentage(stages[0].cumulativePork) / 14.3) ? 'active' : ''}`}
+                />
+              ))
+            }
           </div>
         </div>
       </div>
@@ -451,27 +507,25 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
   <!-- Footer -->
   <footer class="modal-footer">
     <div class="footer-left">
-      <p class="satire-note">Spending figures are satirical estimates, not official cost analyses.</p>
-      {congressDotGovUrl && (
-        <a
-          href={congressDotGovUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="congress-link"
-        >
-          <Icon name="landmark" size={14} />
-          <span>Verify at Congress.gov</span>
-          <Icon name="external-link" size={12} />
-        </a>
-      )}
+      <p class="satire-note">
+        Spending figures are satirical estimates, not official cost analyses.
+      </p>
+      {
+        congressDotGovUrl && (
+          <a
+            href={congressDotGovUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="congress-link"
+          >
+            <Icon name="landmark" size={14} />
+            <span>Verify at Congress.gov</span>
+            <Icon name="external-link" size={12} />
+          </a>
+        )
+      }
     </div>
-    <button
-      type="button"
-      class="close-btn"
-      id={`${modalId}-close-footer`}
-    >
-      Close
-    </button>
+    <button type="button" class="close-btn" id={`${modalId}-close-footer`}> Close </button>
   </footer>
 </div>
 
@@ -673,8 +727,14 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .stage-header {
@@ -1002,13 +1062,13 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
   }
 
   /* Show icon matching parent's data-tier */
-  .gauge-modal-icon[data-tier="0"] .tier-icon[data-tier="0"],
-  .gauge-modal-icon[data-tier="1"] .tier-icon[data-tier="1"],
-  .gauge-modal-icon[data-tier="2"] .tier-icon[data-tier="2"],
-  .gauge-modal-icon[data-tier="3"] .tier-icon[data-tier="3"],
-  .gauge-modal-icon[data-tier="4"] .tier-icon[data-tier="4"],
-  .gauge-modal-icon[data-tier="5"] .tier-icon[data-tier="5"],
-  .gauge-modal-icon[data-tier="6"] .tier-icon[data-tier="6"] {
+  .gauge-modal-icon[data-tier='0'] .tier-icon[data-tier='0'],
+  .gauge-modal-icon[data-tier='1'] .tier-icon[data-tier='1'],
+  .gauge-modal-icon[data-tier='2'] .tier-icon[data-tier='2'],
+  .gauge-modal-icon[data-tier='3'] .tier-icon[data-tier='3'],
+  .gauge-modal-icon[data-tier='4'] .tier-icon[data-tier='4'],
+  .gauge-modal-icon[data-tier='5'] .tier-icon[data-tier='5'],
+  .gauge-modal-icon[data-tier='6'] .tier-icon[data-tier='6'] {
     display: inline-flex;
   }
 
@@ -1018,13 +1078,27 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
   }
 
   /* Tier icon colors - inherit from parent pork-meter-modal tier classes */
-  .pork-meter-modal.tier-0 .gauge-modal-icon { color: #16a34a; }
-  .pork-meter-modal.tier-1 .gauge-modal-icon { color: #65a30d; }
-  .pork-meter-modal.tier-2 .gauge-modal-icon { color: #ca8a04; }
-  .pork-meter-modal.tier-3 .gauge-modal-icon { color: #ea580c; }
-  .pork-meter-modal.tier-4 .gauge-modal-icon { color: #dc2626; }
-  .pork-meter-modal.tier-5 .gauge-modal-icon { color: #b91c1c; }
-  .pork-meter-modal.tier-6 .gauge-modal-icon { color: #991b1b; }
+  .pork-meter-modal.tier-0 .gauge-modal-icon {
+    color: #16a34a;
+  }
+  .pork-meter-modal.tier-1 .gauge-modal-icon {
+    color: #65a30d;
+  }
+  .pork-meter-modal.tier-2 .gauge-modal-icon {
+    color: #ca8a04;
+  }
+  .pork-meter-modal.tier-3 .gauge-modal-icon {
+    color: #ea580c;
+  }
+  .pork-meter-modal.tier-4 .gauge-modal-icon {
+    color: #dc2626;
+  }
+  .pork-meter-modal.tier-5 .gauge-modal-icon {
+    color: #b91c1c;
+  }
+  .pork-meter-modal.tier-6 .gauge-modal-icon {
+    color: #991b1b;
+  }
 
   .tier-modal-badge {
     margin-top: 0.5rem;
@@ -1064,56 +1138,114 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
   }
 
   /* Tier colors */
-  .pork-meter-modal .pork-icon { transition: color 0.3s ease; }
+  .pork-meter-modal .pork-icon {
+    transition: color 0.3s ease;
+  }
 
   .pork-meter-modal.tier-0 .pork-icon,
   .pork-meter-modal.tier-0 .pork-amount,
-  .pork-meter-modal.tier-0 .tier-modal-label { color: #16a34a; }
-  .pork-meter-modal.tier-0 .needle-modal-body { fill: #16a34a; }
-  .pork-meter-modal.tier-0 .needle-modal-cap { fill: #22c55e; }
-  .pork-meter-modal.tier-0 .bacon-modal-strip.active { background: #22c55e; }
+  .pork-meter-modal.tier-0 .tier-modal-label {
+    color: #16a34a;
+  }
+  .pork-meter-modal.tier-0 .needle-modal-body {
+    fill: #16a34a;
+  }
+  .pork-meter-modal.tier-0 .needle-modal-cap {
+    fill: #22c55e;
+  }
+  .pork-meter-modal.tier-0 .bacon-modal-strip.active {
+    background: #22c55e;
+  }
 
   .pork-meter-modal.tier-1 .pork-icon,
   .pork-meter-modal.tier-1 .pork-amount,
-  .pork-meter-modal.tier-1 .tier-modal-label { color: #65a30d; }
-  .pork-meter-modal.tier-1 .needle-modal-body { fill: #65a30d; }
-  .pork-meter-modal.tier-1 .needle-modal-cap { fill: #84cc16; }
-  .pork-meter-modal.tier-1 .bacon-modal-strip.active { background: #84cc16; }
+  .pork-meter-modal.tier-1 .tier-modal-label {
+    color: #65a30d;
+  }
+  .pork-meter-modal.tier-1 .needle-modal-body {
+    fill: #65a30d;
+  }
+  .pork-meter-modal.tier-1 .needle-modal-cap {
+    fill: #84cc16;
+  }
+  .pork-meter-modal.tier-1 .bacon-modal-strip.active {
+    background: #84cc16;
+  }
 
   .pork-meter-modal.tier-2 .pork-icon,
   .pork-meter-modal.tier-2 .pork-amount,
-  .pork-meter-modal.tier-2 .tier-modal-label { color: #ca8a04; }
-  .pork-meter-modal.tier-2 .needle-modal-body { fill: #ca8a04; }
-  .pork-meter-modal.tier-2 .needle-modal-cap { fill: #eab308; }
-  .pork-meter-modal.tier-2 .bacon-modal-strip.active { background: #eab308; }
+  .pork-meter-modal.tier-2 .tier-modal-label {
+    color: #ca8a04;
+  }
+  .pork-meter-modal.tier-2 .needle-modal-body {
+    fill: #ca8a04;
+  }
+  .pork-meter-modal.tier-2 .needle-modal-cap {
+    fill: #eab308;
+  }
+  .pork-meter-modal.tier-2 .bacon-modal-strip.active {
+    background: #eab308;
+  }
 
   .pork-meter-modal.tier-3 .pork-icon,
   .pork-meter-modal.tier-3 .pork-amount,
-  .pork-meter-modal.tier-3 .tier-modal-label { color: #ea580c; }
-  .pork-meter-modal.tier-3 .needle-modal-body { fill: #ea580c; }
-  .pork-meter-modal.tier-3 .needle-modal-cap { fill: #f97316; }
-  .pork-meter-modal.tier-3 .bacon-modal-strip.active { background: #f97316; }
+  .pork-meter-modal.tier-3 .tier-modal-label {
+    color: #ea580c;
+  }
+  .pork-meter-modal.tier-3 .needle-modal-body {
+    fill: #ea580c;
+  }
+  .pork-meter-modal.tier-3 .needle-modal-cap {
+    fill: #f97316;
+  }
+  .pork-meter-modal.tier-3 .bacon-modal-strip.active {
+    background: #f97316;
+  }
 
   .pork-meter-modal.tier-4 .pork-icon,
   .pork-meter-modal.tier-4 .pork-amount,
-  .pork-meter-modal.tier-4 .tier-modal-label { color: #dc2626; }
-  .pork-meter-modal.tier-4 .needle-modal-body { fill: #dc2626; }
-  .pork-meter-modal.tier-4 .needle-modal-cap { fill: #ef4444; }
-  .pork-meter-modal.tier-4 .bacon-modal-strip.active { background: #ef4444; }
+  .pork-meter-modal.tier-4 .tier-modal-label {
+    color: #dc2626;
+  }
+  .pork-meter-modal.tier-4 .needle-modal-body {
+    fill: #dc2626;
+  }
+  .pork-meter-modal.tier-4 .needle-modal-cap {
+    fill: #ef4444;
+  }
+  .pork-meter-modal.tier-4 .bacon-modal-strip.active {
+    background: #ef4444;
+  }
 
   .pork-meter-modal.tier-5 .pork-icon,
   .pork-meter-modal.tier-5 .pork-amount,
-  .pork-meter-modal.tier-5 .tier-modal-label { color: #b91c1c; }
-  .pork-meter-modal.tier-5 .needle-modal-body { fill: #b91c1c; }
-  .pork-meter-modal.tier-5 .needle-modal-cap { fill: #dc2626; }
-  .pork-meter-modal.tier-5 .bacon-modal-strip.active { background: #dc2626; }
+  .pork-meter-modal.tier-5 .tier-modal-label {
+    color: #b91c1c;
+  }
+  .pork-meter-modal.tier-5 .needle-modal-body {
+    fill: #b91c1c;
+  }
+  .pork-meter-modal.tier-5 .needle-modal-cap {
+    fill: #dc2626;
+  }
+  .pork-meter-modal.tier-5 .bacon-modal-strip.active {
+    background: #dc2626;
+  }
 
   .pork-meter-modal.tier-6 .pork-icon,
   .pork-meter-modal.tier-6 .pork-amount,
-  .pork-meter-modal.tier-6 .tier-modal-label { color: #991b1b; }
-  .pork-meter-modal.tier-6 .needle-modal-body { fill: #991b1b; }
-  .pork-meter-modal.tier-6 .needle-modal-cap { fill: #b91c1c; }
-  .pork-meter-modal.tier-6 .bacon-modal-strip.active { background: #b91c1c; }
+  .pork-meter-modal.tier-6 .tier-modal-label {
+    color: #991b1b;
+  }
+  .pork-meter-modal.tier-6 .needle-modal-body {
+    fill: #991b1b;
+  }
+  .pork-meter-modal.tier-6 .needle-modal-cap {
+    fill: #b91c1c;
+  }
+  .pork-meter-modal.tier-6 .bacon-modal-strip.active {
+    background: #b91c1c;
+  }
 
   :global(html.dark) .pork-meter-modal {
     background: linear-gradient(180deg, var(--color-cream-200) 0%, var(--color-cream-100) 100%);
@@ -1305,7 +1437,7 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
     const logAmt = Math.log10(Math.max(amt, 1));
     const logMax = Math.log10(1_500_000_000_000);
     const percent = Math.min(1, logAmt / logMax);
-    return -135 + (percent * 270);
+    return -135 + percent * 270;
   }
 
   function updatePorkMeter(stageIndex) {
@@ -1335,9 +1467,9 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
     const tierIconContainer = document.getElementById(`${modalId}-tier-icon`);
     if (tierIconContainer) tierIconContainer.setAttribute('data-tier', tierIdx);
 
-	    // Update tier label
-	    const labelEl = porkMeter.querySelector('.tier-modal-label');
-	    if (labelEl) labelEl.textContent = `"${tier.label}"`;
+    // Update tier label
+    const labelEl = porkMeter.querySelector('.tier-modal-label');
+    if (labelEl) labelEl.textContent = `"${tier.label}"`;
 
     // Update bacon strips
     const baconStrips = porkMeter.querySelectorAll('.bacon-modal-strip');

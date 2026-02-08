@@ -63,24 +63,27 @@ export async function GET({ request }) {
   const hasMore = safeOffset + paginatedData.length < total;
 
   // Calculate some fun stats
-  const realCount = data.filter(b => b.billType === 'real').length;
-  const avgAbsurdity = data.filter(b => b.absurdityIndex).reduce((sum, b) => sum + b.absurdityIndex, 0) / realCount || 0;
+  const realCount = data.filter((b) => b.billType === 'real').length;
+  const avgAbsurdity =
+    data.filter((b) => b.absurdityIndex).reduce((sum, b) => sum + b.absurdityIndex, 0) /
+      realCount || 0;
 
   const quips = [
-    "Fresh from the congressional sausage factory.",
-    "Warning: May contain traces of democracy.",
+    'Fresh from the congressional sausage factory.',
+    'Warning: May contain traces of democracy.',
     "Legislation so fresh, even Congress hasn't read it.",
-    "Now with 50% more acronyms!",
-    "Handcrafted artisanal bills, aged in committee.",
+    'Now with 50% more acronyms!',
+    'Handcrafted artisanal bills, aged in committee.',
   ];
 
   return new Response(
     JSON.stringify(
       {
         _message: quips[Math.floor(Math.random() * quips.length)],
-        _disclaimer: "Absurdity scores reflect editorial opinion, not legal analysis. We're comedians, not lawyers.",
+        _disclaimer:
+          "Absurdity scores reflect editorial opinion, not legal analysis. We're comedians, not lawyers.",
         generated: new Date().toISOString(),
-        generatedBy: "The Absurdity Index Research Service",
+        generatedBy: 'The Absurdity Index Research Service',
         count: paginatedData.length,
         total,
         offset: safeOffset,
@@ -96,17 +99,20 @@ export async function GET({ request }) {
           real: realCount,
           satirical: total - realCount,
           averageAbsurdity: Math.round(avgAbsurdity * 10) / 10,
-          _verdict: avgAbsurdity >= 6 ? "Congress is Congressing hard today." : "Surprisingly mild. Give it time.",
+          _verdict:
+            avgAbsurdity >= 6
+              ? 'Congress is Congressing hard today.'
+              : 'Surprisingly mild. Give it time.',
         },
         bills: paginatedData,
         _footer: {
           rateLimit: "Please don't DDOS us. We're a satire site, not the actual government.",
-          contact: "Questions? File a Freedom of Information Request (just kidding, email us).",
-          sponsoredBy: "Big Satire™",
+          contact: 'Questions? File a Freedom of Information Request (just kidding, email us).',
+          sponsoredBy: 'Big Satire™',
         },
       },
       null,
-      2
+      2,
     ),
     {
       headers: {
@@ -115,6 +121,6 @@ export async function GET({ request }) {
         'X-Powered-By': 'Disillusionment',
         'X-Congress-Status': 'Probably on recess',
       },
-    }
+    },
   );
 }

@@ -31,7 +31,7 @@ const originLabel = originChamber === 'house' ? 'House' : 'Senate';
 // Comprehensive stage label mapping for the new chamber-agnostic schema
 const stageLabels: Record<string, { label: string; icon: string }> = {
   // Introduction
-  'introduced': { label: 'Introduced', icon: 'file-plus' },
+  introduced: { label: 'Introduced', icon: 'file-plus' },
 
   // Origin chamber stages
   'origin-committee': { label: `${originLabel} Committee`, icon: 'users' },
@@ -60,12 +60,12 @@ const stageLabels: Record<string, { label: string; icon: string }> = {
   'conference-senate-adopts': { label: 'Senate Adopts Report', icon: 'columns' },
 
   // Enrollment
-  'enrolled': { label: 'Enrolled', icon: 'scroll' },
+  enrolled: { label: 'Enrolled', icon: 'scroll' },
 
   // Presidential action
   'presented-to-president': { label: 'Sent to President', icon: 'send' },
-  'signed': { label: 'Signed', icon: 'pen-tool' },
-  'vetoed': { label: 'Vetoed', icon: 'x-circle' },
+  signed: { label: 'Signed', icon: 'pen-tool' },
+  vetoed: { label: 'Vetoed', icon: 'x-circle' },
   'pocket-vetoed': { label: 'Pocket Vetoed', icon: 'clock' },
 
   // Veto override
@@ -79,16 +79,26 @@ const stageLabels: Record<string, { label: string; icon: string }> = {
   'died-in-committee': { label: 'Died in Committee', icon: 'archive' },
   'died-on-floor': { label: 'Died on Floor', icon: 'x-circle' },
   'died-in-conference': { label: 'Died in Conference', icon: 'x-circle' },
-  'expired': { label: 'Expired', icon: 'clock' },
+  expired: { label: 'Expired', icon: 'clock' },
 };
 
 // Fallback for unknown stages
 function getStageConfig(stage: string): { label: string; icon: string } {
-  return stageLabels[stage] || { label: stage.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), icon: 'circle' };
+  return (
+    stageLabels[stage] || {
+      label: stage.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      icon: 'circle',
+    }
+  );
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit', timeZone: 'UTC' });
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: '2-digit',
+    timeZone: 'UTC',
+  });
 }
 
 function formatPorkDelta(amount: number): string {
@@ -105,65 +115,59 @@ function formatPorkDelta(amount: number): string {
 
 <nav class="evolution-timeline" aria-label="Bill evolution stages">
   <ol class="timeline-list">
-    {stages.map((stage, index) => {
-      const config = getStageConfig(stage.stage);
-      const isActive = index === currentStageIndex;
-      const isPast = index < currentStageIndex;
-      const isFuture = index > currentStageIndex;
-      const porkDelta = formatPorkDelta(stage.porkAddedThisStage);
+    {
+      stages.map((stage, index) => {
+        const config = getStageConfig(stage.stage);
+        const isActive = index === currentStageIndex;
+        const isPast = index < currentStageIndex;
+        const isFuture = index > currentStageIndex;
+        const porkDelta = formatPorkDelta(stage.porkAddedThisStage);
 
-      return (
-        <li class="timeline-item" data-index={index}>
-          <button
-            type="button"
-            class:list={[
-              'timeline-node',
-              { 'active': isActive, 'past': isPast, 'future': isFuture }
-            ]}
-            data-stage-index={index}
-            aria-current={isActive ? 'step' : undefined}
-            aria-label={`${config.label} - ${formatDate(stage.date)}${porkDelta ? ` (${porkDelta} pork)` : ''}`}
-          >
-            {/* Connector line */}
-            {index < stages.length - 1 && (
-              <div class:list={[
-                'connector',
-                { 'connector-filled': isPast || isActive }
-              ]} />
-            )}
-
-            {/* Node circle */}
-            <div class:list={[
-              'node-circle',
-              { 'node-active': isActive, 'node-past': isPast, 'node-future': isFuture }
-            ]}>
-              <Icon name={config.icon} size={14} />
-            </div>
-
-            {/* Content */}
-            <div class="node-content">
-              <span class:list={[
-                'node-label',
-                { 'label-active': isActive }
-              ]}>
-                {config.label}
-              </span>
-              <time class="node-date" datetime={stage.date.toISOString()}>
-                {formatDate(stage.date)}
-              </time>
-              {porkDelta && (
-                <span class:list={[
-                  'pork-delta',
-                  { 'delta-positive': stage.porkAddedThisStage > 0 }
-                ]}>
-                  {porkDelta}
-                </span>
+        return (
+          <li class="timeline-item" data-index={index}>
+            <button
+              type="button"
+              class:list={['timeline-node', { active: isActive, past: isPast, future: isFuture }]}
+              data-stage-index={index}
+              aria-current={isActive ? 'step' : undefined}
+              aria-label={`${config.label} - ${formatDate(stage.date)}${porkDelta ? ` (${porkDelta} pork)` : ''}`}
+            >
+              {/* Connector line */}
+              {index < stages.length - 1 && (
+                <div class:list={['connector', { 'connector-filled': isPast || isActive }]} />
               )}
-            </div>
-          </button>
-        </li>
-      );
-    })}
+
+              {/* Node circle */}
+              <div
+                class:list={[
+                  'node-circle',
+                  { 'node-active': isActive, 'node-past': isPast, 'node-future': isFuture },
+                ]}
+              >
+                <Icon name={config.icon} size={14} />
+              </div>
+
+              {/* Content */}
+              <div class="node-content">
+                <span class:list={['node-label', { 'label-active': isActive }]}>
+                  {config.label}
+                </span>
+                <time class="node-date" datetime={stage.date.toISOString()}>
+                  {formatDate(stage.date)}
+                </time>
+                {porkDelta && (
+                  <span
+                    class:list={['pork-delta', { 'delta-positive': stage.porkAddedThisStage > 0 }]}
+                  >
+                    {porkDelta}
+                  </span>
+                )}
+              </div>
+            </button>
+          </li>
+        );
+      })
+    }
   </ol>
 </nav>
 

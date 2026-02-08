@@ -132,7 +132,12 @@
 
       if (bill.billType !== 'real') {
         var typeBadge = document.createElement('span');
-        var typeLabel = bill.billType === 'sensible' ? 'Sensible' : bill.billType === 'absurd' ? 'Absurd' : 'Satirical';
+        var typeLabel =
+          bill.billType === 'sensible'
+            ? 'Sensible'
+            : bill.billType === 'absurd'
+              ? 'Absurd'
+              : 'Satirical';
         typeBadge.textContent = typeLabel;
         typeBadge.style.background = bill.billType === 'sensible' ? '#228B4A' : '#A52020';
         typeBadge.style.color = 'white';

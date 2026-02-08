@@ -20,8 +20,8 @@ if (!actions || actions.length === 0) {
 }
 
 // Sort by date descending (most recent first)
-const sortedActions = [...actions].sort((a, b) =>
-  new Date(b.date).getTime() - new Date(a.date).getTime()
+const sortedActions = [...actions].sort(
+  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
 );
 
 const displayActions = sortedActions.slice(0, maxItems);
@@ -41,7 +41,8 @@ function getChamberLabel(chamber?: string) {
 
 function getActionIcon(text: string) {
   const t = text.toLowerCase();
-  if (t.includes('signed') || t.includes('became law') || t.includes('enacted')) return 'check-circle';
+  if (t.includes('signed') || t.includes('became law') || t.includes('enacted'))
+    return 'check-circle';
   if (t.includes('vetoed') || t.includes('failed') || t.includes('died')) return 'x-circle';
   if (t.includes('passed') || t.includes('agreed to')) return 'vote';
   if (t.includes('referred') || t.includes('committee')) return 'building';
@@ -54,7 +55,13 @@ function getActionIcon(text: string) {
 
 function getActionIconColor(text: string) {
   const t = text.toLowerCase();
-  if (t.includes('signed') || t.includes('became law') || t.includes('enacted') || t.includes('passed')) return 'text-green-600';
+  if (
+    t.includes('signed') ||
+    t.includes('became law') ||
+    t.includes('enacted') ||
+    t.includes('passed')
+  )
+    return 'text-green-600';
   if (t.includes('vetoed') || t.includes('failed') || t.includes('died')) return 'text-red-600';
   return 'text-navy-500';
 }
@@ -70,43 +77,56 @@ function getActionIconColor(text: string) {
   </h4>
 
   <div class="space-y-3">
-    {displayActions.map((action, i) => (
-      <div class="flex gap-3 group">
-        {/* Timeline connector */}
-        <div class="flex flex-col items-center">
-          <div class={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${i === 0 ? 'bg-gold-200' : 'bg-cream-200'}`}>
-            <Icon name={getActionIcon(action.text)} size={12} class={getActionIconColor(action.text)} />
+    {
+      displayActions.map((action, i) => (
+        <div class="flex gap-3 group">
+          {/* Timeline connector */}
+          <div class="flex flex-col items-center">
+            <div
+              class={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${i === 0 ? 'bg-gold-200' : 'bg-cream-200'}`}
+            >
+              <Icon
+                name={getActionIcon(action.text)}
+                size={12}
+                class={getActionIconColor(action.text)}
+              />
+            </div>
+            {i < displayActions.length - 1 && <div class="w-0.5 flex-1 bg-gold-200 mt-1" />}
           </div>
-          {i < displayActions.length - 1 && (
-            <div class="w-0.5 flex-1 bg-gold-200 mt-1"></div>
-          )}
-        </div>
 
-        {/* Action content */}
-        <div class="flex-1 pb-3 min-w-0">
-          <div class="flex items-center gap-2 mb-1">
-            <time class="text-xs font-mono text-navy-500">
-              {new Date(action.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
-            </time>
-            {action.chamber && (
-              <span class={`text-xs px-1.5 py-0.5 rounded border ${getChamberColor(action.chamber)}`}>
-                {getChamberLabel(action.chamber)}
-              </span>
-            )}
+          {/* Action content */}
+          <div class="flex-1 pb-3 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <time class="text-xs font-mono text-navy-500">
+                {new Date(action.date).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  timeZone: 'UTC',
+                })}
+              </time>
+              {action.chamber && (
+                <span
+                  class={`text-xs px-1.5 py-0.5 rounded border ${getChamberColor(action.chamber)}`}
+                >
+                  {getChamberLabel(action.chamber)}
+                </span>
+              )}
+            </div>
+            <p class="text-sm text-navy-700 leading-snug">{action.text}</p>
           </div>
-          <p class="text-sm text-navy-700 leading-snug">
-            {action.text}
-          </p>
         </div>
-      </div>
-    ))}
+      ))
+    }
   </div>
 
-  {hasMore && (
-    <div class="mt-4 pt-4 border-t border-gold-200 text-center">
-      <p class="text-xs text-navy-500">
-        Showing {maxItems} of {actions.length} actions
-      </p>
-    </div>
-  )}
+  {
+    hasMore && (
+      <div class="mt-4 pt-4 border-t border-gold-200 text-center">
+        <p class="text-xs text-navy-500">
+          Showing {maxItems} of {actions.length} actions
+        </p>
+      </div>
+    )
+  }
 </div>

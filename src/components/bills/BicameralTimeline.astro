@@ -39,7 +39,12 @@ const progress = billType ? analyzeChamberProgress(actions, billType) : null;
 // Format the introduction date
 const formattedDate =
   dateIntroduced instanceof Date
-    ? dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+    ? dateIntroduced.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })
     : String(dateIntroduced);
 
 // Determine stages based on bill type
@@ -109,8 +114,7 @@ function getStages(): Stage[] {
       id: 'receiving-committee',
       label: 'Committee',
       chamber: 'receiving',
-      completed:
-        progress?.receivingPhase === 'floor' || progress?.receivingPhase === 'passed',
+      completed: progress?.receivingPhase === 'floor' || progress?.receivingPhase === 'passed',
       current: progress?.receivingPhase === 'committee',
     });
 
@@ -221,12 +225,12 @@ const progressPercent =
       <Icon name={originChamber === 'house' ? 'landmark' : 'columns'} size={10} />
       {formatChamberName(originChamber)} Origin
     </span>
-    {isBicameral && needsPresident && (
-      <span class="text-xs text-navy-400">→ Both Chambers → President</span>
-    )}
-    {isBicameral && !needsPresident && (
-      <span class="text-xs text-navy-400">→ Both Chambers</span>
-    )}
+    {
+      isBicameral && needsPresident && (
+        <span class="text-xs text-navy-400">→ Both Chambers → President</span>
+      )
+    }
+    {isBicameral && !needsPresident && <span class="text-xs text-navy-400">→ Both Chambers</span>}
   </div>
 
   <!-- Desktop dual-track timeline -->
@@ -254,155 +258,12 @@ const progressPercent =
         </text>
 
         <!-- Origin stages -->
-        {originStages.map((stage, i) => {
-          const cx = 80 + i * 100;
-          const cy = 50;
-          const color = getStageColor(stage);
-          const isLast = i === originStages.length - 1;
-
-          return (
-            <g>
-              {/* Connection line */}
-              {!isLast && (
-                <line
-                  x1={cx + 14}
-                  y1={cy}
-                  x2={cx + 86}
-                  y2={cy}
-                  stroke={stage.completed ? COLORS.completed.bg : '#E0D8C8'}
-                  stroke-width="2"
-                  stroke-linecap="round"
-                />
-              )}
-
-              {/* Pulse for current */}
-              {stage.current && (
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r="18"
-                  fill={color.bg}
-                  opacity="0.25"
-                  class="animate-pulse-ring"
-                />
-              )}
-
-              {/* Main circle */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={stage.current ? 14 : stage.completed || stage.failed ? 12 : 10}
-                fill={color.bg}
-                stroke={stage.current ? color.bg : 'transparent'}
-                stroke-width="2"
-              />
-
-              {/* Icon/checkmark */}
-              {stage.completed && (
-                <path
-                  d={`M${cx - 5} ${cy} L${cx - 1} ${cy + 4} L${cx + 6} ${cy - 4}`}
-                  stroke="white"
-                  stroke-width="2"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              )}
-              {stage.failed && (
-                <g>
-                  <line
-                    x1={cx - 4}
-                    y1={cy - 4}
-                    x2={cx + 4}
-                    y2={cy + 4}
-                    stroke="white"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                  <line
-                    x1={cx + 4}
-                    y1={cy - 4}
-                    x2={cx - 4}
-                    y2={cy + 4}
-                    stroke="white"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </g>
-              )}
-              {!stage.completed && !stage.failed && (
-                <text
-                  x={cx}
-                  y={cy + 4}
-                  text-anchor="middle"
-                  fill={stage.current ? 'white' : '#8899AA'}
-                  font-size={stage.current ? '11' : '9'}
-                  font-family="var(--font-mono)"
-                  font-weight="600"
-                >
-                  {i + 1}
-                </text>
-              )}
-
-              {/* Label */}
-              <text
-                x={cx}
-                y={cy + 28}
-                text-anchor="middle"
-                fill={stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#667788'}
-                font-size="9"
-                font-family="var(--font-sans)"
-                font-weight={stage.current ? '600' : '400'}
-              >
-                {stage.label}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-
-      {/* Connection between chambers */}
-      {isBicameral && originStages.length > 0 && receivingStages.length > 0 && (
-        <g class="chamber-connector">
-          <path
-            d={`M${80 + (originStages.length - 1) * 100 + 14} 50
-                Q${80 + (originStages.length - 1) * 100 + 50} 50
-                  ${80 + (originStages.length - 1) * 100 + 50} 90
-                Q${80 + (originStages.length - 1) * 100 + 50} 130
-                  ${80} 130`}
-            stroke={progress?.originPhase === 'passed' ? COLORS.completed.bg : '#E0D8C8'}
-            stroke-width="2"
-            fill="none"
-            stroke-dasharray={progress?.originPhase === 'passed' ? '0' : '4 4'}
-          />
-          <polygon
-            points={`${80 - 6},126 ${80},130 ${80 - 6},134`}
-            fill={progress?.originPhase === 'passed' ? COLORS.completed.bg : '#E0D8C8'}
-          />
-        </g>
-      )}
-
-      {/* Receiving chamber track */}
-      {isBicameral && (
-        <g class="receiving-track">
-          <!-- Track label -->
-          <text
-            x="12"
-            y="135"
-            fill={receivingChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg}
-            font-size="10"
-            font-family="var(--font-sans)"
-            font-weight="700"
-          >
-            {formatChamberName(receivingChamber).toUpperCase()}
-          </text>
-
-          <!-- Receiving stages -->
-          {receivingStages.map((stage, i) => {
+        {
+          originStages.map((stage, i) => {
             const cx = 80 + i * 100;
-            const cy = 130;
+            const cy = 50;
             const color = getStageColor(stage);
-            const isLast = i === receivingStages.length - 1;
+            const isLast = i === originStages.length - 1;
 
             return (
               <g>
@@ -484,7 +345,7 @@ const progressPercent =
                     font-family="var(--font-mono)"
                     font-weight="600"
                   >
-                    {originStages.length + i + 1}
+                    {i + 1}
                   </text>
                 )}
 
@@ -493,7 +354,9 @@ const progressPercent =
                   x={cx}
                   y={cy + 28}
                   text-anchor="middle"
-                  fill={stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#667788'}
+                  fill={
+                    stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#667788'
+                  }
                   font-size="9"
                   font-family="var(--font-sans)"
                   font-weight={stage.current ? '600' : '400'}
@@ -502,123 +365,278 @@ const progressPercent =
                 </text>
               </g>
             );
-          })}
-        </g>
-      )}
+          })
+        }
+      </g>
+
+      {/* Connection between chambers */}
+      {
+        isBicameral && originStages.length > 0 && receivingStages.length > 0 && (
+          <g class="chamber-connector">
+            <path
+              d={`M${80 + (originStages.length - 1) * 100 + 14} 50
+                Q${80 + (originStages.length - 1) * 100 + 50} 50
+                  ${80 + (originStages.length - 1) * 100 + 50} 90
+                Q${80 + (originStages.length - 1) * 100 + 50} 130
+                  ${80} 130`}
+              stroke={progress?.originPhase === 'passed' ? COLORS.completed.bg : '#E0D8C8'}
+              stroke-width="2"
+              fill="none"
+              stroke-dasharray={progress?.originPhase === 'passed' ? '0' : '4 4'}
+            />
+            <polygon
+              points={`${80 - 6},126 ${80},130 ${80 - 6},134`}
+              fill={progress?.originPhase === 'passed' ? COLORS.completed.bg : '#E0D8C8'}
+            />
+          </g>
+        )
+      }
+
+      {/* Receiving chamber track */}
+      {
+        isBicameral && (
+          <g class="receiving-track">
+            {/* Track label */}
+            <text
+              x="12"
+              y="135"
+              fill={receivingChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg}
+              font-size="10"
+              font-family="var(--font-sans)"
+              font-weight="700"
+            >
+              {formatChamberName(receivingChamber).toUpperCase()}
+            </text>
+
+            {/* Receiving stages */}
+            {receivingStages.map((stage, i) => {
+              const cx = 80 + i * 100;
+              const cy = 130;
+              const color = getStageColor(stage);
+              const isLast = i === receivingStages.length - 1;
+
+              return (
+                <g>
+                  {/* Connection line */}
+                  {!isLast && (
+                    <line
+                      x1={cx + 14}
+                      y1={cy}
+                      x2={cx + 86}
+                      y2={cy}
+                      stroke={stage.completed ? COLORS.completed.bg : '#E0D8C8'}
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  )}
+
+                  {/* Pulse for current */}
+                  {stage.current && (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r="18"
+                      fill={color.bg}
+                      opacity="0.25"
+                      class="animate-pulse-ring"
+                    />
+                  )}
+
+                  {/* Main circle */}
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={stage.current ? 14 : stage.completed || stage.failed ? 12 : 10}
+                    fill={color.bg}
+                    stroke={stage.current ? color.bg : 'transparent'}
+                    stroke-width="2"
+                  />
+
+                  {/* Icon/checkmark */}
+                  {stage.completed && (
+                    <path
+                      d={`M${cx - 5} ${cy} L${cx - 1} ${cy + 4} L${cx + 6} ${cy - 4}`}
+                      stroke="white"
+                      stroke-width="2"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  )}
+                  {stage.failed && (
+                    <g>
+                      <line
+                        x1={cx - 4}
+                        y1={cy - 4}
+                        x2={cx + 4}
+                        y2={cy + 4}
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
+                      <line
+                        x1={cx + 4}
+                        y1={cy - 4}
+                        x2={cx - 4}
+                        y2={cy + 4}
+                        stroke="white"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
+                    </g>
+                  )}
+                  {!stage.completed && !stage.failed && (
+                    <text
+                      x={cx}
+                      y={cy + 4}
+                      text-anchor="middle"
+                      fill={stage.current ? 'white' : '#8899AA'}
+                      font-size={stage.current ? '11' : '9'}
+                      font-family="var(--font-mono)"
+                      font-weight="600"
+                    >
+                      {originStages.length + i + 1}
+                    </text>
+                  )}
+
+                  {/* Label */}
+                  <text
+                    x={cx}
+                    y={cy + 28}
+                    text-anchor="middle"
+                    fill={
+                      stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#667788'
+                    }
+                    font-size="9"
+                    font-family="var(--font-sans)"
+                    font-weight={stage.current ? '600' : '400'}
+                  >
+                    {stage.label}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        )
+      }
 
       {/* President stage */}
-      {needsPresident && presidentStages.length > 0 && (
-        <g class="president-track">
-          {presidentStages.map((stage) => {
-            const cx = isBicameral ? 80 + (receivingStages.length - 1) * 100 + 100 : 80 + originStages.length * 100;
-            const cy = isBicameral ? 130 : 50;
-            const color = getStageColor(stage);
+      {
+        needsPresident && presidentStages.length > 0 && (
+          <g class="president-track">
+            {presidentStages.map((stage) => {
+              const cx = isBicameral
+                ? 80 + (receivingStages.length - 1) * 100 + 100
+                : 80 + originStages.length * 100;
+              const cy = isBicameral ? 130 : 50;
+              const color = getStageColor(stage);
 
-            return (
-              <g>
-                {/* Connection line from last stage */}
-                {isBicameral && (
-                  <line
-                    x1={cx - 86}
-                    y1={cy}
-                    x2={cx - 20}
-                    y2={cy}
-                    stroke={progress?.enrolled ? COLORS.completed.bg : '#E0D8C8'}
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-dasharray={progress?.enrolled ? '0' : '4 4'}
-                  />
-                )}
+              return (
+                <g>
+                  {/* Connection line from last stage */}
+                  {isBicameral && (
+                    <line
+                      x1={cx - 86}
+                      y1={cy}
+                      x2={cx - 20}
+                      y2={cy}
+                      stroke={progress?.enrolled ? COLORS.completed.bg : '#E0D8C8'}
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-dasharray={progress?.enrolled ? '0' : '4 4'}
+                    />
+                  )}
 
-                {/* Glow for final outcome */}
-                {(stage.completed || stage.failed) && (
+                  {/* Glow for final outcome */}
+                  {(stage.completed || stage.failed) && (
+                    <circle cx={cx} cy={cy} r="26" fill={color.bg} opacity="0.15" />
+                  )}
+
+                  {/* Pulse for current/pending */}
+                  {stage.current && (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r="22"
+                      fill={COLORS.president.bg}
+                      opacity="0.25"
+                      class="animate-pulse-ring"
+                    />
+                  )}
+
+                  {/* Main circle - larger for president */}
                   <circle
                     cx={cx}
                     cy={cy}
-                    r="26"
+                    r={stage.completed || stage.failed ? 18 : stage.current ? 16 : 12}
                     fill={color.bg}
-                    opacity="0.15"
+                    stroke={stage.current ? COLORS.president.bg : 'transparent'}
+                    stroke-width="2"
                   />
-                )}
 
-                {/* Pulse for current/pending */}
-                {stage.current && (
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r="22"
-                    fill={COLORS.president.bg}
-                    opacity="0.25"
-                    class="animate-pulse-ring"
-                  />
-                )}
-
-                {/* Main circle - larger for president */}
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={stage.completed || stage.failed ? 18 : stage.current ? 16 : 12}
-                  fill={color.bg}
-                  stroke={stage.current ? COLORS.president.bg : 'transparent'}
-                  stroke-width="2"
-                />
-
-                {/* Icon */}
-                {stage.completed && (
-                  <path
-                    d={`M${cx - 7} ${cy} L${cx - 2} ${cy + 5} L${cx + 8} ${cy - 5}`}
-                    stroke="white"
-                    stroke-width="3"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                )}
-                {stage.failed && (
-                  <g>
-                    <line
-                      x1={cx - 6}
-                      y1={cy - 6}
-                      x2={cx + 6}
-                      y2={cy + 6}
+                  {/* Icon */}
+                  {stage.completed && (
+                    <path
+                      d={`M${cx - 7} ${cy} L${cx - 2} ${cy + 5} L${cx + 8} ${cy - 5}`}
                       stroke="white"
                       stroke-width="3"
+                      fill="none"
                       stroke-linecap="round"
+                      stroke-linejoin="round"
                     />
-                    <line
-                      x1={cx + 6}
-                      y1={cy - 6}
-                      x2={cx - 6}
-                      y2={cy + 6}
-                      stroke="white"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                    />
-                  </g>
-                )}
-                {!stage.completed && !stage.failed && (
-                  <foreignObject x={cx - 8} y={cy - 8} width="16" height="16">
-                    <Icon name="pen-tool" size={14} class="text-white" />
-                  </foreignObject>
-                )}
+                  )}
+                  {stage.failed && (
+                    <g>
+                      <line
+                        x1={cx - 6}
+                        y1={cy - 6}
+                        x2={cx + 6}
+                        y2={cy + 6}
+                        stroke="white"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                      />
+                      <line
+                        x1={cx + 6}
+                        y1={cy - 6}
+                        x2={cx - 6}
+                        y2={cy + 6}
+                        stroke="white"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                      />
+                    </g>
+                  )}
+                  {!stage.completed && !stage.failed && (
+                    <foreignObject x={cx - 8} y={cy - 8} width="16" height="16">
+                      <Icon name="pen-tool" size={14} class="text-white" />
+                    </foreignObject>
+                  )}
 
-                {/* Label */}
-                <text
-                  x={cx}
-                  y={cy + 34}
-                  text-anchor="middle"
-                  fill={stage.completed ? COLORS.completed.bg : stage.failed ? COLORS.failed.bg : COLORS.president.bg}
-                  font-size="10"
-                  font-family="var(--font-sans)"
-                  font-weight="600"
-                >
-                  {stage.label}
-                </text>
-              </g>
-            );
-          })}
-        </g>
-      )}
+                  {/* Label */}
+                  <text
+                    x={cx}
+                    y={cy + 34}
+                    text-anchor="middle"
+                    fill={
+                      stage.completed
+                        ? COLORS.completed.bg
+                        : stage.failed
+                          ? COLORS.failed.bg
+                          : COLORS.president.bg
+                    }
+                    font-size="10"
+                    font-family="var(--font-sans)"
+                    font-weight="600"
+                  >
+                    {stage.label}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        )
+      }
     </svg>
   </div>
 
@@ -632,75 +650,17 @@ const progressPercent =
           style={`background: ${originChamber === 'house' ? COLORS.house.light : COLORS.senate.light}; border-color: ${originChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg};`}
         >
           <Icon name={originChamber === 'house' ? 'landmark' : 'columns'} size={12} />
-          <span style={`color: ${originChamber === 'house' ? COLORS.house.text : COLORS.senate.text};`}>
+          <span
+            style={`color: ${originChamber === 'house' ? COLORS.house.text : COLORS.senate.text};`}
+          >
             {formatChamberName(originChamber)} (origin)
           </span>
         </div>
         <div class="chamber-stages">
-          {originStages.map((stage, i) => {
-            const color = getStageColor(stage);
-            const isLast = i === originStages.length - 1;
-
-            return (
-              <div class="stage-row">
-                <div class="stage-indicator-col">
-                  <div
-                    class:list={['stage-circle', stage.current && 'pulse-subtle']}
-                    style={`background: ${color.bg}; width: ${stage.current ? '1.75rem' : '1.25rem'}; height: ${stage.current ? '1.75rem' : '1.25rem'};`}
-                  >
-                    {stage.completed && (
-                      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                    {stage.failed && (
-                      <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    )}
-                    {!stage.completed && !stage.failed && (
-                      <span class="stage-num" style={`color: ${stage.current ? 'white' : '#6B7280'};`}>
-                        {i + 1}
-                      </span>
-                    )}
-                  </div>
-                  {!isLast && (
-                    <div
-                      class="stage-line"
-                      style={`background: ${stage.completed ? COLORS.completed.bg : '#E0D8C8'};`}
-                    />
-                  )}
-                </div>
-                <div class="stage-label-col">
-                  <span
-                    class:list={['stage-label', stage.current && 'font-semibold']}
-                    style={`color: ${stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#4B5563'};`}
-                  >
-                    {stage.label}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <!-- Receiving Chamber Section (if bicameral) -->
-      {isBicameral && receivingStages.length > 0 && (
-        <div class="chamber-section">
-          <div
-            class="chamber-header"
-            style={`background: ${receivingChamber === 'house' ? COLORS.house.light : COLORS.senate.light}; border-color: ${receivingChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg};`}
-          >
-            <Icon name={receivingChamber === 'house' ? 'landmark' : 'columns'} size={12} />
-            <span style={`color: ${receivingChamber === 'house' ? COLORS.house.text : COLORS.senate.text};`}>
-              {formatChamberName(receivingChamber)}
-            </span>
-          </div>
-          <div class="chamber-stages">
-            {receivingStages.map((stage, i) => {
+          {
+            originStages.map((stage, i) => {
               const color = getStageColor(stage);
-              const isLast = i === receivingStages.length - 1 && !needsPresident;
+              const isLast = i === originStages.length - 1;
 
               return (
                 <div class="stage-row">
@@ -710,18 +670,41 @@ const progressPercent =
                       style={`background: ${color.bg}; width: ${stage.current ? '1.75rem' : '1.25rem'}; height: ${stage.current ? '1.75rem' : '1.25rem'};`}
                     >
                       {stage.completed && (
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        <svg
+                          class="w-3 h-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="3"
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       )}
                       {stage.failed && (
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          class="w-3 h-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="3"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       )}
                       {!stage.completed && !stage.failed && (
-                        <span class="stage-num" style={`color: ${stage.current ? 'white' : '#6B7280'};`}>
-                          {originStages.length + i + 1}
+                        <span
+                          class="stage-num"
+                          style={`color: ${stage.current ? 'white' : '#6B7280'};`}
+                        >
+                          {i + 1}
                         </span>
                       )}
                     </div>
@@ -742,65 +725,176 @@ const progressPercent =
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })
+          }
         </div>
-      )}
+      </div>
 
-      <!-- President Section (if applicable) -->
-      {needsPresident && presidentStages.length > 0 && (
-        <div class="chamber-section">
-          <div
-            class="chamber-header"
-            style={`background: ${COLORS.president.light}; border-color: ${COLORS.president.bg};`}
-          >
-            <Icon name="pen-tool" size={12} />
-            <span style={`color: ${COLORS.president.text};`}>President</span>
-          </div>
-          <div class="chamber-stages">
-            {presidentStages.map((stage) => {
-              const color = getStageColor(stage);
+      <!-- Receiving Chamber Section (if bicameral) -->
+      {
+        isBicameral && receivingStages.length > 0 && (
+          <div class="chamber-section">
+            <div
+              class="chamber-header"
+              style={`background: ${receivingChamber === 'house' ? COLORS.house.light : COLORS.senate.light}; border-color: ${receivingChamber === 'house' ? COLORS.house.bg : COLORS.senate.bg};`}
+            >
+              <Icon name={receivingChamber === 'house' ? 'landmark' : 'columns'} size={12} />
+              <span
+                style={`color: ${receivingChamber === 'house' ? COLORS.house.text : COLORS.senate.text};`}
+              >
+                {formatChamberName(receivingChamber)}
+              </span>
+            </div>
+            <div class="chamber-stages">
+              {receivingStages.map((stage, i) => {
+                const color = getStageColor(stage);
+                const isLast = i === receivingStages.length - 1 && !needsPresident;
 
-              return (
-                <div class="stage-row">
-                  <div class="stage-indicator-col">
-                    <div
-                      class:list={[
-                        'stage-circle',
-                        stage.current && 'pulse-subtle',
-                        (stage.completed || stage.failed) && 'stage-circle-large',
-                      ]}
-                      style={`background: ${color.bg}; width: ${stage.completed || stage.failed ? '2.5rem' : stage.current ? '1.75rem' : '1.25rem'}; height: ${stage.completed || stage.failed ? '2.5rem' : stage.current ? '1.75rem' : '1.25rem'};`}
-                    >
-                      {stage.completed && (
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                      {stage.failed && (
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      )}
-                      {!stage.completed && !stage.failed && (
-                        <Icon name="pen-tool" size={12} class="text-white" />
+                return (
+                  <div class="stage-row">
+                    <div class="stage-indicator-col">
+                      <div
+                        class:list={['stage-circle', stage.current && 'pulse-subtle']}
+                        style={`background: ${color.bg}; width: ${stage.current ? '1.75rem' : '1.25rem'}; height: ${stage.current ? '1.75rem' : '1.25rem'};`}
+                      >
+                        {stage.completed && (
+                          <svg
+                            class="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="3"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                        {stage.failed && (
+                          <svg
+                            class="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="3"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        )}
+                        {!stage.completed && !stage.failed && (
+                          <span
+                            class="stage-num"
+                            style={`color: ${stage.current ? 'white' : '#6B7280'};`}
+                          >
+                            {originStages.length + i + 1}
+                          </span>
+                        )}
+                      </div>
+                      {!isLast && (
+                        <div
+                          class="stage-line"
+                          style={`background: ${stage.completed ? COLORS.completed.bg : '#E0D8C8'};`}
+                        />
                       )}
                     </div>
+                    <div class="stage-label-col">
+                      <span
+                        class:list={['stage-label', stage.current && 'font-semibold']}
+                        style={`color: ${stage.current ? color.bg : stage.completed ? COLORS.completed.bg : '#4B5563'};`}
+                      >
+                        {stage.label}
+                      </span>
+                    </div>
                   </div>
-                  <div class="stage-label-col">
-                    <span
-                      class:list={['stage-label font-semibold']}
-                      style={`color: ${stage.completed ? COLORS.completed.bg : stage.failed ? COLORS.failed.bg : COLORS.president.bg};`}
-                    >
-                      {stage.label}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
+      <!-- President Section (if applicable) -->
+      {
+        needsPresident && presidentStages.length > 0 && (
+          <div class="chamber-section">
+            <div
+              class="chamber-header"
+              style={`background: ${COLORS.president.light}; border-color: ${COLORS.president.bg};`}
+            >
+              <Icon name="pen-tool" size={12} />
+              <span style={`color: ${COLORS.president.text};`}>President</span>
+            </div>
+            <div class="chamber-stages">
+              {presidentStages.map((stage) => {
+                const color = getStageColor(stage);
+
+                return (
+                  <div class="stage-row">
+                    <div class="stage-indicator-col">
+                      <div
+                        class:list={[
+                          'stage-circle',
+                          stage.current && 'pulse-subtle',
+                          (stage.completed || stage.failed) && 'stage-circle-large',
+                        ]}
+                        style={`background: ${color.bg}; width: ${stage.completed || stage.failed ? '2.5rem' : stage.current ? '1.75rem' : '1.25rem'}; height: ${stage.completed || stage.failed ? '2.5rem' : stage.current ? '1.75rem' : '1.25rem'};`}
+                      >
+                        {stage.completed && (
+                          <svg
+                            class="w-5 h-5 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="3"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                        {stage.failed && (
+                          <svg
+                            class="w-5 h-5 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="3"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        )}
+                        {!stage.completed && !stage.failed && (
+                          <Icon name="pen-tool" size={12} class="text-white" />
+                        )}
+                      </div>
+                    </div>
+                    <div class="stage-label-col">
+                      <span
+                        class:list={['stage-label font-semibold']}
+                        style={`color: ${stage.completed ? COLORS.completed.bg : stage.failed ? COLORS.failed.bg : COLORS.president.bg};`}
+                      >
+                        {stage.label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )
+      }
     </div>
   </div>
 

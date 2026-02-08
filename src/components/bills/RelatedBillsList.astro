@@ -23,7 +23,8 @@ function getRelationshipColor(relationship: string) {
   const r = relationship.toLowerCase();
   if (r.includes('identical')) return 'bg-green-100 text-green-700 border-green-200';
   if (r.includes('companion')) return 'bg-blue-100 text-blue-700 border-blue-200';
-  if (r.includes('replaced') || r.includes('superseded')) return 'bg-purple-100 text-purple-700 border-purple-200';
+  if (r.includes('replaced') || r.includes('superseded'))
+    return 'bg-purple-100 text-purple-700 border-purple-200';
   return 'bg-navy-100 text-navy-600 border-navy-200';
 }
 ---
@@ -38,35 +39,36 @@ function getRelationshipColor(relationship: string) {
   </h4>
 
   <div class="space-y-2">
-    {relatedBills.map((bill) => (
-      <div class="flex items-start gap-3 p-3 bg-white rounded border border-gold-200 hover:border-gold-300 transition-colors">
-        <Icon name="file-text" size={16} class="text-navy-400 flex-shrink-0 mt-0.5" />
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 flex-wrap mb-1">
-            <span class="font-mono text-sm font-semibold text-navy-900">
-              {bill.billNumber}
-            </span>
-            <span class={`text-xs px-1.5 py-0.5 rounded border ${getRelationshipColor(bill.relationship)}`}>
-              {bill.relationship}
-            </span>
-            {bill.congress && (
-              <span class="text-xs text-navy-500">
-                {bill.congress}th Congress
+    {
+      relatedBills.map((bill) => (
+        <div class="flex items-start gap-3 p-3 bg-white rounded border border-gold-200 hover:border-gold-300 transition-colors">
+          <Icon name="file-text" size={16} class="text-navy-400 flex-shrink-0 mt-0.5" />
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <span class="font-mono text-sm font-semibold text-navy-900">{bill.billNumber}</span>
+              <span
+                class={`text-xs px-1.5 py-0.5 rounded border ${getRelationshipColor(bill.relationship)}`}
+              >
+                {bill.relationship}
               </span>
-            )}
+              {bill.congress && (
+                <span class="text-xs text-navy-500">{bill.congress}th Congress</span>
+              )}
+            </div>
+            {bill.title && <p class="text-sm text-navy-700 line-clamp-2">{bill.title}</p>}
           </div>
-          {bill.title && (
-            <p class="text-sm text-navy-700 line-clamp-2">
-              {bill.title}
-            </p>
+          {bill.url && (
+            <a
+              href={bill.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-gold-600 hover:text-gold-700 flex-shrink-0"
+            >
+              <Icon name="external-link" size={14} />
+            </a>
           )}
         </div>
-        {bill.url && (
-          <a href={bill.url} target="_blank" rel="noopener noreferrer" class="text-gold-600 hover:text-gold-700 flex-shrink-0">
-            <Icon name="external-link" size={14} />
-          </a>
-        )}
-      </div>
-    ))}
+      ))
+    }
   </div>
 </div>

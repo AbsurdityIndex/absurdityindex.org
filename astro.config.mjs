@@ -9,9 +9,7 @@ export default defineConfig({
   site: 'https://absurdityindex.org',
   integrations: [mdx(), sitemap()],
   markdown: {
-    rehypePlugins: [
-      [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }],
-    ],
+    rehypePlugins: [[rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]],
   },
   vite: {
     plugins: [tailwindcss()],

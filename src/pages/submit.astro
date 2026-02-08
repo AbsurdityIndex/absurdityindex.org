@@ -4,13 +4,20 @@ import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Icon from '../components/ui/Icon.astro';
 ---
 
-<BaseLayout title="Submit a Bill" description="Submit your own satirical bill to the Absurdity Index. All proposals will be given exactly as much consideration as real bills receive.">
+<BaseLayout
+  title="Submit a Bill"
+  description="Submit your own satirical bill to the Absurdity Index. All proposals will be given exactly as much consideration as real bills receive."
+>
   <div class="max-w-3xl mx-auto px-4 py-12">
     <div class="text-center mb-10">
       <OfficialSeal size="100" />
-      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Citizen Submission</p>
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">
+        Citizen Submission
+      </p>
       <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Submit a Bill</h1>
-      <p class="text-navy-600 font-serif italic mt-3">Your voice matters here — unlike in actual Congress</p>
+      <p class="text-navy-600 font-serif italic mt-3">
+        Your voice matters here — unlike in actual Congress
+      </p>
     </div>
     <div class="gold-rule"></div>
 
@@ -86,7 +93,10 @@ import Icon from '../components/ui/Icon.astro';
           <label for="bill-text" class="block font-serif font-bold text-navy-900 mb-2">
             Full Bill Text
           </label>
-          <p class="text-sm text-navy-600 mb-2">Write the bill in the most bureaucratic, overly-formal language you can muster. Bonus points for unnecessary subsections.</p>
+          <p class="text-sm text-navy-600 mb-2">
+            Write the bill in the most bureaucratic, overly-formal language you can muster. Bonus
+            points for unnecessary subsections.
+          </p>
           <textarea
             id="bill-text"
             name="text"
@@ -98,7 +108,9 @@ import Icon from '../components/ui/Icon.astro';
 
         <div>
           <label for="bill-source" class="block font-serif font-bold text-navy-900 mb-2">
-            Real Source URL <span class="text-navy-400 font-normal">(for Real Absurdities only)</span>
+            Real Source URL <span class="text-navy-400 font-normal"
+              >(for Real Absurdities only)</span
+            >
           </label>
           <input
             type="url"
@@ -138,15 +150,19 @@ import Icon from '../components/ui/Icon.astro';
   </div>
 
   <!-- Popup modal -->
-  <div id="submit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
-    <div class="bg-parchment rounded-lg shadow-2xl max-w-md w-full p-8 text-center border-4 border-gold-500 relative">
+  <div
+    id="submit-modal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4"
+  >
+    <div
+      class="bg-parchment rounded-lg shadow-2xl max-w-md w-full p-8 text-center border-4 border-gold-500 relative"
+    >
       <div class="flex justify-center text-gold-600 mb-4"><Icon name="landmark" size={48} /></div>
       <h2 class="font-serif text-2xl text-navy-900 font-bold mb-3">Just Kidding.</h2>
-      <p class="text-navy-700 font-serif text-lg mb-2">
-        You think we actually work around here?
-      </p>
+      <p class="text-navy-700 font-serif text-lg mb-2">You think we actually work around here?</p>
       <p class="text-navy-600 text-sm mb-6">
-        Congress averages 147 days in session per year. Our submission inbox averages 0. Check back when we get around to it — so, never.
+        Congress averages 147 days in session per year. Our submission inbox averages 0. Check back
+        when we get around to it — so, never.
       </p>
       <button
         id="close-modal"

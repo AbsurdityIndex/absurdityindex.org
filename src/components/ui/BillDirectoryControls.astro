@@ -65,7 +65,10 @@ const safeTotalPages = Math.max(1, totalPages);
 const hasApiPaging = Boolean(apiPagePath) && safeTotalPages > 1;
 
 function toCategorySlug(value: string) {
-  return value.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+  return value
+    .toLowerCase()
+    .replace(/\s+&\s+/g, '-')
+    .replace(/\s+/g, '-');
 }
 ---
 
@@ -82,88 +85,65 @@ function toCategorySlug(value: string) {
   data-directory-label={directoryLabel}
 >
   <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-    {tabs.length > 0 && (
-      <div class="hide-scrollbar w-full overflow-x-auto pb-1 sm:w-auto sm:overflow-visible sm:pb-0">
-        <nav class="inline-flex min-w-max items-center rounded-full border border-navy-700 bg-cream-100 p-1" aria-label="Directory views">
-          {tabs.map((tab) => (
-            <a
-              href={tab.href}
-              aria-current={tab.active ? 'page' : undefined}
-              class:list={[
-                'rounded-full px-3 py-1.5 text-[13px] font-sans font-semibold transition-colors min-[375px]:px-4 min-[375px]:text-sm',
-                tab.active ? 'bg-navy-800 text-white' : 'text-navy-700 hover:bg-cream-200',
-              ]}
-            >
-              {tab.label}
-            </a>
-          ))}
-        </nav>
-      </div>
-    )}
+    {
+      tabs.length > 0 && (
+        <div class="hide-scrollbar w-full overflow-x-auto pb-1 sm:w-auto sm:overflow-visible sm:pb-0">
+          <nav
+            class="inline-flex min-w-max items-center rounded-full border border-navy-700 bg-cream-100 p-1"
+            aria-label="Directory views"
+          >
+            {tabs.map((tab) => (
+              <a
+                href={tab.href}
+                aria-current={tab.active ? 'page' : undefined}
+                class:list={[
+                  'rounded-full px-3 py-1.5 text-[13px] font-sans font-semibold transition-colors min-[375px]:px-4 min-[375px]:text-sm',
+                  tab.active ? 'bg-navy-800 text-white' : 'text-navy-700 hover:bg-cream-200',
+                ]}
+              >
+                {tab.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      )
+    }
 
     <div class="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start">
-      <label for="bill-sort" class="text-[13px] font-sans font-medium text-navy-700 min-[375px]:text-sm">Sort</label>
+      <label
+        for="bill-sort"
+        class="text-[13px] font-sans font-medium text-navy-700 min-[375px]:text-sm">Sort</label
+      >
       <select
         id="bill-sort"
         class="w-full rounded-md border border-gold-300 bg-cream-100 px-3 py-2 text-base text-navy-800 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-300 min-[430px]:w-auto min-[430px]:min-w-[10rem] sm:text-sm"
       >
-        {sortOptions.map((option) => (
-          <option value={option.value} selected={option.value === defaultSortValue}>{option.label}</option>
-        ))}
+        {
+          sortOptions.map((option) => (
+            <option value={option.value} selected={option.value === defaultSortValue}>
+              {option.label}
+            </option>
+          ))
+        }
       </select>
     </div>
   </div>
 
-  {showSearch && (
-    <SearchBar label={searchLabel} placeholder={searchPlaceholder} />
-  )}
+  {showSearch && <SearchBar label={searchLabel} placeholder={searchPlaceholder} />}
 
-  {showCategoryFilters && (
-    <div class="space-y-3">
-      <div class="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          data-category-filter="all"
-          aria-pressed="true"
-          class="category-filter-chip inline-flex items-center rounded-full border border-navy-800 bg-navy-800 px-3 py-1.5 text-[13px] font-sans font-semibold text-white transition-colors min-[375px]:text-sm"
-        >
-          All categories
-        </button>
-        {primaryCategories.map((category) => (
+  {
+    showCategoryFilters && (
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            data-category-filter={toCategorySlug(category)}
-            aria-pressed="false"
-            class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white min-[375px]:text-sm"
+            data-category-filter="all"
+            aria-pressed="true"
+            class="category-filter-chip inline-flex items-center rounded-full border border-navy-800 bg-navy-800 px-3 py-1.5 text-[13px] font-sans font-semibold text-white transition-colors min-[375px]:text-sm"
           >
-            {category}
+            All categories
           </button>
-        ))}
-        {overflowCategories.length > 0 && (
-          <button
-            id="more-filters-toggle"
-            type="button"
-            aria-expanded="false"
-            aria-controls="extra-category-filters"
-            class="inline-flex items-center rounded-full border border-gold-300 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-700 transition-colors hover:bg-cream-200 min-[375px]:text-sm"
-          >
-            More filters
-          </button>
-        )}
-        {showReset && (
-          <button
-            id="clear-filters"
-            type="button"
-            class="inline-flex items-center rounded-full border border-cream-300 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-sm"
-          >
-            Reset
-          </button>
-        )}
-      </div>
-
-      {overflowCategories.length > 0 && (
-        <div id="extra-category-filters" class="hidden flex-wrap items-center gap-2 pt-1">
-          {overflowCategories.map((category) => (
+          {primaryCategories.map((category) => (
             <button
               type="button"
               data-category-filter={toCategorySlug(category)}
@@ -173,43 +153,89 @@ function toCategorySlug(value: string) {
               {category}
             </button>
           ))}
+          {overflowCategories.length > 0 && (
+            <button
+              id="more-filters-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="extra-category-filters"
+              class="inline-flex items-center rounded-full border border-gold-300 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-700 transition-colors hover:bg-cream-200 min-[375px]:text-sm"
+            >
+              More filters
+            </button>
+          )}
+          {showReset && (
+            <button
+              id="clear-filters"
+              type="button"
+              class="inline-flex items-center rounded-full border border-cream-300 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-sm"
+            >
+              Reset
+            </button>
+          )}
         </div>
-      )}
-    </div>
-  )}
 
-  <div class="flex flex-col gap-1 border-t border-gold-200 pt-3 text-sm text-navy-600 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
+        {overflowCategories.length > 0 && (
+          <div id="extra-category-filters" class="hidden flex-wrap items-center gap-2 pt-1">
+            {overflowCategories.map((category) => (
+              <button
+                type="button"
+                data-category-filter={toCategorySlug(category)}
+                aria-pressed="false"
+                class="category-filter-chip inline-flex items-center rounded-full border border-navy-700 px-3 py-1.5 text-[13px] font-sans font-semibold text-navy-700 transition-colors hover:border-navy-800 hover:bg-navy-800 hover:text-white min-[375px]:text-sm"
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  <div
+    class="flex flex-col gap-1 border-t border-gold-200 pt-3 text-sm text-navy-600 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between"
+  >
     <p id="results-summary" class="font-sans font-medium" aria-live="polite" aria-atomic="true">
-      Showing {initialCount} {initialCount === 1 ? 'bill' : 'bills'}
+      Showing {initialCount}
+      {initialCount === 1 ? 'bill' : 'bills'}
     </p>
-    <p id="sort-summary" class="font-sans text-xs min-[375px]:text-sm">{resolvedInitialSortSummary}</p>
+    <p id="sort-summary" class="font-sans text-xs min-[375px]:text-sm">
+      {resolvedInitialSortSummary}
+    </p>
   </div>
 
-  {hasApiPaging && (
-    <div class="flex flex-col gap-2 border-t border-gold-200 pt-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
-      <button
-        id="load-more-bills"
-        type="button"
-        class="inline-flex w-full items-center justify-center rounded-md border border-navy-700 bg-navy-800 px-4 py-2 text-sm font-sans font-semibold text-white transition-colors hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50 min-[430px]:w-auto"
-      >
-        Load More
-      </button>
-      <p id="load-more-status" class="text-xs font-sans text-navy-500">
-        Loaded page {safeCurrentPage} of {safeTotalPages}
-      </p>
-    </div>
-  )}
+  {
+    hasApiPaging && (
+      <div class="flex flex-col gap-2 border-t border-gold-200 pt-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
+        <button
+          id="load-more-bills"
+          type="button"
+          class="inline-flex w-full items-center justify-center rounded-md border border-navy-700 bg-navy-800 px-4 py-2 text-sm font-sans font-semibold text-white transition-colors hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50 min-[430px]:w-auto"
+        >
+          Load More
+        </button>
+        <p id="load-more-status" class="text-xs font-sans text-navy-500">
+          Loaded page {safeCurrentPage} of {safeTotalPages}
+        </p>
+      </div>
+    )
+  }
 </section>
 
 <script>
   const controlsContainer = document.getElementById('bill-directory-controls');
   const searchInput = document.getElementById('bill-search') as HTMLInputElement | null;
   const billSort = document.getElementById('bill-sort') as HTMLSelectElement | null;
-  const categoryButtons = Array.from(document.querySelectorAll('[data-category-filter]')) as HTMLButtonElement[];
+  const categoryButtons = Array.from(
+    document.querySelectorAll('[data-category-filter]'),
+  ) as HTMLButtonElement[];
   const clearFiltersButton = document.getElementById('clear-filters') as HTMLButtonElement | null;
   const resultsSummary = document.getElementById('results-summary');
   const sortSummary = document.getElementById('sort-summary');
-  const moreFiltersToggle = document.getElementById('more-filters-toggle') as HTMLButtonElement | null;
+  const moreFiltersToggle = document.getElementById(
+    'more-filters-toggle',
+  ) as HTMLButtonElement | null;
   const extraFilters = document.getElementById('extra-category-filters');
   const noResults = document.getElementById('no-results');
   const billsGrid = document.getElementById('bills-grid');
@@ -224,22 +250,24 @@ function toCategorySlug(value: string) {
     const defaultSortValue = controlsContainer.getAttribute('data-default-sort') || 'newest';
     const searchDebounceMs = Number.parseInt(
       controlsContainer.getAttribute('data-search-debounce-ms') || '140',
-      10
+      10,
     );
     const apiPagePath = controlsContainer.getAttribute('data-api-page-path') || '';
-    const initialPage = Number.parseInt(controlsContainer.getAttribute('data-current-page') || '1', 10);
+    const initialPage = Number.parseInt(
+      controlsContainer.getAttribute('data-current-page') || '1',
+      10,
+    );
     let totalPages = Number.parseInt(controlsContainer.getAttribute('data-total-pages') || '1', 10);
     let totalAvailableCount = Number.parseInt(
       controlsContainer.getAttribute('data-total-available-count') || String(billItems.length),
-      10
+      10,
     );
     const cardVariant = controlsContainer.getAttribute('data-card-variant') || 'default';
     const directoryLabel = controlsContainer.getAttribute('data-directory-label') || 'bills';
 
     if (Number.isNaN(totalPages) || totalPages < 1) totalPages = 1;
-    const safeInitialPage = Number.isNaN(initialPage) || initialPage < 1
-      ? 1
-      : Math.min(initialPage, totalPages);
+    const safeInitialPage =
+      Number.isNaN(initialPage) || initialPage < 1 ? 1 : Math.min(initialPage, totalPages);
     if (Number.isNaN(totalAvailableCount) || totalAvailableCount < billItems.length) {
       totalAvailableCount = billItems.length;
     }
@@ -365,7 +393,7 @@ function toCategorySlug(value: string) {
     function emitPerfEvent(
       action: string,
       outcome: 'success' | 'error',
-      data: Record<string, unknown> = {}
+      data: Record<string, unknown> = {},
     ) {
       const event: DirectoryPerfEvent = {
         event: 'directory_interaction',
@@ -439,30 +467,33 @@ function toCategorySlug(value: string) {
       return Boolean(apiPagePath) && loadedPages.size < totalPages;
     }
 
-	    function toNumber(value: string | undefined): number {
-	      const parsed = Number.parseFloat(value ?? '');
-	      return Number.isNaN(parsed) ? 0 : parsed;
-	    }
+    function toNumber(value: string | undefined): number {
+      const parsed = Number.parseFloat(value ?? '');
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
 
-	    function safeHref(value: string | undefined, fallback: string): string {
-	      const candidate = String(value ?? '').trim();
-	      if (!candidate) return fallback;
-	      if (candidate.startsWith('/')) return candidate;
+    function safeHref(value: string | undefined, fallback: string): string {
+      const candidate = String(value ?? '').trim();
+      if (!candidate) return fallback;
+      if (candidate.startsWith('/')) return candidate;
 
-	      try {
-	        const parsed = new URL(candidate, window.location.origin);
-	        if (parsed.origin === window.location.origin) {
-	          return `${parsed.pathname}${parsed.search}${parsed.hash}`;
-	        }
-	      } catch (_err) {
-	        // Ignore invalid URL.
-	      }
+      try {
+        const parsed = new URL(candidate, window.location.origin);
+        if (parsed.origin === window.location.origin) {
+          return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        }
+      } catch (_err) {
+        // Ignore invalid URL.
+      }
 
-	      return fallback;
-	    }
+      return fallback;
+    }
 
     function toCategorySlug(value: string): string {
-      return value.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
+      return value
+        .toLowerCase()
+        .replace(/\s+&\s+/g, '-')
+        .replace(/\s+/g, '-');
     }
 
     function getSponsorName(sponsor: string): string {
@@ -473,11 +504,11 @@ function toCategorySlug(value: string) {
       return sponsor.match(/\(([^)]+)\)/)?.[1] || '';
     }
 
-	    function getDateLabel(dateIso: string, fallbackLabel?: string): string {
-	      if (fallbackLabel) return fallbackLabel;
-	      const date = new Date(dateIso);
-	      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-	    }
+    function getDateLabel(dateIso: string, fallbackLabel?: string): string {
+      if (fallbackLabel) return fallbackLabel;
+      const date = new Date(dateIso);
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+    }
 
     function getScoreBadgeClasses(score: number): string {
       if (score <= 3) return 'bg-green-100 text-green-800 border-green-200';
@@ -488,7 +519,12 @@ function toCategorySlug(value: string) {
 
     function getStageBadge(status: string): { label: string; classes: string } {
       const s = status.toLowerCase();
-      if (s.includes('became public law') || s.includes('became law') || s.includes('enacted') || s.includes('signed')) {
+      if (
+        s.includes('became public law') ||
+        s.includes('became law') ||
+        s.includes('enacted') ||
+        s.includes('signed')
+      ) {
         return { label: 'Law', classes: 'bg-green-100 text-green-800' };
       }
       if (s.includes('vetoed')) {
@@ -537,188 +573,193 @@ function toCategorySlug(value: string) {
       url?: string;
     };
 
-	    type ApplySource =
-	      | 'initial'
-	      | 'search'
+    type ApplySource =
+      | 'initial'
+      | 'search'
       | 'sort'
       | 'category'
       | 'reset'
       | 'load_more'
-	      | 'auto_hydrate'
-	      | 'unknown';
+      | 'auto_hydrate'
+      | 'unknown';
 
-	    function buildAbsurdityBar(score: number): HTMLDivElement {
-	      const bar = document.createElement('div');
-	      bar.className = 'flex gap-0.5';
+    function buildAbsurdityBar(score: number): HTMLDivElement {
+      const bar = document.createElement('div');
+      bar.className = 'flex gap-0.5';
 
-	      const clamped = Math.max(1, Math.min(10, Math.round(score)));
-	      for (let segment = 1; segment <= 10; segment += 1) {
-	        let activeClass = 'bg-red-600';
-	        if (segment <= 3) activeClass = 'bg-green-600';
-	        else if (segment <= 6) activeClass = 'bg-yellow-500';
-	        else if (segment <= 8) activeClass = 'bg-orange-500';
+      const clamped = Math.max(1, Math.min(10, Math.round(score)));
+      for (let segment = 1; segment <= 10; segment += 1) {
+        let activeClass = 'bg-red-600';
+        if (segment <= 3) activeClass = 'bg-green-600';
+        else if (segment <= 6) activeClass = 'bg-yellow-500';
+        else if (segment <= 8) activeClass = 'bg-orange-500';
 
-	        const span = document.createElement('span');
-	        span.className = `h-1.5 flex-1 rounded-sm ${segment <= clamped ? activeClass : 'bg-cream-200'}`;
-	        bar.appendChild(span);
-	      }
+        const span = document.createElement('span');
+        span.className = `h-1.5 flex-1 rounded-sm ${segment <= clamped ? activeClass : 'bg-cream-200'}`;
+        bar.appendChild(span);
+      }
 
-	      return bar;
-	    }
+      return bar;
+    }
 
-	    function renderCardElement(bill: ApiBill): HTMLElement {
-	      const isReal = bill.billType === 'real';
-	      const isRealGridCard = cardVariant === 'real-grid' && isReal;
-	      const fallbackHref = isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`;
-	      const detailHref = safeHref(bill.url, fallbackHref);
-	      const sponsorName = bill.sponsorName || getSponsorName(bill.sponsor);
-	      const sponsorParty = bill.sponsorParty || getSponsorParty(bill.sponsor);
-	      const categorySlug = bill.categorySlug || toCategorySlug(bill.category);
-	      const dateLabel = getDateLabel(bill.dateIntroduced, bill.dateIntroducedLabel);
-	      const score = typeof bill.absurdityIndex === 'number' ? bill.absurdityIndex : null;
-	      const featured = Boolean(bill.featured);
-	      const stage = getStageBadge(bill.status || '');
-	      const topBarClass = featured
-	        ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400'
-	        : isReal
-	          ? 'bg-navy-600'
-	          : 'bg-green-600';
+    function renderCardElement(bill: ApiBill): HTMLElement {
+      const isReal = bill.billType === 'real';
+      const isRealGridCard = cardVariant === 'real-grid' && isReal;
+      const fallbackHref = isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`;
+      const detailHref = safeHref(bill.url, fallbackHref);
+      const sponsorName = bill.sponsorName || getSponsorName(bill.sponsor);
+      const sponsorParty = bill.sponsorParty || getSponsorParty(bill.sponsor);
+      const categorySlug = bill.categorySlug || toCategorySlug(bill.category);
+      const dateLabel = getDateLabel(bill.dateIntroduced, bill.dateIntroducedLabel);
+      const score = typeof bill.absurdityIndex === 'number' ? bill.absurdityIndex : null;
+      const featured = Boolean(bill.featured);
+      const stage = getStageBadge(bill.status || '');
+      const topBarClass = featured
+        ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400'
+        : isReal
+          ? 'bg-navy-600'
+          : 'bg-green-600';
 
-	      const article = document.createElement('article');
-	      const variantClass = isRealGridCard
-	        ? 'rounded-xl hover:-translate-y-0.5 border border-gold-300 hover:border-gold-500'
-	        : 'rounded-lg border border-gold-200 hover:border-gold-400';
-	      article.className = `group relative min-h-full overflow-hidden bg-white shadow-sm transition-all duration-200 hover:shadow-lg ${variantClass}${featured ? ' ring-2 ring-gold-400 border-gold-400' : ''}`;
+      const article = document.createElement('article');
+      const variantClass = isRealGridCard
+        ? 'rounded-xl hover:-translate-y-0.5 border border-gold-300 hover:border-gold-500'
+        : 'rounded-lg border border-gold-200 hover:border-gold-400';
+      article.className = `group relative min-h-full overflow-hidden bg-white shadow-sm transition-all duration-200 hover:shadow-lg ${variantClass}${featured ? ' ring-2 ring-gold-400 border-gold-400' : ''}`;
 
-	      const topBar = document.createElement('div');
-	      topBar.className = `h-1 ${topBarClass}`;
-	      article.appendChild(topBar);
+      const topBar = document.createElement('div');
+      topBar.className = `h-1 ${topBarClass}`;
+      article.appendChild(topBar);
 
-	      if (featured) {
-	        const featuredLabel = document.createElement('div');
-	        featuredLabel.className = 'absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono';
-	        featuredLabel.textContent = 'FEATURED';
-	        article.appendChild(featuredLabel);
-	      }
+      if (featured) {
+        const featuredLabel = document.createElement('div');
+        featuredLabel.className =
+          'absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono';
+        featuredLabel.textContent = 'FEATURED';
+        article.appendChild(featuredLabel);
+      }
 
-	      const body = document.createElement('div');
-	      body.className = `p-4 min-[375px]:p-5${isRealGridCard ? ' space-y-0.5' : ''}`;
-	      article.appendChild(body);
+      const body = document.createElement('div');
+      body.className = `p-4 min-[375px]:p-5${isRealGridCard ? ' space-y-0.5' : ''}`;
+      article.appendChild(body);
 
-	      const headerRow = document.createElement('div');
-	      headerRow.className = 'mb-2 flex items-center justify-between gap-2';
-	      body.appendChild(headerRow);
+      const headerRow = document.createElement('div');
+      headerRow.className = 'mb-2 flex items-center justify-between gap-2';
+      body.appendChild(headerRow);
 
-	      const billNumberEl = document.createElement('span');
-	      billNumberEl.className = 'inline-flex items-center rounded-full bg-navy-800 px-2.5 py-1 text-[11px] font-mono font-semibold tracking-wide text-gold-400 min-[375px]:text-xs';
-	      billNumberEl.textContent = bill.billNumber || '';
-	      headerRow.appendChild(billNumberEl);
+      const billNumberEl = document.createElement('span');
+      billNumberEl.className =
+        'inline-flex items-center rounded-full bg-navy-800 px-2.5 py-1 text-[11px] font-mono font-semibold tracking-wide text-gold-400 min-[375px]:text-xs';
+      billNumberEl.textContent = bill.billNumber || '';
+      headerRow.appendChild(billNumberEl);
 
-	      let badgeEl: HTMLElement | null = null;
-	      if (isRealGridCard && score !== null) {
-	        const scoreBadge = document.createElement('span');
-	        scoreBadge.className = `inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-mono font-bold min-[375px]:text-xs ${getScoreBadgeClasses(score)}`;
-	        scoreBadge.textContent = `${score}/10`;
-	        badgeEl = scoreBadge;
-	      } else {
-	        const typeBadge = document.createElement('span');
-	        typeBadge.className = isReal
-	          ? 'inline-flex items-center rounded-full border border-navy-800 bg-navy-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs'
-	          : 'inline-flex items-center rounded-full border border-green-800 bg-green-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs';
-	        typeBadge.textContent = isReal ? 'Real Bill' : 'Not Bill';
-	        badgeEl = typeBadge;
-	      }
+      let badgeEl: HTMLElement | null = null;
+      if (isRealGridCard && score !== null) {
+        const scoreBadge = document.createElement('span');
+        scoreBadge.className = `inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-mono font-bold min-[375px]:text-xs ${getScoreBadgeClasses(score)}`;
+        scoreBadge.textContent = `${score}/10`;
+        badgeEl = scoreBadge;
+      } else {
+        const typeBadge = document.createElement('span');
+        typeBadge.className = isReal
+          ? 'inline-flex items-center rounded-full border border-navy-800 bg-navy-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs'
+          : 'inline-flex items-center rounded-full border border-green-800 bg-green-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs';
+        typeBadge.textContent = isReal ? 'Real Bill' : 'Not Bill';
+        badgeEl = typeBadge;
+      }
 
-	      if (badgeEl) headerRow.appendChild(badgeEl);
+      if (badgeEl) headerRow.appendChild(badgeEl);
 
-	      if (isReal) {
-	        const statusWrap = document.createElement('div');
-	        statusWrap.className = 'mb-2.5 min-[375px]:mb-3';
-	        const statusPill = document.createElement('span');
-	        statusPill.className = `inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-sans font-medium min-[375px]:text-xs ${stage.classes}`;
-	        statusPill.textContent = stage.label;
-	        statusWrap.appendChild(statusPill);
-	        body.appendChild(statusWrap);
-	      }
+      if (isReal) {
+        const statusWrap = document.createElement('div');
+        statusWrap.className = 'mb-2.5 min-[375px]:mb-3';
+        const statusPill = document.createElement('span');
+        statusPill.className = `inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-sans font-medium min-[375px]:text-xs ${stage.classes}`;
+        statusPill.textContent = stage.label;
+        statusWrap.appendChild(statusPill);
+        body.appendChild(statusWrap);
+      }
 
-	      const h3 = document.createElement('h3');
-	      h3.className = `mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700 ${isRealGridCard ? 'text-[1.06rem] min-[375px]:text-lg min-[430px]:text-xl' : 'text-[1.04rem] min-[375px]:text-lg'}`;
-	      const link = document.createElement('a');
-	      link.href = detailHref;
-	      link.className = 'after:absolute after:inset-0';
-	      link.textContent = bill.title || '';
-	      h3.appendChild(link);
-	      body.appendChild(h3);
+      const h3 = document.createElement('h3');
+      h3.className = `mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700 ${isRealGridCard ? 'text-[1.06rem] min-[375px]:text-lg min-[430px]:text-xl' : 'text-[1.04rem] min-[375px]:text-lg'}`;
+      const link = document.createElement('a');
+      link.href = detailHref;
+      link.className = 'after:absolute after:inset-0';
+      link.textContent = bill.title || '';
+      h3.appendChild(link);
+      body.appendChild(h3);
 
-	      const summary = document.createElement('p');
-	      summary.className = `mb-3.5 text-[13px] leading-relaxed text-navy-600 min-[375px]:mb-4 min-[375px]:text-sm ${isRealGridCard ? 'line-clamp-3' : 'line-clamp-2'}`;
-	      summary.textContent = bill.summary || '';
-	      body.appendChild(summary);
+      const summary = document.createElement('p');
+      summary.className = `mb-3.5 text-[13px] leading-relaxed text-navy-600 min-[375px]:mb-4 min-[375px]:text-sm ${isRealGridCard ? 'line-clamp-3' : 'line-clamp-2'}`;
+      summary.textContent = bill.summary || '';
+      body.appendChild(summary);
 
-	      if (isReal && score !== null) {
-	        const absurdWrap = document.createElement('div');
-	        absurdWrap.className = 'mb-3.5 space-y-1 min-[375px]:mb-4';
+      if (isReal && score !== null) {
+        const absurdWrap = document.createElement('div');
+        absurdWrap.className = 'mb-3.5 space-y-1 min-[375px]:mb-4';
 
-	        const label = document.createElement('div');
-	        label.className = 'text-xs font-sans font-medium text-navy-500';
-	        label.textContent = 'Absurdity';
+        const label = document.createElement('div');
+        label.className = 'text-xs font-sans font-medium text-navy-500';
+        label.textContent = 'Absurdity';
 
-	        absurdWrap.append(label, buildAbsurdityBar(score));
-	        body.appendChild(absurdWrap);
-	      }
+        absurdWrap.append(label, buildAbsurdityBar(score));
+        body.appendChild(absurdWrap);
+      }
 
-	      const meta = document.createElement('div');
-	      meta.className = 'space-y-2 border-t border-cream-200 pt-2.5 min-[375px]:pt-3';
-	      body.appendChild(meta);
+      const meta = document.createElement('div');
+      meta.className = 'space-y-2 border-t border-cream-200 pt-2.5 min-[375px]:pt-3';
+      body.appendChild(meta);
 
-	      const sponsorRow = document.createElement('div');
-	      sponsorRow.className = 'flex items-center gap-1.5 text-[13px] min-[375px]:text-sm';
+      const sponsorRow = document.createElement('div');
+      sponsorRow.className = 'flex items-center gap-1.5 text-[13px] min-[375px]:text-sm';
 
-	      const sponsorEl = document.createElement('span');
-	      sponsorEl.className = 'truncate font-medium text-navy-700';
-	      sponsorEl.title = bill.sponsor || '';
-	      sponsorEl.textContent = sponsorName;
-	      sponsorRow.appendChild(sponsorEl);
+      const sponsorEl = document.createElement('span');
+      sponsorEl.className = 'truncate font-medium text-navy-700';
+      sponsorEl.title = bill.sponsor || '';
+      sponsorEl.textContent = sponsorName;
+      sponsorRow.appendChild(sponsorEl);
 
-	      if (sponsorParty) {
-	        const partyEl = document.createElement('span');
-	        partyEl.className = 'flex-shrink-0 font-mono text-[11px] text-navy-500 min-[375px]:text-xs';
-	        partyEl.textContent = `(${sponsorParty})`;
-	        sponsorRow.appendChild(partyEl);
-	      }
+      if (sponsorParty) {
+        const partyEl = document.createElement('span');
+        partyEl.className = 'flex-shrink-0 font-mono text-[11px] text-navy-500 min-[375px]:text-xs';
+        partyEl.textContent = `(${sponsorParty})`;
+        sponsorRow.appendChild(partyEl);
+      }
 
-	      meta.appendChild(sponsorRow);
+      meta.appendChild(sponsorRow);
 
-	      const bottomRow = document.createElement('div');
-	      bottomRow.className = 'flex flex-col items-start gap-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between';
+      const bottomRow = document.createElement('div');
+      bottomRow.className =
+        'flex flex-col items-start gap-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between';
 
-	      const cat = document.createElement('a');
-	      cat.href = `/category/${categorySlug}`;
-	      cat.className = 'relative z-10 inline-flex items-center rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-xs';
-	      cat.textContent = bill.category || '';
+      const cat = document.createElement('a');
+      cat.href = `/category/${categorySlug}`;
+      cat.className =
+        'relative z-10 inline-flex items-center rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-xs';
+      cat.textContent = bill.category || '';
 
-	      const time = document.createElement('time');
-	      time.dateTime = bill.dateIntroduced || '';
-	      time.className = 'text-[11px] text-navy-500 min-[375px]:text-xs';
-	      time.textContent = dateLabel;
+      const time = document.createElement('time');
+      time.dateTime = bill.dateIntroduced || '';
+      time.className = 'text-[11px] text-navy-500 min-[375px]:text-xs';
+      time.textContent = dateLabel;
 
-	      bottomRow.append(cat, time);
-	      meta.appendChild(bottomRow);
+      bottomRow.append(cat, time);
+      meta.appendChild(bottomRow);
 
-	      return article;
-	    }
+      return article;
+    }
 
-	    function createBillItemFromApi(bill: ApiBill): HTMLElement {
-	      const item = document.createElement('div');
-	      const titleLower = (bill.title || '').toLowerCase();
-	      const categoryLower = (bill.category || '').toLowerCase();
+    function createBillItemFromApi(bill: ApiBill): HTMLElement {
+      const item = document.createElement('div');
+      const titleLower = (bill.title || '').toLowerCase();
+      const categoryLower = (bill.category || '').toLowerCase();
       const sponsorLower = (bill.sponsor || '').toLowerCase();
       const committeeLower = (bill.committee || '').toLowerCase();
       const tagsLower = (bill.tags || []).join(',').toLowerCase();
       const categorySlug = bill.categorySlug || toCategorySlug(bill.category || '');
-      const introducedTs = typeof bill.dateIntroducedTs === 'number'
-        ? bill.dateIntroducedTs
-        : new Date(bill.dateIntroduced).getTime();
+      const introducedTs =
+        typeof bill.dateIntroducedTs === 'number'
+          ? bill.dateIntroducedTs
+          : new Date(bill.dateIntroduced).getTime();
 
       item.className = 'bill-item';
       item.dataset.title = titleLower;
@@ -727,14 +768,14 @@ function toCategorySlug(value: string) {
       item.dataset.type = bill.billType;
       item.dataset.sponsor = sponsorLower;
       item.dataset.committee = committeeLower;
-	      item.dataset.tags = tagsLower;
-	      item.dataset.featured = bill.featured ? '1' : '0';
-	      item.dataset.score = String(bill.absurdityIndex ?? 0);
-	      item.dataset.date = String(introducedTs);
-	      item.appendChild(renderCardElement(bill));
+      item.dataset.tags = tagsLower;
+      item.dataset.featured = bill.featured ? '1' : '0';
+      item.dataset.score = String(bill.absurdityIndex ?? 0);
+      item.dataset.date = String(introducedTs);
+      item.appendChild(renderCardElement(bill));
 
-	      return item;
-	    }
+      return item;
+    }
 
     function setCategoryButtonState(button: HTMLButtonElement, isActive: boolean) {
       button.classList.toggle('bg-navy-800', isActive);
@@ -773,7 +814,8 @@ function toCategorySlug(value: string) {
 
     function getSortSummaryText(): string {
       if (!billSort) return 'Sorted by default order';
-      const selectedLabel = billSort.options[billSort.selectedIndex]?.textContent || 'default order';
+      const selectedLabel =
+        billSort.options[billSort.selectedIndex]?.textContent || 'default order';
       return `Sorted by ${selectedLabel}`;
     }
 
@@ -853,7 +895,13 @@ function toCategorySlug(value: string) {
     }
 
     async function loadPage(pageToLoad: number, autoMode = false): Promise<boolean> {
-      if (!apiPagePath || isLoadingMore || pageToLoad < 1 || pageToLoad > totalPages || loadedPages.has(pageToLoad)) {
+      if (
+        !apiPagePath ||
+        isLoadingMore ||
+        pageToLoad < 1 ||
+        pageToLoad > totalPages ||
+        loadedPages.has(pageToLoad)
+      ) {
         return false;
       }
 
@@ -954,7 +1002,9 @@ function toCategorySlug(value: string) {
     }
 
     async function maybeAutoLoadAll(query: string, sortValue: string) {
-      const shouldAutoLoadAll = Boolean(apiPagePath) && (query.length > 0 || activeCategory !== 'all' || sortValue !== defaultSortValue);
+      const shouldAutoLoadAll =
+        Boolean(apiPagePath) &&
+        (query.length > 0 || activeCategory !== 'all' || sortValue !== defaultSortValue);
       if (!shouldAutoLoadAll || autoLoadInFlight || !hasUnloadedPages()) return;
 
       const autoHydrateStartMs = performance.now();
@@ -987,12 +1037,14 @@ function toCategorySlug(value: string) {
       if (hasEmittedSessionSummary) return;
       hasEmittedSessionSummary = true;
 
-      const averageApplyMs = perfSession.apply_count > 0
-        ? roundMs(perfSession.apply_total_ms / perfSession.apply_count)
-        : 0;
-      const averageFetchMs = perfSession.fetch_count > 0
-        ? roundMs(perfSession.fetch_total_ms / perfSession.fetch_count)
-        : 0;
+      const averageApplyMs =
+        perfSession.apply_count > 0
+          ? roundMs(perfSession.apply_total_ms / perfSession.apply_count)
+          : 0;
+      const averageFetchMs =
+        perfSession.fetch_count > 0
+          ? roundMs(perfSession.fetch_total_ms / perfSession.fetch_count)
+          : 0;
 
       emitPerfEvent('session_summary', 'success', {
         reason,
@@ -1027,7 +1079,8 @@ function toCategorySlug(value: string) {
             itemData.sponsor.includes(query) ||
             itemData.tags.includes(query) ||
             itemData.committee.includes(query);
-          const matchesCategory = activeCategory === 'all' || itemData.categorySlug === activeCategory;
+          const matchesCategory =
+            activeCategory === 'all' || itemData.categorySlug === activeCategory;
           return matchesQuery && matchesCategory;
         })
         .map((itemData) => itemData.item);
@@ -1092,7 +1145,10 @@ function toCategorySlug(value: string) {
       if (searchTimer) {
         window.clearTimeout(searchTimer);
       }
-      searchTimer = window.setTimeout(() => applyControls(true, 'search'), Math.max(0, searchDebounceMs));
+      searchTimer = window.setTimeout(
+        () => applyControls(true, 'search'),
+        Math.max(0, searchDebounceMs),
+      );
     }
 
     categoryButtons.forEach((button) => {
@@ -1150,7 +1206,7 @@ function toCategorySlug(value: string) {
         const isOverflowCategory = !categoryButtons.some(
           (button) =>
             button.dataset.categoryFilter === activeCategory &&
-            button.closest('#extra-category-filters') === null
+            button.closest('#extra-category-filters') === null,
         );
         if (isOverflowCategory) {
           extraFilters.classList.remove('hidden');

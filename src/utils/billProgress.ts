@@ -5,7 +5,7 @@
  * Used by BillTimeline, LegislativePathPopover, and any other progress visualization.
  */
 
-import { parseBillType, type BillTypeInfo } from './billParser';
+import { parseBillType } from './billParser';
 
 /**
  * Legislative path types
@@ -124,9 +124,17 @@ export function getCurrentStageIndex(status: string, path: LegislativePath): num
   }
 
   // Standard bill track (fullPath)
-  if (s.includes('signed') || s.includes('law') || s.includes('vetoed') || s.includes('died') || s.includes('enacted')) return 5;
+  if (
+    s.includes('signed') ||
+    s.includes('law') ||
+    s.includes('vetoed') ||
+    s.includes('died') ||
+    s.includes('enacted')
+  )
+    return 5;
   if (s.includes('enrolled') || s.includes('passed both')) return 4;
-  if (s.includes('passed house') || s.includes('passed senate') || s.includes('passed/agreed')) return 3;
+  if (s.includes('passed house') || s.includes('passed senate') || s.includes('passed/agreed'))
+    return 3;
   if (s.includes('reported')) return 2;
   if (s.includes('committee') || s.includes('referred')) return 1;
   return 0;
@@ -278,7 +286,7 @@ export function getStageColors(
   stageIndex: number,
   currentStageIndex: number,
   isFinalStage: boolean,
-  outcome: BillOutcome
+  outcome: BillOutcome,
 ) {
   if (isStageCompleted(stageIndex, currentStageIndex)) {
     return PROGRESS_COLORS.completed;

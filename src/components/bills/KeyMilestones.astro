@@ -31,7 +31,7 @@ interface Props {
   actions: Action[];
   status: string;
   totalActions: number;
-  keyMilestones?: Milestone[];  // AI-extracted milestones from frontmatter
+  keyMilestones?: Milestone[]; // AI-extracted milestones from frontmatter
 }
 
 const { actions, status, totalActions, keyMilestones } = Astro.props;
@@ -42,52 +42,90 @@ const getMilestonesFromActions = (actions: Action[]) => {
   const milestones: Array<{ date: Date; text: string; type: string; icon: string }> = [];
 
   // Sort by date ascending
-  const sorted = [...actions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const sorted = [...actions].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
 
   for (const action of sorted) {
     const text = action.text.toLowerCase();
 
     // Introduced
-    if (text.includes('introduced') && !milestones.find(m => m.type === 'introduced')) {
-      milestones.push({ date: action.date, text: action.text, type: 'introduced', icon: 'file-text' });
+    if (text.includes('introduced') && !milestones.find((m) => m.type === 'introduced')) {
+      milestones.push({
+        date: action.date,
+        text: action.text,
+        type: 'introduced',
+        icon: 'file-text',
+      });
     }
     // Committee referral
-    else if (text.includes('referred to') && text.includes('committee') && !milestones.find(m => m.type === 'committee')) {
+    else if (
+      text.includes('referred to') &&
+      text.includes('committee') &&
+      !milestones.find((m) => m.type === 'committee')
+    ) {
       milestones.push({ date: action.date, text: action.text, type: 'committee', icon: 'users' });
     }
     // Reported from committee
-    else if ((text.includes('reported') || text.includes('ordered to be reported')) && !milestones.find(m => m.type === 'reported')) {
-      milestones.push({ date: action.date, text: action.text, type: 'reported', icon: 'check-square' });
+    else if (
+      (text.includes('reported') || text.includes('ordered to be reported')) &&
+      !milestones.find((m) => m.type === 'reported')
+    ) {
+      milestones.push({
+        date: action.date,
+        text: action.text,
+        type: 'reported',
+        icon: 'check-square',
+      });
     }
     // Passed House (various phrasings)
-    else if ((text.includes('passed house') ||
-              (text.includes('house') && text.includes('agreed to')) ||
-              text.includes('agreeing to the resolution agreed to') ||
-              text.includes('on agreeing to the resolution')) &&
-             !milestones.find(m => m.type === 'passed-house')) {
+    else if (
+      (text.includes('passed house') ||
+        (text.includes('house') && text.includes('agreed to')) ||
+        text.includes('agreeing to the resolution agreed to') ||
+        text.includes('on agreeing to the resolution')) &&
+      !milestones.find((m) => m.type === 'passed-house')
+    ) {
       milestones.push({ date: action.date, text: action.text, type: 'passed-house', icon: 'vote' });
     }
     // Passed Senate (various phrasings)
-    else if ((text.includes('passed senate') ||
-              (text.includes('senate') && text.includes('agreed to')) ||
-              text.includes('resolution agreed to in senate')) &&
-             !milestones.find(m => m.type === 'passed-senate')) {
-      milestones.push({ date: action.date, text: action.text, type: 'passed-senate', icon: 'vote' });
+    else if (
+      (text.includes('passed senate') ||
+        (text.includes('senate') && text.includes('agreed to')) ||
+        text.includes('resolution agreed to in senate')) &&
+      !milestones.find((m) => m.type === 'passed-senate')
+    ) {
+      milestones.push({
+        date: action.date,
+        text: action.text,
+        type: 'passed-senate',
+        icon: 'vote',
+      });
     }
     // Conference
-    else if (text.includes('conference') && !milestones.find(m => m.type === 'conference')) {
-      milestones.push({ date: action.date, text: action.text, type: 'conference', icon: 'git-merge' });
+    else if (text.includes('conference') && !milestones.find((m) => m.type === 'conference')) {
+      milestones.push({
+        date: action.date,
+        text: action.text,
+        type: 'conference',
+        icon: 'git-merge',
+      });
     }
     // Signed
-    else if (text.includes('signed by president') && !milestones.find(m => m.type === 'signed')) {
-      milestones.push({ date: action.date, text: 'Signed into law by the President', type: 'signed', icon: 'pen-tool' });
+    else if (text.includes('signed by president') && !milestones.find((m) => m.type === 'signed')) {
+      milestones.push({
+        date: action.date,
+        text: 'Signed into law by the President',
+        type: 'signed',
+        icon: 'pen-tool',
+      });
     }
     // Became law
-    else if (text.includes('became public law') && !milestones.find(m => m.type === 'law')) {
+    else if (text.includes('became public law') && !milestones.find((m) => m.type === 'law')) {
       milestones.push({ date: action.date, text: action.text, type: 'law', icon: 'award' });
     }
     // Vetoed
-    else if (text.includes('vetoed') && !milestones.find(m => m.type === 'vetoed')) {
+    else if (text.includes('vetoed') && !milestones.find((m) => m.type === 'vetoed')) {
       milestones.push({ date: action.date, text: action.text, type: 'vetoed', icon: 'x-circle' });
     }
   }
@@ -97,19 +135,25 @@ const getMilestonesFromActions = (actions: Action[]) => {
 };
 
 // Use AI-extracted milestones if available, otherwise fall back to keyword matching
-const milestones = keyMilestones && keyMilestones.length > 0
-  ? keyMilestones
-  : getMilestonesFromActions(actions);
+const milestones =
+  keyMilestones && keyMilestones.length > 0 ? keyMilestones : getMilestonesFromActions(actions);
 
 const formatDate = (date: Date) => {
   // Dates in bill content are date-only; format in UTC to avoid off-by-one issues across timezones.
-  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 };
 ---
 
 <div class="key-milestones">
   <div class="flex items-center justify-between mb-4">
-    <h4 class="text-sm font-sans font-semibold text-navy-600 uppercase tracking-wide flex items-center gap-2">
+    <h4
+      class="text-sm font-sans font-semibold text-navy-600 uppercase tracking-wide flex items-center gap-2"
+    >
       <Icon name="git-commit" size={14} class="text-gold-600" />
       Key Milestones
     </h4>
@@ -118,38 +162,47 @@ const formatDate = (date: Date) => {
     </span>
   </div>
 
-  {milestones.length > 0 ? (
-    <div class="relative">
-      {/* Connecting line - runs the full height behind the icons */}
-      <div class="absolute left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-gold-300 via-gold-200 to-gold-100" aria-hidden="true"></div>
+  {
+    milestones.length > 0 ? (
+      <div class="relative">
+        {/* Connecting line - runs the full height behind the icons */}
+        <div
+          class="absolute left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-gold-300 via-gold-200 to-gold-100"
+          aria-hidden="true"
+        />
 
-      <div class="space-y-0">
-        {milestones.map((milestone, i) => (
-          <div class="flex items-start gap-3 relative">
-            {/* Icon with background to cover the line */}
-            <div class:list={[
-              'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 relative z-10 border-2 shadow-sm',
-              milestone.type === 'law' || milestone.type === 'signed'
-                ? 'bg-green-100 text-green-700 border-green-200'
-                : milestone.type === 'vetoed'
-                ? 'bg-red-100 text-red-700 border-red-200'
-                : 'bg-gold-100 text-gold-700 border-gold-200'
-            ]}>
-              <Icon name={milestone.icon} size={14} />
+        <div class="space-y-0">
+          {milestones.map((milestone, i) => (
+            <div class="flex items-start gap-3 relative">
+              {/* Icon with background to cover the line */}
+              <div
+                class:list={[
+                  'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 relative z-10 border-2 shadow-sm',
+                  milestone.type === 'law' || milestone.type === 'signed'
+                    ? 'bg-green-100 text-green-700 border-green-200'
+                    : milestone.type === 'vetoed'
+                      ? 'bg-red-100 text-red-700 border-red-200'
+                      : 'bg-gold-100 text-gold-700 border-gold-200',
+                ]}
+              >
+                <Icon name={milestone.icon} size={14} />
+              </div>
+              <div class="flex-1 min-w-0 pb-4">
+                <time class="text-xs font-mono text-navy-400 block mb-0.5">
+                  {formatDate(milestone.date)}
+                </time>
+                <p class="text-sm font-sans text-navy-700 leading-snug">
+                  {milestone.text.length > 120
+                    ? milestone.text.slice(0, 117) + '...'
+                    : milestone.text}
+                </p>
+              </div>
             </div>
-            <div class="flex-1 min-w-0 pb-4">
-              <time class="text-xs font-mono text-navy-400 block mb-0.5">
-                {formatDate(milestone.date)}
-              </time>
-              <p class="text-sm font-sans text-navy-700 leading-snug">
-                {milestone.text.length > 120 ? milestone.text.slice(0, 117) + '...' : milestone.text}
-              </p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  ) : (
-    <p class="text-sm text-navy-500 italic">No major milestones recorded yet.</p>
-  )}
+    ) : (
+      <p class="text-sm text-navy-500 italic">No major milestones recorded yet.</p>
+    )
+  }
 </div>

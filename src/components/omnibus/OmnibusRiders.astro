@@ -79,12 +79,18 @@ for (const rider of riders) {
 
 // Filter to only categories that have riders, sorted by priority
 const activeCategories = (Object.keys(grouped) as Category[])
-  .filter(cat => grouped[cat].length > 0)
+  .filter((cat) => grouped[cat].length > 0)
   .sort((a, b) => categoryConfig[a].order - categoryConfig[b].order);
 ---
 
-<section class="bg-cream-100 border border-gold-300 rounded-lg overflow-hidden" data-section="riders">
-  <div class="px-5 py-4 bg-navy-800 border-b border-gold-300 flex items-center justify-between" data-theme-fixed>
+<section
+  class="bg-cream-100 border border-gold-300 rounded-lg overflow-hidden"
+  data-section="riders"
+>
+  <div
+    class="px-5 py-4 bg-navy-800 border-b border-gold-300 flex items-center justify-between"
+    data-theme-fixed
+  >
     <h2 class="font-serif text-lg font-bold text-gold-400 flex items-center gap-2">
       <Icon name="gift" size={18} class="text-gold-400" />
       Policy Riders & Hidden Provisions
@@ -93,50 +99,61 @@ const activeCategories = (Object.keys(grouped) as Category[])
   </div>
 
   <div class="p-4 space-y-5">
-    {activeCategories.map((cat) => {
-      const config = categoryConfig[cat];
-      const catRiders = grouped[cat];
-      return (
-        <div>
-          <!-- Category header -->
-          <div class:list={['flex items-center gap-2 px-3 py-2 rounded-lg mb-2', config.headerBg]}>
-            <Icon name={config.icon} size={14} class="text-navy-600" />
-            <span class="text-xs font-sans font-semibold text-navy-700 uppercase tracking-wide">
-              {config.label}
-            </span>
-            <span class="text-xs font-mono text-navy-400 ml-auto">{catRiders.length}</span>
-          </div>
+    {
+      activeCategories.map((cat) => {
+        const config = categoryConfig[cat];
+        const catRiders = grouped[cat];
+        return (
+          <div>
+            {/* Category header */}
+            <div
+              class:list={['flex items-center gap-2 px-3 py-2 rounded-lg mb-2', config.headerBg]}
+            >
+              <Icon name={config.icon} size={14} class="text-navy-600" />
+              <span class="text-xs font-sans font-semibold text-navy-700 uppercase tracking-wide">
+                {config.label}
+              </span>
+              <span class="text-xs font-mono text-navy-400 ml-auto">{catRiders.length}</span>
+            </div>
 
-          <!-- Riders in this category -->
-          <div class="space-y-1.5">
-            {catRiders.map((rider) => (
-              <div class:list={[
-                'border-l-4 rounded-r-lg bg-white p-3 hover:bg-cream-200 transition-colors',
-                config.border
-              ]}>
-                <div class="flex items-start gap-3">
-                  <div class="flex-1 min-w-0">
-                    <h4 class="font-serif font-bold text-sm text-navy-900 mb-0.5">{rider.title}</h4>
-                    <p class="text-xs text-navy-600 leading-relaxed">{rider.description}</p>
+            {/* Riders in this category */}
+            <div class="space-y-1.5">
+              {catRiders.map((rider) => (
+                <div
+                  class:list={[
+                    'border-l-4 rounded-r-lg bg-white p-3 hover:bg-cream-200 transition-colors',
+                    config.border,
+                  ]}
+                >
+                  <div class="flex items-start gap-3">
+                    <div class="flex-1 min-w-0">
+                      <h4 class="font-serif font-bold text-sm text-navy-900 mb-0.5">
+                        {rider.title}
+                      </h4>
+                      <p class="text-xs text-navy-600 leading-relaxed">{rider.description}</p>
+                    </div>
+                    <span
+                      class:list={[
+                        'shrink-0 text-[10px] font-mono px-2 py-0.5 rounded-full',
+                        config.badge,
+                      ]}
+                    >
+                      {config.label}
+                    </span>
                   </div>
-                  <span class:list={[
-                    'shrink-0 text-[10px] font-mono px-2 py-0.5 rounded-full',
-                    config.badge
-                  ]}>
-                    {config.label}
-                  </span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      );
-    })}
+        );
+      })
+    }
   </div>
 
   <div class="px-5 py-3 bg-cream-200 border-t border-gold-300">
     <p class="text-xs text-navy-600 italic text-center">
-      <strong>Rider:</strong> A provision attached to a must-pass bill that has little connection to the bill's main subject.
+      <strong>Rider:</strong> A provision attached to a must-pass bill that has little connection to the
+      bill's main subject.
     </p>
   </div>
 </section>

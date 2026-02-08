@@ -4,11 +4,7 @@ import BillCard from '../../components/bills/BillCard.astro';
 import BillDirectoryControls from '../../components/ui/BillDirectoryControls.astro';
 import Pagination from '../../components/ui/Pagination.astro';
 import { getCollection } from 'astro:content';
-import {
-  DIRECTORY_PAGE_SIZE,
-  sortByDateDesc,
-  toCategorySlug,
-} from '../../utils/directory.js';
+import { DIRECTORY_PAGE_SIZE, sortByDateDesc, toCategorySlug } from '../../utils/directory.js';
 
 const allBills = await getCollection('bills');
 const sensibleBills = allBills.filter((b) => b.data.billType === 'sensible');
@@ -21,12 +17,25 @@ const currentPage = 1;
 const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
 ---
 
-<BaseLayout title="Sensible Bills" description="Bills that actually make sense - proposed by the Absurdity Index, where common sense isn't an oxymoron.">
+<BaseLayout
+  title="Sensible Bills"
+  description="Bills that actually make sense - proposed by the Absurdity Index, where common sense isn't an oxymoron."
+>
   <div class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-8 text-center min-[430px]:mb-10">
-      <p class="mb-2 font-mono text-[11px] uppercase tracking-widest min-[375px]:text-sm text-green-700">Bill Type</p>
-      <h1 class="font-serif text-2xl font-bold text-navy-900 min-[375px]:text-3xl md:text-4xl">Sensible Bills</h1>
-      <p class="mt-2 font-serif italic text-sm text-navy-600 min-[375px]:mt-3 min-[375px]:text-base">Legislation that actually makes sense - a novel concept</p>
+      <p
+        class="mb-2 font-mono text-[11px] uppercase tracking-widest min-[375px]:text-sm text-green-700"
+      >
+        Bill Type
+      </p>
+      <h1 class="font-serif text-2xl font-bold text-navy-900 min-[375px]:text-3xl md:text-4xl">
+        Sensible Bills
+      </h1>
+      <p
+        class="mt-2 font-serif italic text-sm text-navy-600 min-[375px]:mt-3 min-[375px]:text-base"
+      >
+        Legislation that actually makes sense - a novel concept
+      </p>
     </div>
     <div class="gold-rule"></div>
 
@@ -56,28 +65,35 @@ const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
       directoryLabel="sensible bills"
     />
 
-    <div class="mt-4 flex flex-col gap-1 text-xs font-sans text-navy-500 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
+    <div
+      class="mt-4 flex flex-col gap-1 text-xs font-sans text-navy-500 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between"
+    >
       <p>Page {currentPage} of {totalPages}</p>
       <p>{totalCount} total sensible bills in the index</p>
     </div>
 
-    <div id="bills-grid" class="mt-5 grid grid-cols-1 gap-4 min-[375px]:mt-6 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3">
-      {bills.map((bill) => (
-        <div
-          class="bill-item"
-          data-title={bill.data.title.toLowerCase()}
-          data-category={bill.data.category.toLowerCase()}
-          data-category-slug={toCategorySlug(bill.data.category)}
-          data-type={bill.data.billType}
-          data-sponsor={bill.data.sponsor.toLowerCase()}
-          data-committee={(bill.data.committee ?? '').toLowerCase()}
-          data-tags={bill.data.tags.join(',').toLowerCase()}
-          data-featured={bill.data.featured ? '1' : '0'}
-          data-date={bill.data.dateIntroduced.getTime()}
-        >
-          <BillCard bill={bill} />
-        </div>
-      ))}
+    <div
+      id="bills-grid"
+      class="mt-5 grid grid-cols-1 gap-4 min-[375px]:mt-6 min-[430px]:gap-5 min-[520px]:grid-cols-2 lg:grid-cols-3"
+    >
+      {
+        bills.map((bill) => (
+          <div
+            class="bill-item"
+            data-title={bill.data.title.toLowerCase()}
+            data-category={bill.data.category.toLowerCase()}
+            data-category-slug={toCategorySlug(bill.data.category)}
+            data-type={bill.data.billType}
+            data-sponsor={bill.data.sponsor.toLowerCase()}
+            data-committee={(bill.data.committee ?? '').toLowerCase()}
+            data-tags={bill.data.tags.join(',').toLowerCase()}
+            data-featured={bill.data.featured ? '1' : '0'}
+            data-date={bill.data.dateIntroduced.getTime()}
+          >
+            <BillCard bill={bill} />
+          </div>
+        ))
+      }
     </div>
 
     <div id="no-results" class="hidden py-12 text-center min-[430px]:py-16">
@@ -85,10 +101,12 @@ const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
       <p class="italic text-navy-400">This committee appears to be out for lunch.</p>
     </div>
 
-    {totalPages > 1 && (
-      <div class="mt-10">
-        <Pagination currentPage={currentPage} totalPages={totalPages} basePath="/type/sensible" />
-      </div>
-    )}
+    {
+      totalPages > 1 && (
+        <div class="mt-10">
+          <Pagination currentPage={currentPage} totalPages={totalPages} basePath="/type/sensible" />
+        </div>
+      )
+    }
   </div>
 </BaseLayout>

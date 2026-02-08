@@ -25,7 +25,7 @@ function parseMaxWarningsArg() {
 
   const value = Number.parseInt(raw.slice('--max-warnings='.length), 10);
   if (Number.isNaN(value) || value < 0) {
-    console.error("Error: --max-warnings must be a non-negative integer.");
+    console.error('Error: --max-warnings must be a non-negative integer.');
     process.exit(1);
   }
 
@@ -160,13 +160,13 @@ const VALID_STAGES = [
   'died-on-floor',
   'died-in-conference',
   'expired',
-  'stalled'
+  'stalled',
 ];
 
 /**
  * Validation for billEvolution stages
  */
-function validateBillEvolution(evolution, filename) {
+function validateBillEvolution(evolution, _filename) {
   const warnings = [];
   const errors = [];
 
@@ -206,7 +206,9 @@ function validateBillEvolution(evolution, filename) {
       // Check chronological order
       const currentDate = new Date(stage.date);
       if (prevDate && currentDate < prevDate) {
-        warnings.push(`billEvolution[${idx}] (${stage.stage}) date ${stage.date} is before previous stage`);
+        warnings.push(
+          `billEvolution[${idx}] (${stage.stage}) date ${stage.date} is before previous stage`,
+        );
       }
       prevDate = currentDate;
     }
@@ -221,7 +223,9 @@ function validateBillEvolution(evolution, filename) {
       // Note: Negative pork is valid for bills that save money
       // Only warn if pork unexpectedly decreased mid-evolution (not from first stage)
       if (idx > 0 && stage.cumulativePork < prevPork && prevPork > 0) {
-        warnings.push(`billEvolution[${idx}] (${stage.stage}) cumulativePork decreased from ${prevPork} to ${stage.cumulativePork}`);
+        warnings.push(
+          `billEvolution[${idx}] (${stage.stage}) cumulativePork decreased from ${prevPork} to ${stage.cumulativePork}`,
+        );
       }
       prevPork = stage.cumulativePork;
     }
@@ -255,16 +259,16 @@ function validatePorkItems(porkItems, context) {
   const validCategories = [
     'earmark',
     'tax-break',
-    'tax-expenditure',       // Broader category for tax-related costs
+    'tax-expenditure', // Broader category for tax-related costs
     'hidden-cost',
     'bureaucratic-expansion',
     'corporate-welfare',
     'unnecessary-study',
     'pet-project',
-    'program-expansion',     // Expanding existing programs
-    'new-program',           // Creating new programs
-    'regulatory-burden',     // New regulatory requirements
-    'subsidy'                // Direct subsidies
+    'program-expansion', // Expanding existing programs
+    'new-program', // Creating new programs
+    'regulatory-burden', // New regulatory requirements
+    'subsidy', // Direct subsidies
   ];
 
   porkItems.forEach((item, idx) => {
@@ -303,15 +307,15 @@ function validatePorkItems(porkItems, context) {
 /**
  * Validate votes structure
  */
-function validateVotes(votes, filename) {
+function validateVotes(votes, _filename) {
   const errors = [];
   const warnings = [];
 
   if (!votes) return { errors, warnings };
 
-  if (votes.yeas === undefined) errors.push("votes.yeas is missing");
-  if (votes.nays === undefined) errors.push("votes.nays is missing");
-  if (votes.passed === undefined) errors.push("votes.passed is missing");
+  if (votes.yeas === undefined) errors.push('votes.yeas is missing');
+  if (votes.nays === undefined) errors.push('votes.nays is missing');
+  if (votes.passed === undefined) errors.push('votes.passed is missing');
 
   // Check vote totals make sense
   if (votes.yeas !== undefined && votes.nays !== undefined) {
@@ -332,7 +336,9 @@ function validateVotes(votes, filename) {
     if (total > 0 && votes.passed === false && votes.yeas > votes.nays) {
       // This might be valid for Senate cloture votes (60 needed)
       if (votes.chamber !== 'senate' || votes.yeas >= 60) {
-        warnings.push(`Bill marked as failed but yeas (${votes.yeas}) > nays (${votes.nays}) - if Senate cloture vote, 60 needed`);
+        warnings.push(
+          `Bill marked as failed but yeas (${votes.yeas}) > nays (${votes.nays}) - if Senate cloture vote, 60 needed`,
+        );
       }
     }
   }
@@ -344,8 +350,10 @@ function validateVotes(votes, filename) {
 
   // Validate rollCallUrl format if present
   if (votes.rollCallUrl) {
-    if (!votes.rollCallUrl.includes('clerk.house.gov') &&
-        !votes.rollCallUrl.includes('senate.gov')) {
+    if (
+      !votes.rollCallUrl.includes('clerk.house.gov') &&
+      !votes.rollCallUrl.includes('senate.gov')
+    ) {
       warnings.push(`rollCallUrl doesn't match expected Congress URL patterns`);
     }
   }
@@ -357,18 +365,68 @@ function validateVotes(votes, filename) {
  * Valid US state codes
  */
 const VALID_STATES = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
-  'DC', 'PR', 'GU', 'VI', 'AS', 'MP' // Include territories
+  'AL',
+  'AK',
+  'AZ',
+  'AR',
+  'CA',
+  'CO',
+  'CT',
+  'DE',
+  'FL',
+  'GA',
+  'HI',
+  'ID',
+  'IL',
+  'IN',
+  'IA',
+  'KS',
+  'KY',
+  'LA',
+  'ME',
+  'MD',
+  'MA',
+  'MI',
+  'MN',
+  'MS',
+  'MO',
+  'MT',
+  'NE',
+  'NV',
+  'NH',
+  'NJ',
+  'NM',
+  'NY',
+  'NC',
+  'ND',
+  'OH',
+  'OK',
+  'OR',
+  'PA',
+  'RI',
+  'SC',
+  'SD',
+  'TN',
+  'TX',
+  'UT',
+  'VT',
+  'VA',
+  'WA',
+  'WV',
+  'WI',
+  'WY',
+  'DC',
+  'PR',
+  'GU',
+  'VI',
+  'AS',
+  'MP', // Include territories
 ];
 
 /**
  * Validate sponsor/cosponsor data
  */
-function validateSponsorData(data, filename) {
+function validateSponsorData(data, _filename) {
   const errors = [];
   const warnings = [];
 
@@ -390,7 +448,9 @@ function validateSponsorData(data, filename) {
       if (typeof cosponsor === 'string') {
         // String format is valid for satirical bills
         if (data.billType === 'real') {
-          warnings.push(`cosponsors[${idx}] is a string - real bills should use object format with name/party/state`);
+          warnings.push(
+            `cosponsors[${idx}] is a string - real bills should use object format with name/party/state`,
+          );
         }
       } else if (typeof cosponsor === 'object') {
         // Object format - validate structure
@@ -398,13 +458,17 @@ function validateSponsorData(data, filename) {
           errors.push(`cosponsors[${idx}] missing 'name'`);
         }
         if (cosponsor.party && !['D', 'R', 'I'].includes(cosponsor.party)) {
-          errors.push(`cosponsors[${idx}] party must be 'D', 'R', or 'I', got '${cosponsor.party}'`);
+          errors.push(
+            `cosponsors[${idx}] party must be 'D', 'R', or 'I', got '${cosponsor.party}'`,
+          );
         }
         if (cosponsor.state && !VALID_STATES.includes(cosponsor.state)) {
           warnings.push(`cosponsors[${idx}] state '${cosponsor.state}' may not be valid`);
         }
         if (cosponsor.bioguideId && !/^[A-Z]\d{6}$/.test(cosponsor.bioguideId)) {
-          warnings.push(`cosponsors[${idx}] bioguideId '${cosponsor.bioguideId}' doesn't match expected format (X000000)`);
+          warnings.push(
+            `cosponsors[${idx}] bioguideId '${cosponsor.bioguideId}' doesn't match expected format (X000000)`,
+          );
         }
       }
     });
@@ -416,7 +480,9 @@ function validateSponsorData(data, filename) {
       data.cosponsorCount !== undefined &&
       data.cosponsors.length > data.cosponsorCount
     ) {
-      warnings.push(`cosponsorCount (${data.cosponsorCount}) is less than cosponsors array length (${data.cosponsors.length})`);
+      warnings.push(
+        `cosponsorCount (${data.cosponsorCount}) is less than cosponsors array length (${data.cosponsors.length})`,
+      );
     }
   }
 
@@ -426,7 +492,7 @@ function validateSponsorData(data, filename) {
 /**
  * Validate Congress.gov URL format
  */
-function validateCongressUrl(data, filename) {
+function validateCongressUrl(data, _filename) {
   const errors = [];
   const warnings = [];
 
@@ -449,12 +515,11 @@ function validateCongressUrl(data, filename) {
     const isSenateRes = billNum.includes('s.res') || billNum.includes('sres');
 
     const urlLower = url.toLowerCase();
-    const hasCorrectType = (
+    const hasCorrectType =
       (isHouseBill && urlLower.includes('house-bill')) ||
       (isSenateBill && urlLower.includes('senate-bill')) ||
       (isHouseRes && urlLower.includes('house-resolution')) ||
-      (isSenateRes && urlLower.includes('senate-resolution'))
-    );
+      (isSenateRes && urlLower.includes('senate-resolution'));
 
     if (!hasCorrectType && data.billType === 'real') {
       warnings.push(`congressDotGovUrl may not match billNumber type`);
@@ -467,7 +532,7 @@ function validateCongressUrl(data, filename) {
 /**
  * Check for common mistakes
  */
-function checkCommonMistakes(data, filename) {
+function checkCommonMistakes(data, _filename) {
   const errors = [];
   const warnings = [];
 
@@ -488,7 +553,7 @@ function checkCommonMistakes(data, filename) {
   // Check for empty required arrays that should have content
   if (data.billType === 'real') {
     if (data.actions && data.actions.length === 0) {
-      warnings.push("actions array is empty - consider adding legislative actions");
+      warnings.push('actions array is empty - consider adding legislative actions');
     }
   }
 
@@ -498,14 +563,14 @@ function checkCommonMistakes(data, filename) {
 /**
  * Validate MDX content body
  */
-function validateMdxContent(content, data, filename) {
+function validateMdxContent(content, data, _filename) {
   const errors = [];
   const warnings = [];
 
   // Extract MDX body (after frontmatter)
   const bodyMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
   if (!bodyMatch) {
-    errors.push("Could not extract MDX body content");
+    errors.push('Could not extract MDX body content');
     return { errors, warnings };
   }
 
@@ -520,12 +585,12 @@ function validateMdxContent(content, data, filename) {
   if (data.billType === 'real') {
     // Should have at least one markdown heading
     if (!body.includes('##')) {
-      warnings.push("MDX body has no section headings (##) - consider adding structure");
+      warnings.push('MDX body has no section headings (##) - consider adding structure');
     }
 
     // Should have source/disclaimer section
     if (!body.toLowerCase().includes('source') && !body.toLowerCase().includes('congress.gov')) {
-      warnings.push("MDX body may be missing source attribution");
+      warnings.push('MDX body may be missing source attribution');
     }
   }
 
@@ -546,7 +611,7 @@ function validateMdxContent(content, data, filename) {
 
   // Check for placeholder text that shouldn't be in production
   const placeholders = ['TODO', 'FIXME', 'XXX', 'PLACEHOLDER', 'TBD'];
-  placeholders.forEach(placeholder => {
+  placeholders.forEach((placeholder) => {
     if (body.includes(placeholder)) {
       warnings.push(`Found '${placeholder}' placeholder text in MDX body`);
     }
@@ -564,7 +629,7 @@ function parseFrontmatter(content) {
 
   try {
     return yaml.load(match[1]);
-  } catch (e) {
+  } catch (_err) {
     return null;
   }
 }
@@ -595,7 +660,9 @@ function validateBill(filepath) {
   const timestampMatches = frontmatterRaw.match(/\b\d{4}-\d{2}-\d{2}T[0-9:.+-]+Z?\b/g);
   if (timestampMatches && timestampMatches.length > 0) {
     const unique = Array.from(new Set(timestampMatches));
-    errors.push(`Frontmatter contains timestamp date(s): ${unique.join(', ')}. Use date-only YYYY-MM-DD.`);
+    errors.push(
+      `Frontmatter contains timestamp date(s): ${unique.join(', ')}. Use date-only YYYY-MM-DD.`,
+    );
   }
 
   // Check required fields for all bill types
@@ -615,8 +682,11 @@ function validateBill(filepath) {
 
     // Check recommended fields
     Object.entries(RECOMMENDED_REAL).forEach(([field, component]) => {
-      if (data[field] === undefined || data[field] === null ||
-          (Array.isArray(data[field]) && data[field].length === 0)) {
+      if (
+        data[field] === undefined ||
+        data[field] === null ||
+        (Array.isArray(data[field]) && data[field].length === 0)
+      ) {
         warnings.push(`Missing '${field}' (recommended: ${component})`);
       }
     });
@@ -635,8 +705,11 @@ function validateBill(filepath) {
 
     // Check recommended fields
     Object.entries(RECOMMENDED_SATIRICAL).forEach(([field, component]) => {
-      if (data[field] === undefined || data[field] === null ||
-          (Array.isArray(data[field]) && data[field].length === 0)) {
+      if (
+        data[field] === undefined ||
+        data[field] === null ||
+        (Array.isArray(data[field]) && data[field].length === 0)
+      ) {
         warnings.push(`Missing '${field}' (recommended: ${component})`);
       }
     });
@@ -697,8 +770,7 @@ function main() {
   }
 
   // Get all MDX files (excluding templates)
-  const files = fs.readdirSync(BILLS_DIR)
-    .filter(f => f.endsWith('.mdx') && !f.startsWith('_'));
+  const files = fs.readdirSync(BILLS_DIR).filter((f) => f.endsWith('.mdx') && !f.startsWith('_'));
 
   console.log(`Found ${files.length} bill files to validate\n`);
 
@@ -706,7 +778,7 @@ function main() {
   let totalWarnings = 0;
   const results = { real: [], sensible: [], absurd: [], unknown: [] };
 
-  files.forEach(file => {
+  files.forEach((file) => {
     const filepath = path.join(BILLS_DIR, file);
     const result = validateBill(filepath);
 
@@ -720,26 +792,27 @@ function main() {
   });
 
   // Print results by category
-  ['real', 'sensible', 'absurd'].forEach(category => {
+  ['real', 'sensible', 'absurd'].forEach((category) => {
     const categoryResults = results[category] || [];
     if (categoryResults.length === 0) return;
 
-    const categoryErrors = categoryResults.reduce((sum, r) => sum + r.errors.length, 0);
-    const categoryWarnings = categoryResults.reduce((sum, r) => sum + r.warnings.length, 0);
-
-    console.log(`${colors.bold}${category.toUpperCase()} BILLS (${categoryResults.length})${colors.reset}`);
+    console.log(
+      `${colors.bold}${category.toUpperCase()} BILLS (${categoryResults.length})${colors.reset}`,
+    );
     console.log(`${colors.dim}${'─'.repeat(50)}${colors.reset}`);
 
-    categoryResults.forEach(result => {
+    categoryResults.forEach((result) => {
       if (result.errors.length === 0 && result.warnings.length === 0) {
         console.log(`  ${colors.green}OK${colors.reset} ${result.filename}`);
       } else {
-        console.log(`  ${result.errors.length > 0 ? colors.red + 'ERR' : colors.yellow + 'WARN'}${colors.reset} ${result.filename}`);
+        console.log(
+          `  ${result.errors.length > 0 ? colors.red + 'ERR' : colors.yellow + 'WARN'}${colors.reset} ${result.filename}`,
+        );
 
-        result.errors.forEach(err => {
+        result.errors.forEach((err) => {
           console.log(`    ${colors.red}ERROR:${colors.reset} ${err}`);
         });
-        result.warnings.forEach(warn => {
+        result.warnings.forEach((warn) => {
           console.log(`    ${colors.yellow}WARN:${colors.reset} ${warn}`);
         });
       }
@@ -757,14 +830,18 @@ function main() {
   console.log();
 
   if (totalErrors > 0) {
-    console.log(`${colors.red}${colors.bold}Validation FAILED${colors.reset} - fix errors before deploying\n`);
+    console.log(
+      `${colors.red}${colors.bold}Validation FAILED${colors.reset} - fix errors before deploying\n`,
+    );
     process.exit(1);
   } else if (STRICT_WARNINGS && totalWarnings > 0) {
-    console.log(`${colors.red}${colors.bold}Validation FAILED${colors.reset} - warnings are treated as errors in strict mode\n`);
+    console.log(
+      `${colors.red}${colors.bold}Validation FAILED${colors.reset} - warnings are treated as errors in strict mode\n`,
+    );
     process.exit(1);
   } else if (MAX_WARNINGS !== null && totalWarnings > MAX_WARNINGS) {
     console.log(
-      `${colors.red}${colors.bold}Validation FAILED${colors.reset} - warnings (${totalWarnings}) exceed allowed max (${MAX_WARNINGS})\n`
+      `${colors.red}${colors.bold}Validation FAILED${colors.reset} - warnings (${totalWarnings}) exceed allowed max (${MAX_WARNINGS})\n`,
     );
     process.exit(1);
   } else if (totalWarnings > 0) {

@@ -94,9 +94,10 @@ sophisticated fraud.
   cryptographically sealed. No one — not a poll worker, not a state official, not a
   database admin — can alter the record after the fact.
 
-This is not a voting machine. It does not touch ballot casting or counting. It is a
-**verification and fraud detection layer** that sits alongside existing election
-infrastructure.
+This is not a voting machine. It is a **verification and fraud detection layer** that sits
+alongside existing election infrastructure. The companion **Election Web Protocol (EWP)**
+extends this with a ballot integrity layer — the cryptographic chain of custody from cast
+to tally — ensuring every ballot is encrypted, recorded, included, and counted correctly.
 
 ---
 
@@ -154,12 +155,16 @@ the voter, you don't need to check a plastic card.
 
 ### 3.2 Non-Goals
 
-- **Replace ballot casting or counting systems.** VoteChain is verification only.
+- **Replace ballot casting or counting systems within this document.** VoteChain is the
+  verification layer. The companion **Election Web Protocol (EWP)** in
+  `PRD-VOTECHAIN-ELECTION-WEB-PROTOCOL.md` defines the ballot integrity layer — the
+  cryptographic chain of custody from cast to tally that completes the system.
 - **Create a national voter database.** The system stores cryptographic commitments, not
   voter records.
-- **Mandate internet voting in v1.** This system works at physical polling places.
-  Remote ballot casting is an optional, future "gold-plated" track that requires a separate
-  protocol standard and controlled pilots.
+- **Mandate unsupervised internet voting in v1.** The EWP ballot integrity protocol works
+  at physical polling places (Mode 1) and supervised kiosks (Mode 2) first. Unsupervised
+  remote casting (Mode 3) is a gated future deployment that requires independent
+  certification. See EWP Section 11.2 for hard gate criteria.
 - **Eliminate poll workers.** Humans remain in the loop for every flagged event.
 - **Track how individuals vote.** Ballot secrecy is constitutionally sacred and technically
   enforced.
@@ -1076,24 +1081,32 @@ the responsible jurisdiction must publish a remediation plan within 30 days.**
 - **Pre-election stress test** 60 days before each federal election simulating 2x expected load
 - **Results published publicly** (with responsible disclosure timeline for vulnerabilities)
 
-### 13.4 Optional Future Track: Remote Casting Hurdles ("Gold-Plated")
+### 13.4 Ballot Integrity Protocol (EWP) And Unsupervised Remote Casting
 
-Remote casting from personal phones/computers is explicitly treated as a future optional
-track, not a v1 requirement. Key hurdles that must be solved before production use:
+The companion **Election Web Protocol (EWP)** in `PRD-VOTECHAIN-ELECTION-WEB-PROTOCOL.md`
+defines the ballot integrity layer — the cryptographic chain of custody from cast to tally.
+EWP applies to all deployment modes:
+
+- **Mode 1 (in-person):** EWP ballot integrity at polling places — the primary deployment
+  target. Replaces physical chain of custody with cryptographic proof.
+- **Mode 2 (supervised):** EWP at UOCAVA facilities, consulates, supervised kiosks.
+- **Mode 3 (unsupervised remote):** EWP from personal devices. This mode is **gated** —
+  deployment requires clearing all hard gate criteria in EWP Section 11.2.
+
+Key hurdles specific to Mode 3 that must be solved before production use:
 
 - **Coercion resistance in uncontrolled environments** (home/work pressure, vote buying)
 - **Receipt-freeness with verifiability** (voter can verify inclusion without gaining a
   coercion-enabling proof of ballot choice)
 - **Endpoint integrity** (malware, browser tampering, phishing overlays, SIM-swap account recovery abuse)
-- **Unlinkability at scale** (identity token proof must not be linkable to ballot content)
-- **High-assurance dispute handling** (auditable challenge process when voter claims
-  submission manipulation or non-inclusion)
-- **Nationwide resilience** (DDoS, CDN/provider dependency, election-day traffic spikes)
+- **Network privacy** (IP-to-voter correlation via OHTTP or equivalent proxy)
+- **Phishing gateway defense** (voter must reliably authenticate the real gateway)
 - **Equity and access parity** (no disenfranchisement for voters without compatible devices,
   broadband, or digital literacy)
 
-No remote-casting deployment should proceed until these controls are independently tested
-in controlled pilots and certified by federal election and cybersecurity authorities.
+No Mode 3 deployment should proceed until these controls are independently tested in
+controlled pilots and certified by federal election and cybersecurity authorities. See
+EWP Section 11.2 for the formal gate criteria table.
 
 ### 13.5 Election Day Incident Command and Runbooks
 
@@ -1161,7 +1174,7 @@ This roadmap separates rapid product validation from production readiness.
 | Congressional authorization | M1-M6 | Legislation establishing VoteChain, governance, and funding authority |
 | Standards body creation | M3-M9 | Joint NIST/EAC/CISA working group defining technical and assurance standards |
 | Government data/API modernization baseline | M1-M9 | Inventory and modernization plan for SSA/USCIS/state-vital/corrections/restoration interfaces with SLA targets |
-| Election web protocol profile (optional remote casting track) | M3-M9 | Define app-layer protocol over HTTPS for controlled remote-casting pilots |
+| Election Web Protocol (EWP) ballot integrity layer | M3-M9 | Define ballot integrity protocol (cast-to-tally chain of custody) for in-person (Mode 1), supervised (Mode 2), and gated remote (Mode 3) deployment |
 | Privacy impact assessment | M6-M9 | Full PIA with public comment period |
 | Procurement framework and operator selection | M9-M12 | Competitive RFP and initial node/operator selection |
 
@@ -1199,7 +1212,7 @@ This roadmap separates rapid product validation from production readiness.
 | Pilot enrollment | M25-M30 | Enroll pilot voters; target 50%+ enrollment in pilot areas |
 | Pilot election (local) | M30-M33 | VoteChain verification runs alongside existing methods |
 | UOCAVA operational pilot | M30-M33 | Overseas/military enrollment, recovery, and deadline-aware adjudication in live conditions |
-| Optional remote-casting pilot (controlled) | M30-M33 | Limited cohort pilot only under approved protocol profile and red-team observation |
+| EWP Mode 1 + Mode 2 pilot | M30-M33 | In-person and supervised ballot integrity protocol in live conditions; Mode 3 pilot only if all EWP Section 11.2 gate criteria are cleared |
 | Pilot analysis | M33-M36 | Measure fraud detection, voter experience, and adjudication outcomes |
 | Pilot report (public) | M36 | Publish transparent results and required remediations |
 
@@ -1327,7 +1340,7 @@ implementation:
 | 8 | **How to handle naturalized citizens whose USCIS records are incomplete?** Legacy records from before digitization are inconsistent. | Enrollment edge case | Alternative verification path with sworn affidavit + 3 supporting documents + manual review |
 | 9 | **Long-term governance of the oversight board.** How to keep it bipartisan and independent as political dynamics shift? | Institutional design | Staggered terms, supermajority removal requirements, inspector general with independent authority |
 | 10 | **Interoperability with tribal nations.** Tribal IDs and governance structures are unique. | Equity | Dedicated engagement with tribal governments; tribal enrollment authorities as first-class system participants |
-| 11 | **Does secure remote casting require a new web election protocol/profile?** Standard web forms over HTTPS are likely insufficient for coercion resistance and receipt-freeness. | Security & standards | Run a formal standards sprint (NIST/EAC/CISA + external standards bodies), publish a threat model and draft spec, and validate only in controlled pilots before any production use |
+| 11 | **What are the gate criteria for unsupervised remote casting (EWP Mode 3)?** The companion EWP defines a ballot integrity protocol for all modes, with hard gate criteria for Mode 3 in Section 11.2. | Security & standards | Resolve all EWP Mode 3 gate criteria (coercion mitigation, network privacy, client integrity, phishing defense, equity parity) through independent testing and federal certification before any Mode 3 deployment |
 | 12 | **How should UOCAVA absentee-return deadlines be harmonized with adjudication SLAs across states?** | UOCAVA operations | Build a state-by-state deadline matrix, publish machine-readable cutoff rules, and require deadline-aware triage queues |
 | 13 | **What minimum staffing model is required for 24/7 global voter support?** | Operations | Define baseline staffing by time zone/language, partner surge contracts, and election-week staffing multipliers |
 | 14 | **Can required federal/state data sources meet reliability and latency targets without major modernization?** | Integration risk | Run a formal API readiness audit (coverage, uptime, error rates, schema quality) and publish a staged modernization plan with funding gates |
@@ -1388,7 +1401,7 @@ No. Enrollment, secure cards, and required replacement support are free to voter
 | "If the network goes down, voting stops." | Runbooks require continuity via degraded mode and provisional handling. |
 | "States lose all control of their elections." | Federal mandate scope is federal elections; state/local extension remains optional by state law. |
 | "A flag means I am permanently blacklisted." | Every flag has a lifecycle, adjudication, and appeal process with auditable resolution. |
-| "Remote internet voting is being forced immediately." | Remote casting is explicitly an optional future track requiring separate standards and controlled pilots. |
+| "Remote internet voting is being forced immediately." | The EWP ballot integrity protocol deploys first at polling places (Mode 1) and supervised facilities (Mode 2). Unsupervised remote casting (Mode 3) is gated behind hard criteria that must be independently certified before deployment. |
 
 ### 18.3 Public Communications Commitments
 

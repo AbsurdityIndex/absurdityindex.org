@@ -33,32 +33,36 @@ const iconSize = size === 'sm' ? 12 : 14;
 ---
 
 <span class="bill-type-badge-wrapper inline-flex items-center gap-1">
-  <span class:list={[
-    'inline-flex items-center gap-1.5 font-sans font-semibold rounded-full border',
-    classes,
-    sizeClasses
-  ]}>
+  <span
+    class:list={[
+      'inline-flex items-center gap-1.5 font-sans font-semibold rounded-full border',
+      classes,
+      sizeClasses,
+    ]}
+  >
     <Icon name={icon} size={iconSize} strokeWidth={2.5} />
     {label}
   </span>
-  {showHelp && (
-    <button
-      type="button"
-      class="help-btn"
-      aria-label="Learn about bill types"
-      title="What does this mean?"
-    >
-      <Icon name="help-circle" size={14} />
-    </button>
-  )}
+  {
+    showHelp && (
+      <button
+        type="button"
+        class="help-btn"
+        aria-label="Learn about bill types"
+        title="What does this mean?"
+      >
+        <Icon name="help-circle" size={14} />
+      </button>
+    )
+  }
 </span>
 
 <style>
   :global(html.dark) .bill-type-real {
     background-color: rgba(26, 45, 77, 0.9);
-    border-color: #121F36;
+    border-color: #121f36;
   }
-  :global(html[data-theme="solarized-dark"]) .bill-type-real {
+  :global(html[data-theme='solarized-dark']) .bill-type-real {
     background-color: rgba(10, 61, 73, 0.9);
     border-color: #073642;
   }

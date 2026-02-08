@@ -4,7 +4,9 @@ import { getCollection } from 'astro:content';
 const allBills = await getCollection('bills');
 // Use day of year to pick a bill deterministically
 const now = new Date();
-const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
+const dayOfYear = Math.floor(
+  (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000,
+);
 const bill = allBills[dayOfYear % allBills.length];
 const d = bill.data;
 const billUrl = d.billType === 'real' ? `/bills/${bill.id}/` : `/not-bills/${bill.id}/`;
@@ -15,16 +17,22 @@ const billUrl = d.billType === 'real' ? `/bills/${bill.id}/` : `/not-bills/${bil
     <div class="flex items-center gap-2 mb-3">
       <span class="text-gold-500 font-mono text-xs uppercase tracking-widest">Bill of the Day</span>
       <span class="text-navy-500 text-xs">&bull;</span>
-      <span class="text-navy-400 text-xs font-mono">{now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+      <span class="text-navy-400 text-xs font-mono"
+        >{now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span
+      >
     </div>
     <a href={billUrl} class="group block">
-      <h3 class="font-serif text-xl font-bold text-gold-400 group-hover:text-gold-300 transition-colors">
+      <h3
+        class="font-serif text-xl font-bold text-gold-400 group-hover:text-gold-300 transition-colors"
+      >
         {d.billNumber} &mdash; {d.title}
       </h3>
       <p class="text-gold-300/80 mt-2 text-sm leading-relaxed line-clamp-2">
         {d.summary}
       </p>
-      <span class="inline-block mt-3 text-xs font-sans text-gold-500 group-hover:text-gold-400 transition-colors">
+      <span
+        class="inline-block mt-3 text-xs font-sans text-gold-500 group-hover:text-gold-400 transition-colors"
+      >
         Read more &rarr;
       </span>
     </a>

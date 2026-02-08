@@ -7,7 +7,7 @@ import { getCollection } from 'astro:content';
 const allBills = await getCollection('bills');
 
 // Prepare bills for the game - mix of real and satirical
-const gameBills = allBills.map(bill => ({
+const gameBills = allBills.map((bill) => ({
   id: bill.id,
   title: bill.data.title,
   summary: bill.data.summary.slice(0, 200) + (bill.data.summary.length > 200 ? '...' : ''),
@@ -23,7 +23,10 @@ const gameBills = allBills.map(bill => ({
 const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
 ---
 
-<BaseLayout title="Would You Pass It?" description="Tinder-style voting game: swipe to pass or veto bills, then find out if they're real or satirical.">
+<BaseLayout
+  title="Would You Pass It?"
+  description="Tinder-style voting game: swipe to pass or veto bills, then find out if they're real or satirical."
+>
   <div class="max-w-2xl mx-auto px-4 py-12">
     <!-- Header -->
     <div class="text-center mb-8">
@@ -34,13 +37,17 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
         Would You Pass It?
       </h1>
       <p class="text-navy-600 font-sans text-base max-w-lg mx-auto">
-        Read the bill. Cast your vote. Then discover if it's <strong>real legislation</strong> or <strong>satire</strong>.
-        How well do you know Congress?
+        Read the bill. Cast your vote. Then discover if it's <strong>real legislation</strong> or <strong
+          >satire</strong
+        >. How well do you know Congress?
       </p>
     </div>
 
     <!-- Score Display -->
-    <div id="score-display" class="bg-parchment border border-gold-300 rounded-lg p-4 mb-8 text-center">
+    <div
+      id="score-display"
+      class="bg-parchment border border-gold-300 rounded-lg p-4 mb-8 text-center"
+    >
       <div class="flex justify-center gap-8">
         <div>
           <p class="text-navy-500 font-sans text-xs uppercase tracking-wider">Bills Reviewed</p>
@@ -48,7 +55,9 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
         </div>
         <div class="border-l border-gold-300"></div>
         <div>
-          <p class="text-navy-500 font-sans text-xs uppercase tracking-wider">Agreed with Congress</p>
+          <p class="text-navy-500 font-sans text-xs uppercase tracking-wider">
+            Agreed with Congress
+          </p>
           <p id="agreement-rate" class="font-serif text-2xl font-bold text-gold-600">--%</p>
         </div>
       </div>
@@ -57,10 +66,15 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
     <!-- Card Container -->
     <div id="card-container" class="relative" style="min-height: 400px;">
       <!-- Initial Card -->
-      <div id="bill-card" class="bg-white rounded-xl shadow-lg border-2 border-navy-200 overflow-hidden transition-all duration-300">
+      <div
+        id="bill-card"
+        class="bg-white rounded-xl shadow-lg border-2 border-navy-200 overflow-hidden transition-all duration-300"
+      >
         <!-- Card Header -->
         <div class="bg-navy-900 px-6 py-4">
-          <p class="text-gold-400 font-serif text-xs uppercase tracking-wider mb-1">Proposed Legislation</p>
+          <p class="text-gold-400 font-serif text-xs uppercase tracking-wider mb-1">
+            Proposed Legislation
+          </p>
           <h2 id="card-title" class="font-serif text-xl text-white font-bold leading-tight">
             Loading...
           </h2>
@@ -73,7 +87,10 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
           </p>
 
           <!-- Category Badge -->
-          <div id="card-category" class="inline-block bg-cream-200 text-navy-600 font-sans text-xs font-semibold px-3 py-1 rounded-full mb-4">
+          <div
+            id="card-category"
+            class="inline-block bg-cream-200 text-navy-600 font-sans text-xs font-semibold px-3 py-1 rounded-full mb-4"
+          >
             Category
           </div>
 
@@ -122,15 +139,18 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
         </div>
       </div>
 
-	      <!-- Game Complete State -->
-	      <div id="game-complete" class="hidden bg-white rounded-xl shadow-lg border-2 border-gold-400 overflow-hidden text-center p-8">
-	        <div class="mb-4 flex justify-center">
-	          <Icon name="vote" size={56} class="text-gold-600" />
-	        </div>
-	        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-2">Session Adjourned!</h2>
-	        <p class="text-navy-600 font-sans mb-4">You've reviewed all available bills.</p>
-	        <div class="bg-parchment rounded-lg p-4 mb-6">
-	          <p class="text-navy-500 font-sans text-sm">Final Score</p>
+      <!-- Game Complete State -->
+      <div
+        id="game-complete"
+        class="hidden bg-white rounded-xl shadow-lg border-2 border-gold-400 overflow-hidden text-center p-8"
+      >
+        <div class="mb-4 flex justify-center">
+          <Icon name="vote" size={56} class="text-gold-600" />
+        </div>
+        <h2 class="font-serif text-2xl font-bold text-navy-900 mb-2">Session Adjourned!</h2>
+        <p class="text-navy-600 font-sans mb-4">You've reviewed all available bills.</p>
+        <div class="bg-parchment rounded-lg p-4 mb-6">
+          <p class="text-navy-500 font-sans text-sm">Final Score</p>
           <p class="font-serif text-3xl font-bold text-navy-900">
             You agreed with Congress <span id="final-rate" class="text-gold-600">0%</span> of the time.
           </p>
@@ -159,40 +179,42 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
         &larr; Back to Home
       </a>
     </div>
-	  </div>
-	
-	  <script is:inline define:vars={{ bills: shuffledBills }}>
-	    // Game state
-	    let currentIndex = 0;
-	    let totalVotes = 0;
-	    let agreements = 0;
-	    let allBills = bills;
-	    let hasVoted = false;
+  </div>
 
-	    // Inline Lucide SVG strings for dynamic UI (no Unicode icons)
-	    const ICON_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="inline-block align-[-2px] mr-1"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-	    const ICON_X = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="inline-block align-[-2px] mr-1"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+  <script is:inline define:vars={{ bills: shuffledBills }}>
+    // Game state
+    let currentIndex = 0;
+    let totalVotes = 0;
+    let agreements = 0;
+    let allBills = bills;
+    let hasVoted = false;
 
-	    const svgParser = new DOMParser();
-	    const iconTemplates = {
-	      check: svgParser.parseFromString(ICON_CHECK, 'image/svg+xml').documentElement,
-	      x: svgParser.parseFromString(ICON_X, 'image/svg+xml').documentElement,
-	    };
+    // Inline Lucide SVG strings for dynamic UI (no Unicode icons)
+    const ICON_CHECK =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="inline-block align-[-2px] mr-1"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    const ICON_X =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="inline-block align-[-2px] mr-1"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
-	    function cloneIcon(name) {
-	      const template = iconTemplates[name];
-	      return template ? document.importNode(template, true) : null;
-	    }
+    const svgParser = new DOMParser();
+    const iconTemplates = {
+      check: svgParser.parseFromString(ICON_CHECK, 'image/svg+xml').documentElement,
+      x: svgParser.parseFromString(ICON_X, 'image/svg+xml').documentElement,
+    };
 
-	    function resetEl(el) {
-	      if (!el) return;
-	      el.replaceChildren();
-	    }
+    function cloneIcon(name) {
+      const template = iconTemplates[name];
+      return template ? document.importNode(template, true) : null;
+    }
 
-	    // DOM elements
-	    const cardTitle = document.getElementById('card-title');
-	    const cardSummary = document.getElementById('card-summary');
-	    const cardCategory = document.getElementById('card-category');
+    function resetEl(el) {
+      if (!el) return;
+      el.replaceChildren();
+    }
+
+    // DOM elements
+    const cardTitle = document.getElementById('card-title');
+    const cardSummary = document.getElementById('card-summary');
+    const cardCategory = document.getElementById('card-category');
     const revealSection = document.getElementById('reveal-section');
     const revealType = document.getElementById('reveal-type');
     const revealDetails = document.getElementById('reveal-details');
@@ -262,7 +284,8 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
         }
       } else {
         // For satirical bills, "agreeing" means passing sensible ones
-        agreed = (passed && bill.billType === 'sensible') || (!passed && bill.billType === 'absurd');
+        agreed =
+          (passed && bill.billType === 'sensible') || (!passed && bill.billType === 'absurd');
       }
 
       if (agreed) agreements++;
@@ -282,71 +305,91 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
       billCard.classList.add(passed ? 'border-green-500' : 'border-red-500');
 
       // Populate reveal
-      const typeColor = bill.isReal ? 'bg-navy-800' : (bill.billType === 'sensible' ? 'bg-green-700' : 'bg-gold-600');
-	      const typeLabel = bill.isReal ? 'REAL BILL' : (bill.billType === 'sensible' ? 'SATIRICAL (Sensible)' : 'SATIRICAL (Absurd)');
-	      const typeTextColor = bill.isReal ? 'text-white' : (bill.billType === 'sensible' ? 'text-white' : 'text-navy-900');
+      const typeColor = bill.isReal
+        ? 'bg-navy-800'
+        : bill.billType === 'sensible'
+          ? 'bg-green-700'
+          : 'bg-gold-600';
+      const typeLabel = bill.isReal
+        ? 'REAL BILL'
+        : bill.billType === 'sensible'
+          ? 'SATIRICAL (Sensible)'
+          : 'SATIRICAL (Absurd)';
+      const typeTextColor = bill.isReal
+        ? 'text-white'
+        : bill.billType === 'sensible'
+          ? 'text-white'
+          : 'text-navy-900';
 
-	      resetEl(revealType);
+      resetEl(revealType);
 
-	      const badge = document.createElement('span');
-	      badge.className = `${typeColor} ${typeTextColor} font-serif font-bold px-4 py-2 rounded-full text-sm inline-block`;
-	      badge.textContent = typeLabel;
+      const badge = document.createElement('span');
+      badge.className = `${typeColor} ${typeTextColor} font-serif font-bold px-4 py-2 rounded-full text-sm inline-block`;
+      badge.textContent = typeLabel;
 
-	      const message = document.createElement('p');
-	      message.className = `mt-2 font-sans text-sm ${agreed ? 'text-green-700' : 'text-red-700'}`;
-	      const icon = cloneIcon(agreed ? 'check' : 'x');
-	      if (icon) message.appendChild(icon);
-	      message.appendChild(document.createTextNode(
-	        agreed ? 'You voted like a sensible legislator!' : 'Congress might disagree with you on this one.'
-	      ));
+      const message = document.createElement('p');
+      message.className = `mt-2 font-sans text-sm ${agreed ? 'text-green-700' : 'text-red-700'}`;
+      const icon = cloneIcon(agreed ? 'check' : 'x');
+      if (icon) message.appendChild(icon);
+      message.appendChild(
+        document.createTextNode(
+          agreed
+            ? 'You voted like a sensible legislator!'
+            : 'Congress might disagree with you on this one.',
+        ),
+      );
 
-	      revealType.append(badge, message);
+      revealType.append(badge, message);
 
-	      resetEl(revealDetails);
+      resetEl(revealDetails);
 
-	      const billNumberP = document.createElement('p');
-	      const billNumberStrong = document.createElement('strong');
-	      billNumberStrong.className = 'text-navy-600';
-	      billNumberStrong.textContent = 'Bill Number:';
-	      const billNumberSpan = document.createElement('span');
-	      billNumberSpan.className = 'font-mono';
-	      billNumberSpan.textContent = ` ${bill.billNumber}`;
-	      billNumberP.append(billNumberStrong, billNumberSpan);
+      const billNumberP = document.createElement('p');
+      const billNumberStrong = document.createElement('strong');
+      billNumberStrong.className = 'text-navy-600';
+      billNumberStrong.textContent = 'Bill Number:';
+      const billNumberSpan = document.createElement('span');
+      billNumberSpan.className = 'font-mono';
+      billNumberSpan.textContent = ` ${bill.billNumber}`;
+      billNumberP.append(billNumberStrong, billNumberSpan);
 
-	      const sponsorP = document.createElement('p');
-	      const sponsorStrong = document.createElement('strong');
-	      sponsorStrong.className = 'text-navy-600';
-	      sponsorStrong.textContent = 'Sponsor:';
-	      sponsorP.append(sponsorStrong, document.createTextNode(` ${bill.sponsor}`));
+      const sponsorP = document.createElement('p');
+      const sponsorStrong = document.createElement('strong');
+      sponsorStrong.className = 'text-navy-600';
+      sponsorStrong.textContent = 'Sponsor:';
+      sponsorP.append(sponsorStrong, document.createTextNode(` ${bill.sponsor}`));
 
-	      revealDetails.append(billNumberP, sponsorP);
+      revealDetails.append(billNumberP, sponsorP);
 
-	      if (bill.isReal && bill.absurdityIndex) {
-	        const scoreP = document.createElement('p');
-	        const scoreStrong = document.createElement('strong');
-	        scoreStrong.className = 'text-navy-600';
-	        scoreStrong.textContent = 'Absurdity Index:';
+      if (bill.isReal && bill.absurdityIndex) {
+        const scoreP = document.createElement('p');
+        const scoreStrong = document.createElement('strong');
+        scoreStrong.className = 'text-navy-600';
+        scoreStrong.textContent = 'Absurdity Index:';
 
-	        const scoreSpan = document.createElement('span');
-	        scoreSpan.className = `font-bold ${
-	          bill.absurdityIndex >= 7 ? 'text-red-600' : bill.absurdityIndex >= 4 ? 'text-orange-600' : 'text-green-600'
-	        }`;
-	        scoreSpan.textContent = ` ${bill.absurdityIndex}/10`;
+        const scoreSpan = document.createElement('span');
+        scoreSpan.className = `font-bold ${
+          bill.absurdityIndex >= 7
+            ? 'text-red-600'
+            : bill.absurdityIndex >= 4
+              ? 'text-orange-600'
+              : 'text-green-600'
+        }`;
+        scoreSpan.textContent = ` ${bill.absurdityIndex}/10`;
 
-	        scoreP.append(scoreStrong, scoreSpan);
-	        revealDetails.appendChild(scoreP);
-	      }
+        scoreP.append(scoreStrong, scoreSpan);
+        revealDetails.appendChild(scoreP);
+      }
 
-	      resetEl(revealLink);
+      resetEl(revealLink);
 
-	      // Link to bill page
-	      const billPath = bill.isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`;
-	      const link = document.createElement('a');
-	      link.href = billPath;
-	      link.className = 'text-gold-600 hover:text-gold-700 font-serif text-sm underline';
-	      link.textContent = 'Read Full Bill ->';
-	      revealLink.appendChild(link);
-	    }
+      // Link to bill page
+      const billPath = bill.isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`;
+      const link = document.createElement('a');
+      link.href = billPath;
+      link.className = 'text-gold-600 hover:text-gold-700 font-serif text-sm underline';
+      link.textContent = 'Read Full Bill ->';
+      revealLink.appendChild(link);
+    }
 
     function nextBill() {
       currentIndex++;
@@ -362,15 +405,19 @@ const shuffledBills = [...gameBills].sort(() => Math.random() - 0.5);
 
       let commentary = '';
       if (rate >= 80) {
-        commentary = '"You have excellent legislative instincts. Have you considered running for office? (Please don\'t.)"';
+        commentary =
+          '"You have excellent legislative instincts. Have you considered running for office? (Please don\'t.)"';
       } else if (rate >= 60) {
         commentary = '"Not bad! You\'d fit right in on Capitol Hill. Take that as you will."';
       } else if (rate >= 40) {
-        commentary = '"You\'re a true independent thinker. Congress has no idea what to do with you."';
+        commentary =
+          '"You\'re a true independent thinker. Congress has no idea what to do with you."';
       } else if (rate >= 20) {
-        commentary = '"You and Congress appear to be operating in different realities. Possibly a good thing."';
+        commentary =
+          '"You and Congress appear to be operating in different realities. Possibly a good thing."';
       } else {
-        commentary = '"You disagree with Congress on almost everything. Congratulations, you\'re officially a contrarian."';
+        commentary =
+          '"You disagree with Congress on almost everything. Congratulations, you\'re officially a contrarian."';
       }
       scoreCommentary.textContent = commentary;
     }

@@ -34,48 +34,134 @@ type StageConfig = {
 function getStageConfig(): StageConfig {
   // Final outcomes first (most specific)
   if (s.includes('became public law') || s.includes('became law') || s.includes('enacted')) {
-    return { label: 'Law', icon: 'award', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' };
+    return {
+      label: 'Law',
+      icon: 'award',
+      bg: 'bg-green-100',
+      text: 'text-green-800',
+      dot: 'bg-green-500',
+    };
   }
   if (s.includes('signed')) {
-    return { label: 'Signed', icon: 'pen-tool', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' };
+    return {
+      label: 'Signed',
+      icon: 'pen-tool',
+      bg: 'bg-green-100',
+      text: 'text-green-800',
+      dot: 'bg-green-500',
+    };
   }
   if (s.includes('vetoed')) {
-    return { label: 'Vetoed', icon: 'x-circle', bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' };
+    return {
+      label: 'Vetoed',
+      icon: 'x-circle',
+      bg: 'bg-red-100',
+      text: 'text-red-800',
+      dot: 'bg-red-500',
+    };
   }
   if (s.includes('adopted') || s.includes('agreed to')) {
-    return { label: 'Adopted', icon: 'check-circle', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' };
+    return {
+      label: 'Adopted',
+      icon: 'check-circle',
+      bg: 'bg-green-100',
+      text: 'text-green-800',
+      dot: 'bg-green-500',
+    };
   }
 
   // Failed/dead states
-  if (s.includes('failed') || s.includes('rejected') || s.includes('died') || s.includes('pocket')) {
-    return { label: 'Dead', icon: 'x-circle', bg: 'bg-gray-200', text: 'text-gray-700', dot: 'bg-gray-500' };
+  if (
+    s.includes('failed') ||
+    s.includes('rejected') ||
+    s.includes('died') ||
+    s.includes('pocket')
+  ) {
+    return {
+      label: 'Dead',
+      icon: 'x-circle',
+      bg: 'bg-gray-200',
+      text: 'text-gray-700',
+      dot: 'bg-gray-500',
+    };
   }
 
   // In progress states
   if (s.includes('enrolled') || s.includes('presented to president')) {
-    return { label: 'Enrolled', icon: 'send', bg: 'bg-gold-100', text: 'text-gold-800', dot: 'bg-gold-500' };
+    return {
+      label: 'Enrolled',
+      icon: 'send',
+      bg: 'bg-gold-100',
+      text: 'text-gold-800',
+      dot: 'bg-gold-500',
+    };
   }
-  if ((s.includes('passed') && s.includes('house') && s.includes('senate')) || s.includes('passed both')) {
-    return { label: 'Passed Both', icon: 'check-circle', bg: 'bg-gold-100', text: 'text-gold-800', dot: 'bg-gold-500' };
+  if (
+    (s.includes('passed') && s.includes('house') && s.includes('senate')) ||
+    s.includes('passed both')
+  ) {
+    return {
+      label: 'Passed Both',
+      icon: 'check-circle',
+      bg: 'bg-gold-100',
+      text: 'text-gold-800',
+      dot: 'bg-gold-500',
+    };
   }
   if (s.includes('passed house') || (s.includes('house') && s.includes('passed'))) {
-    return { label: 'Passed House', icon: 'vote', bg: 'bg-gold-100', text: 'text-gold-800', dot: 'bg-gold-500' };
+    return {
+      label: 'Passed House',
+      icon: 'vote',
+      bg: 'bg-gold-100',
+      text: 'text-gold-800',
+      dot: 'bg-gold-500',
+    };
   }
   if (s.includes('passed senate') || (s.includes('senate') && s.includes('passed'))) {
-    return { label: 'Passed Senate', icon: 'vote', bg: 'bg-gold-100', text: 'text-gold-800', dot: 'bg-gold-500' };
+    return {
+      label: 'Passed Senate',
+      icon: 'vote',
+      bg: 'bg-gold-100',
+      text: 'text-gold-800',
+      dot: 'bg-gold-500',
+    };
   }
   if (s.includes('reported')) {
-    return { label: 'Reported', icon: 'check-square', bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500' };
+    return {
+      label: 'Reported',
+      icon: 'check-square',
+      bg: 'bg-blue-100',
+      text: 'text-blue-800',
+      dot: 'bg-blue-500',
+    };
   }
   if (s.includes('committee') || s.includes('referred')) {
-    return { label: 'In Committee', icon: 'users', bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-400' };
+    return {
+      label: 'In Committee',
+      icon: 'users',
+      bg: 'bg-blue-100',
+      text: 'text-blue-700',
+      dot: 'bg-blue-400',
+    };
   }
   if (s.includes('introduced')) {
-    return { label: 'Introduced', icon: 'file-text', bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' };
+    return {
+      label: 'Introduced',
+      icon: 'file-text',
+      bg: 'bg-gray-100',
+      text: 'text-gray-700',
+      dot: 'bg-gray-400',
+    };
   }
 
   // Default - pending/unknown
-  return { label: 'Pending', icon: 'clock', bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' };
+  return {
+    label: 'Pending',
+    icon: 'clock',
+    bg: 'bg-gray-100',
+    text: 'text-gray-600',
+    dot: 'bg-gray-400',
+  };
 }
 
 const config = getStageConfig();
@@ -91,6 +177,7 @@ const isXs = size === 'xs';
   ]}
   title={status}
 >
-  <span class:list={['rounded-full flex-shrink-0', config.dot, isXs ? 'w-1.5 h-1.5' : 'w-2 h-2']} />
+  <span class:list={['rounded-full flex-shrink-0', config.dot, isXs ? 'w-1.5 h-1.5' : 'w-2 h-2']}
+  ></span>
   {config.label}
 </span>

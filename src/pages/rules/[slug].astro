@@ -22,7 +22,9 @@ const d = rule.data;
 
 // Get other rules from the same Congress for navigation
 const allRules = await getCollection('rules');
-const sameCongressRules = allRules.filter(r => r.data.congressNumber === d.congressNumber && r.id !== rule.id);
+const sameCongressRules = allRules.filter(
+  (r) => r.data.congressNumber === d.congressNumber && r.id !== rule.id,
+);
 
 const chamberColors = {
   house: { bg: 'bg-red-700', text: 'text-cream-100', light: 'bg-red-100' },
@@ -40,14 +42,18 @@ const categoryColors = {
 };
 
 const ruleSchema = {
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": d.title,
-  "description": d.summary,
-  "datePublished": d.dateAdopted instanceof Date ? d.dateAdopted.toISOString() : d.dateAdopted,
-  "author": { "@type": "Organization", "name": "Absurdity Index" },
-  "publisher": { "@type": "Organization", "name": "Absurdity Index", "url": "https://absurdityindex.org" },
-  "mainEntityOfPage": { "@type": "WebPage", "@id": `https://absurdityindex.org/rules/${rule.id}` },
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.summary,
+  datePublished: d.dateAdopted instanceof Date ? d.dateAdopted.toISOString() : d.dateAdopted,
+  author: { '@type': 'Organization', name: 'Absurdity Index' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Absurdity Index',
+    url: 'https://absurdityindex.org',
+  },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': `https://absurdityindex.org/rules/${rule.id}` },
 };
 ---
 
@@ -62,28 +68,35 @@ const ruleSchema = {
   <nav class="bg-navy-800 border-b border-gold-500 sticky top-0 z-40" data-theme-fixed>
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <a href="/rules" class="text-gold-400 hover:text-gold-300 font-mono text-sm flex items-center gap-1">
+        <a
+          href="/rules"
+          class="text-gold-400 hover:text-gold-300 font-mono text-sm flex items-center gap-1"
+        >
           <Icon name="chevron-right" size={14} class="rotate-180" />
           All Rules
         </a>
         <span class="text-gold-500">|</span>
         <span class="text-gold-400 font-mono text-sm">{d.congressNumber}th Congress</span>
       </div>
-      {sameCongressRules.length > 0 && (
-        <div class="flex items-center gap-2">
-          <span class="text-gold-400/70 text-sm hidden sm:inline">Also in this Congress:</span>
-          {sameCongressRules.map(r => (
-            <a
-              href={`/rules/${r.id}`}
-              class={`px-3 py-1 rounded text-sm font-mono ${
-                r.data.chamber === 'house' ? 'bg-red-700 text-cream-100' : 'bg-navy-600 text-cream-100'
-              } hover:opacity-80 transition-opacity`}
-            >
-              {r.data.chamber === 'house' ? 'House' : 'Senate'}
-            </a>
-          ))}
-        </div>
-      )}
+      {
+        sameCongressRules.length > 0 && (
+          <div class="flex items-center gap-2">
+            <span class="text-gold-400/70 text-sm hidden sm:inline">Also in this Congress:</span>
+            {sameCongressRules.map((r) => (
+              <a
+                href={`/rules/${r.id}`}
+                class={`px-3 py-1 rounded text-sm font-mono ${
+                  r.data.chamber === 'house'
+                    ? 'bg-red-700 text-cream-100'
+                    : 'bg-navy-600 text-cream-100'
+                } hover:opacity-80 transition-opacity`}
+              >
+                {r.data.chamber === 'house' ? 'House' : 'Senate'}
+              </a>
+            ))}
+          </div>
+        )
+      }
     </div>
   </nav>
 
@@ -101,12 +114,14 @@ const ruleSchema = {
               {d.congressNumber}th Congress ({d.congressYears})
             </p>
           </div>
-          {d.pageCount && (
-            <div class="text-right">
-              <div class="font-mono text-3xl font-bold text-cream-100">{d.pageCount}</div>
-              <div class="text-sm text-cream-100/70">pages</div>
-            </div>
-          )}
+          {
+            d.pageCount && (
+              <div class="text-right">
+                <div class="font-mono text-3xl font-bold text-cream-100">{d.pageCount}</div>
+                <div class="text-sm text-cream-100/70">pages</div>
+              </div>
+            )
+          }
         </div>
       </div>
 
@@ -115,26 +130,50 @@ const ruleSchema = {
 
         <div class="flex flex-wrap gap-4 text-sm text-navy-600">
           <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            <svg
+              class="w-4 h-4 text-gold-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              ></path>
             </svg>
             <span>
-              Adopted {d.dateAdopted.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
+              Adopted {
+                d.dateAdopted.toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                  timeZone: 'UTC',
+                })
+              }
             </span>
           </div>
-          {d.congressDotGovUrl && (
-            <a
-              href={d.congressDotGovUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="flex items-center gap-2 text-gold-700 hover:text-gold-600"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-              </svg>
-              View on Congress.gov
-            </a>
-          )}
+          {
+            d.congressDotGovUrl && (
+              <a
+                href={d.congressDotGovUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-2 text-gold-700 hover:text-gold-600"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+                View on Congress.gov
+              </a>
+            )
+          }
         </div>
       </div>
     </div>
@@ -144,61 +183,71 @@ const ruleSchema = {
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-8">
         <!-- Absurdity Score -->
-        {d.absurdityIndex && (
-          <div class="bg-parchment rounded-lg shadow-lg p-6">
-            <AbsurdityMeter score={d.absurdityIndex} />
-          </div>
-        )}
+        {
+          d.absurdityIndex && (
+            <div class="bg-parchment rounded-lg shadow-lg p-6">
+              <AbsurdityMeter score={d.absurdityIndex} />
+            </div>
+          )
+        }
 
         <!-- Major Changes -->
-        {d.majorChanges && d.majorChanges.length > 0 && (
-          <div class="bg-parchment rounded-lg shadow-lg p-6">
-            <h2 class="font-serif text-xl font-bold text-navy-900 mb-4 flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-gold-100 flex items-center justify-center">
-                <Icon name="zap" size={14} class="text-gold-700" />
-              </div>
-              Major Changes
-            </h2>
-            <div class="space-y-4">
-              {d.majorChanges.map((change) => (
-                <div class="bg-cream-100 border border-gold-200 rounded-lg p-4">
-                  <div class="flex items-start justify-between gap-4 mb-2">
-                    <h3 class="font-serif font-bold text-navy-900">{change.title}</h3>
-                    {change.category && (
-                      <span class={`${categoryColors[change.category]} text-xs font-mono px-2 py-1 rounded shrink-0`}>
-                        {change.category}
-                      </span>
-                    )}
-                  </div>
-                  <p class="text-sm text-navy-600">{change.description}</p>
+        {
+          d.majorChanges && d.majorChanges.length > 0 && (
+            <div class="bg-parchment rounded-lg shadow-lg p-6">
+              <h2 class="font-serif text-xl font-bold text-navy-900 mb-4 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-gold-100 flex items-center justify-center">
+                  <Icon name="zap" size={14} class="text-gold-700" />
                 </div>
-              ))}
+                Major Changes
+              </h2>
+              <div class="space-y-4">
+                {d.majorChanges.map((change) => (
+                  <div class="bg-cream-100 border border-gold-200 rounded-lg p-4">
+                    <div class="flex items-start justify-between gap-4 mb-2">
+                      <h3 class="font-serif font-bold text-navy-900">{change.title}</h3>
+                      {change.category && (
+                        <span
+                          class={`${categoryColors[change.category]} text-xs font-mono px-2 py-1 rounded shrink-0`}
+                        >
+                          {change.category}
+                        </span>
+                      )}
+                    </div>
+                    <p class="text-sm text-navy-600">{change.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
         <!-- Notable Rules -->
-        {d.notableRules && d.notableRules.length > 0 && (
-          <div class="bg-parchment rounded-lg shadow-lg p-6">
-            <h2 class="font-serif text-xl font-bold text-navy-900 mb-4 flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-gold-100 flex items-center justify-center">
-                <Icon name="clipboard-list" size={14} class="text-gold-700" />
-              </div>
-              Notable Standing Rules
-            </h2>
-            <div class="space-y-3">
-              {d.notableRules.map((rule) => (
-                <div class="flex gap-4 p-3 bg-cream-100 border border-gold-200 rounded">
-                  <span class="font-mono text-sm text-gold-700 shrink-0 font-bold">{rule.rule}</span>
-                  <div>
-                    <h4 class="font-serif font-bold text-navy-900 text-sm">{rule.title}</h4>
-                    <p class="text-xs text-navy-600 mt-1">{rule.description}</p>
-                  </div>
+        {
+          d.notableRules && d.notableRules.length > 0 && (
+            <div class="bg-parchment rounded-lg shadow-lg p-6">
+              <h2 class="font-serif text-xl font-bold text-navy-900 mb-4 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-gold-100 flex items-center justify-center">
+                  <Icon name="clipboard-list" size={14} class="text-gold-700" />
                 </div>
-              ))}
+                Notable Standing Rules
+              </h2>
+              <div class="space-y-3">
+                {d.notableRules.map((rule) => (
+                  <div class="flex gap-4 p-3 bg-cream-100 border border-gold-200 rounded">
+                    <span class="font-mono text-sm text-gold-700 shrink-0 font-bold">
+                      {rule.rule}
+                    </span>
+                    <div>
+                      <h4 class="font-serif font-bold text-navy-900 text-sm">{rule.title}</h4>
+                      <p class="text-xs text-navy-600 mt-1">{rule.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
         <!-- MDX Content -->
         <div class="bg-parchment rounded-lg shadow-lg p-8 relative overflow-hidden">
@@ -218,9 +267,7 @@ const ruleSchema = {
       <!-- Sidebar -->
       <aside class="space-y-6">
         <!-- Vote Breakdown -->
-        {d.votes && (
-          <VoteBreakdown votes={d.votes} />
-        )}
+        {d.votes && <VoteBreakdown votes={d.votes} />}
 
         <!-- Quick Facts -->
         <div class="bg-cream-100 border border-gold-300 rounded-lg p-6">
@@ -238,38 +285,44 @@ const ruleSchema = {
               <dt class="text-navy-600">Years</dt>
               <dd class="font-mono text-navy-900">{d.congressYears}</dd>
             </div>
-            {d.pageCount && (
-              <div class="flex justify-between">
-                <dt class="text-navy-600">Pages</dt>
-                <dd class="font-mono text-navy-900">{d.pageCount}</dd>
-              </div>
-            )}
-            {d.majorChanges && (
-              <div class="flex justify-between">
-                <dt class="text-navy-600">Major Changes</dt>
-                <dd class="font-mono text-navy-900">{d.majorChanges.length}</dd>
-              </div>
-            )}
+            {
+              d.pageCount && (
+                <div class="flex justify-between">
+                  <dt class="text-navy-600">Pages</dt>
+                  <dd class="font-mono text-navy-900">{d.pageCount}</dd>
+                </div>
+              )
+            }
+            {
+              d.majorChanges && (
+                <div class="flex justify-between">
+                  <dt class="text-navy-600">Major Changes</dt>
+                  <dd class="font-mono text-navy-900">{d.majorChanges.length}</dd>
+                </div>
+              )
+            }
           </dl>
         </div>
 
         <!-- Related Rules -->
-        {sameCongressRules.length > 0 && (
-          <div class="bg-cream-100 border border-gold-300 rounded-lg p-6">
-            <h3 class="font-serif font-bold text-navy-900 mb-4">Same Congress</h3>
-            <div class="space-y-2">
-              {sameCongressRules.map(r => (
-                <a
-                  href={`/rules/${r.id}`}
-                  class="block p-3 bg-parchment rounded border border-gold-200 hover:border-gold-400 transition-colors"
-                >
-                  <span class="font-mono text-sm text-gold-600">{r.data.resolution}</span>
-                  <span class="font-serif text-navy-900 ml-2 capitalize">{r.data.chamber}</span>
-                </a>
-              ))}
+        {
+          sameCongressRules.length > 0 && (
+            <div class="bg-cream-100 border border-gold-300 rounded-lg p-6">
+              <h3 class="font-serif font-bold text-navy-900 mb-4">Same Congress</h3>
+              <div class="space-y-2">
+                {sameCongressRules.map((r) => (
+                  <a
+                    href={`/rules/${r.id}`}
+                    class="block p-3 bg-parchment rounded border border-gold-200 hover:border-gold-400 transition-colors"
+                  >
+                    <span class="font-mono text-sm text-gold-600">{r.data.resolution}</span>
+                    <span class="font-serif text-navy-900 ml-2 capitalize">{r.data.chamber}</span>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
       </aside>
     </div>
 

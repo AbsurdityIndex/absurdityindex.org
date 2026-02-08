@@ -44,7 +44,9 @@ function isActivePath(href: string) {
   </div>
 
   <!-- Main nav -->
-  <nav class="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 min-[375px]:px-4 sm:h-16">
+  <nav
+    class="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 min-[375px]:px-4 sm:h-16"
+  >
     <!-- Logo / site name -->
     <a href="/" class="group flex items-center gap-2 min-[375px]:gap-3">
       <!-- Inline official seal SVG -->
@@ -55,9 +57,10 @@ function isActivePath(href: string) {
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2" />
-        <circle cx="32" cy="32" r="24" stroke="currentColor" stroke-width="1.5" />
-        <circle cx="32" cy="32" r="18" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
+        <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2"></circle>
+        <circle cx="32" cy="32" r="24" stroke="currentColor" stroke-width="1.5"></circle>
+        <circle cx="32" cy="32" r="18" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2"
+        ></circle>
         <text
           x="32"
           y="30"
@@ -65,45 +68,47 @@ function isActivePath(href: string) {
           font-size="10"
           font-weight="700"
           fill="currentColor"
-          font-family="serif"
-        >NOT</text>
+          font-family="serif">NOT</text
+        >
         <text
           x="32"
           y="42"
           text-anchor="middle"
           font-size="7"
           fill="currentColor"
-          font-family="serif"
-        >CONGRESS</text>
+          font-family="serif">CONGRESS</text
+        >
         <!-- Stars at cardinal points -->
-        <circle cx="32" cy="4" r="1.5" fill="currentColor" />
-        <circle cx="32" cy="60" r="1.5" fill="currentColor" />
-        <circle cx="4" cy="32" r="1.5" fill="currentColor" />
-        <circle cx="60" cy="32" r="1.5" fill="currentColor" />
+        <circle cx="32" cy="4" r="1.5" fill="currentColor"></circle>
+        <circle cx="32" cy="60" r="1.5" fill="currentColor"></circle>
+        <circle cx="4" cy="32" r="1.5" fill="currentColor"></circle>
+        <circle cx="60" cy="32" r="1.5" fill="currentColor"></circle>
       </svg>
-      <span class="font-serif font-bold text-sm text-gold-400 transition-colors group-hover:text-gold-300 min-[375px]:text-base sm:text-xl">
+      <span
+        class="font-serif font-bold text-sm text-gold-400 transition-colors group-hover:text-gold-300 min-[375px]:text-base sm:text-xl"
+      >
         ABSURDITY INDEX™
       </span>
     </a>
 
     <!-- Desktop nav links -->
     <ul class="hidden md:flex items-center gap-6">
-      {navLinks.map(({ href, label }) => (
-        <li>
-          <a
-            href={href}
-            aria-current={isActivePath(href) ? 'page' : undefined}
-            class:list={[
-              'font-sans text-sm tracking-wide uppercase transition-colors',
-              isActivePath(href)
-                ? 'text-gold-200'
-                : 'text-gold-400 hover:text-gold-300',
-            ]}
-          >
-            {label}
-          </a>
-        </li>
-      ))}
+      {
+        navLinks.map(({ href, label }) => (
+          <li>
+            <a
+              href={href}
+              aria-current={isActivePath(href) ? 'page' : undefined}
+              class:list={[
+                'font-sans text-sm tracking-wide uppercase transition-colors',
+                isActivePath(href) ? 'text-gold-200' : 'text-gold-400 hover:text-gold-300',
+              ]}
+            >
+              {label}
+            </a>
+          </li>
+        ))
+      }
       <!-- Tools dropdown -->
       <li id="tools-menu-container" class="relative">
         <button
@@ -119,8 +124,15 @@ function isActivePath(href: string) {
           aria-controls="tools-menu"
         >
           Tools
-          <svg id="tools-menu-chevron" class="w-3 h-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          <svg
+            id="tools-menu-chevron"
+            class="w-3 h-3 transition-transform"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
           </svg>
         </button>
         <ul
@@ -129,36 +141,41 @@ function isActivePath(href: string) {
           role="menu"
           aria-labelledby="tools-menu-button"
         >
-          <li role="presentation" class="px-3 pb-2 pt-1 text-[10px] font-sans font-semibold uppercase tracking-[0.18em] text-gold-500/80">
+          <li
+            role="presentation"
+            class="px-3 pb-2 pt-1 text-[10px] font-sans font-semibold uppercase tracking-[0.18em] text-gold-500/80"
+          >
             Tools
           </li>
-          {toolsDropdown.map(({ href, label }) => (
-            <li>
-              <a
-                href={href}
-                role="menuitem"
-                aria-current={isActivePath(href) ? 'page' : undefined}
-                class:list={[
-                  'group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-sans transition-colors',
-                  isActivePath(href)
-                    ? 'border border-gold-500/40 bg-gold-500/20 text-gold-200'
-                    : 'border border-transparent text-gold-300 hover:border-gold-500/30 hover:bg-navy-800 hover:text-gold-200',
-                ]}
-              >
-                <span>{label}</span>
-                <svg
-                  class="h-3.5 w-3.5 text-gold-500/60 transition-transform group-hover:translate-x-0.5"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.8"
-                  aria-hidden="true"
+          {
+            toolsDropdown.map(({ href, label }) => (
+              <li>
+                <a
+                  href={href}
+                  role="menuitem"
+                  aria-current={isActivePath(href) ? 'page' : undefined}
+                  class:list={[
+                    'group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-sans transition-colors',
+                    isActivePath(href)
+                      ? 'border border-gold-500/40 bg-gold-500/20 text-gold-200'
+                      : 'border border-transparent text-gold-300 hover:border-gold-500/30 hover:bg-navy-800 hover:text-gold-200',
+                  ]}
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 5l5 5-5 5" />
-                </svg>
-              </a>
-            </li>
-          ))}
+                  <span>{label}</span>
+                  <svg
+                    class="h-3.5 w-3.5 text-gold-500/60 transition-transform group-hover:translate-x-0.5"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 5l5 5-5 5" />
+                  </svg>
+                </a>
+              </li>
+            ))
+          }
         </ul>
       </li>
     </ul>
@@ -172,11 +189,19 @@ function isActivePath(href: string) {
         aria-label="Founding Documents"
         title="Constitution & Bill of Rights"
       >
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/>
-          <path d="M19 17V5a2 2 0 0 0-2-2H4"/>
-          <path d="M15 8h-5"/>
-          <path d="M15 12h-5"/>
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"></path>
+          <path d="M19 17V5a2 2 0 0 0-2-2H4"></path>
+          <path d="M15 8h-5"></path>
+          <path d="M15 12h-5"></path>
         </svg>
       </button>
 
@@ -193,8 +218,8 @@ function isActivePath(href: string) {
         title="Search bills"
       >
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" stroke-linecap="round" />
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35" stroke-linecap="round"></path>
         </svg>
       </a>
 
@@ -207,9 +232,11 @@ function isActivePath(href: string) {
         aria-controls="mobile-menu"
       >
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
-        <span class="hidden font-sans text-xs uppercase tracking-wider min-[375px]:inline">Menu</span>
+        <span class="hidden font-sans text-xs uppercase tracking-wider min-[375px]:inline"
+          >Menu</span
+        >
       </button>
     </div>
   </nav>
@@ -350,7 +377,9 @@ function isActivePath(href: string) {
   const mobileMenuClose = document.getElementById('mobile-menu-close');
   const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
   const mobileMenuLinks = Array.from(document.querySelectorAll('[data-mobile-link]'));
-  const mobileSectionToggles = Array.from(document.querySelectorAll('[data-mobile-section-toggle]'));
+  const mobileSectionToggles = Array.from(
+    document.querySelectorAll('[data-mobile-section-toggle]'),
+  );
 
   let isMobileMenuOpen = false;
   let mobileCloseTimeoutId = null;
@@ -403,7 +432,9 @@ function isActivePath(href: string) {
       .filter((sectionName) => Boolean(sectionName));
 
     const expandedSections = sectionNames.filter((sectionName) => {
-      const sectionToggle = document.querySelector(`[data-mobile-section-toggle=\"${sectionName}\"]`);
+      const sectionToggle = document.querySelector(
+        `[data-mobile-section-toggle=\"${sectionName}\"]`,
+      );
       return sectionToggle?.getAttribute('aria-expanded') === 'true';
     });
 
@@ -481,9 +512,8 @@ function isActivePath(href: string) {
     clearMobileCloseTimeout();
     isMobileMenuOpen = true;
     closeToolsMenu();
-    previousFocusedElement = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
+    previousFocusedElement =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
     mobileMenu.classList.remove('hidden');
     mobileMenu.setAttribute('aria-hidden', 'false');

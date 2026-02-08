@@ -38,7 +38,12 @@ const isBicameral = billType?.needsBothChambers ?? false;
 // Format dates
 const formatDate = (date: Date) => {
   // All bill/action dates are date-only; force UTC for consistent output across build machines/timezones.
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 };
 
 // Check for detailed data
@@ -52,14 +57,19 @@ const hasPork = d.totalPork !== undefined;
 
 // Schema.org structured data
 const billSchema = {
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": d.title,
-  "description": d.summary,
-  "datePublished": d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
-  "author": { "@type": "Organization", "name": "Absurdity Index" },
-  "publisher": { "@type": "Organization", "name": "Absurdity Index", "url": "https://absurdityindex.org" },
-  "mainEntityOfPage": { "@type": "WebPage", "@id": `https://absurdityindex.org/bills/${bill.id}` },
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.summary,
+  datePublished:
+    d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
+  author: { '@type': 'Organization', name: 'Absurdity Index' },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Absurdity Index',
+    url: 'https://absurdityindex.org',
+  },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': `https://absurdityindex.org/bills/${bill.id}` },
 };
 
 // Share URLs
@@ -72,7 +82,12 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
   title={`${d.billNumber} — ${d.title}`}
   description={d.summary}
   ogType="article"
-  article={{ publishedTime: d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced), section: d.category, tags: d.tags }}
+  article={{
+    publishedTime:
+      d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : String(d.dateIntroduced),
+    section: d.category,
+    tags: d.tags,
+  }}
 >
   <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
 
@@ -82,14 +97,18 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       <span class="text-gold-400 font-serif text-sm italic">
         This is satire. Some of it's real. We'll let you figure out which.
       </span>
-      <a href={d.congressDotGovUrl || "https://www.congress.gov"} target="_blank" rel="noopener noreferrer" class="text-gold-500 hover:text-gold-300 text-xs font-mono underline underline-offset-2 whitespace-nowrap">
+      <a
+        href={d.congressDotGovUrl || 'https://www.congress.gov'}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-gold-500 hover:text-gold-300 text-xs font-mono underline underline-offset-2 whitespace-nowrap"
+      >
         Verify it yourself
       </a>
     </div>
   </div>
 
   <div class="max-w-3xl mx-auto px-4 py-8 md:py-12">
-
     {/* Compact header bar */}
     <div class="flex flex-wrap items-center gap-3 mb-6">
       <span class="font-mono text-lg font-bold text-navy-900">{d.billNumber}</span>
@@ -104,72 +123,102 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     </div>
 
     {/* Title + Subtitle */}
-    <h1 class:list={["text-2xl md:text-3xl font-serif font-bold text-navy-900 leading-tight", d.subtitle ? "mb-2" : "mb-6"]}>
+    <h1
+      class:list={[
+        'text-2xl md:text-3xl font-serif font-bold text-navy-900 leading-tight',
+        d.subtitle ? 'mb-2' : 'mb-6',
+      ]}
+    >
       {d.title}
     </h1>
-    {d.subtitle && (
-      <p class="text-lg text-navy-600 font-serif italic mb-6">{d.subtitle}</p>
-    )}
+    {d.subtitle && <p class="text-lg text-navy-600 font-serif italic mb-6">{d.subtitle}</p>}
 
     {/* Legislative Progress Timeline */}
-    {isBicameral ? (
-      <BicameralTimeline
-        billNumber={d.billNumber}
-        status={d.status}
-        dateIntroduced={d.dateIntroduced}
-        actions={d.actions}
-      />
-    ) : (
-      <BillTimeline status={d.status} dateIntroduced={d.dateIntroduced} billNumber={d.billNumber} />
-    )}
+    {
+      isBicameral ? (
+        <BicameralTimeline
+          billNumber={d.billNumber}
+          status={d.status}
+          dateIntroduced={d.dateIntroduced}
+          actions={d.actions}
+        />
+      ) : (
+        <BillTimeline
+          status={d.status}
+          dateIntroduced={d.dateIntroduced}
+          billNumber={d.billNumber}
+        />
+      )
+    }
 
     {/* Absurdity Meter - Prominent */}
-    {d.absurdityIndex !== undefined && (
-      <div class="mb-8">
-        <AbsurdityMeter score={d.absurdityIndex} />
-      </div>
-    )}
+    {
+      d.absurdityIndex !== undefined && (
+        <div class="mb-8">
+          <AbsurdityMeter score={d.absurdityIndex} />
+        </div>
+      )
+    }
 
     {/* The Gist - Editorial Summary */}
-    {d.theGist ? (
-      <div class="mb-8 p-6 bg-parchment rounded-lg border border-gold-200">
-        <TheGist
-          theGist={d.theGist}
-          whyItMatters={d.whyItMatters}
-          absurdityIndex={d.absurdityIndex}
-        />
-      </div>
-    ) : d.summary && (
-      <div class="mb-8 p-6 bg-parchment rounded-lg border border-gold-200">
-        <p class="text-lg font-serif text-navy-800 leading-relaxed">
-          {d.summary}
-        </p>
-      </div>
-    )}
+    {
+      d.theGist ? (
+        <div class="mb-8 p-6 bg-parchment rounded-lg border border-gold-200">
+          <TheGist
+            theGist={d.theGist}
+            whyItMatters={d.whyItMatters}
+            absurdityIndex={d.absurdityIndex}
+          />
+        </div>
+      ) : (
+        d.summary && (
+          <div class="mb-8 p-6 bg-parchment rounded-lg border border-gold-200">
+            <p class="text-lg font-serif text-navy-800 leading-relaxed">{d.summary}</p>
+          </div>
+        )
+      )
+    }
 
     {/* Compact metadata - 2x2 on mobile, 4-col on desktop */}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8 text-sm">
-      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all">
-        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+      <div
+        class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all"
+      >
+        <dt
+          class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5"
+        >
           <Icon name="user" size={12} class="text-gold-600" />
           Sponsor
         </dt>
-        <dd class="font-sans text-navy-800 text-sm leading-tight line-clamp-2 font-medium" title={d.sponsor}>
+        <dd
+          class="font-sans text-navy-800 text-sm leading-tight line-clamp-2 font-medium"
+          title={d.sponsor}
+        >
           {d.sponsor?.replace(/^(Rep\.|Sen\.)\s*/, '').trim() || 'Unknown'}
-          {d.sponsorParty && (
-            <span class:list={[
-              'ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold',
-              d.sponsorParty === 'R' ? 'bg-red-100 text-red-700' :
-              d.sponsorParty === 'D' ? 'bg-blue-100 text-blue-700' :
-              'bg-purple-100 text-purple-700'
-            ]}>
-              {d.sponsorParty}
-            </span>
-          )}
+          {
+            d.sponsorParty && (
+              <span
+                class:list={[
+                  'ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold',
+                  d.sponsorParty === 'R'
+                    ? 'bg-red-100 text-red-700'
+                    : d.sponsorParty === 'D'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-purple-100 text-purple-700',
+                ]}
+              >
+                {d.sponsorParty}
+              </span>
+            )
+          }
         </dd>
       </div>
-      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all">
-        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+      <div
+        class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all"
+      >
+        <dt
+          class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5"
+        >
           <Icon name="users" size={12} class="text-gold-600" />
           Committee
         </dt>
@@ -177,15 +226,23 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
           {d.committee?.replace(/^House |^Senate /, '').trim() || 'N/A'}
         </dd>
       </div>
-      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all">
-        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+      <div
+        class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all"
+      >
+        <dt
+          class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5"
+        >
           <Icon name="calendar" size={12} class="text-gold-600" />
           Introduced
         </dt>
         <dd class="font-sans text-navy-800 text-sm font-medium">{formatDate(d.dateIntroduced)}</dd>
       </div>
-      <div class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all">
-        <dt class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+      <div
+        class="p-3 bg-cream-100 border border-gold-200 rounded-lg group hover:border-gold-400 hover:shadow-sm transition-all"
+      >
+        <dt
+          class="text-[11px] font-sans text-navy-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5"
+        >
           <Icon name="tag" size={12} class="text-gold-600" />
           Category
         </dt>
@@ -194,21 +251,24 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     </div>
 
     {/* Party Balance */}
-    {(d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
-      <div class="mb-8">
-        <PartyBalance
-          sponsor={d.sponsor}
-          sponsorParty={d.sponsorParty}
-          cosponsors={d.cosponsors}
-          cosponsorCount={d.cosponsorCount}
-          billEvolution={d.billEvolution}
-          totalPork={d.totalPork}
-        />
-      </div>
-    )}
+    {
+      (d.sponsorParty || (d.cosponsors?.length ?? 0) > 0) && (
+        <div class="mb-8">
+          <PartyBalance
+            sponsor={d.sponsor}
+            sponsorParty={d.sponsorParty}
+            cosponsors={d.cosponsors}
+            cosponsorCount={d.cosponsorCount}
+            billEvolution={d.billEvolution}
+            totalPork={d.totalPork}
+          />
+        </div>
+      )
+    }
 
-      {/* Key Milestones */}
-      {(hasActions || d.keyMilestones) && (
+    {/* Key Milestones */}
+    {
+      (hasActions || d.keyMilestones) && (
         <div class="mb-8 p-5 bg-cream-100 rounded-lg border border-gold-300">
           <KeyMilestones
             actions={d.actions || []}
@@ -217,7 +277,8 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
             keyMilestones={d.keyMilestones}
           />
         </div>
-      )}
+      )
+    }
 
     {/* Cost Estimate */}
     <div class="mb-8">
@@ -225,47 +286,66 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     </div>
 
     {/* Satire disclaimer — appears when pork or evolution data is present */}
-    {(hasPork || hasBillEvolution) && (
-      <div class="mb-6 px-4 py-3 bg-gold-50 border border-gold-300 rounded-lg flex items-start gap-3">
-        <Icon name="alert-triangle" size={16} class="text-gold-600 flex-shrink-0 mt-0.5" />
-        <p class="text-xs text-navy-700 leading-relaxed">
-          <strong class="font-semibold">Satire notice:</strong> Spending figures, pork tracking, and editorial commentary below are
-          satirical estimates for entertainment purposes. They are not official government cost analyses.
-          Legislative history and vote records are real &mdash;
-          <a href={d.congressDotGovUrl || "https://www.congress.gov"} target="_blank" rel="noopener noreferrer" class="text-gold-700 underline hover:text-gold-800">verify at Congress.gov</a>.
-        </p>
-      </div>
-    )}
+    {
+      (hasPork || hasBillEvolution) && (
+        <div class="mb-6 px-4 py-3 bg-gold-50 border border-gold-300 rounded-lg flex items-start gap-3">
+          <Icon name="alert-triangle" size={16} class="text-gold-600 flex-shrink-0 mt-0.5" />
+          <p class="text-xs text-navy-700 leading-relaxed">
+            <strong class="font-semibold">Satire notice:</strong> Spending figures, pork tracking,
+            and editorial commentary below are satirical estimates for entertainment purposes. They
+            are not official government cost analyses. Legislative history and vote records are real
+            &mdash;
+            <a
+              href={d.congressDotGovUrl || 'https://www.congress.gov'}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-gold-700 underline hover:text-gold-800"
+            >
+              verify at Congress.gov
+            </a>
+            .
+          </p>
+        </div>
+      )
+    }
 
     {/* Pork Barrel Meter */}
-    {hasPork && (
-      <div class="mb-8">
-        <PorkMeter amount={d.totalPork || 0} />
-      </div>
-    )}
+    {
+      hasPork && (
+        <div class="mb-8">
+          <PorkMeter amount={d.totalPork || 0} />
+        </div>
+      )
+    }
 
     {/* Bill Evolution Modal (if evolution data exists) */}
-    {hasBillEvolution && (
-      <div class="mb-8 p-5 bg-gradient-to-r from-navy-800 to-navy-900 rounded-lg border border-gold-500" data-theme-fixed>
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h3 class="text-sm font-sans font-semibold text-gold-400 uppercase tracking-wide mb-1">
-              Watch the Sausage Get Made
-            </h3>
-            <p class="text-xs text-cream-300">
-              See how this bill transformed through {d.billEvolution?.length} stages of the legislative process.
-            </p>
+    {
+      hasBillEvolution && (
+        <div
+          class="mb-8 p-5 bg-gradient-to-r from-navy-800 to-navy-900 rounded-lg border border-gold-500"
+          data-theme-fixed
+        >
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-sans font-semibold text-gold-400 uppercase tracking-wide mb-1">
+                Watch the Sausage Get Made
+              </h3>
+              <p class="text-xs text-cream-300">
+                See how this bill transformed through {d.billEvolution?.length} stages of the
+                legislative process.
+              </p>
+            </div>
+            <BillEvolutionModal
+              billNumber={d.billNumber}
+              billTitle={d.title}
+              stages={d.billEvolution || []}
+              totalPork={d.totalPork || 0}
+              congressDotGovUrl={d.congressDotGovUrl}
+            />
           </div>
-          <BillEvolutionModal
-            billNumber={d.billNumber}
-            billTitle={d.title}
-            stages={d.billEvolution || []}
-            totalPork={d.totalPork || 0}
-            congressDotGovUrl={d.congressDotGovUrl}
-          />
         </div>
-      </div>
-    )}
+      )
+    }
 
     {/* Collapsible Deep Dive Sections */}
     <div class="space-y-3 mb-8">
@@ -275,108 +355,129 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </h3>
 
       {/* CRS Summary */}
-      {hasCrsSummary && (
-        <CollapsibleSection title="Official CRS Summary" icon="file-text">
-          <div class="prose prose-sm prose-navy max-w-none">
-            <p class="text-sm text-navy-700 leading-relaxed whitespace-pre-line">
-              {d.crsSummary}
-            </p>
-            {d.congressDotGovUrl && (
-              <a
-                href={d.congressDotGovUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-1 text-sm text-gold-700 hover:text-gold-800 mt-3"
-              >
-                Read full summary on Congress.gov
-                <Icon name="external-link" size={12} />
-              </a>
-            )}
-          </div>
-        </CollapsibleSection>
-      )}
+      {
+        hasCrsSummary && (
+          <CollapsibleSection title="Official CRS Summary" icon="file-text">
+            <div class="prose prose-sm prose-navy max-w-none">
+              <p class="text-sm text-navy-700 leading-relaxed whitespace-pre-line">
+                {d.crsSummary}
+              </p>
+              {d.congressDotGovUrl && (
+                <a
+                  href={d.congressDotGovUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-sm text-gold-700 hover:text-gold-800 mt-3"
+                >
+                  Read full summary on Congress.gov
+                  <Icon name="external-link" size={12} />
+                </a>
+              )}
+            </div>
+          </CollapsibleSection>
+        )
+      }
 
       {/* All Actions */}
-      {hasActions && (
-        <CollapsibleSection title="All Legislative Actions" count={d.actionCount ?? d.actions?.length} icon="list">
-          <div class="max-h-96 overflow-y-auto space-y-2">
-            {d.actions?.slice(0, 50).map((action) => (
-              <div class="flex gap-3 text-sm py-2 border-b border-cream-200 last:border-0">
-                <time class="flex-shrink-0 font-mono text-xs text-navy-400 w-24">
-                  {formatDate(action.date)}
-                </time>
-                <span class="text-navy-700">{action.text}</span>
-              </div>
-            ))}
-            {((d.actionCount ?? d.actions?.length ?? 0) > 50) && (
-              <p class="text-xs text-navy-500 italic pt-2">
-                Showing 50 of {d.actionCount ?? d.actions?.length} actions.
-                <a href={d.congressDotGovUrl} target="_blank" rel="noopener noreferrer" class="text-gold-700 hover:underline ml-1">
-                  See all on Congress.gov
-                </a>
-              </p>
-            )}
-          </div>
-        </CollapsibleSection>
-      )}
+      {
+        hasActions && (
+          <CollapsibleSection
+            title="All Legislative Actions"
+            count={d.actionCount ?? d.actions?.length}
+            icon="list"
+          >
+            <div class="max-h-96 overflow-y-auto space-y-2">
+              {d.actions?.slice(0, 50).map((action) => (
+                <div class="flex gap-3 text-sm py-2 border-b border-cream-200 last:border-0">
+                  <time class="flex-shrink-0 font-mono text-xs text-navy-400 w-24">
+                    {formatDate(action.date)}
+                  </time>
+                  <span class="text-navy-700">{action.text}</span>
+                </div>
+              ))}
+              {(d.actionCount ?? d.actions?.length ?? 0) > 50 && (
+                <p class="text-xs text-navy-500 italic pt-2">
+                  Showing 50 of {d.actionCount ?? d.actions?.length} actions.
+                  <a
+                    href={d.congressDotGovUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-gold-700 hover:underline ml-1"
+                  >
+                    See all on Congress.gov
+                  </a>
+                </p>
+              )}
+            </div>
+          </CollapsibleSection>
+        )
+      }
 
       {/* Amendments */}
-      {hasAmendments && (
-        <CollapsibleSection title="Amendments" count={d.amendmentCount || d.amendments?.length} icon="edit-3">
-          <div class="space-y-2">
-            {d.amendments?.slice(0, 20).map((amend) => (
-              <div class="p-3 bg-cream-50 rounded text-sm">
-                <span class="font-mono text-navy-600">{amend.number}</span>
-                {amend.description && (
-                  <p class="text-navy-700 mt-1">{amend.description}</p>
-                )}
-              </div>
-            ))}
-            {(d.amendmentCount || 0) > 20 && (
-              <p class="text-xs text-navy-500 italic">
-                Showing 20 of {d.amendmentCount} amendments.
-              </p>
-            )}
-          </div>
-        </CollapsibleSection>
-      )}
+      {
+        hasAmendments && (
+          <CollapsibleSection
+            title="Amendments"
+            count={d.amendmentCount || d.amendments?.length}
+            icon="edit-3"
+          >
+            <div class="space-y-2">
+              {d.amendments?.slice(0, 20).map((amend) => (
+                <div class="p-3 bg-cream-50 rounded text-sm">
+                  <span class="font-mono text-navy-600">{amend.number}</span>
+                  {amend.description && <p class="text-navy-700 mt-1">{amend.description}</p>}
+                </div>
+              ))}
+              {(d.amendmentCount || 0) > 20 && (
+                <p class="text-xs text-navy-500 italic">
+                  Showing 20 of {d.amendmentCount} amendments.
+                </p>
+              )}
+            </div>
+          </CollapsibleSection>
+        )
+      }
 
       {/* Related Bills */}
-      {hasRelated && (
-        <CollapsibleSection title="Related Bills" count={d.relatedBills?.length} icon="git-branch">
-          <div class="space-y-2">
-            {d.relatedBills?.map((related) => (
-              <div class="flex items-start gap-3 p-3 bg-cream-50 rounded text-sm">
-                <span class="font-mono text-navy-600 flex-shrink-0">{related.billNumber}</span>
-                <div class="min-w-0">
-                  {related.title && (
-                    <p class="text-navy-700 truncate">{related.title}</p>
-                  )}
-                  <span class="text-xs text-navy-500">{related.relationship}</span>
+      {
+        hasRelated && (
+          <CollapsibleSection
+            title="Related Bills"
+            count={d.relatedBills?.length}
+            icon="git-branch"
+          >
+            <div class="space-y-2">
+              {d.relatedBills?.map((related) => (
+                <div class="flex items-start gap-3 p-3 bg-cream-50 rounded text-sm">
+                  <span class="font-mono text-navy-600 flex-shrink-0">{related.billNumber}</span>
+                  <div class="min-w-0">
+                    {related.title && <p class="text-navy-700 truncate">{related.title}</p>}
+                    <span class="text-xs text-navy-500">{related.relationship}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CollapsibleSection>
-      )}
+              ))}
+            </div>
+          </CollapsibleSection>
+        )
+      }
 
       {/* Text Versions */}
-      {hasTextVersions && (
-        <CollapsibleSection title="Text Versions" count={d.textVersions?.length} icon="book-open">
-          <div class="space-y-2">
-            {d.textVersions?.map((version) => (
-              <div class="flex items-center justify-between p-3 bg-cream-50 rounded text-sm">
-                <span class="font-medium text-navy-700">{version.type}</span>
-                {version.date && (
-                  <time class="text-xs font-mono text-navy-400">
-                    {formatDate(version.date)}
-                  </time>
-                )}
-              </div>
-            ))}
-          </div>
-        </CollapsibleSection>
-      )}
+      {
+        hasTextVersions && (
+          <CollapsibleSection title="Text Versions" count={d.textVersions?.length} icon="book-open">
+            <div class="space-y-2">
+              {d.textVersions?.map((version) => (
+                <div class="flex items-center justify-between p-3 bg-cream-50 rounded text-sm">
+                  <span class="font-medium text-navy-700">{version.type}</span>
+                  {version.date && (
+                    <time class="text-xs font-mono text-navy-400">{formatDate(version.date)}</time>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )
+      }
     </div>
 
     {/* MDX body content (editorial writeup, bill text excerpts, etc.) */}
@@ -385,17 +486,24 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     </div>
 
     {/* Paired bill callout */}
-    {d.pairedBillId && (
-      <div class="mb-8">
-        <PairedBillCallout pairedBillId={d.pairedBillId} currentBillType={d.billType} />
-      </div>
-    )}
+    {
+      d.pairedBillId && (
+        <div class="mb-8">
+          <PairedBillCallout pairedBillId={d.pairedBillId} currentBillType={d.billType} />
+        </div>
+      )
+    }
 
     {/* Action bar */}
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-navy-800 rounded-lg mb-8" data-theme-fixed>
+    <div
+      class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-navy-800 rounded-lg mb-8"
+      data-theme-fixed
+    >
       {/* Share buttons */}
       <div class="flex items-center gap-3">
-        <span class="text-xs font-sans font-medium text-gold-400 uppercase tracking-wide">Share</span>
+        <span class="text-xs font-sans font-medium text-gold-400 uppercase tracking-wide"
+          >Share</span
+        >
         <div class="flex gap-2">
           <a
             href={`https://twitter.com/intent/tweet?text=${twitterText}&url=${encodedUrl}`}
@@ -405,7 +513,9 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
             aria-label="Share on X"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              <path
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+              ></path>
             </svg>
           </a>
           <a
@@ -416,7 +526,9 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
             aria-label="Share on Reddit"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+              <path
+                d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"
+              ></path>
             </svg>
           </a>
           <button
@@ -432,28 +544,35 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </div>
 
       {/* Official link */}
-      {d.congressDotGovUrl && (
-        <a
-          href={d.congressDotGovUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-gold-500 text-navy-900 rounded font-mono text-sm font-semibold hover:bg-gold-400 transition-colors"
-        >
-          <Icon name="landmark" size={14} />
-          View on Congress.gov
-          <Icon name="external-link" size={12} />
-        </a>
-      )}
+      {
+        d.congressDotGovUrl && (
+          <a
+            href={d.congressDotGovUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-gold-500 text-navy-900 rounded font-mono text-sm font-semibold hover:bg-gold-400 transition-colors"
+          >
+            <Icon name="landmark" size={14} />
+            View on Congress.gov
+            <Icon name="external-link" size={12} />
+          </a>
+        )
+      }
     </div>
 
     {/* Footer disclaimer */}
     <div class="text-center p-4 bg-cream-100 rounded-lg border border-gold-200">
       <p class="text-xs text-navy-600 leading-relaxed">
         <Icon name="info" size={12} class="inline -mt-0.5 mr-1" />
-        This page is satirical commentary by AbsurdityIndex.org. Legislative history comes from public congressional records;
-        spending estimates and "pork" figures are editorial and may not reflect official cost analyses.
-        Absurdity scores are subjective editorial ratings.
-        <a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer" class="text-navy-800 underline hover:text-gold-700 ml-1">
+        This page is satirical commentary by AbsurdityIndex.org. Legislative history comes from public
+        congressional records; spending estimates and "pork" figures are editorial and may not reflect
+        official cost analyses. Absurdity scores are subjective editorial ratings.
+        <a
+          href="https://www.congress.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-navy-800 underline hover:text-gold-700 ml-1"
+        >
           Verify all claims at Congress.gov
         </a>
       </p>
@@ -461,7 +580,10 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
     {/* Back link */}
     <div class="text-center mt-6">
-      <a href="/bills" class="inline-flex items-center gap-2 text-navy-600 hover:text-gold-600 font-sans transition-colors">
+      <a
+        href="/bills"
+        class="inline-flex items-center gap-2 text-navy-600 hover:text-gold-600 font-sans transition-colors"
+      >
         <Icon name="chevron-right" size={16} class="rotate-180" />
         Back to Bills
       </a>

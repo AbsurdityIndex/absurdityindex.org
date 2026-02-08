@@ -22,20 +22,28 @@ const progress = getBillProgress(billNumber, status);
 const { stages, currentStageIndex, outcome } = progress;
 
 // Convert stages to timeline format
-const timelineStages = stages.map(stage => ({
+const timelineStages = stages.map((stage) => ({
   id: stage.id,
   label: stage.label,
 }));
 
 // Format the introduction date
-const formattedDate = dateIntroduced instanceof Date
-  ? dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
-  : String(dateIntroduced);
+const formattedDate =
+  dateIntroduced instanceof Date
+    ? dateIntroduced.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })
+    : String(dateIntroduced);
 ---
 
 <div class="bill-timeline mb-8">
   <div class="flex items-center justify-between mb-3">
-    <span class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-700 flex items-center gap-1.5">
+    <span
+      class="text-xs font-sans font-semibold uppercase tracking-wide text-navy-700 flex items-center gap-1.5"
+    >
       Legislative Progress
       <LegislativePathPopover billNumber={billNumber} status={status} />
     </span>

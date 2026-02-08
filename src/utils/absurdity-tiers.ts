@@ -76,7 +76,7 @@ export const ABSURDITY_TIERS: AbsurdityTier[] = [
     description:
       'Genuinely reckless legislating. Pork barrel projects, studies on things we already know, and spending decisions that suggest the vote was taken at 2am.',
     examples:
-      'Earmarks for bridges to nowhere, studies answering questions nobody asked, infrastructure in districts that don\'t exist yet',
+      "Earmarks for bridges to nowhere, studies answering questions nobody asked, infrastructure in districts that don't exist yet",
     color: {
       hex: '#f97316',
       bg: 'bg-orange-500',

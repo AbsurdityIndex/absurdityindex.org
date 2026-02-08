@@ -28,43 +28,49 @@ const porkSponsorSchema = z.object({
 
 // Pork item schema for tracking spending additions
 const porkItemSchema = z.object({
-  description: z.string(),           // "Bridge to nowhere in Alaska"
-  amount: z.number(),                // Dollar amount (can be estimate)
+  description: z.string(), // "Bridge to nowhere in Alaska"
+  amount: z.number(), // Dollar amount (can be estimate)
 
   // Enhanced attribution
-  addedBy: z.string(),               // Legacy simple field: "Rep. Don Young (R-AK)"
+  addedBy: z.string(), // Legacy simple field: "Rep. Don Young (R-AK)"
   sponsor: porkSponsorSchema.optional(), // Primary sponsor with full details
   cosponsors: z.array(porkSponsorSchema).optional(), // Co-sponsors
 
   // Committee attribution
-  committee: z.string().optional(),  // "House Appropriations Committee"
-  committeeMembers: z.array(z.object({
-    name: z.string(),
-    role: z.enum(['chair', 'ranking', 'member']),
-    party: z.enum(['R', 'D', 'I']),
-    state: z.string(),
-  })).optional(),
+  committee: z.string().optional(), // "House Appropriations Committee"
+  committeeMembers: z
+    .array(
+      z.object({
+        name: z.string(),
+        role: z.enum(['chair', 'ranking', 'member']),
+        party: z.enum(['R', 'D', 'I']),
+        state: z.string(),
+      }),
+    )
+    .optional(),
 
   // Amendment details
-  amendmentNumber: z.string().optional(),  // e.g., "H.Amdt.423"
+  amendmentNumber: z.string().optional(), // e.g., "H.Amdt.423"
   amendmentType: z.enum(['floor', 'committee', 'conference', 'manager']).optional(),
 
   // Vote record (if there was a recorded vote)
-  vote: z.object({
-    yeas: z.number(),
-    nays: z.number(),
-    notVoting: z.number().optional(),
-    passed: z.boolean(),
-    rollCallNumber: z.number().optional(),
-    rollCallUrl: z.string().url().optional(),
-  }).optional(),
+  vote: z
+    .object({
+      yeas: z.number(),
+      nays: z.number(),
+      notVoting: z.number().optional(),
+      passed: z.boolean(),
+      rollCallNumber: z.number().optional(),
+      rollCallUrl: z.string().url().optional(),
+    })
+    .optional(),
 
   category: z.enum([
-    'earmark',                       // Specific local project
-    'program-expansion',             // Expanding existing program
-    'new-program',                   // Creating new program
-    'tax-expenditure',               // Tax breaks/credits
-    'hidden-cost'                    // Unfunded mandates, etc.
+    'earmark', // Specific local project
+    'program-expansion', // Expanding existing program
+    'new-program', // Creating new program
+    'tax-expenditure', // Tax breaks/credits
+    'hidden-cost', // Unfunded mandates, etc.
   ]),
   satiricalNote: z.string().optional(), // "Because fish need meth too"
   sourceUrl: z.string().url().optional(), // Link to Congress.gov amendment/section
@@ -78,10 +84,10 @@ const amendmentSchema = z.object({
   chamber: z.enum(['house', 'senate']).optional(),
   url: z.string().url().optional(),
   // Enhanced fields for bill evolution
-  paraphrasedChange: z.string().optional(),  // Plain-English explanation
+  paraphrasedChange: z.string().optional(), // Plain-English explanation
   porkItems: z.array(porkItemSchema).optional(),
-  totalPorkAdded: z.number().optional(),     // Sum of pork items
-  passedDate: z.coerce.date().optional()
+  totalPorkAdded: z.number().optional(), // Sum of pork items
+  passedDate: z.coerce.date().optional(),
 });
 
 // Stage-specific vote schema (for bill evolution stages)
@@ -104,23 +110,23 @@ const billEvolutionStageSchema = z.object({
     'introduced',
 
     // Origin chamber (House for H.R., Senate for S.)
-    'origin-committee',        // Referred to committee(s)
-    'origin-reported',         // Reported out of committee
-    'origin-floor',            // Floor consideration/debate
-    'origin-passed',           // Passed origin chamber
+    'origin-committee', // Referred to committee(s)
+    'origin-reported', // Reported out of committee
+    'origin-floor', // Floor consideration/debate
+    'origin-passed', // Passed origin chamber
 
     // Receiving chamber
-    'receiving-received',      // Received in other chamber
-    'receiving-committee',     // In receiving chamber's committee
-    'receiving-reported',      // Reported out of receiving committee
-    'receiving-floor',         // Floor consideration in receiving chamber
-    'receiving-passed',        // Passed without changes → enrolled
-    'receiving-amended',       // Passed WITH changes → ping-pong
+    'receiving-received', // Received in other chamber
+    'receiving-committee', // In receiving chamber's committee
+    'receiving-reported', // Reported out of receiving committee
+    'receiving-floor', // Floor consideration in receiving chamber
+    'receiving-passed', // Passed without changes → enrolled
+    'receiving-amended', // Passed WITH changes → ping-pong
 
     // Ping-pong (origin reconsiders receiving's amendments)
     'origin-considers-amendments',
-    'origin-concurs',          // Accepts receiving's changes → enrolled
-    'origin-disagrees',        // Rejects → conference or more amendments
+    'origin-concurs', // Accepts receiving's changes → enrolled
+    'origin-disagrees', // Rejects → conference or more amendments
 
     // Conference committee
     'conference-requested',
@@ -149,7 +155,7 @@ const billEvolutionStageSchema = z.object({
     'died-in-committee',
     'died-on-floor',
     'died-in-conference',
-    'expired',                 // Congress ended without action
+    'expired', // Congress ended without action
   ]),
 
   // Track which chamber this occurred in (for explicit display)
@@ -159,10 +165,10 @@ const billEvolutionStageSchema = z.object({
   round: z.number().optional(),
 
   date: z.coerce.date(),
-  paraphrasedText: z.string(),        // AI summary at this stage
-  cumulativePork: z.number(),         // Running total
+  paraphrasedText: z.string(), // AI summary at this stage
+  cumulativePork: z.number(), // Running total
   porkAddedThisStage: z.number(),
-  keyChanges: z.array(z.string()),    // Bullet points of what changed
+  keyChanges: z.array(z.string()), // Bullet points of what changed
   amendmentsIncluded: z.array(z.string()).optional(), // Amendment numbers
   porkItems: z.array(porkItemSchema).optional(), // Pork added this stage
 
@@ -184,10 +190,14 @@ const committeeSchema = z.object({
   chamber: z.enum(['house', 'senate', 'joint']).optional(),
   type: z.enum(['primary', 'additional']).optional(),
   referralDate: z.coerce.date().optional(),
-  activities: z.array(z.object({
-    date: z.coerce.date(),
-    action: z.string(),
-  })).optional(),
+  activities: z
+    .array(
+      z.object({
+        date: z.coerce.date(),
+        action: z.string(),
+      }),
+    )
+    .optional(),
   url: z.string().url().optional(),
 });
 
@@ -202,12 +212,14 @@ const relatedBillSchema = z.object({
 const textVersionSchema = z.object({
   type: z.string(), // e.g., "Introduced", "Engrossed", "Enrolled"
   date: z.coerce.date().optional(),
-  formats: z.object({
-    pdf: z.string().url().optional(),
-    html: z.string().url().optional(),
-    xml: z.string().url().optional(),
-    txt: z.string().url().optional(),
-  }).optional(),
+  formats: z
+    .object({
+      pdf: z.string().url().optional(),
+      html: z.string().url().optional(),
+      xml: z.string().url().optional(),
+      txt: z.string().url().optional(),
+    })
+    .optional(),
 });
 
 // Votes schema - shared between bill types
@@ -271,18 +283,23 @@ const bills = defineCollection({
       sponsorState: z.string().optional(),
       sponsorUrl: z.string().url().optional(),
       cosponsorCount: z.number().optional(),
-	      committees: z.array(committeeSchema).optional(),
-	      dateUpdated: z.coerce.date().optional(),
-	      actionCount: z.number().optional(),
-	      actions: z.array(actionSchema).optional().transform((actions) =>
-	        actions ? dedupeActionEntries(actions) : actions
-	      ),
-      keyMilestones: z.array(z.object({
-        type: z.string(),
-        date: z.coerce.date(),
-        text: z.string(),
-        icon: z.string(),
-      })).optional(),
+      committees: z.array(committeeSchema).optional(),
+      dateUpdated: z.coerce.date().optional(),
+      actionCount: z.number().optional(),
+      actions: z
+        .array(actionSchema)
+        .optional()
+        .transform((actions) => (actions ? dedupeActionEntries(actions) : actions)),
+      keyMilestones: z
+        .array(
+          z.object({
+            type: z.string(),
+            date: z.coerce.date(),
+            text: z.string(),
+            icon: z.string(),
+          }),
+        )
+        .optional(),
       officialTitle: z.string().optional(),
       shortTitles: z.array(titleSchema).optional(),
       popularTitle: z.string().optional(),
@@ -302,25 +319,39 @@ const bills = defineCollection({
       excerpt: z.string().optional(),
       pairedBillId: z.string().optional(),
       isOmnibus: z.boolean().default(false),
-      omnibusData: z.object({
-        totalSpending: z.number(),
-        pageCount: z.number(),
-        divisions: z.array(z.object({
-          title: z.string(),
-          shortTitle: z.string().optional(),
-          spending: z.number(),
-          description: z.string().optional(),
-        })),
-        riders: z.array(z.object({
-          title: z.string(),
-          description: z.string(),
-          category: z.enum(['policy', 'spending', 'tax', 'controversial', 'sneaky']).optional(),
-        })).optional(),
-        timeline: z.array(z.object({
-          date: z.coerce.date(),
-          event: z.string(),
-        })).optional(),
-      }).optional(),
+      omnibusData: z
+        .object({
+          totalSpending: z.number(),
+          pageCount: z.number(),
+          divisions: z.array(
+            z.object({
+              title: z.string(),
+              shortTitle: z.string().optional(),
+              spending: z.number(),
+              description: z.string().optional(),
+            }),
+          ),
+          riders: z
+            .array(
+              z.object({
+                title: z.string(),
+                description: z.string(),
+                category: z
+                  .enum(['policy', 'spending', 'tax', 'controversial', 'sneaky'])
+                  .optional(),
+              }),
+            )
+            .optional(),
+          timeline: z
+            .array(
+              z.object({
+                date: z.coerce.date(),
+                event: z.string(),
+              }),
+            )
+            .optional(),
+        })
+        .optional(),
       // Absurd bill fields
       realSource: z.string().optional(),
       realJurisdiction: z.string().optional(),
@@ -330,13 +361,15 @@ const bills = defineCollection({
       (data) => {
         // Real bills must have certain fields
         if (data.billType === 'real') {
-          return data.sponsorParty !== undefined &&
-                 data.sponsorState !== undefined &&
-                 data.congressNumber !== undefined;
+          return (
+            data.sponsorParty !== undefined &&
+            data.sponsorState !== undefined &&
+            data.congressNumber !== undefined
+          );
         }
         return true;
       },
-      { message: "Real bills require sponsorParty, sponsorState, and congressNumber" }
+      { message: 'Real bills require sponsorParty, sponsorState, and congressNumber' },
     ),
 });
 
@@ -352,22 +385,34 @@ const rules = defineCollection({
     dateAdopted: z.coerce.date(),
     summary: z.string(),
     pageCount: z.number().optional(),
-    votes: z.object({
-      yeas: z.number(),
-      nays: z.number(),
-      notVoting: z.number(),
-      passed: z.boolean(),
-    }).optional(),
-    majorChanges: z.array(z.object({
-      title: z.string(),
-      description: z.string(),
-      category: z.enum(['procedure', 'committee', 'floor', 'ethics', 'administrative', 'controversial']).optional(),
-    })).optional(),
-    notableRules: z.array(z.object({
-      rule: z.string(),
-      title: z.string(),
-      description: z.string(),
-    })).optional(),
+    votes: z
+      .object({
+        yeas: z.number(),
+        nays: z.number(),
+        notVoting: z.number(),
+        passed: z.boolean(),
+      })
+      .optional(),
+    majorChanges: z
+      .array(
+        z.object({
+          title: z.string(),
+          description: z.string(),
+          category: z
+            .enum(['procedure', 'committee', 'floor', 'ethics', 'administrative', 'controversial'])
+            .optional(),
+        }),
+      )
+      .optional(),
+    notableRules: z
+      .array(
+        z.object({
+          rule: z.string(),
+          title: z.string(),
+          description: z.string(),
+        }),
+      )
+      .optional(),
     congressDotGovUrl: z.string().url().optional(),
     absurdityIndex: z.number().min(1).max(10).optional(),
   }),
@@ -384,12 +429,18 @@ const termSchema = z.object({
 });
 
 const porkContributionSchema = z.object({
-  billId: z.string(),               // Reference to bill in bills collection
-  billNumber: z.string(),           // e.g., "H.R. 2112"
+  billId: z.string(), // Reference to bill in bills collection
+  billNumber: z.string(), // e.g., "H.R. 2112"
   amount: z.number(),
   description: z.string(),
   date: z.coerce.date(),
-  category: z.enum(['earmark', 'program-expansion', 'new-program', 'tax-expenditure', 'hidden-cost']),
+  category: z.enum([
+    'earmark',
+    'program-expansion',
+    'new-program',
+    'tax-expenditure',
+    'hidden-cost',
+  ]),
 });
 
 const financialDisclosureSchema = z.object({
@@ -403,7 +454,7 @@ const representatives = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/data/representatives' }),
   schema: z.object({
     name: z.string(),
-    bioguideId: z.string(),         // Official Congress bioguide ID
+    bioguideId: z.string(), // Official Congress bioguide ID
     party: z.string(),
     state: z.string(),
     imageUrl: z.string().url().optional(),
