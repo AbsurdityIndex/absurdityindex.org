@@ -26,6 +26,10 @@ if (!inVoteChain) {
   // render nothing rather than leaking styling assumptions into other pages.
   return null;
 }
+
+const activeDoc = inAssurance
+  ? VOTECHAIN_ASSURANCE_DOCS.find((doc) => isActive(doc.href))
+  : null;
 ---
 
 <nav class="border-b border-navy-200 bg-cream-50/90 backdrop-blur" aria-label="VoteChain">
@@ -59,38 +63,70 @@ if (!inVoteChain) {
     </div>
   </div>
 
-  {/* Assurance Secondary Nav — wrapping pills, no horizontal scroll */}
+  {/* Assurance Secondary Nav — collapsible on mobile, always visible on desktop */}
   {
     inAssurance && (
       <div class="border-t border-navy-100 bg-cream-50/60">
         <div class="max-w-5xl mx-auto px-4 py-3">
-          <div class="flex flex-wrap gap-1.5">
-            {VOTECHAIN_ASSURANCE_DOCS.map((doc) => {
-              const active = isActive(doc.href);
-              return (
-                <a
-                  href={doc.href}
-                  aria-current={active ? 'page' : undefined}
-                  class:list={[
-                    'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
-                    active
-                      ? 'bg-gold-500 text-navy-900 shadow-sm'
-                      : 'bg-white text-navy-700 border border-navy-200 hover:border-gold-400 hover:bg-gold-50',
-                  ]}
-                  title={doc.description}
-                >
-                  <Icon
-                    name={doc.icon as any}
-                    size={14}
-                    class={active ? 'text-navy-800' : 'text-navy-500'}
-                  />
-                  {doc.label}
-                </a>
-              );
-            })}
-          </div>
+          <details class="assurance-subnav">
+            <summary class="flex items-center gap-1.5 text-xs font-medium text-navy-500 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none py-1">
+              <Icon name="chevron-right" size={14} class="assurance-subnav-chevron transition-transform" />
+              {activeDoc ? (
+                <span>
+                  <span class="font-semibold text-navy-700">{activeDoc.label}</span>
+                  <span class="text-navy-400 mx-1">&middot;</span>
+                  {VOTECHAIN_ASSURANCE_DOCS.length} playbooks
+                </span>
+              ) : (
+                <span>{VOTECHAIN_ASSURANCE_DOCS.length} assurance playbooks</span>
+              )}
+            </summary>
+            <div class="assurance-subnav-pills flex flex-wrap gap-1.5 pt-2">
+              {VOTECHAIN_ASSURANCE_DOCS.map((doc) => {
+                const active = isActive(doc.href);
+                return (
+                  <a
+                    href={doc.href}
+                    aria-current={active ? 'page' : undefined}
+                    class:list={[
+                      'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
+                      active
+                        ? 'bg-gold-500 text-navy-900 shadow-sm'
+                        : 'bg-white text-navy-700 border border-navy-200 hover:border-gold-400 hover:bg-gold-50',
+                    ]}
+                    title={doc.description}
+                  >
+                    <Icon
+                      name={doc.icon as any}
+                      size={14}
+                      class={active ? 'text-navy-800' : 'text-navy-500'}
+                    />
+                    {doc.label}
+                  </a>
+                );
+              })}
+            </div>
+          </details>
         </div>
       </div>
     )
   }
 </nav>
+
+<style>
+  /* Rotate chevron when open */
+  .assurance-subnav[open] > summary .assurance-subnav-chevron {
+    transform: rotate(90deg);
+  }
+
+  /* On md+ screens: hide summary, always show pills */
+  @media (min-width: 768px) {
+    .assurance-subnav > summary {
+      display: none;
+    }
+    .assurance-subnav > .assurance-subnav-pills {
+      display: flex !important;
+      padding-top: 0;
+    }
+  }
+</style>
