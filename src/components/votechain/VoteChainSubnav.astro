@@ -1,6 +1,6 @@
 ---
 import Icon from '../ui/Icon.astro';
-import { VOTECHAIN_ASSURANCE_DOCS, VOTECHAIN_POC_MODULES, VOTECHAIN_PRIMARY_NAV } from '../../utils/votechain-nav';
+import { VOTECHAIN_ASSURANCE_DOCS, VOTECHAIN_PRIMARY_NAV } from '../../utils/votechain-nav';
 
 interface Props {
   currentPath: string;
@@ -21,7 +21,6 @@ function isActive(href: string) {
 
 const inVoteChain = normalize(currentPath).startsWith('/votechain');
 const inAssurance = normalize(currentPath).startsWith('/votechain/assurance');
-const inPoc = normalize(currentPath).startsWith('/votechain/poc');
 if (!inVoteChain) {
   // This component is only meant for VoteChain routes. If accidentally used elsewhere,
   // render nothing rather than leaking styling assumptions into other pages.
@@ -32,11 +31,6 @@ const activeDoc = inAssurance
   ? VOTECHAIN_ASSURANCE_DOCS.find((doc) => isActive(doc.href))
   : null;
 
-const activePocModule = inPoc
-  ? VOTECHAIN_POC_MODULES.find((mod) => normalize(mod.href) === normalize(currentPath))
-  : null;
-
-const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(currentPath))}`;
 ---
 
 <nav class="border-b border-navy-200 bg-cream-50/90 backdrop-blur" aria-label="VoteChain" data-votechain-subnav>
@@ -71,79 +65,6 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
     <div class="subnav-fade-right" aria-hidden="true"></div>
     <div class="subnav-fade-left" aria-hidden="true"></div>
   </div>
-
-  {/* POC Secondary Nav — collapsible on mobile, always visible on desktop */}
-  {
-    inPoc && (
-      <div class="border-t border-navy-100 bg-cream-50/60">
-        <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3">
-          <div>
-            <details class="section-subnav" open>
-              <summary class="flex items-center gap-1.5 text-xs font-medium text-navy-500 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none py-1">
-                <Icon
-                  name="chevron-right"
-                  size={14}
-                  class="section-subnav-chevron transition-transform"
-                />
-                {activePocModule ? (
-                  <span>
-                    <span class="font-semibold text-navy-700">{activePocModule.label}</span>
-                    <span class="text-navy-400 mx-1">&middot;</span>
-                    {VOTECHAIN_POC_MODULES.length} modules
-                  </span>
-                ) : (
-                  <span>{VOTECHAIN_POC_MODULES.length} POC modules</span>
-                )}
-              </summary>
-              <div class="section-subnav-pills flex flex-wrap gap-1.5 pt-2">
-                {VOTECHAIN_POC_MODULES.map((mod) => {
-                  const active = normalize(mod.href) === normalize(currentPath);
-                  return (
-                    <a
-                      href={mod.href}
-                      aria-current={active ? 'page' : undefined}
-                      class:list={[
-                        'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all',
-                        active
-                          ? 'bg-gold-500 text-navy-900 shadow-sm'
-                          : 'bg-white text-navy-700 border border-navy-200 hover:border-gold-400 hover:bg-gold-50',
-                      ]}
-                      title={mod.description}
-                    >
-                      <Icon
-                        name={mod.icon as any}
-                        size={14}
-                        class={active ? 'text-navy-800' : 'text-navy-500'}
-                      />
-                      {mod.label}
-                    </a>
-                  );
-                })}
-              </div>
-            </details>
-
-            <div
-              id="poc-human-chip"
-              class="hidden mt-2 items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-mono border-navy-200 bg-white text-navy-600"
-              role="status"
-              aria-live="polite"
-              title="This POC uses Cloudflare Turnstile to reduce automated abuse. Verification is server-checked via an HttpOnly session cookie."
-            >
-              <Icon name="shield" size={12} class="text-current shrink-0" />
-              <span id="poc-human-text">Human check</span>
-              <a
-                id="poc-human-unlock"
-                href={pocUnlockHref}
-                class="hidden font-sans text-[11px] font-semibold text-navy-700 hover:text-navy-900 underline decoration-dotted underline-offset-2"
-              >
-                Unlock
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   {/* Assurance Secondary Nav — collapsible on mobile, always visible on desktop */}
   {
@@ -230,87 +151,6 @@ const pocUnlockHref = `/votechain/poc?next=${encodeURIComponent(normalize(curren
     window.addEventListener('load', updateFades);
   }
 
-  // POC: show whether the current browser session is Turnstile-verified (server-side).
-  const pocChip = document.getElementById('poc-human-chip') as HTMLElement | null;
-  const pocText = document.getElementById('poc-human-text') as HTMLElement | null;
-  const pocUnlock = document.getElementById('poc-human-unlock') as HTMLAnchorElement | null;
-
-  function setChipState(state: 'verified' | 'locked' | 'disabled', text: string, showUnlock: boolean) {
-    if (!pocChip || !pocText) return;
-
-    pocChip.classList.remove(
-      'border-navy-200',
-      'bg-white',
-      'text-navy-600',
-      'border-gold-400',
-      'bg-gold-50',
-      'text-navy-900',
-      'border-red-300',
-      'bg-red-50',
-      'text-red-700',
-      'bg-cream-50',
-    );
-
-    if (state === 'verified') {
-      pocChip.classList.add('border-gold-400', 'bg-gold-50', 'text-navy-900');
-    } else if (state === 'locked') {
-      pocChip.classList.add('border-red-300', 'bg-red-50', 'text-red-700');
-    } else {
-      pocChip.classList.add('border-navy-200', 'bg-cream-50', 'text-navy-600');
-    }
-
-    pocText.textContent = text;
-    if (pocUnlock) {
-      if (showUnlock) pocUnlock.classList.remove('hidden');
-      else pocUnlock.classList.add('hidden');
-    }
-  }
-
-  function formatExpiry(iso: unknown) {
-    if (typeof iso !== 'string' || iso.length < 10) return null;
-    try {
-      return new Date(iso).toLocaleString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return iso;
-    }
-  }
-
-  async function refreshPocSession() {
-    if (!pocChip) return;
-    try {
-      const r = await fetch('/api/votechain/poc/session', { cache: 'no-store' });
-      if (!r.ok) return;
-      const data = await r.json();
-
-      // Only show if the endpoint is present. (Astro dev server may not serve Pages Functions.)
-      pocChip.classList.remove('hidden');
-      pocChip.classList.add('inline-flex');
-
-      if (!data?.enabled) {
-        setChipState('disabled', 'Human check: off', false);
-        return;
-      }
-
-      if (data?.unlocked) {
-        const exp = formatExpiry(data?.expires_at);
-        setChipState('verified', exp ? `Human check: verified (until ${exp})` : 'Human check: verified', false);
-        return;
-      }
-
-      setChipState('locked', 'Human check: locked', true);
-    } catch {
-      // Keep hidden if anything goes wrong; don’t block navigation on a POC affordance.
-    }
-  }
-
-  refreshPocSession();
-  window.setInterval(refreshPocSession, 60_000);
 </script>
 
 <style>

@@ -3,6 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import OfficialSeal from '../../../components/ui/OfficialSeal.astro';
 import Divider from '../../../components/ui/Divider.astro';
 import Icon from '../../../components/ui/Icon.astro';
+import JourneyStepBar from '../../../components/votechain/JourneyStepBar.astro';
 ---
 
 <BaseLayout
@@ -16,20 +17,18 @@ import Icon from '../../../components/ui/Icon.astro';
     tags: ['votechain', 'ewp', 'poc', 'verification'],
   }}
 >
+  <JourneyStepBar currentStep={2} />
   <main class="bg-parchment min-h-screen">
-    <section class="relative bg-navy-900 py-10 sm:py-14">
-      <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
-        <div class="flex justify-center">
-          <OfficialSeal size="90" />
+    <!-- Compact hero bar (matching vote page style) -->
+    <section class="bg-navy-900 py-3">
+      <div class="max-w-5xl mx-auto px-4 flex items-center gap-3">
+        <OfficialSeal size="32" />
+        <div>
+          <p class="text-[10px] text-gold-500 font-mono uppercase tracking-widest leading-none">EWP POC &mdash; Step 2 of 3</p>
+          <h1 class="font-serif text-lg sm:text-xl text-gold-400 font-bold leading-tight">Receipt Verification</h1>
         </div>
-        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-5 mb-2">EWP POC</p>
-        <h1 class="font-serif text-3xl sm:text-4xl text-gold-400 font-bold">
-          Receipt Verification
-        </h1>
-        <p class="mt-3 text-gold-300/80 font-sans text-base max-w-3xl mx-auto">
-          After casting your ballot, you receive a signed receipt. This page lets you
-          independently verify that your vote was actually recorded &mdash; that it wasn't
-          silently dropped, altered, or excluded from the count.
+        <p class="hidden sm:block ml-auto text-gold-300/70 text-xs max-w-xs text-right">
+          Independently verify your ballot was recorded correctly &mdash; without revealing how you voted.
         </p>
       </div>
     </section>
@@ -113,6 +112,28 @@ import Icon from '../../../components/ui/Icon.astro';
         </div>
       </section>
 
+      <!-- ===== JOURNEY CONTINUATION CTA (hidden until verification passes) ===== -->
+      <section id="verify-journey-prompt" class="hidden">
+        <div class="rounded-xl border-2 border-gold-400 bg-gradient-to-br from-gold-50 to-cream-50 p-6 text-center shadow-lg">
+          <p class="text-[10px] font-mono uppercase tracking-widest text-gold-600 mb-1">Step 2 Complete</p>
+          <p class="font-serif text-lg text-navy-900 font-bold">Your receipt checks out.</p>
+          <p class="text-navy-600 text-sm mt-1 max-w-md mx-auto">
+            Every cryptographic check passed. Your ballot is provably in the count.
+            Now see the full picture &mdash; publish the tally and watch the results.
+          </p>
+          <a
+            href="/votechain/poc/dashboard"
+            class="mt-4 inline-flex items-center gap-2 rounded-lg bg-navy-800 px-6 py-3 text-gold-300 font-sans text-sm font-bold hover:bg-navy-700 transition-all shadow-md hover:shadow-lg group"
+          >
+            Continue to Step 3: Watch the Count
+            <Icon name="arrow-right" class="text-gold-400 transition-transform group-hover:translate-x-0.5" size={18} />
+          </a>
+          <p class="text-navy-400 text-xs mt-3 italic">
+            Or explore the <a href="/votechain/poc/lookup" class="text-gold-600 hover:text-gold-700 underline">Ballot Lookup</a> tool
+          </p>
+        </div>
+      </section>
+
       <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
         <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
           <Icon name="info" class="text-gold-600" />
@@ -145,6 +166,7 @@ import Icon from '../../../components/ui/Icon.astro';
     const verifyBtn = document.getElementById('verify-btn') as HTMLButtonElement;
     const summaryEl = document.getElementById('verify-summary') as HTMLElement;
     const proofEl = document.getElementById('proof-json') as HTMLElement;
+    const journeyPrompt = document.getElementById('verify-journey-prompt');
 
     function el(tag: keyof HTMLElementTagNameMap, className?: string, text?: string) {
       const node = document.createElement(tag);
@@ -164,42 +186,8 @@ import Icon from '../../../components/ui/Icon.astro';
       );
     }
 
-    // Auto-load last receipt on page load
-    (function autoLoadReceipt() {
-      const raw = localStorage.getItem('votechain_poc_last_receipt');
-      if (raw) {
-        receiptInput.value = raw;
-        const notice = el('p', 'text-sm text-gold-700 font-sans mt-2', 'Loaded your last cast receipt automatically.');
-        notice.id = 'auto-load-notice';
-        receiptInput.parentElement?.insertBefore(notice, receiptInput.nextSibling);
-      }
-    })();
-
-    loadLastBtn?.addEventListener('click', () => {
-      const raw = localStorage.getItem('votechain_poc_last_receipt');
-      if (!raw) return;
-      receiptInput.value = raw;
-      if (!document.getElementById('auto-load-notice')) {
-        const notice = el('p', 'text-sm text-gold-700 font-sans mt-2', 'Receipt loaded.');
-        notice.id = 'auto-load-notice';
-        receiptInput.parentElement?.insertBefore(notice, receiptInput.nextSibling);
-      }
-    });
-
-    verifyBtn?.addEventListener('click', async () => {
+    function renderResult(result: any) {
       summaryEl.replaceChildren();
-      proofEl.textContent = 'Working...';
-
-      let receipt: unknown;
-      try {
-        receipt = JSON.parse(receiptInput.value);
-      } catch (err) {
-        summaryEl.appendChild(el('p', 'text-red-700 text-sm', `Invalid JSON: ${String(err)}`));
-        proofEl.textContent = 'N/A';
-        return;
-      }
-
-      const result = await verifyReceipt(receipt as any);
 
       const header = el('div', 'flex items-center justify-between gap-3 flex-wrap');
       header.appendChild(el('p', 'font-sans text-sm font-semibold text-navy-900', 'Overall'));
@@ -224,6 +212,59 @@ import Icon from '../../../components/ui/Icon.astro';
       proofEl.textContent = result.inclusion_proof
         ? JSON.stringify(result.inclusion_proof, null, 2)
         : 'N/A';
+
+      // Show journey continuation if all checks passed
+      if (result.status === 'ok' && journeyPrompt) {
+        journeyPrompt.classList.remove('hidden');
+        // Smooth scroll to the CTA after a brief delay
+        setTimeout(() => {
+          journeyPrompt.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 400);
+      }
+    }
+
+    async function runVerification() {
+      summaryEl.replaceChildren();
+      proofEl.textContent = 'Working...';
+
+      let receipt: unknown;
+      try {
+        receipt = JSON.parse(receiptInput.value);
+      } catch (err) {
+        summaryEl.appendChild(el('p', 'text-red-700 text-sm', `Invalid JSON: ${String(err)}`));
+        proofEl.textContent = 'N/A';
+        return;
+      }
+
+      const result = await verifyReceipt(receipt as any);
+      renderResult(result);
+    }
+
+    // Auto-load last receipt on page load
+    (function autoLoadReceipt() {
+      const raw = localStorage.getItem('votechain_poc_last_receipt');
+      if (raw) {
+        receiptInput.value = raw;
+        const notice = el('p', 'text-sm text-gold-700 font-sans mt-2', 'Loaded your last cast receipt automatically.');
+        notice.id = 'auto-load-notice';
+        receiptInput.parentElement?.insertBefore(notice, receiptInput.nextSibling);
+
+        // Auto-verify if coming from the journey flow (receipt exists)
+        setTimeout(() => runVerification(), 300);
+      }
+    })();
+
+    loadLastBtn?.addEventListener('click', () => {
+      const raw = localStorage.getItem('votechain_poc_last_receipt');
+      if (!raw) return;
+      receiptInput.value = raw;
+      if (!document.getElementById('auto-load-notice')) {
+        const notice = el('p', 'text-sm text-gold-700 font-sans mt-2', 'Receipt loaded.');
+        notice.id = 'auto-load-notice';
+        receiptInput.parentElement?.insertBefore(notice, receiptInput.nextSibling);
+      }
     });
+
+    verifyBtn?.addEventListener('click', () => runVerification());
   </script>
 </BaseLayout>
