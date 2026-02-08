@@ -28,8 +28,8 @@ import Icon from '../../../components/ui/Icon.astro';
       </div>
     </section>
 
-    <!-- Step indicator -->
-    <div id="step-indicator-bar" class="bg-parchment border-b border-navy-200 py-3">
+    <!-- Step indicator (sticky below header + subnav via --sticky-offset) -->
+    <div id="step-indicator-bar" class="bg-parchment border-b border-navy-200 py-3 sticky z-20 shadow-sm" style="top: var(--sticky-offset, 0px);">
       <div class="flex items-center justify-between max-w-3xl mx-auto px-4" id="step-indicator">
         <div class="flex flex-col items-center flex-shrink-0" data-step="1">
           <div

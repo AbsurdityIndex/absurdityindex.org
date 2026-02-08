@@ -149,6 +149,42 @@ body {
   text-overflow: ellipsis;
 }
 
+.diagram-inspector-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.diagram-inspector-search-input {
+  appearance: none;
+  border: 1px solid var(--color-navy-200);
+  background: white;
+  color: var(--color-navy-900);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.55rem;
+  width: min(26rem, 46vw);
+  max-width: 100%;
+}
+
+.diagram-inspector-search-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.diagram-inspector-search-input:focus {
+  outline: none;
+  border-color: var(--color-gold-500);
+  box-shadow: 0 0 0 3px rgba(197, 165, 114, 0.25);
+}
+
+.diagram-inspector-search-invalid {
+  border-color: var(--color-red-500) !important;
+  background: rgba(192, 40, 40, 0.06) !important;
+}
+
 .diagram-inspector-controls {
   display: inline-flex;
   align-items: center;
@@ -211,6 +247,54 @@ body {
 .diagram-inspector-overlay .mermaid-diagram svg {
   max-width: none !important;
   max-height: none !important;
+}
+
+/* Mermaid focus mode in inspector: click a node/edge to isolate connections */
+.diagram-inspector-overlay .mermaid-diagram svg g.node,
+.diagram-inspector-overlay .mermaid-diagram svg path.flowchart-link,
+.diagram-inspector-overlay .mermaid-diagram svg g.edgeLabel {
+  transition: opacity 120ms ease, filter 120ms ease;
+}
+
+.diagram-inspector-overlay .mermaid-diagram svg g.node,
+.diagram-inspector-overlay .mermaid-diagram svg path.flowchart-link,
+.diagram-inspector-overlay .mermaid-diagram svg g.edgeLabel {
+  cursor: pointer;
+}
+
+.diagram-inspector-overlay .mermaid-diagram svg .diagram-dim {
+  opacity: 0.12;
+}
+
+.diagram-inspector-overlay .mermaid-diagram svg g.node.diagram-highlight,
+.diagram-inspector-overlay .mermaid-diagram svg g.edgeLabel.diagram-highlight {
+  opacity: 1;
+}
+
+.diagram-inspector-overlay .mermaid-diagram svg g.node.diagram-selected {
+  opacity: 1;
+  filter: drop-shadow(0 12px 26px rgba(10, 22, 40, 0.18)) drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+}
+
+.diagram-inspector-overlay .mermaid-diagram svg g.node.diagram-selected rect,
+.diagram-inspector-overlay .mermaid-diagram svg g.node.diagram-selected polygon,
+.diagram-inspector-overlay .mermaid-diagram svg g.node.diagram-selected path,
+.diagram-inspector-overlay .mermaid-diagram svg g.node.diagram-selected ellipse,
+.diagram-inspector-overlay .mermaid-diagram svg g.node.diagram-selected circle {
+  stroke: var(--color-gold-600) !important;
+  stroke-width: 3px !important;
+}
+
+.diagram-inspector-overlay .mermaid-diagram svg path.flowchart-link.diagram-highlight {
+  opacity: 1;
+  stroke: var(--color-gold-600) !important;
+  stroke-width: 4px !important;
+}
+
+.diagram-inspector-overlay .mermaid-diagram svg path.flowchart-link.diagram-selected {
+  opacity: 1;
+  stroke: var(--color-gold-700) !important;
+  stroke-width: 5px !important;
 }
 
 /* Official document styling for MDX bill content */

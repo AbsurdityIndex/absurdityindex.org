@@ -32,7 +32,7 @@ const activeDoc = inAssurance
   : null;
 ---
 
-<nav class="border-b border-navy-200 bg-cream-50/90 backdrop-blur" aria-label="VoteChain">
+<nav class="border-b border-navy-200 bg-cream-50/90 backdrop-blur" aria-label="VoteChain" data-votechain-subnav>
   {/* Primary Nav — tab-style with underline indicator */}
   <div class="max-w-5xl mx-auto px-4">
     <div class="flex gap-1 -mb-px">
@@ -112,6 +112,20 @@ const activeDoc = inAssurance
     )
   }
 </nav>
+
+<script>
+  // Make subnav sticky below the site header
+  const header = document.querySelector('header[data-theme-fixed]') as HTMLElement | null;
+  const subnav = document.querySelector('[data-votechain-subnav]') as HTMLElement | null;
+  if (header && subnav) {
+    const h = header.getBoundingClientRect().height;
+    subnav.style.position = 'sticky';
+    subnav.style.top = `${h}px`;
+    subnav.style.zIndex = '40';
+    // Expose combined height for downstream sticky elements (e.g. step indicator)
+    document.documentElement.style.setProperty('--sticky-offset', `${h + subnav.getBoundingClientRect().height}px`);
+  }
+</script>
 
 <style>
   /* Rotate chevron when open */

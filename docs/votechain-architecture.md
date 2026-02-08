@@ -90,11 +90,14 @@ Names are descriptive; implementations can vary as long as the interfaces and in
 
 ## 4. Diagrams (Readable + Complete)
 
-Tip: click the `Fullscreen` button on any diagram to pan and zoom.
+Tip: click the `Fullscreen` button on any diagram to pan and zoom. In fullscreen, click a box or line label to
+isolate its connections; right-click a box to "decompose" it into a deeper diagram (when available); click the
+background (or `Clear focus`) to reset.
 
 ### 4A Ownership Map (High-Level)
 
 ```mermaid
+%% diagram-id: ownership-map-high-level
 flowchart LR
   subgraph VOTERS["Voters"]
     VC["Voter Client(s)"]
@@ -146,6 +149,7 @@ flowchart LR
 ### 4B VoteChain Consortium (74 Nodes)
 
 ```mermaid
+%% diagram-id: votechain-consortium-74
 flowchart TB
   subgraph OPS["Node Operators (74 total)"]
     F["Federal (6)"]
@@ -168,6 +172,7 @@ flowchart TB
 ### 4C EWP Cast-to-Tally (Sequence)
 
 ```mermaid
+%% diagram-id: ewp-cast-to-tally-sequence
 sequenceDiagram
   participant VC as Voter Client
   participant EWG as EWP Gateway
@@ -200,6 +205,7 @@ sequenceDiagram
 ### 4D Full Alignment Map (Dense)
 
 ```mermaid
+%% diagram-id: full-alignment-dense
 flowchart LR
   %% Voter environments
   subgraph VOTERS["Voter Environments"]

@@ -13,6 +13,69 @@
       return Math.min(max, Math.max(min, value));
     }
 
+    function normalizeText(input) {
+      return String(input || '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function parseFlowchartNodeKey(nodeId) {
+      if (!nodeId) return null;
+      if (nodeId.indexOf('flowchart-') !== 0) return null;
+      var parts = nodeId.split('-');
+      // Expected: flowchart-<KEY>-<INDEX>. KEY may contain dashes.
+      if (parts.length < 3) return null;
+      parts.shift(); // flowchart
+      parts.pop(); // numeric index
+      var key = parts.join('-');
+      return key || null;
+    }
+
+    function parseFlowchartEdge(edgeId) {
+      if (!edgeId) return null;
+      if (edgeId.indexOf('L_') !== 0) return null;
+      var parts = edgeId.split('_');
+      // Expected: L_<FROM>_<TO>_<INDEX>. FROM/TO should not contain underscores.
+      if (parts.length < 4) return null;
+      return { from: parts[1] || null, to: parts[2] || null };
+    }
+
+    function extractDiagramIdFromSource(sourceText) {
+      var text = String(sourceText || '');
+      if (!text) return null;
+      var lines = text.split('\n').slice(0, 10);
+      for (var i = 0; i < lines.length; i++) {
+        var m = lines[i].match(/^\s*%%\s*diagram-id:\s*([a-z0-9][a-z0-9_-]{1,80})\s*$/i);
+        if (m && m[1]) return m[1];
+      }
+      return null;
+    }
+
+    function getNodeLabelText(nodeEl) {
+      if (!nodeEl) return '';
+      var fo = nodeEl.querySelector('foreignObject');
+      var raw = fo ? fo.textContent : nodeEl.textContent;
+      return String(raw || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function inferTitleForDiagram(diagramEl) {
+      if (!diagramEl) return 'Diagram inspector';
+      var root = diagramEl.closest('.bill-content');
+      if (!root) return 'Diagram inspector';
+      var headings = root.querySelectorAll('h2, h3, h4');
+      var best = null;
+      headings.forEach(function (h) {
+        if (!(h instanceof HTMLElement)) return;
+        var pos = h.compareDocumentPosition(diagramEl);
+        // If the diagram is after this heading, keep it as the best match so far.
+        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) best = h;
+      });
+      var txt = best ? best.textContent : '';
+      txt = String(txt || '').trim();
+      return txt || 'Diagram inspector';
+    }
+
     function createModal() {
       var overlay = document.createElement('div');
       overlay.className = 'diagram-inspector-overlay';
@@ -30,6 +93,16 @@
       title.className = 'diagram-inspector-title';
       title.textContent = 'Diagram inspector';
 
+      var searchWrap = document.createElement('div');
+      searchWrap.className = 'diagram-inspector-search';
+
+      var searchInput = document.createElement('input');
+      searchInput.className = 'diagram-inspector-search-input';
+      searchInput.type = 'search';
+      searchInput.placeholder = 'Find node (e.g., ENR, VCLW, STH)';
+      searchInput.setAttribute('aria-label', 'Find node');
+      searchInput.disabled = true;
+
       var controls = document.createElement('div');
       controls.className = 'diagram-inspector-controls';
 
@@ -42,6 +115,13 @@
         return b;
       }
 
+      var btnFind = makeBtn('Find', 'find');
+      var btnBack = makeBtn('Back', 'back');
+      var btnClearFocus = makeBtn('Clear focus', 'clearFocus');
+      btnFind.disabled = true;
+      btnBack.disabled = true;
+      btnClearFocus.disabled = true;
+
       var btnFit = makeBtn('Fit', 'fit');
       var btnReset = makeBtn('Reset', 'reset');
       var btnZoomOut = makeBtn('Zoom -', 'zoomOut');
@@ -49,6 +129,12 @@
       var btnClose = makeBtn('Close', 'close');
       btnClose.classList.add('diagram-inspector-btn-primary');
 
+      searchWrap.appendChild(searchInput);
+      searchWrap.appendChild(btnFind);
+
+      controls.appendChild(btnBack);
+      controls.appendChild(searchWrap);
+      controls.appendChild(btnClearFocus);
       controls.appendChild(btnFit);
       controls.appendChild(btnReset);
       controls.appendChild(btnZoomOut);
@@ -67,12 +153,44 @@
       overlay.appendChild(dialog);
       document.body.appendChild(overlay);
 
-      return { overlay: overlay, dialog: dialog, viewport: viewport, title: title, btnClose: btnClose };
+      return {
+        overlay: overlay,
+        dialog: dialog,
+        viewport: viewport,
+        title: title,
+        searchInput: searchInput,
+        btnFind: btnFind,
+        btnBack: btnBack,
+        btnClearFocus: btnClearFocus,
+        btnClose: btnClose,
+      };
     }
 
     // Lazy-created modal so we only pay DOM cost on pages with diagrams.
     var modal = null;
     var active = null;
+    var focusIndexCache = new WeakMap();
+    var diagramNavStack = [];
+
+    // Right-click "decomposition" jumps from a node to a deeper/alternate diagram view.
+    // This stays lightweight: Mermaid remains the canonical representation.
+    var DECOMPOSE_TO_DIAGRAM_ID = {
+      // VoteChain consortium detail
+      VCLN: 'votechain-consortium-74',
+
+      // EWP pipeline detail (sequence view)
+      VC1: 'ewp-cast-to-tally-sequence',
+      VC2: 'ewp-cast-to-tally-sequence',
+      VC3: 'ewp-cast-to-tally-sequence',
+      G1: 'ewp-cast-to-tally-sequence',
+      G2: 'ewp-cast-to-tally-sequence',
+      G3: 'ewp-cast-to-tally-sequence',
+      BLOG: 'ewp-cast-to-tally-sequence',
+      STH: 'ewp-cast-to-tally-sequence',
+      TS: 'ewp-cast-to-tally-sequence',
+      TP: 'ewp-cast-to-tally-sequence',
+      M: 'ewp-cast-to-tally-sequence',
+    };
 
     // Pan/zoom state for the active diagram SVG in the modal viewport.
     var panZoom = {
@@ -83,6 +201,7 @@
       pointers: new Map(),
       dragStart: null,
       pinchStart: null,
+      ignoreClick: false,
     };
 
     function applyTransform() {
@@ -91,6 +210,457 @@
       panZoom.svg.style.transform =
         'translate(' + panZoom.tx + 'px, ' + panZoom.ty + 'px) scale(' + panZoom.scale + ')';
       panZoom.svg.style.willChange = 'transform';
+    }
+
+    function centerOnElement(el) {
+      if (!modal || !active || !panZoom.svg || !el) return;
+      if (!(el instanceof Element)) return;
+      var viewportRect = modal.viewport.getBoundingClientRect();
+      var rect = el.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return;
+
+      var cx = rect.left - viewportRect.left + rect.width / 2;
+      var cy = rect.top - viewportRect.top + rect.height / 2;
+      panZoom.tx += viewportRect.width / 2 - cx;
+      panZoom.ty += viewportRect.height / 2 - cy;
+      applyTransform();
+    }
+
+    function buildFocusIndex(svg) {
+      if (!svg) return null;
+
+      var nodeEls = svg.querySelectorAll('g.node');
+      var edgePathEls = svg.querySelectorAll('path.flowchart-link[id^="L_"]');
+      if (nodeEls.length === 0 || edgePathEls.length === 0) return null;
+
+      var index = {
+        svg: svg,
+        nodes: [],
+        nodeByKey: new Map(),
+        nodeSearch: [],
+        edges: [],
+        edgeById: new Map(),
+        edgesByNode: new Map(),
+        focusNode: null,
+        focusEdge: null,
+        _wired: false,
+      };
+
+      nodeEls.forEach(function (nodeEl) {
+        if (!(nodeEl instanceof SVGGElement)) return;
+        var key = parseFlowchartNodeKey(nodeEl.getAttribute('id'));
+        if (!key) return;
+        var label = getNodeLabelText(nodeEl);
+        var record = { key: key, label: label, el: nodeEl };
+        index.nodes.push(record);
+        index.nodeByKey.set(key, record);
+        index.nodeSearch.push({ key: key, keyNorm: normalizeText(key), labelNorm: normalizeText(label) });
+      });
+
+      function addEdgeToNode(nodeKey, edgeRecord) {
+        if (!nodeKey) return;
+        var list = index.edgesByNode.get(nodeKey);
+        if (!list) {
+          list = [];
+          index.edgesByNode.set(nodeKey, list);
+        }
+        list.push(edgeRecord);
+      }
+
+      edgePathEls.forEach(function (pathEl) {
+        if (!(pathEl instanceof SVGPathElement)) return;
+        var edgeId = pathEl.getAttribute('id') || pathEl.getAttribute('data-id') || '';
+        var parsed = parseFlowchartEdge(edgeId);
+        if (!parsed || !parsed.from || !parsed.to) return;
+        var record = { id: edgeId, from: parsed.from, to: parsed.to, pathEl: pathEl, labelEls: [] };
+        index.edges.push(record);
+        index.edgeById.set(edgeId, record);
+        addEdgeToNode(parsed.from, record);
+        addEdgeToNode(parsed.to, record);
+      });
+
+      // Index edge labels by data-id (matches edge path id).
+      var labelInnerEls = svg.querySelectorAll('g.edgeLabel .label[data-id]');
+      labelInnerEls.forEach(function (labelEl) {
+        if (!(labelEl instanceof SVGGElement)) return;
+        var edgeId = labelEl.getAttribute('data-id') || '';
+        if (!edgeId) return;
+        var edge = index.edgeById.get(edgeId);
+        if (!edge) return;
+        var wrapper = labelEl.closest('g.edgeLabel') || labelEl;
+        if (wrapper) edge.labelEls.push(wrapper);
+      });
+
+      return index;
+    }
+
+    function clearDiagramFocus(index) {
+      if (!index) return;
+      index.focusNode = null;
+      index.focusEdge = null;
+
+      index.nodes.forEach(function (n) {
+        n.el.classList.remove('diagram-dim', 'diagram-highlight', 'diagram-selected');
+      });
+      index.edges.forEach(function (e) {
+        e.pathEl.classList.remove('diagram-dim', 'diagram-highlight', 'diagram-selected');
+        e.labelEls.forEach(function (lbl) {
+          lbl.classList.remove('diagram-dim', 'diagram-highlight', 'diagram-selected');
+        });
+      });
+    }
+
+    function applyDiagramFocus(index, opts) {
+      if (!index) return;
+      var nodes = opts.nodes || new Set();
+      var edges = opts.edges || new Set();
+      var selectedNode = opts.selectedNode || null;
+      var selectedEdge = opts.selectedEdge || null;
+
+      index.nodes.forEach(function (n) {
+        n.el.classList.add('diagram-dim');
+        n.el.classList.remove('diagram-highlight', 'diagram-selected');
+      });
+      index.edges.forEach(function (e) {
+        e.pathEl.classList.add('diagram-dim');
+        e.pathEl.classList.remove('diagram-highlight', 'diagram-selected');
+        e.labelEls.forEach(function (lbl) {
+          lbl.classList.add('diagram-dim');
+          lbl.classList.remove('diagram-highlight', 'diagram-selected');
+        });
+      });
+
+      nodes.forEach(function (nodeKey) {
+        var n = index.nodeByKey.get(nodeKey);
+        if (!n) return;
+        n.el.classList.remove('diagram-dim');
+        n.el.classList.add('diagram-highlight');
+      });
+
+      edges.forEach(function (edgeId) {
+        var e = index.edgeById.get(edgeId);
+        if (!e) return;
+        e.pathEl.classList.remove('diagram-dim');
+        e.pathEl.classList.add('diagram-highlight');
+        e.labelEls.forEach(function (lbl) {
+          lbl.classList.remove('diagram-dim');
+          lbl.classList.add('diagram-highlight');
+        });
+      });
+
+      if (selectedNode) {
+        var sn = index.nodeByKey.get(selectedNode);
+        if (sn) sn.el.classList.add('diagram-selected');
+      }
+      if (selectedEdge) {
+        var se = index.edgeById.get(selectedEdge);
+        if (se) {
+          se.pathEl.classList.add('diagram-selected');
+          se.labelEls.forEach(function (lbl) {
+            lbl.classList.add('diagram-selected');
+          });
+        }
+      }
+    }
+
+    function updateFocusUi() {
+      if (!modal) return;
+      if (!active || !active.focusIndex) {
+        modal.searchInput.disabled = true;
+        modal.btnFind.disabled = true;
+        modal.btnClearFocus.disabled = true;
+        return;
+      }
+
+      modal.searchInput.disabled = false;
+      modal.btnFind.disabled = false;
+
+      var hasFocus = !!(active.focusIndex.focusNode || active.focusIndex.focusEdge);
+      modal.btnClearFocus.disabled = !hasFocus;
+
+      var base = active.titleBase || 'Diagram inspector';
+      if (active.focusIndex.focusNode) modal.title.textContent = base + ': ' + active.focusIndex.focusNode;
+      else if (active.focusIndex.focusEdge) modal.title.textContent = base + ': ' + active.focusIndex.focusEdge;
+      else modal.title.textContent = base;
+    }
+
+    function updateNavUi() {
+      if (!modal) return;
+      modal.btnBack.disabled = diagramNavStack.length === 0;
+    }
+
+    function switchModalToDiagram(diagramEl) {
+      if (!diagramEl) return;
+      if (!(diagramEl instanceof HTMLElement)) return;
+      if (!modal || !active) {
+        openModalForDiagram(diagramEl);
+        ensureControlsWired();
+        return;
+      }
+      if (active.diagram === diagramEl) return;
+
+      // Restore current diagram (but keep overlay open).
+      if (active.focusIndex) clearDiagramFocus(active.focusIndex);
+
+      if (active.nextSibling) active.parent.insertBefore(active.diagram, active.nextSibling);
+      else active.parent.appendChild(active.diagram);
+
+      if (active.placeholder && active.placeholder.parentNode) {
+        active.placeholder.parentNode.removeChild(active.placeholder);
+      }
+
+      active.diagram.className = active.originalClassName;
+
+      // Install new diagram.
+      var parent = diagramEl.parentNode;
+      var nextSibling = diagramEl.nextSibling;
+      var rect = diagramEl.getBoundingClientRect();
+      var computed = window.getComputedStyle(diagramEl);
+
+      var placeholder = document.createElement('div');
+      placeholder.className = 'diagram-inspector-placeholder';
+      placeholder.style.height = rect.height + 'px';
+      placeholder.style.marginTop = computed.marginTop;
+      placeholder.style.marginBottom = computed.marginBottom;
+      placeholder.style.marginLeft = computed.marginLeft;
+      placeholder.style.marginRight = computed.marginRight;
+
+      parent.insertBefore(placeholder, diagramEl);
+
+      var originalClassName = diagramEl.className;
+      diagramEl.className = originalClassName + ' diagram-inspector-active';
+
+      modal.viewport.appendChild(diagramEl);
+
+      var titleBase = inferTitleForDiagram(diagramEl);
+      modal.title.textContent = titleBase;
+
+      active = {
+        diagram: diagramEl,
+        parent: parent,
+        nextSibling: nextSibling,
+        placeholder: placeholder,
+        originalClassName: originalClassName,
+        titleBase: titleBase,
+        focusIndex: null,
+      };
+
+      // Wire up pan/zoom to the SVG.
+      panZoom.svg = diagramEl.querySelector('svg');
+      panZoom.scale = 1;
+      panZoom.tx = 0;
+      panZoom.ty = 0;
+      applyTransform();
+      fitToViewport();
+
+      // Focus/highlight support (flowcharts). Safe no-op for non-flowchart diagrams.
+      var focusIndex = null;
+      if (panZoom.svg) {
+        focusIndex = focusIndexCache.get(panZoom.svg);
+        if (!focusIndex) {
+          focusIndex = buildFocusIndex(panZoom.svg);
+          if (focusIndex) focusIndexCache.set(panZoom.svg, focusIndex);
+        }
+        if (focusIndex) wireFocusHandlersForSvg(focusIndex);
+      }
+      active.focusIndex = focusIndex;
+      if (modal && modal.searchInput) {
+        modal.searchInput.value = '';
+        modal.searchInput.disabled = !focusIndex;
+        modal.btnFind.disabled = !focusIndex;
+        modal.btnClearFocus.disabled = true;
+      }
+      updateFocusUi();
+    }
+
+    function decomposeNodeKey(nodeKey) {
+      if (!active || !nodeKey) return false;
+      var diagramId = DECOMPOSE_TO_DIAGRAM_ID[nodeKey];
+      if (!diagramId) return false;
+      var target = document.querySelector('.mermaid-diagram[data-diagram-id="' + diagramId + '"]');
+      if (!(target instanceof HTMLElement)) return false;
+
+      // Push current diagram to history so Back works.
+      diagramNavStack.push(active.diagram);
+      switchModalToDiagram(target);
+      updateNavUi();
+      return true;
+    }
+
+    function focusNode(index, nodeKey, shouldCenter) {
+      if (!index || !nodeKey) return;
+      var record = index.nodeByKey.get(nodeKey);
+      if (!record) return;
+
+      var nodes = new Set();
+      var edges = new Set();
+      nodes.add(nodeKey);
+      var related = index.edgesByNode.get(nodeKey) || [];
+      related.forEach(function (e) {
+        edges.add(e.id);
+        nodes.add(e.from);
+        nodes.add(e.to);
+      });
+
+      index.focusNode = nodeKey;
+      index.focusEdge = null;
+      applyDiagramFocus(index, { nodes: nodes, edges: edges, selectedNode: nodeKey });
+      updateFocusUi();
+
+      if (modal && modal.searchInput) modal.searchInput.value = nodeKey;
+      if (shouldCenter !== false) centerOnElement(record.el);
+    }
+
+    function focusEdge(index, edgeId, shouldCenter) {
+      if (!index || !edgeId) return;
+      var edge = index.edgeById.get(edgeId);
+      if (!edge) return;
+
+      var nodes = new Set();
+      var edges = new Set();
+      nodes.add(edge.from);
+      nodes.add(edge.to);
+      edges.add(edge.id);
+
+      index.focusNode = null;
+      index.focusEdge = edge.id;
+      applyDiagramFocus(index, { nodes: nodes, edges: edges, selectedEdge: edge.id });
+      updateFocusUi();
+
+      if (shouldCenter !== false) {
+        var labelEl = edge.labelEls && edge.labelEls.length ? edge.labelEls[0] : null;
+        centerOnElement(labelEl || edge.pathEl);
+      }
+    }
+
+    function flashSearchError() {
+      if (!modal || !modal.searchInput) return;
+      modal.searchInput.classList.add('diagram-inspector-search-invalid');
+      setTimeout(function () {
+        if (!modal || !modal.searchInput) return;
+        modal.searchInput.classList.remove('diagram-inspector-search-invalid');
+      }, 650);
+    }
+
+    function findAndFocusFromQuery(query) {
+      if (!active || !active.focusIndex) return;
+      var index = active.focusIndex;
+      var raw = String(query || '').trim();
+      if (!raw) return;
+
+      // Try exact key match first (case-insensitive).
+      var qNorm = normalizeText(raw);
+      var exact = null;
+      index.nodeSearch.some(function (n) {
+        if (n.keyNorm === qNorm) {
+          exact = n.key;
+          return true;
+        }
+        return false;
+      });
+      if (exact) {
+        focusNode(index, exact);
+        return;
+      }
+
+      // If the input starts with a token that matches a key, prefer that.
+      var token = normalizeText(raw.split(/[\s:,-]+/)[0]);
+      var tokenMatch = null;
+      index.nodeSearch.some(function (n) {
+        if (n.keyNorm === token) {
+          tokenMatch = n.key;
+          return true;
+        }
+        return false;
+      });
+      if (tokenMatch) {
+        focusNode(index, tokenMatch);
+        return;
+      }
+
+      // Otherwise, substring match on label, then key.
+      var partial = null;
+      index.nodeSearch.some(function (n) {
+        if (n.labelNorm.indexOf(qNorm) !== -1) {
+          partial = n.key;
+          return true;
+        }
+        return false;
+      });
+      if (!partial) {
+        index.nodeSearch.some(function (n) {
+          if (n.keyNorm.indexOf(qNorm) !== -1) {
+            partial = n.key;
+            return true;
+          }
+          return false;
+        });
+      }
+
+      if (partial) focusNode(index, partial);
+      else flashSearchError();
+    }
+
+    function wireFocusHandlersForSvg(index) {
+      if (!index || index._wired) return;
+      index._wired = true;
+
+      index.svg.addEventListener('click', function (e) {
+        if (!active || panZoom.svg !== index.svg) return;
+        if (panZoom.ignoreClick) return;
+
+        var target = e.target;
+        if (!(target instanceof Element)) return;
+
+        // Node click focuses adjacency.
+        var nodeEl = target.closest('g.node');
+        if (nodeEl) {
+          var key = parseFlowchartNodeKey(nodeEl.getAttribute('id'));
+          if (key) {
+            focusNode(index, key);
+            return;
+          }
+        }
+
+        // Edge click focuses endpoints.
+        var edgePath = target.closest('path.flowchart-link[id^=\"L_\"]');
+        if (edgePath) {
+          var edgeId = edgePath.getAttribute('id');
+          if (edgeId) {
+            focusEdge(index, edgeId);
+            return;
+          }
+        }
+
+        var edgeLabel = target.closest('g.label[data-id]');
+        if (edgeLabel) {
+          var edgeId2 = edgeLabel.getAttribute('data-id');
+          if (edgeId2) {
+            focusEdge(index, edgeId2);
+            return;
+          }
+        }
+
+        // Background clears focus.
+        clearDiagramFocus(index);
+        updateFocusUi();
+      });
+
+      // Right-click: decompose a node into a deeper/alternate diagram (when configured).
+      index.svg.addEventListener('contextmenu', function (e) {
+        if (!active || panZoom.svg !== index.svg) return;
+        var target = e.target;
+        if (!(target instanceof Element)) return;
+
+        var nodeEl = target.closest('g.node');
+        if (!nodeEl) return;
+
+        var key = parseFlowchartNodeKey(nodeEl.getAttribute('id'));
+        if (!key) return;
+
+        e.preventDefault();
+        if (!decomposeNodeKey(key)) focusNode(index, key);
+      });
     }
 
     function fitToViewport() {
@@ -143,6 +713,11 @@
     function closeModal() {
       if (!modal || !active) return;
 
+      // Ensure we don't leave a focused/dimmed state behind when restoring inline.
+      if (active.focusIndex) {
+        clearDiagramFocus(active.focusIndex);
+      }
+
       // Restore diagram to original location.
       if (active.nextSibling) active.parent.insertBefore(active.diagram, active.nextSibling);
       else active.parent.appendChild(active.diagram);
@@ -162,12 +737,26 @@
       panZoom.pointers.clear();
       panZoom.dragStart = null;
       panZoom.pinchStart = null;
+      panZoom.ignoreClick = false;
+
+      if (modal && modal.searchInput) {
+        modal.searchInput.value = '';
+        modal.searchInput.disabled = true;
+        modal.btnFind.disabled = true;
+        modal.btnClearFocus.disabled = true;
+      }
+
+      diagramNavStack.length = 0;
+      updateNavUi();
+
       active = null;
     }
 
     function openModalForDiagram(diagramEl) {
       if (!modal) modal = createModal();
       if (active) closeModal();
+      diagramNavStack.length = 0;
+      updateNavUi();
 
       // Save original placement so we can restore.
       var parent = diagramEl.parentNode;
@@ -192,8 +781,8 @@
       modal.viewport.appendChild(diagramEl);
 
       // Update title if we can infer something useful.
-      var heading = diagramEl.closest('.bill-content')?.querySelector('h2, h3, h4');
-      modal.title.textContent = heading ? heading.textContent.trim() : 'Diagram inspector';
+      var titleBase = inferTitleForDiagram(diagramEl);
+      modal.title.textContent = titleBase;
 
       active = {
         diagram: diagramEl,
@@ -201,6 +790,8 @@
         nextSibling: nextSibling,
         placeholder: placeholder,
         originalClassName: originalClassName,
+        titleBase: titleBase,
+        focusIndex: null,
       };
 
       modal.overlay.setAttribute('data-open', 'true');
@@ -214,6 +805,26 @@
       panZoom.ty = 0;
       applyTransform();
       fitToViewport();
+
+      // Focus/highlight support (flowcharts). Safe no-op for non-flowchart diagrams.
+      var focusIndex = null;
+      if (panZoom.svg) {
+        focusIndex = focusIndexCache.get(panZoom.svg);
+        if (!focusIndex) {
+          focusIndex = buildFocusIndex(panZoom.svg);
+          if (focusIndex) focusIndexCache.set(panZoom.svg, focusIndex);
+        }
+        if (focusIndex) wireFocusHandlersForSvg(focusIndex);
+      }
+      active.focusIndex = focusIndex;
+      if (modal && modal.searchInput) {
+        modal.searchInput.value = '';
+        modal.searchInput.disabled = !focusIndex;
+        modal.btnFind.disabled = !focusIndex;
+        modal.btnClearFocus.disabled = true;
+      }
+      updateFocusUi();
+      updateNavUi();
 
       // Focus the close button for keyboard users.
       requestAnimationFrame(function () {
@@ -248,6 +859,20 @@
         if (!action) return;
 
         if (action === 'close') closeModal();
+        else if (action === 'back') {
+          if (diagramNavStack.length === 0) return;
+          var prev = diagramNavStack.pop();
+          switchModalToDiagram(prev);
+          updateNavUi();
+        }
+        else if (action === 'clearFocus') {
+          if (active && active.focusIndex) {
+            clearDiagramFocus(active.focusIndex);
+            updateFocusUi();
+          }
+        } else if (action === 'find') {
+          if (modal && modal.searchInput) findAndFocusFromQuery(modal.searchInput.value);
+        }
         else if (action === 'fit') fitToViewport();
         else if (action === 'reset') {
           panZoom.scale = 1;
@@ -284,6 +909,7 @@
         if (!active) return;
         modal.viewport.setPointerCapture(e.pointerId);
         panZoom.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        panZoom.ignoreClick = false;
 
         if (panZoom.pointers.size === 1) {
           panZoom.dragStart = {
@@ -326,6 +952,10 @@
         panZoom.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
         if (panZoom.pointers.size === 1 && panZoom.dragStart) {
+          // If we moved, treat this pointer sequence as a drag, not a click.
+          var dx1 = e.clientX - panZoom.dragStart.x;
+          var dy1 = e.clientY - panZoom.dragStart.y;
+          if (Math.sqrt(dx1 * dx1 + dy1 * dy1) > 6) panZoom.ignoreClick = true;
           panZoom.tx = panZoom.dragStart.tx + (e.clientX - panZoom.dragStart.x);
           panZoom.ty = panZoom.dragStart.ty + (e.clientY - panZoom.dragStart.y);
           applyTransform();
@@ -333,6 +963,7 @@
         }
 
         if (panZoom.pointers.size === 2 && panZoom.pinchStart && modal) {
+          panZoom.ignoreClick = true;
           var pts = Array.from(panZoom.pointers.values());
           var dx = pts[0].x - pts[1].x;
           var dy = pts[0].y - pts[1].y;
@@ -363,6 +994,13 @@
           panZoom.dragStart = null;
           panZoom.pinchStart = null;
           modal.viewport.classList.remove('diagram-inspector-dragging');
+
+          // Prevent a click-after-drag from triggering focus changes.
+          if (panZoom.ignoreClick) {
+            setTimeout(function () {
+              panZoom.ignoreClick = false;
+            }, 0);
+          }
         } else if (panZoom.pointers.size === 1) {
           // Transition from pinch to drag.
           var pt = Array.from(panZoom.pointers.values())[0];
@@ -377,6 +1015,16 @@
 
       // Ensure explicit close button works even if event delegation above changes.
       modal.btnClose.addEventListener('click', closeModal);
+
+      // Search input: Enter triggers find.
+      if (modal.searchInput) {
+        modal.searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            findAndFocusFromQuery(modal.searchInput.value);
+          }
+        });
+      }
     }
 
     function enhanceMermaidDiagrams() {
@@ -424,11 +1072,14 @@
       });
 
       preBlocks.forEach(function (pre, index) {
+        var sourceText = pre.textContent || '';
         var container = document.createElement('div');
         container.className = 'mermaid-diagram my-6 overflow-x-auto';
         container.id = 'mermaid-diagram-' + index;
-        container.setAttribute('data-mermaid-source', pre.textContent || '');
-        container.textContent = pre.textContent;
+        container.setAttribute('data-mermaid-source', sourceText);
+        var diagramId = extractDiagramIdFromSource(sourceText);
+        if (diagramId) container.setAttribute('data-diagram-id', diagramId);
+        container.textContent = sourceText;
         pre.parentElement.replaceChild(container, pre);
       });
 
@@ -463,4 +1114,3 @@
     document.head.appendChild(script);
   });
 </script>
-

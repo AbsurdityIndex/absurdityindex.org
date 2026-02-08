@@ -1,0 +1,447 @@
+---
+/**
+ * AI Document Summarizer modal — a mock summarizer that shows pre-baked
+ * summaries of the VoteChain PRD at three knowledge levels (ELI5, Plain
+ * Language, Technical). Includes a scanning animation on first open and a
+ * knowledge-level slider.
+ *
+ * Usage: Drop <AISummarizer /> anywhere in a page layout. The trigger
+ * button renders inline; the modal is fixed-position.
+ */
+---
+
+<!-- AI Summarizer trigger (inline) -->
+<div class="text-center my-6">
+  <button id="ai-modal-trigger" class="ai-trigger">
+    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+    Too long? Summarize with AI
+  </button>
+  <p class="font-serif text-navy-500 text-sm italic mt-2">1,525 lines &rarr; 60 seconds</p>
+</div>
+
+<!-- AI Summarizer Modal -->
+<div id="ai-modal-backdrop" class="ai-modal-backdrop" aria-hidden="true"></div>
+<div id="ai-modal" class="ai-modal" role="dialog" aria-modal="true" aria-label="AI Document Summary" aria-hidden="true">
+  <div class="ai-modal-panel">
+    <!-- Modal header -->
+    <div class="ai-modal-header">
+      <div class="flex items-center gap-3">
+        <div class="ai-icon-wrap">
+          <svg class="w-5 h-5 text-gold-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg>
+        </div>
+        <p class="font-mono text-xs uppercase tracking-widest text-gold-400">AI Document Summarizer</p>
+      </div>
+      <button id="ai-modal-close" class="ai-modal-close" aria-label="Close summary">
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Modal body -->
+    <div class="ai-modal-body">
+      <!-- Scanning state -->
+      <div id="ai-scanning" class="ai-scanning">
+        <div class="ai-scan-lines font-mono text-sm text-navy-500 space-y-2 py-8">
+          <p id="scan-1" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Reading 1,525 lines across 19 sections...</p>
+          <p id="scan-2" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Analyzing 5 verification pillars...</p>
+          <p id="scan-3" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Cross-referencing threat models &amp; cost data...</p>
+          <p id="scan-4" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Evaluating rollout strategy...</p>
+          <p id="scan-5" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Compiling summary...</p>
+        </div>
+      </div>
+
+      <!-- Summary result -->
+      <div id="ai-result" class="ai-result hidden">
+        <!-- Knowledge level slider -->
+        <div class="ai-slider-wrap mb-5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-mono text-xs text-navy-500 uppercase tracking-wide">ELI5</span>
+            <span id="ai-level-label" class="font-mono text-xs text-gold-600 font-bold uppercase tracking-wide">Plain Language</span>
+            <span class="font-mono text-xs text-navy-500 uppercase tracking-wide">Technical</span>
+          </div>
+          <input id="ai-slider" type="range" min="0" max="2" step="1" value="1" class="ai-range-slider" aria-label="Summary complexity level" />
+        </div>
+
+        <!-- Level 0: ELI5 -->
+        <div id="ai-level-0" class="ai-level hidden">
+          <div class="ai-summary font-serif text-navy-800 text-[0.95rem] leading-relaxed">
+            <p class="font-bold text-lg text-navy-900 mb-3">The library card version:</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">What is this?</p>
+            <p class="mb-3">This is a really long plan — like the blueprints for a building, but for a computer system that checks whether people are allowed to vote. It's not a real thing yet. It's a plan that says "here's how we <em>could</em> build it" so people can argue about it, poke holes in it, and make it better.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Why was it written?</p>
+            <p class="mb-3">For a really long time, grown-ups have been saying "voting is broken!" but nobody ever drew up a plan to fix any part of it. This is someone finally saying "okay, here's a plan — tell me what's wrong with it."</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">How it works:</p>
+            <p class="mb-3">Imagine voting is like borrowing a library book.</p>
+
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>You make your library card one time.</strong> You prove who you are once — then after that, you just show your card. No need to bring your birth certificate every time you want a book.</li>
+              <li><strong>A big shared notebook keeps track.</strong> 74 different librarians all have a copy of the same notebook, and they all have to agree before anything gets written down. No single librarian can cheat.</li>
+              <li><strong>The notebook doesn't say which stories you like.</strong> It only knows <em>that</em> a book was checked out — not which one. Your reading habits are your business.</li>
+              <li><strong>If somebody tries to check out two books at once, it gets caught right away.</strong> The notebook sees the duplicate instantly — not weeks later.</li>
+              <li><strong>If something looks weird, you still get a temporary pass</strong> while the adults figure it out. You never get turned away with nothing.</li>
+            </ul>
+
+            <p class="mb-3">VoteChain tries to do exactly this for voting: prove who you are <strong>once</strong>, catch cheating <strong>fast</strong>, and never take away your right to vote while things get sorted out.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">"But doesn't it know all my stuff?"</p>
+            <p class="mb-3">Nope. Think of it this way: the library already has your name and address on file — that's how you got your card. But the <strong>notebook</strong> only says "someone checked out a book." Not your name. Not which book. VoteChain is the notebook, not the library's filing cabinet. Your personal info stays where it already is. The notebook only knows: <em>allowed to borrow? yes or no.</em></p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Who makes sure it's working right?</p>
+            <p class="mb-3">Every three months, an outside group checks everything — like a surprise inspection. And here's the cool part: <strong>25 regular people are picked at random</strong> (like jury duty!) to choose <em>which</em> group does the inspection. So the people in charge don't get to pick their own inspector. And the inspection results? Posted for everyone to see.</p>
+            <p class="mb-3">Also, <strong>all the instructions for how the system works are public.</strong> Anyone can look at them. It's like if the recipe for the school lunch was posted on the wall so every parent could read it. The system belongs to everyone — not a company, not the government, everyone.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Some quick numbers:</p>
+            <ul class="list-disc pl-6 space-y-1.5 mb-4">
+              <li>Costs about <strong>$5.60 per vote</strong> to run — we already spend $4-6 billion each election cycle</li>
+              <li>Would take about <strong>5 years</strong> to build and roll out to all 50 states</li>
+              <li>Under <strong>60 seconds</strong> at the polls — faster than the current ID check</li>
+              <li><strong>Free</strong> for voters — enrollment, secure cards, everything</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">What it doesn't do:</p>
+            <p class="mb-3">It doesn't change how you vote or count your ballot. It doesn't track who you voted for. It doesn't cost you a cent. It doesn't need a smartphone. And it doesn't let any one person or party run the show.</p>
+
+            <p class="text-navy-500 text-sm italic mt-4">Want more detail? Slide the bar to the right. Or close this and read the full 1,525 lines.</p>
+          </div>
+        </div>
+
+        <!-- Level 1: Plain Language (default) -->
+        <div id="ai-level-1" class="ai-level">
+          <div class="ai-summary font-serif text-navy-800 text-[0.95rem] leading-relaxed">
+            <p class="font-bold text-lg text-navy-900 mb-3">Here's what 1,525 lines boil down to:</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">What is this?</p>
+            <p class="mb-3">A complete technical blueprint — a detailed plan for building a system that verifies voters are who they say they are. It's not a law. It's not software you can download. It's a proposal that anyone can read, tear apart, and improve. Think of it like an architect's drawings for a building that hasn't been built yet.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Why does it exist?</p>
+            <p class="mb-3">For 20 years, people across the political spectrum have said "elections are broken" — but nobody has published a concrete, buildable plan to fix any part of it. This document tries to change that. It tackles one specific piece: verifying that every person who votes is a citizen, is eligible, is alive, and hasn't already voted — and doing it in a way that's fast, private, and not controlled by any single party or agency.</p>
+
+            <p class="mb-3"><strong>VoteChain is a voter <em>verification</em> system — not a voting machine.</strong> It doesn't touch your ballot. It sits alongside existing election infrastructure and answers four questions with mathematical proof: Are you a citizen? Are you eligible? Are you alive? Have you already voted?</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">"But what about my personal data?"</p>
+            <p class="mb-3">This is the part most people get wrong, so let's get ahead of it. Think of voter verification as having two sides. On the <strong>left side</strong>, yes — the government already collects your personal information. Social Security numbers, birth certificates, passports. That happens today, right now, and VoteChain doesn't change any of it. On the <strong>right side</strong> is the only question this system actually answers: <em>are you verified — yes or no?</em></p>
+            <p class="mb-3">VoteChain lives <strong>entirely on that right side</strong>. It receives a cryptographic "yes, this person checks out" — and that's all it stores. No names. No Social Security numbers. No addresses. No biometrics. Just math that proves someone was verified, without revealing who they are. Your personal data stays where it already is — locked in existing government databases that already have it. VoteChain never sees it, never touches it, and is architecturally incapable of storing it.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">How it works:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li>Enroll <strong>once</strong> through multi-source identity checks (Social Security, immigration services, birth certificates, passport records). This generates a <strong>digital credential</strong> — think of it as a secure digital key that only you hold, proving you're a verified voter without carrying a physical ID to the polls.</li>
+              <li>At the polls, the system uses something called a <strong>zero-knowledge proof</strong>. In plain English: it's a way for the system to confirm "yes, this person is eligible to vote" <em>without revealing who they are</em>. The poll worker sees a green light or a red light — not your name, not your address, nothing personal.</li>
+              <li>Every verification event is recorded on an <strong>immutable ledger</strong> — a shared digital record book that 74 separate computers (run by federal, state, and independent auditor organizations) all have to agree on before anything gets written. Once it's written, nobody can go back and change it. That's what "blockchain" means here — not crypto coins, just a tamper-proof record.</li>
+              <li>No single agency, party, or official can control the system. Finalizing any record requires <strong>3 of 4 independent operator groups</strong> to agree — federal nodes, state nodes, auditor nodes, and oversight nodes.</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">How it catches fraud:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>Instantly at the polls:</strong> If someone tries to vote twice, the system catches it in seconds. Each voter gets a unique one-time-use digital token (called a "nullifier") for each election. Try to use it twice? The math doesn't lie — the conflict is flagged immediately.</li>
+              <li><strong>In the background (hours, not months):</strong> Death records, court records, and suspicious patterns are checked continuously. Today, dead voters can stay on the rolls for months or years. This system targets flagging them within 48 hours of a death record arriving.</li>
+              <li>Six types of fraud are actively monitored: deceased voters, duplicate voting, geographic impossibility (voting in two places too far apart too fast), statistical anomalies, enrollment fraud, and court-record mismatches.</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Privacy protections:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>No personal information on the shared ledger. Ever.</strong> No names, Social Security numbers, addresses, or fingerprints. The blockchain only stores math — proofs that someone was verified, not who they are.</li>
+              <li>Fingerprint/biometric enrollment is <strong>optional</strong>. If you don't want to use biometrics, you can use a PIN + a free secure card + a poll worker confirming you're physically present. Both paths have equal legal standing.</li>
+              <li>Ballot secrecy is <strong>built into the architecture</strong>, not just promised by policy. The verification system and the ballot system are completely separate. VoteChain knows <em>that</em> you voted — it has no way of knowing <em>how</em> you voted.</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Who audits the system?</p>
+            <p class="mb-3">Trust doesn't come from the people who built it telling you to trust it. So the blueprint proposes this: <strong>every quarter, an independent third-party firm audits the entire system</strong> — the code, the data, the processes, everything. The audit must be completed within 30 days and the full results published publicly.</p>
+            <p class="mb-3">Here's the part that matters: <strong>the public picks the auditor.</strong> Any qualified U.S. security firm can volunteer. Then <strong>25 people are chosen at random from across the country</strong> — like jury duty, but for choosing the watchdog. Those 25 citizens review the candidates and vote on which firm gets the job. No government committee choosing its own auditor. No single online poll that bots can flood. Just 25 randomly selected Americans deciding who checks the homework.</p>
+            <p class="mb-3">A different firm each quarter means no auditor gets cozy with the system they're reviewing. And because the results are public, anyone — journalists, academics, your neighbor who's really into spreadsheets — can read exactly what was found.</p>
+            <p class="mb-3">Oh, and <strong>the entire system is open source.</strong> Every line of code, every smart contract, every configuration file — published publicly for anyone to inspect, audit, or fork. You don't have to take anyone's word for what the system does. You can read it yourself or hire someone who can. No black boxes. No proprietary secrets. No "trust us." If a security researcher in their garage finds a flaw at 2 AM, they can prove it with the actual code. The system belongs to the people — not a contractor, not an agency, not a party. It's public infrastructure, built in the open, owned by everyone.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">The numbers:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>Cost:</strong> ~$870M to build + ~$375M/year to run (baseline estimate), roughly $5.60 per verified vote. For context, the U.S. already spends an estimated $4-6 billion per election cycle on election administration.</li>
+              <li><strong>Timeline:</strong> 5-year phased rollout — working prototype in 6 months, security hardening through year 2, real-world pilots in years 2-3, nationwide for federal elections in years 3-5.</li>
+              <li><strong>Speed:</strong> Target under 60 seconds for the voter experience at the polls. The shared ledger confirms records in under 3 seconds.</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">What it doesn't do:</p>
+            <p class="mb-4">Replace how ballots are cast or counted. Create a national voter database. Require internet voting. Eliminate poll workers. Track how you vote. Charge voters a single cent.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">14 open questions remain</p>
+            <p class="mb-3">Including which specific technology to build on, how to handle 50 different state eligibility rules, what happens in states with same-day voter registration, and how to keep the oversight board independent as political winds shift.</p>
+
+            <p class="text-navy-500 text-sm italic mt-4">Close this modal and keep reading for the full 1,525-line blueprint with architecture diagrams, data schemas, threat models, and more.</p>
+          </div>
+        </div>
+
+        <!-- Level 2: Technical -->
+        <div id="ai-level-2" class="ai-level hidden">
+          <div class="ai-summary font-serif text-navy-800 text-[0.95rem] leading-relaxed">
+            <p class="font-bold text-lg text-navy-900 mb-3">Technical summary:</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Scope:</p>
+            <p class="mb-3">A 1,525-line PRD specifying a permissioned blockchain-based voter verification layer. Not a voting system — a verification-only layer that sits alongside existing election infrastructure. This document is a buildable blueprint: architecture, data schemas, threat models, cost models, rollout phases, and 14 open questions. Intended to be forked, red-teamed, and iterated on publicly.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">PII boundary (critical architectural constraint):</p>
+            <p class="mb-3">Strict separation between the <strong>identity enrollment plane</strong> (where PII exists — SSA, USCIS, state vital records, encrypted state enrollment vaults) and the <strong>verification plane</strong> (VoteChain itself). The chain never ingests, stores, or transmits PII. DID-to-PII linkage exists only in state-operated encrypted vaults, accessible exclusively by court order. The verification plane operates solely on cryptographic attestations: ZKPs, nullifiers, and DID-anchored proofs. This is an architectural invariant, not a policy promise.</p>
+
+            <p class="mb-3"><strong>VoteChain is a permissioned blockchain-based voter verification layer</strong> implementing five cryptographic attestation pillars. It is not a ballot-casting or counting system — it answers four eligibility questions with cryptographic proof and records every verification event on an immutable, multi-party-consensus ledger.</p>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Architecture:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>Consortium chain</strong> (Hyperledger Fabric-class): 74-node BFT network — 6 federal (EAC/CISA), 50 state, 12 independent auditor, 6 congressional oversight. Category-quorum consensus: 3-of-4 categories, each requiring &ge;2/3 intra-category agreement.</li>
+              <li><strong>Identity layer:</strong> W3C Decentralized Identifiers (DIDs) with voter-held private keys (device or HSM-backed secure card). DID-to-PII linkage exists only in encrypted state enrollment vaults, accessible by court order.</li>
+              <li><strong>Privacy layer:</strong> zk-SNARKs (circuit proves all five pillar attestations valid for a given election_id + jurisdiction_id without disclosing voter identity). Nullifier = deterministic hash(DID + election_id) for cross-jurisdictional duplicate detection on the national channel.</li>
+              <li><strong>Data model:</strong> Per-state channels for eligibility chaincode (statute-versioned judicial rulesets); one national channel for nullifier dedup and cross-state fraud correlation. Target: 10,000+ TPS, &lt;3s finality.</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Five verification pillars:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>Citizenship:</strong> 2-of-4 source attestation at enrollment (SSA, USCIS, state vital records, State Dept passport records). Attestation bound to DID, 10-year expiry.</li>
+              <li><strong>Eligibility:</strong> Per-election smart contract evaluation — age, residency, judicial status (felony disenfranchisement, restoration, court adjudications), registration. Stale/conflicting data defaults to provisional + adjudication SLA.</li>
+              <li><strong>Liveness &amp; Presence:</strong> Biometric (local template match on voter device, never centralized) or non-biometric first-class path (knowledge factor + possession factor + poll worker attestation). Continuous death-record feed integration with &lt;48h revocation SLA.</li>
+              <li><strong>Duplicate Prevention:</strong> One-time nullifier checked against national channel pre-ballot-issuance. Cross-state duplicate detection in real-time — cryptographically infeasible to generate a second valid nullifier for same DID + election_id.</li>
+              <li><strong>Chain-of-Custody:</strong> Device DIDs with HSM attestation co-sign all verification events. Compromised device &rarr; attestation revocation + retroactive flag of all prior verifications.</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Hybrid fraud detection engine:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>Synchronous (poll-time):</strong> Nullifier collision, invalid ZKP, compromised device attestation, geographic impossibility.</li>
+              <li><strong>Asynchronous (SLA-bound):</strong> SSA DMF / vital records death matching, judicial eligibility drift detection, enrollment pattern anomaly clustering, rate-limit violations.</li>
+              <li><strong>Flag lifecycle:</strong> Detected &rarr; Triaged &rarr; Investigated &rarr; Resolved. Every state transition is an immutable on-chain record with signer identity and timestamp. Resolutions: confirmed fraud (DOJ/AG referral), false positive (reason code), system error (post-mortem).</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Cost &amp; rollout:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>Baseline:</strong> ~$870M capex, ~$375M/yr opex (~$5.60/verified vote). Expected with integration risk: $2.0-2.8B / $0.5-0.7B/yr. High-risk: $3.0-4.0B / $0.7-0.9B/yr.</li>
+              <li><strong>Phases:</strong> Governance &amp; standards (M1-12), rapid POC (M1-6), production hardening + red-team cycles (M6-24), live pilot in 3-5 diverse jurisdictions (M24-36), federal rollout (M36-60).</li>
+              <li><strong>Security:</strong> Annual red team by 2+ independent firms, continuous bug bounty (up to $500K), pre-election stress test at 2x peak load, post-quantum migration path (NIST PQC).</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Audit governance:</p>
+            <ul class="list-disc pl-6 space-y-2.5 mb-4">
+              <li><strong>Quarterly external audit:</strong> Full-scope review (code, chaincode, infrastructure, operational processes) by an independent U.S. security firm. 30-day completion SLA. Full report published publicly — no redactions except active vulnerability details under coordinated disclosure.</li>
+              <li><strong>Sortition-based auditor selection:</strong> 25 citizens selected at random from the national population (jury-duty model). Panel reviews qualified candidate firms and votes on selection. No government entity, oversight board member, or system operator participates in auditor selection. Rotating panel and rotating firm each quarter — prevents capture.</li>
+              <li><strong>Fully open source:</strong> All source code, smart contracts, chaincode, configuration, and deployment manifests published under an OSI-approved license. Public git repository with full commit history. No proprietary components. The system is public infrastructure owned by the people — not a contractor, agency, or political party.</li>
+            </ul>
+
+            <p class="font-bold text-navy-900 mt-4 mb-2">Open questions (14):</p>
+            <p class="mb-3">Blockchain framework selection (Fabric vs Besu vs custom), ZKP system (Groth16 vs PLONK vs STARKs — tradeoffs in proof size, generation time, trusted setup), 50-state judicial eligibility codification (NCSL partnership), same-day registration rapid-enrollment track, smart contract governance model (multi-party approval + 30-day public comment), ZKP computation offload for low-end devices, UOCAVA deadline harmonization, tribal nation interoperability, post-quantum key migration, and long-term oversight board independence.</p>
+
+            <p class="text-navy-500 text-sm italic mt-4">Full architecture diagrams (Mermaid), JSON schema examples, sequence diagrams, threat model matrices, and the citizen FAQ are in the document below.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Summarizer styles -->
+<style>
+  .ai-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: var(--color-navy-900);
+    color: var(--color-gold-400);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    border: 2px solid var(--color-gold-500);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .ai-trigger:hover {
+    background: var(--color-navy-800);
+    border-color: var(--color-gold-400);
+    box-shadow: 0 0 16px rgba(197, 165, 114, 0.2);
+  }
+  .ai-modal-backdrop {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(10, 22, 40, 0.7);
+    backdrop-filter: blur(4px);
+    opacity: 0; visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  .ai-modal-backdrop.open { opacity: 1; visibility: visible; }
+  .ai-modal {
+    position: fixed; inset: 0; z-index: 61;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem; pointer-events: none;
+    opacity: 0; visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  .ai-modal.open { opacity: 1; visibility: visible; pointer-events: auto; }
+  .ai-modal-panel {
+    width: 100%; max-width: 720px; max-height: 85vh;
+    display: flex; flex-direction: column;
+    background: var(--color-parchment);
+    border: 2px solid var(--color-gold-500);
+    border-radius: 0.75rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .ai-modal.open .ai-modal-panel { transform: translateY(0) scale(1); }
+  .ai-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.875rem 1.25rem;
+    background: var(--color-navy-900);
+    border-bottom: 2px solid var(--color-gold-500);
+    border-radius: 0.625rem 0.625rem 0 0;
+  }
+  .ai-icon-wrap {
+    display: flex; align-items: center; justify-content: center;
+    width: 2rem; height: 2rem;
+    background: rgba(197, 165, 114, 0.15);
+    border-radius: 0.5rem; flex-shrink: 0;
+  }
+  .ai-modal-close {
+    display: flex; align-items: center; justify-content: center;
+    width: 2rem; height: 2rem;
+    background: transparent;
+    border: 1px solid rgba(197, 165, 114, 0.3);
+    border-radius: 0.25rem;
+    color: var(--color-gold-400);
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .ai-modal-close:hover {
+    background: rgba(197, 165, 114, 0.1);
+    border-color: var(--color-gold-500);
+    color: var(--color-gold-300);
+  }
+  .ai-modal-body { flex: 1; overflow-y: auto; padding: 1.5rem; }
+  .ai-scan-line { transition: opacity 0.3s ease; }
+  .ai-cursor { color: var(--color-gold-500); animation: blink 0.8s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .ai-result { opacity: 0; transition: opacity 0.5s ease; }
+  .ai-result.visible { opacity: 1; }
+  .ai-summary ul { list-style-type: disc; }
+  .ai-slider-wrap { padding: 0 0.25rem; }
+  .ai-range-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px; border-radius: 3px;
+    background: linear-gradient(to right, var(--color-gold-300), var(--color-navy-600));
+    outline: none; cursor: pointer;
+  }
+  .ai-range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--color-gold-500);
+    border: 3px solid var(--color-navy-900);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .ai-range-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  }
+  .ai-range-slider::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--color-gold-500);
+    border: 3px solid var(--color-navy-900);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+  .ai-level { transition: opacity 0.3s ease; }
+  @media (max-width: 640px) {
+    .ai-modal { padding: 0.5rem; }
+    .ai-modal-panel { max-height: 90vh; }
+    .ai-modal-body { padding: 1rem; }
+  }
+</style>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', function() {
+    var trigger = document.getElementById('ai-modal-trigger');
+    var backdrop = document.getElementById('ai-modal-backdrop');
+    var modal = document.getElementById('ai-modal');
+    var closeBtn = document.getElementById('ai-modal-close');
+    var scanning = document.getElementById('ai-scanning');
+    var result = document.getElementById('ai-result');
+    var slider = document.getElementById('ai-slider');
+    var levelLabel = document.getElementById('ai-level-label');
+    var levelNames = ['ELI5', 'Plain Language', 'Technical'];
+    var hasPlayed = false;
+
+    if (!trigger || !modal || !backdrop || !scanning || !result) return;
+
+    function showLevel(level) {
+      for (var i = 0; i <= 2; i++) {
+        var el = document.getElementById('ai-level-' + i);
+        if (el) {
+          if (i === level) { el.classList.remove('hidden'); }
+          else { el.classList.add('hidden'); }
+        }
+      }
+      if (levelLabel) levelLabel.textContent = levelNames[level];
+    }
+
+    if (slider) {
+      slider.addEventListener('input', function() {
+        showLevel(parseInt(this.value, 10));
+      });
+    }
+
+    function openModal() {
+      backdrop.classList.add('open');
+      modal.classList.add('open');
+      backdrop.setAttribute('aria-hidden', 'false');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+
+      if (hasPlayed) {
+        scanning.classList.add('hidden');
+        result.classList.remove('hidden');
+        result.classList.add('visible');
+        return;
+      }
+
+      scanning.classList.remove('hidden');
+      result.classList.add('hidden');
+      result.classList.remove('visible');
+
+      var delays = [0, 500, 1100, 1800, 2400];
+      var lines = ['scan-1', 'scan-2', 'scan-3', 'scan-4', 'scan-5'];
+
+      lines.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.opacity = '0';
+      });
+
+      lines.forEach(function(id, i) {
+        setTimeout(function() {
+          var el = document.getElementById(id);
+          if (el) el.style.opacity = '1';
+        }, delays[i]);
+      });
+
+      setTimeout(function() {
+        scanning.classList.add('hidden');
+        result.classList.remove('hidden');
+        showLevel(1);
+        if (slider) slider.value = '1';
+        requestAnimationFrame(function() {
+          result.classList.add('visible');
+        });
+        hasPlayed = true;
+      }, 3200);
+    }
+
+    function closeModal() {
+      backdrop.classList.remove('open');
+      modal.classList.remove('open');
+      backdrop.setAttribute('aria-hidden', 'true');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    trigger.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', closeModal);
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.classList.contains('open')) {
+        closeModal();
+      }
+    });
+  });
+</script>

@@ -1,31 +1,33 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import MermaidClient from '../../components/votechain/MermaidClient.astro';
-import { Content as PRDContent } from '../../../PRD-VOTECHAIN-ELECTION-WEB-PROTOCOL.md';
+import AISummarizer from '../../components/votechain/AISummarizer.astro';
+import { Content as PRDContent } from '../../../PRD-VOTER-VERIFICATION-CHAIN.md';
 ---
 
 <BaseLayout
-  title="VoteChain EWP — Election Web Protocol"
-  description="Ballot integrity protocol that completes VoteChain verification: challenge, cast receipts, bulletin board inclusion, and tally anchoring."
+  title="VoteChain PRD — Voter Verification Chain"
+  description="Blockchain-based voter verification and hybrid fraud detection: cryptographic credentials, privacy-preserving identity, and provisional-first handling."
   ogType="article"
   article={{
     publishedTime: '2026-02-08',
     author: 'Absurdity Index',
     section: 'Policy',
-    tags: ['votechain', 'ewp', 'election security', 'end-to-end verifiability'],
+    tags: ['votechain', 'voter verification', 'election security', 'cryptography'],
   }}
 >
   <div class="max-w-4xl mx-auto px-4 py-8">
-    <!-- Header -->
     <div class="text-center mb-6">
       <p class="text-xs text-gold-600 font-mono uppercase tracking-widest mb-1">
-        Protocol Draft
+        Protocol Blueprint
       </p>
-      <h1 class="font-serif text-2xl md:text-3xl text-navy-900 font-bold">VoteChain EWP</h1>
+      <h1 class="font-serif text-2xl md:text-3xl text-navy-900 font-bold">VoteChain PRD</h1>
       <p class="text-navy-600 font-serif italic mt-2 text-sm">
-        Election Web Protocol (EWP) &mdash; Ballot Integrity Layer
+        Blockchain-Based Voter Verification & Hybrid Fraud Detection
       </p>
     </div>
+
+    <AISummarizer />
 
     <!-- Full PRD -->
     <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12">
