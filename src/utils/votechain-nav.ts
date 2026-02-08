@@ -13,6 +13,7 @@ export type VoteChainAssuranceDoc = {
 
 export const VOTECHAIN_PRIMARY_NAV: VoteChainNavItem[] = [
   { href: '/votechain', label: 'Overview', icon: 'home' },
+  { href: '/votechain/architecture', label: 'Architecture', icon: 'git-branch' },
   { href: '/votechain/ewp', label: 'EWP PRD', icon: 'file-text' },
   { href: '/votechain/poc', label: 'POC', icon: 'vote' },
   { href: '/votechain/assurance', label: 'Assurance', icon: 'clipboard-list' },

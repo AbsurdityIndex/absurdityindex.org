@@ -346,10 +346,33 @@ import Icon from '../../../components/ui/Icon.astro';
       detail: string;
     }
 
-    function okBadge(ok: boolean): string {
-      return ok
-        ? '<span class="inline-flex items-center rounded-full bg-green-600/15 px-2.5 py-1 text-xs font-semibold text-green-700">OK</span>'
-        : '<span class="inline-flex items-center rounded-full bg-red-600/15 px-2.5 py-1 text-xs font-semibold text-red-700">FAIL</span>';
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    function createLucideSvg(params: {
+      size?: number;
+      className?: string;
+      nodes: Array<{ name: string; attrs: Record<string, string> }>;
+    }) {
+      const size = params.size ?? 24;
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('xmlns', SVG_NS);
+      svg.setAttribute('width', String(size));
+      svg.setAttribute('height', String(size));
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('stroke-linecap', 'round');
+      svg.setAttribute('stroke-linejoin', 'round');
+      if (params.className) svg.setAttribute('class', params.className);
+
+      for (const node of params.nodes) {
+        const el = document.createElementNS(SVG_NS, node.name);
+        for (const [k, v] of Object.entries(node.attrs)) el.setAttribute(k, v);
+        svg.appendChild(el);
+      }
+
+      return svg;
     }
 
     function setBadge(el: HTMLElement, ok: boolean) {
@@ -379,9 +402,9 @@ import Icon from '../../../components/ui/Icon.astro';
         left.appendChild(detail);
 
         row.appendChild(left);
-        const badgeWrap = document.createElement('span');
-        badgeWrap.innerHTML = okBadge(r.ok);
-        row.appendChild(badgeWrap);
+        const badge = document.createElement('span');
+        setBadge(badge, r.ok);
+        row.appendChild(badge);
         checksList.appendChild(row);
       }
     }
@@ -390,14 +413,33 @@ import Icon from '../../../components/ui/Icon.astro';
       overallBanner.classList.remove('hidden');
       if (allOk) {
         overallBanner.className = 'mt-4 rounded-lg border border-green-300 bg-green-50 p-4';
-        overallIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        overallIcon.replaceChildren(
+          createLucideSvg({
+            size: 28,
+            className: 'text-green-600',
+            nodes: [
+              { name: 'path', attrs: { d: 'M22 11.08V12a10 10 0 1 1-5.93-9.14' } },
+              { name: 'polyline', attrs: { points: '22 4 12 14.01 9 11.01' } },
+            ],
+          }),
+        );
         overallTitle.textContent = 'All Checks Passed';
         overallTitle.className = 'font-serif font-bold text-lg text-green-800';
         overallSubtitle.textContent = 'Every cryptographic signature and data structure in the election verified successfully.';
         overallSubtitle.className = 'text-sm mt-0.5 text-green-700';
       } else {
         overallBanner.className = 'mt-4 rounded-lg border border-red-300 bg-red-50 p-4';
-        overallIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        overallIcon.replaceChildren(
+          createLucideSvg({
+            size: 28,
+            className: 'text-red-600',
+            nodes: [
+              { name: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+              { name: 'line', attrs: { x1: '15', y1: '9', x2: '9', y2: '15' } },
+              { name: 'line', attrs: { x1: '9', y1: '9', x2: '15', y2: '15' } },
+            ],
+          }),
+        );
         overallTitle.textContent = 'Issues Detected';
         overallTitle.className = 'font-serif font-bold text-lg text-red-800';
         overallSubtitle.textContent = 'One or more verification checks failed. See details below.';
@@ -428,14 +470,16 @@ import Icon from '../../../components/ui/Icon.astro';
 
     function renderKeys(keys: Awaited<ReturnType<typeof getPublicKeys>>) {
       keysContainer.replaceChildren();
-      const entries: Array<[string, { kid: string; alg: string; jwk: JsonWebKey }]> = [
+
+      // JWK-based keys (ECDSA P-256)
+      const jwkEntries: Array<[string, { kid: string; alg: string; jwk: JsonWebKey }]> = [
         ['Manifest Signing Key', keys.manifest],
         ['Election Web Gateway (EWG)', keys.ewg],
         ['Bulletin Board (BB)', keys.bb],
         ['VoteChain Ledger (VCL)', keys.vcl],
       ];
 
-      for (const [label, key] of entries) {
+      for (const [label, key] of jwkEntries) {
         const card = document.createElement('div');
         card.className = 'rounded-lg border border-navy-200 bg-cream-50 p-4';
 
@@ -455,14 +499,28 @@ import Icon from '../../../components/ui/Icon.astro';
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
         copyBtn.className = 'inline-flex items-center gap-1.5 rounded-md border border-navy-200 bg-white px-2.5 py-1.5 text-navy-800 font-sans text-xs font-semibold hover:border-gold-500 hover:shadow-sm transition-all';
-        copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy JWK';
         const jwkText = JSON.stringify(key.jwk, null, 2);
+
+        function setCopyIdle() {
+          copyBtn.replaceChildren(
+            createLucideSvg({
+              size: 14,
+              nodes: [
+                { name: 'rect', attrs: { x: '9', y: '9', width: '13', height: '13', rx: '2', ry: '2' } },
+                { name: 'path', attrs: { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' } },
+              ],
+            }),
+            document.createTextNode('Copy JWK'),
+          );
+        }
+
+        setCopyIdle();
         copyBtn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText(jwkText);
             copyBtn.textContent = 'Copied!';
             setTimeout(() => {
-              copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy JWK';
+              setCopyIdle();
             }, 1500);
           } catch {
             copyBtn.textContent = 'Failed';
@@ -477,6 +535,71 @@ import Icon from '../../../components/ui/Icon.astro';
         pre.className = 'mt-2 rounded-lg bg-navy-800 text-cream-100 p-3 overflow-x-auto text-xs leading-relaxed font-mono';
         const code = document.createElement('code');
         code.textContent = jwkText;
+        pre.appendChild(code);
+        card.appendChild(pre);
+
+        keysContainer.appendChild(card);
+      }
+
+      // Issuer key (secp256k1 compressed point, not JWK)
+      {
+        const card = document.createElement('div');
+        card.className = 'rounded-lg border border-navy-200 bg-cream-50 p-4';
+
+        const header = document.createElement('div');
+        header.className = 'flex items-center justify-between flex-wrap gap-2';
+
+        const title = document.createElement('p');
+        title.className = 'text-xs font-mono text-navy-500 uppercase tracking-widest';
+        title.textContent = 'Registration Authority (Issuer)';
+
+        const meta = document.createElement('p');
+        meta.className = 'text-[10px] font-mono text-navy-400';
+        meta.textContent = `alg: ${keys.issuer.alg} | format: secp256k1 compressed point (base64url)`;
+
+        header.appendChild(title);
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'inline-flex items-center gap-1.5 rounded-md border border-navy-200 bg-white px-2.5 py-1.5 text-navy-800 font-sans text-xs font-semibold hover:border-gold-500 hover:shadow-sm transition-all';
+
+        function setIssuerCopyIdle() {
+          copyBtn.replaceChildren(
+            createLucideSvg({
+              size: 14,
+              nodes: [
+                { name: 'rect', attrs: { x: '9', y: '9', width: '13', height: '13', rx: '2', ry: '2' } },
+                { name: 'path', attrs: { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' } },
+              ],
+            }),
+            document.createTextNode('Copy'),
+          );
+        }
+
+        setIssuerCopyIdle();
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(keys.issuer.pk);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { setIssuerCopyIdle(); }, 1500);
+          } catch {
+            copyBtn.textContent = 'Failed';
+          }
+        });
+        header.appendChild(copyBtn);
+
+        card.appendChild(header);
+        card.appendChild(meta);
+
+        const desc = document.createElement('p');
+        desc.className = 'text-xs text-navy-600 mt-2';
+        desc.textContent = 'Used for blind Schnorr credential issuance. The issuer certifies voter credentials without learning which credential it certified.';
+        card.appendChild(desc);
+
+        const pre = document.createElement('pre');
+        pre.className = 'mt-2 rounded-lg bg-navy-800 text-cream-100 p-3 overflow-x-auto text-xs leading-relaxed font-mono';
+        const code = document.createElement('code');
+        code.textContent = keys.issuer.pk;
         pre.appendChild(code);
         card.appendChild(pre);
 

@@ -6,10 +6,19 @@
  * - Bulletin board (BB): append-only Merkle log + signed tree heads (STH)
  * - Election web gateway (EWG): challenge + cast + idempotency behavior
  *
- * It intentionally does NOT implement ZK proofs or threshold cryptography.
- * Where the PRDs call for ZK, this POC uses signatures to demonstrate binding
- * to (election_id, jurisdiction_id, nullifier, challenge) and receipt verification.
+ * It implements:
+ * - A POC eligibility proof as a Schnorr-style NIZK proof-of-knowledge (Fiat-Shamir)
+ *   bound to (election_id, jurisdiction_id, nullifier, challenge).
+ * - A POC threshold-decryption model for ballot secrecy: each ballot uses a fresh
+ *   symmetric key, and that key is wrapped to an election public key whose secret is
+ *   split among trustees (t-of-n). Decryption is only performed at tally time.
+ *
+ * This remains a toy/demo (single-browser, localStorage). It is not production voting
+ * software and does not implement full anonymous credential membership proofs or
+ * real-world trustee ceremonies / decryption proofs.
  */
+
+import { secp256k1, schnorr } from '@noble/curves/secp256k1';
 
 export const POC_EWP_VERSION = '0.1-preview';
 export const POC_EWP_MEDIA_TYPE = 'application/votechain.ewp.v1+json';
@@ -86,6 +95,7 @@ export interface PocElectionManifest {
   crypto: {
     suite: string;
     pk_election: B64u;
+    pk_issuer: B64u; // Registration authority's compressed secp256k1 public key (33 bytes)
     trustees: Array<{ id: string; pubkey: B64u }>;
     threshold: { t: number; n: number };
   };
@@ -103,9 +113,18 @@ export interface PocElectionManifest {
 
 export interface PocCredential {
   did: string;
-  pub_spki: B64u;
-  jwk_public: JsonWebKey;
-  jwk_private: JsonWebKey;
+  curve: 'secp256k1';
+  // BIP340 x-only public key (32 bytes, base64url)
+  pk: B64u;
+  // Private key (32 bytes, base64url). POC only: stored in localStorage.
+  sk: B64u;
+  // Blind Schnorr signature from the registration authority (issuer).
+  // The issuer certified this credential without learning which public key it certified,
+  // breaking the link between registration and voting.
+  blind_sig: {
+    R: B64u; // Unblinded nonce point R' (33 bytes compressed)
+    s: B64u; // Unblinded scalar s' (32 bytes)
+  };
   created_at: string;
 }
 
@@ -126,11 +145,18 @@ export interface PocEligibilityProof {
     nullifier: Hex0x;
     challenge: B64u;
   };
-  // In real EWP this is a ZK proof. In this POC it's an ECDSA signature.
+  // Schnorr-style NIZK proof (Fiat-Shamir) as base64url bytes.
   pi: B64u;
-  // POC-only disclosure to make verification possible without ZK.
-  did: string;
-  did_pub_spki: B64u;
+  // The voter's x-only public key. It is still disclosed in the proof (needed for nullifier
+  // derivation and BIP340 proof-of-knowledge verification), but blind Schnorr issuance makes
+  // it **unlinkable to registration** — the issuer cannot tell which credential it certified.
+  credential_pub: B64u;
+  // Blind Schnorr signature from the registration authority, proving this credential was
+  // authorized without revealing which signing session produced it.
+  issuer_blind_sig: {
+    R: B64u;
+    s: B64u;
+  };
 }
 
 export interface PocEncryptedBallot {
@@ -138,6 +164,11 @@ export interface PocEncryptedBallot {
   ciphertext: B64u;
   ballot_validity_proof: B64u;
   ballot_hash: B64u;
+  // POC threshold decryption support:
+  // - ballot is encrypted with a fresh per-ballot AES key (revealed only on spoil)
+  // - that key is wrapped to the election public key via ECIES-style ECDH + AES-GCM
+  wrapped_ballot_key: B64u;
+  wrapped_ballot_key_epk: B64u;
 }
 
 export interface PocCastRequest {
@@ -179,7 +210,7 @@ export interface PocSpoilReceipt {
 export interface PocBallotRandomnessReveal {
   ballot_id: B64u;
   iv: B64u;
-  aes_key: B64u;
+  ballot_key: B64u;
   plaintext: PocBallotPlaintext;
 }
 
@@ -200,6 +231,7 @@ export interface PocSpoiledBallotRecord {
 interface EncryptionResult {
   encrypted_ballot: PocEncryptedBallot;
   iv: Uint8Array;
+  ballot_key: Uint8Array;
   plaintext: PocBallotPlaintext;
 }
 
@@ -302,8 +334,14 @@ interface PocTally {
   sig: B64u;
 }
 
-interface PocStateV1 {
-  version: 1;
+export interface PocTrusteeShareRecord {
+  id: string;
+  x: number; // 1..n (Shamir x-coordinate)
+  share: B64u; // scalar bytes (base64url, 32 bytes)
+}
+
+interface PocStateV2 {
+  version: 2;
   election: {
     election_id: string;
     jurisdiction_id: string;
@@ -316,9 +354,15 @@ interface PocStateV1 {
     vcl: StoredKeyPair;
   };
   manifest: PocElectionManifest;
-  election_secret: {
-    // AES-GCM 256 key bytes (base64url)
-    aes_key: B64u;
+  trustees: {
+    threshold: { t: number; n: number };
+    // POC-only: private shares used to reconstruct the election secret at tally time.
+    shares: PocTrusteeShareRecord[];
+  };
+  // Registration authority (issuer) keypair for blind Schnorr credential issuance.
+  issuer: {
+    sk: B64u; // secp256k1 scalar (32 bytes)
+    pk: B64u; // secp256k1 compressed point (33 bytes)
   };
   credential?: PocCredential;
   challenges: Record<string, PocChallengeRecord>;
@@ -334,7 +378,7 @@ interface PocStateV1 {
   tally?: PocTally;
 }
 
-const STORAGE_KEY = 'votechain_poc_state_v1';
+const STORAGE_KEY = 'votechain_poc_state_v2';
 
 function nowIso() {
   return new Date().toISOString();
@@ -429,6 +473,328 @@ async function sha256Hex0x(data: Uint8Array): Promise<Hex0x> {
   return `0x${bytesToHex(h)}`;
 }
 
+// secp256k1 subgroup order (q / n). Hard-coded to avoid depending on deprecated curve internals.
+const SECP256K1_ORDER: bigint = BigInt(
+  '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141',
+);
+
+function bytesToBigIntBE(bytes: Uint8Array): bigint {
+  let n = 0n;
+  for (const b of bytes) n = (n << 8n) + BigInt(b);
+  return n;
+}
+
+function bigIntToBytesBE(n: bigint, len: number): Uint8Array {
+  if (n < 0n) throw new Error('bigIntToBytesBE: negative');
+  const out = new Uint8Array(len);
+  let x = n;
+  for (let i = len - 1; i >= 0; i--) {
+    out[i] = Number(x & 0xffn);
+    x >>= 8n;
+  }
+  return out;
+}
+
+function mod(a: bigint, m: bigint): bigint {
+  const res = a % m;
+  return res >= 0n ? res : res + m;
+}
+
+function modInv(a: bigint, m: bigint): bigint {
+  // Extended Euclidean algorithm. Assumes m is prime and a != 0 mod m.
+  let t = 0n;
+  let newT = 1n;
+  let r = m;
+  let newR = mod(a, m);
+
+  while (newR !== 0n) {
+    const q = r / newR;
+    [t, newT] = [newT, t - q * newT];
+    [r, newR] = [newR, r - q * newR];
+  }
+
+  if (r !== 1n) throw new Error('modInv: not invertible');
+  return t < 0n ? t + m : t;
+}
+
+// ── Blind Schnorr Signature Primitives ──────────────────────────────────────
+//
+// Protocol (s = k − c·sk convention):
+//
+//   Setup: Issuer has (sk_I, PK_I = sk_I·G)
+//
+//   1. ISSUER:  k ∈ Z_q,  R = k·G  →  send R to voter
+//   2. VOTER:   α, β ∈ Z_q
+//               R' = R + α·G + β·PK_I
+//               c' = H("votechain:blind_schnorr:v1:" ‖ R' ‖ PK_I ‖ m)
+//               c  = c' − β mod q   →  send c to issuer
+//   3. ISSUER:  s  = k − c·sk_I mod q  →  send s to voter
+//   4. VOTER:   s' = s + α mod q
+//
+//   Signature: (R', s')
+//   Verify(PK_I, m, R', s'):  c' = H(…),  check s'·G + c'·PK_I == R'
+//
+// Message `m` = voter's x-only public key (32 bytes).
+
+async function blindSchnorrChallenge(
+  RPrime: Uint8Array, // compressed point (33 bytes)
+  pkIssuer: Uint8Array, // compressed point (33 bytes)
+  message: Uint8Array, // voter's x-only pk (32 bytes)
+): Promise<bigint> {
+  // Domain-separated SHA-256 hash reduced mod q
+  const hash = await sha256(
+    concatBytes(
+      utf8('votechain:blind_schnorr:v1:'),
+      RPrime,
+      pkIssuer,
+      message,
+    ),
+  );
+  return mod(bytesToBigIntBE(hash), SECP256K1_ORDER);
+}
+
+function verifyBlindSchnorr(
+  pkIssuerBytes: Uint8Array, // compressed point (33 bytes)
+  message: Uint8Array, // voter's x-only pk (32 bytes)
+  RBytes: Uint8Array, // compressed point (33 bytes) — unblinded R'
+  sBytes: Uint8Array, // scalar (32 bytes) — unblinded s'
+): Promise<boolean> {
+  // Verify: s'·G + c'·PK_I == R'
+  return (async () => {
+    try {
+      const cPrime = await blindSchnorrChallenge(RBytes, pkIssuerBytes, message);
+      const sPrime = bytesToBigIntBE(sBytes);
+
+      const pkIssuerPoint = secp256k1.Point.fromHex(pkIssuerBytes);
+      const RPrimePoint = secp256k1.Point.fromHex(RBytes);
+
+      // s'·G + c'·PK_I
+      const sG = secp256k1.Point.BASE.multiply(mod(sPrime, SECP256K1_ORDER));
+      const cPK = pkIssuerPoint.multiply(mod(cPrime, SECP256K1_ORDER));
+      const lhs = sG.add(cPK);
+
+      return lhs.equals(RPrimePoint);
+    } catch {
+      return false;
+    }
+  })();
+}
+
+async function blindSchnorrIssuance(params: {
+  issuer_sk: Uint8Array; // scalar (32 bytes)
+  issuer_pk: Uint8Array; // compressed point (33 bytes)
+  voter_pk_xonly: Uint8Array; // x-only pk (32 bytes) — the message to sign
+}): Promise<{ R: Uint8Array; s: Uint8Array }> {
+  const { issuer_sk, issuer_pk, voter_pk_xonly } = params;
+  const skI = bytesToBigIntBE(issuer_sk);
+
+  // ── ISSUER STEP 1: generate nonce k, compute R = k·G ──
+  const kBytes = secp256k1.utils.randomSecretKey();
+  const k = bytesToBigIntBE(kBytes);
+  const R = secp256k1.Point.BASE.multiply(mod(k, SECP256K1_ORDER));
+
+  // ── VOTER STEP 2: blind the nonce ──
+  const alphaBytes = secp256k1.utils.randomSecretKey();
+  const alpha = bytesToBigIntBE(alphaBytes);
+  const betaBytes = secp256k1.utils.randomSecretKey();
+  const beta = bytesToBigIntBE(betaBytes);
+
+  const pkIssuerPoint = secp256k1.Point.fromHex(issuer_pk);
+
+  // R' = R + α·G + β·PK_I
+  const RPrime = R.add(
+    secp256k1.Point.BASE.multiply(mod(alpha, SECP256K1_ORDER)),
+  ).add(
+    pkIssuerPoint.multiply(mod(beta, SECP256K1_ORDER)),
+  );
+  const RPrimeBytes = RPrime.toBytes(true); // 33 bytes compressed
+
+  // c' = H(domain ‖ R' ‖ PK_I ‖ m)
+  const cPrime = await blindSchnorrChallenge(RPrimeBytes, issuer_pk, voter_pk_xonly);
+
+  // c = c' − β mod q (sent to issuer)
+  const c = mod(cPrime - beta, SECP256K1_ORDER);
+
+  // ── ISSUER STEP 3: sign blinded challenge ──
+  // s = k − c·sk_I mod q
+  const s = mod(k - c * skI, SECP256K1_ORDER);
+
+  // ── VOTER STEP 4: unblind the signature ──
+  // s' = s + α mod q
+  const sPrime = mod(s + alpha, SECP256K1_ORDER);
+
+  return {
+    R: RPrimeBytes,
+    s: bigIntToBytesBE(sPrime, 32),
+  };
+}
+
+type ShamirShare = { x: bigint; y: bigint };
+
+function shamirSplit(secret: bigint, t: number, nShares: number): ShamirShare[] {
+  if (!(t >= 2)) throw new Error('shamirSplit: threshold must be >= 2');
+  if (!(nShares >= t)) throw new Error('shamirSplit: n must be >= t');
+
+  // f(x) = a0 + a1*x + ... + a_{t-1}*x^{t-1} mod q, where a0=secret
+  const coeffs: bigint[] = [mod(secret, SECP256K1_ORDER)];
+  for (let i = 1; i < t; i++) {
+    const r = secp256k1.utils.randomSecretKey(); // 1..n-1
+    coeffs.push(bytesToBigIntBE(r));
+  }
+
+  const shares: ShamirShare[] = [];
+  for (let i = 1; i <= nShares; i++) {
+    const x = BigInt(i);
+    let y = 0n;
+    let xPow = 1n;
+    for (const c of coeffs) {
+      y = mod(y + c * xPow, SECP256K1_ORDER);
+      xPow = mod(xPow * x, SECP256K1_ORDER);
+    }
+    shares.push({ x, y });
+  }
+  return shares;
+}
+
+function shamirCombine(shares: ShamirShare[]): bigint {
+  if (shares.length === 0) throw new Error('shamirCombine: no shares');
+
+  // Lagrange interpolation at x=0:
+  // secret = Σ y_i * Π_{j!=i} (-x_j)/(x_i-x_j) mod q
+  let secret = 0n;
+  for (let i = 0; i < shares.length; i++) {
+    const xi = shares[i].x;
+    const yi = shares[i].y;
+    let num = 1n;
+    let den = 1n;
+    for (let j = 0; j < shares.length; j++) {
+      if (j === i) continue;
+      const xj = shares[j].x;
+      num = mod(num * mod(-xj, SECP256K1_ORDER), SECP256K1_ORDER);
+      den = mod(den * mod(xi - xj, SECP256K1_ORDER), SECP256K1_ORDER);
+    }
+    const li = mod(num * modInv(den, SECP256K1_ORDER), SECP256K1_ORDER);
+    secret = mod(secret + yi * li, SECP256K1_ORDER);
+  }
+  return secret;
+}
+
+async function deriveWrapKey(params: {
+  shared_point: Uint8Array;
+  election_id: string;
+  ballot_id: B64u;
+}): Promise<Uint8Array> {
+  // Domain separated KDF.
+  return sha256(
+    concatBytes(
+      utf8('votechain:poc:ecies-wrapkey:v1:'),
+      params.shared_point,
+      utf8(params.election_id),
+      utf8(params.ballot_id),
+    ),
+  );
+}
+
+async function wrapBallotKeyToElectionPk(params: {
+  pk_election: B64u;
+  election_id: string;
+  ballot_id: B64u;
+  ballot_key: Uint8Array; // 32 bytes
+}): Promise<{ wrapped_ballot_key: B64u; wrapped_ballot_key_epk: B64u }> {
+  const pkElectionBytes = b64uToBytes(params.pk_election);
+  const pkPoint = secp256k1.Point.fromHex(pkElectionBytes);
+
+  const ephSkBytes = secp256k1.utils.randomSecretKey();
+  const ephSk = bytesToBigIntBE(ephSkBytes);
+  const ephPkBytes = secp256k1.getPublicKey(ephSkBytes, true); // 33 bytes compressed
+
+  const sharedPoint = pkPoint.multiply(ephSk).toBytes(true);
+  const wrapKey = await deriveWrapKey({
+    shared_point: sharedPoint,
+    election_id: params.election_id,
+    ballot_id: params.ballot_id,
+  });
+
+  const aad = utf8(
+    canonicalJson({
+      election_id: params.election_id,
+      ballot_id: params.ballot_id,
+      suite: 'poc_ecies_aesgcm_v1',
+    }),
+  );
+
+  const iv = randomBytes(12);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    toArrayBuffer(wrapKey),
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt'],
+  );
+  const cipherBuf = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv, additionalData: toArrayBuffer(aad) },
+    key,
+    toArrayBuffer(params.ballot_key),
+  );
+
+  const packed = concatBytes(iv, new Uint8Array(cipherBuf));
+
+  return {
+    wrapped_ballot_key: bytesToB64u(packed),
+    wrapped_ballot_key_epk: bytesToB64u(ephPkBytes),
+  };
+}
+
+async function unwrapBallotKeyWithElectionSecret(params: {
+  wrapped_ballot_key: B64u;
+  wrapped_ballot_key_epk: B64u;
+  election_id: string;
+  ballot_id: B64u;
+  election_secret: bigint;
+}): Promise<Uint8Array | null> {
+  try {
+    const ephPkBytes = b64uToBytes(params.wrapped_ballot_key_epk);
+    const ephPoint = secp256k1.Point.fromHex(ephPkBytes);
+    const sharedPoint = ephPoint
+      .multiply(mod(params.election_secret, SECP256K1_ORDER))
+      .toBytes(true);
+    const wrapKey = await deriveWrapKey({
+      shared_point: sharedPoint,
+      election_id: params.election_id,
+      ballot_id: params.ballot_id,
+    });
+
+    const aad = utf8(
+      canonicalJson({
+        election_id: params.election_id,
+        ballot_id: params.ballot_id,
+        suite: 'poc_ecies_aesgcm_v1',
+      }),
+    );
+
+    const packed = b64uToBytes(params.wrapped_ballot_key);
+    const iv = packed.slice(0, 12);
+    const cipher = packed.slice(12);
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      toArrayBuffer(wrapKey),
+      { name: 'AES-GCM' },
+      false,
+      ['decrypt'],
+    );
+    const plainBuf = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: toArrayBuffer(iv), additionalData: toArrayBuffer(aad) },
+      key,
+      toArrayBuffer(cipher),
+    );
+    const ballotKey = new Uint8Array(plainBuf);
+    return ballotKey;
+  } catch {
+    return null;
+  }
+}
+
 async function generateEcdsaKeyPair(): Promise<CryptoKeyPair> {
   return crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
     'sign',
@@ -483,21 +849,22 @@ async function verifyB64u(
   );
 }
 
-function loadState(): PocStateV1 | null {
+function loadState(): PocStateV2 | null {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as PocStateV1;
+    return JSON.parse(raw) as PocStateV2;
   } catch {
     return null;
   }
 }
 
-function saveState(state: PocStateV1) {
+function saveState(state: PocStateV2) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 export function resetPocState() {
+  localStorage.removeItem('votechain_poc_state_v1');
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem('votechain_poc_last_receipt');
 }
@@ -672,14 +1039,23 @@ function buildEwpError(
   };
 }
 
-async function ensureInitialized(): Promise<PocStateV1> {
+function isStateUsable(s: PocStateV2): boolean {
+  // Validate that critical fields match the current code's expectations.
+  // This catches stale localStorage left over from earlier development iterations
+  // where the version was already 2 but the internal schema differed.
+  if (s.manifest?.crypto?.suite !== 'ewp_suite_poc_blind_schnorr_ecies_aesgcm_threshold_v1') return false;
+  if (!Array.isArray(s.trustees?.shares)) return false;
+  if (s.credential && typeof s.credential.pk !== 'string') return false;
+  if (!s.issuer?.pk) return false;
+  if (!s.manifest?.crypto?.pk_issuer) return false;
+  return true;
+}
+
+async function ensureInitialized(): Promise<PocStateV2> {
   const existing = loadState();
-  // Detect old single-contest schema and force re-init
-  if (existing?.version === 1 && Array.isArray((existing.election as any).contests) && Array.isArray(existing.spoiled_ballots)) return existing;
-  if (existing) {
-    // Old schema detected — reset and re-initialize
-    localStorage.removeItem(STORAGE_KEY);
-  }
+  if (existing?.version === 2 && isStateUsable(existing)) return existing;
+  // Old or incompatible schema detected — reset and re-initialize
+  resetPocState();
 
   const [manifestKeyPair, ewgKeyPair, bbKeyPair, vclKeyPair] = await Promise.all([
     generateEcdsaKeyPair(),
@@ -719,8 +1095,35 @@ async function ensureInitialized(): Promise<PocStateV1> {
     },
   ];
 
-  const aesKey = randomBytes(32);
-  const pkElection = await sha256B64u(concatBytes(utf8('votechain:poc:pk_election:'), aesKey));
+  const threshold = { t: 2, n: 3 };
+
+  // Election secret is a scalar x in Z_q. Only the public key is published.
+  const electionSkBytes = secp256k1.utils.randomSecretKey();
+  const electionSecret = bytesToBigIntBE(electionSkBytes);
+  const pkElectionBytes = secp256k1.getPublicKey(electionSkBytes, true);
+  const pk_election = bytesToB64u(pkElectionBytes);
+
+  // Registration authority (issuer) keypair for blind Schnorr credential issuance.
+  // The issuer certifies voter credentials without learning which credential it certified.
+  const issuerSkBytes = secp256k1.utils.randomSecretKey();
+  const issuerPkBytes = secp256k1.getPublicKey(issuerSkBytes, true); // 33 bytes compressed
+  const pk_issuer = bytesToB64u(issuerPkBytes);
+
+  // POC-only: split the election secret among trustees (t-of-n).
+  const shares = shamirSplit(electionSecret, threshold.t, threshold.n);
+  const trusteeShares: PocTrusteeShareRecord[] = shares.map((s, idx) => ({
+    id: `T${idx + 1}`,
+    x: Number(s.x),
+    share: bytesToB64u(bigIntToBytesBE(s.y, 32)),
+  }));
+
+  // Trustee public keys are published in the manifest. In real deployments these would be used
+  // to authenticate trustee outputs and decryption proofs. In this POC they are informational.
+  const trustees = Array.from({ length: threshold.n }).map((_, i) => {
+    const tSk = secp256k1.utils.randomSecretKey();
+    const tPk = secp256k1.getPublicKey(tSk, true);
+    return { id: `T${i + 1}`, pubkey: bytesToB64u(tPk) };
+  });
 
   const endpoints = {
     challenge: `/votechain/poc/vote#challenge`,
@@ -737,26 +1140,30 @@ async function ensureInitialized(): Promise<PocStateV1> {
     not_before,
     not_after,
     crypto: {
-      suite: 'ewp_suite_aesgcm_poc_v1',
-      pk_election: pkElection,
-      trustees: [
-        { id: 'T1', pubkey: pkElection },
-        { id: 'T2', pubkey: pkElection },
-        { id: 'T3', pubkey: pkElection },
-      ],
-      threshold: { t: 2, n: 3 },
+      suite: 'ewp_suite_poc_blind_schnorr_ecies_aesgcm_threshold_v1',
+      pk_election,
+      pk_issuer,
+      trustees,
+      threshold,
     },
     endpoints,
   };
 
   const manifest = await signManifest(unsignedManifest, keys.manifest);
 
-  const initialState: PocStateV1 = {
-    version: 1,
+  const initialState: PocStateV2 = {
+    version: 2,
     election: { election_id, jurisdiction_id, contests },
     keys,
     manifest,
-    election_secret: { aes_key: bytesToB64u(aesKey) },
+    trustees: {
+      threshold,
+      shares: trusteeShares,
+    },
+    issuer: {
+      sk: bytesToB64u(issuerSkBytes),
+      pk: bytesToB64u(issuerPkBytes),
+    },
     challenges: {},
     idempotency: {},
     bb: { leaves: [], sth_history: [] },
@@ -793,26 +1200,61 @@ export async function getManifest(): Promise<PocElectionManifest> {
   return state.manifest;
 }
 
+export async function getTrusteeShares(): Promise<{
+  threshold: { t: number; n: number };
+  shares: PocTrusteeShareRecord[];
+}> {
+  const state = await ensureInitialized();
+  return { threshold: state.trustees.threshold, shares: state.trustees.shares };
+}
+
 export async function getCredential(): Promise<PocCredential | null> {
   const state = await ensureInitialized();
   return state.credential ?? null;
 }
 
-export async function ensureCredential(): Promise<PocCredential> {
+async function registerCredential(): Promise<PocCredential> {
   const state = await ensureInitialized();
   if (state.credential) return state.credential;
 
-  const voterKeys = await generateEcdsaKeyPair();
-  const jwk_public = await crypto.subtle.exportKey('jwk', voterKeys.publicKey);
-  const jwk_private = await crypto.subtle.exportKey('jwk', voterKeys.privateKey);
-  const spki = new Uint8Array(await crypto.subtle.exportKey('spki', voterKeys.publicKey));
+  // 1. Generate voter secp256k1 keypair
+  const skBytes = secp256k1.utils.randomSecretKey();
+  const pkBytes = schnorr.getPublicKey(skBytes); // x-only (32 bytes)
 
-  const didSuffix = await sha256B64u(concatBytes(utf8('votechain:poc:did:v1:'), spki));
+  // 2. Run the blind Schnorr issuance ceremony.
+  //    In a real system, the issuer and voter are separate parties communicating over a
+  //    secure channel. Here we simulate both roles in-browser for the POC.
+  const issuerSkBytes = b64uToBytes(state.issuer.sk);
+  const issuerPkBytes = b64uToBytes(state.issuer.pk);
+
+  const blindSig = await blindSchnorrIssuance({
+    issuer_sk: issuerSkBytes,
+    issuer_pk: issuerPkBytes,
+    voter_pk_xonly: pkBytes,
+  });
+
+  // 3. Self-verify the blind signature (sanity check)
+  const sigValid = await verifyBlindSchnorr(
+    issuerPkBytes,
+    pkBytes,
+    blindSig.R,
+    blindSig.s,
+  );
+  if (!sigValid) {
+    throw new Error('Blind Schnorr self-verification failed — this should never happen.');
+  }
+
+  // 4. Store credential with blind signature
+  const didSuffix = await sha256B64u(concatBytes(utf8('votechain:poc:did:v1:'), pkBytes));
   const credential: PocCredential = {
     did: `did:votechain:poc:${didSuffix}`,
-    pub_spki: bytesToB64u(spki),
-    jwk_public,
-    jwk_private,
+    curve: 'secp256k1',
+    pk: bytesToB64u(pkBytes),
+    sk: bytesToB64u(skBytes),
+    blind_sig: {
+      R: bytesToB64u(blindSig.R),
+      s: bytesToB64u(blindSig.s),
+    },
     created_at: nowIso(),
   };
 
@@ -821,9 +1263,12 @@ export async function ensureCredential(): Promise<PocCredential> {
   return credential;
 }
 
-export async function computeNullifier(pubSpkiB64u: B64u, election_id: string): Promise<Hex0x> {
-  const pubSpki = b64uToBytes(pubSpkiB64u);
-  return sha256Hex0x(concatBytes(utf8('votechain:nullifier:v1:'), pubSpki, utf8(election_id)));
+// Alias so existing imports (e.g. vote.astro) continue to work.
+export const ensureCredential = registerCredential;
+
+export async function computeNullifier(credentialPubB64u: B64u, election_id: string): Promise<Hex0x> {
+  const pub = b64uToBytes(credentialPubB64u);
+  return sha256Hex0x(concatBytes(utf8('votechain:nullifier:v1:'), pub, utf8(election_id)));
 }
 
 export async function issueChallenge(client_session: B64u): Promise<PocChallengeResponse> {
@@ -866,13 +1311,15 @@ export async function issueChallenge(client_session: B64u): Promise<PocChallenge
 
 async function encryptBallot(
   plaintext: PocBallotPlaintext,
-  aesKeyB64u: B64u,
+  manifest: PocElectionManifest,
 ): Promise<EncryptionResult> {
   const ballot_id = bytesToB64u(randomBytes(16));
   const iv = randomBytes(12);
+  const ballotKey = randomBytes(32);
+
   const key = await crypto.subtle.importKey(
     'raw',
-    toArrayBuffer(b64uToBytes(aesKeyB64u)),
+    toArrayBuffer(ballotKey),
     { name: 'AES-GCM' },
     false,
     ['encrypt'],
@@ -880,9 +1327,16 @@ async function encryptBallot(
 
   const fullPlaintext: PocBallotPlaintext = { ...plaintext, ballot_id };
   const body = utf8(canonicalJson(fullPlaintext));
-  const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, body);
+  const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, toArrayBuffer(body));
   const cipherBytes = new Uint8Array(cipherBuf);
   const packed = concatBytes(iv, cipherBytes);
+
+  const wrapped = await wrapBallotKeyToElectionPk({
+    pk_election: manifest.crypto.pk_election,
+    election_id: manifest.election_id,
+    ballot_id,
+    ballot_key: ballotKey,
+  });
 
   return {
     encrypted_ballot: {
@@ -890,15 +1344,18 @@ async function encryptBallot(
       ciphertext: bytesToB64u(packed),
       ballot_validity_proof: bytesToB64u(utf8('poc_validity_v1')),
       ballot_hash: await sha256B64u(packed),
+      wrapped_ballot_key: wrapped.wrapped_ballot_key,
+      wrapped_ballot_key_epk: wrapped.wrapped_ballot_key_epk,
     },
     iv,
+    ballot_key: ballotKey,
     plaintext: fullPlaintext,
   };
 }
 
-async function decryptBallot(
+async function decryptBallotWithKey(
   ciphertextB64u: B64u,
-  aesKeyB64u: B64u,
+  ballotKey: Uint8Array,
 ): Promise<PocBallotPlaintext | null> {
   try {
     const packed = b64uToBytes(ciphertextB64u);
@@ -906,12 +1363,12 @@ async function decryptBallot(
     const cipher = packed.slice(12);
     const key = await crypto.subtle.importKey(
       'raw',
-      toArrayBuffer(b64uToBytes(aesKeyB64u)),
+      toArrayBuffer(ballotKey),
       { name: 'AES-GCM' },
       false,
       ['decrypt'],
     );
-    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipher);
+    const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, toArrayBuffer(cipher));
     const plainText = new TextDecoder().decode(new Uint8Array(plainBuf));
     return JSON.parse(plainText) as PocBallotPlaintext;
   } catch {
@@ -919,7 +1376,7 @@ async function decryptBallot(
   }
 }
 
-function validateBallotPlaintext(state: PocStateV1, plaintext: PocBallotPlaintext): boolean {
+function validateBallotPlaintext(state: PocStateV2, plaintext: PocBallotPlaintext): boolean {
   if (plaintext.election_id !== state.election.election_id) return false;
   if (plaintext.manifest_id !== state.manifest.manifest_id) return false;
   if (!Array.isArray(plaintext.contests)) return false;
@@ -931,7 +1388,7 @@ function validateBallotPlaintext(state: PocStateV1, plaintext: PocBallotPlaintex
   return true;
 }
 
-async function issueBbSth(state: PocStateV1): Promise<PocSignedTreeHead> {
+async function issueBbSth(state: PocStateV2): Promise<PocSignedTreeHead> {
   const leafHashes = state.bb.leaves.map((l) => l.leaf_hash);
   const rootBytes = await computeMerkleRootFromLeafHashes(leafHashes);
   const sthUnsigned = {
@@ -956,7 +1413,7 @@ async function receiptSigPayload(receipt: Omit<PocCastReceipt, 'sig'>) {
 }
 
 async function signReceipt(
-  state: PocStateV1,
+  state: PocStateV2,
   receiptUnsigned: Omit<PocCastReceipt, 'sig'>,
 ): Promise<B64u> {
   return signB64u(state.keys.ewg.jwk_private, await receiptSigPayload(receiptUnsigned));
@@ -967,20 +1424,20 @@ async function verifyReceiptSig(receipt: PocCastReceipt, ewgKey: StoredKeyPair):
   return verifyB64u(ewgKey.jwk_public, await receiptSigPayload(unsigned), sig);
 }
 
-function getAnchorEventForLeaf(state: PocStateV1, bb_leaf_hash: B64u): PocVclEvent | null {
+function getAnchorEventForLeaf(state: PocStateV2, bb_leaf_hash: B64u): PocVclEvent | null {
   const match = state.vcl.events.find(
     (evt) => evt.type === 'ewp_ballot_cast' && evt.payload.bb_leaf_hash === bb_leaf_hash,
   );
   return match ?? null;
 }
 
-function hasUsedNullifier(state: PocStateV1, nullifier: Hex0x) {
+function hasUsedNullifier(state: PocStateV2, nullifier: Hex0x) {
   return state.vcl.events.some(
     (evt) => evt.type === 'ewp_ballot_cast' && evt.payload.nullifier === nullifier,
   );
 }
 
-async function recordFraudFlag(state: PocStateV1, flag: Record<string, unknown>) {
+async function recordFraudFlag(state: PocStateV2, flag: Record<string, unknown>) {
   const eventUnsigned: Omit<PocVclEvent, 'sig' | 'tx_id'> = {
     type: 'fraud_flag',
     recorded_at: nowIso(),
@@ -991,7 +1448,7 @@ async function recordFraudFlag(state: PocStateV1, flag: Record<string, unknown>)
   state.vcl.events.push({ ...eventUnsigned, ...signed });
 }
 
-async function recordFraudFlagAction(state: PocStateV1, action: Record<string, unknown>) {
+async function recordFraudFlagAction(state: PocStateV2, action: Record<string, unknown>) {
   const eventUnsigned: Omit<PocVclEvent, 'sig' | 'tx_id'> = {
     type: 'fraud_flag_action',
     recorded_at: nowIso(),
@@ -1010,7 +1467,7 @@ function isResolvedFraudStatus(status: string) {
   return status.startsWith('resolved_');
 }
 
-function deriveFraudCases(state: PocStateV1): PocFraudCase[] {
+function deriveFraudCases(state: PocStateV2): PocFraudCase[] {
   const createEvents = state.vcl.events.filter((e) => e.type === 'fraud_flag');
   const actionEvents = state.vcl.events.filter((e) => e.type === 'fraud_flag_action');
 
@@ -1080,7 +1537,7 @@ function deriveFraudCases(state: PocStateV1): PocFraudCase[] {
   return cases;
 }
 
-async function recordBbSthPublished(state: PocStateV1, sth: PocSignedTreeHead) {
+async function recordBbSthPublished(state: PocStateV2, sth: PocSignedTreeHead) {
   const eventUnsigned: Omit<PocVclEvent, 'sig' | 'tx_id'> = {
     type: 'bb_sth_published',
     recorded_at: nowIso(),
@@ -1098,7 +1555,7 @@ async function recordBbSthPublished(state: PocStateV1, sth: PocSignedTreeHead) {
 }
 
 async function recordEwpBallotCast(
-  state: PocStateV1,
+  state: PocStateV2,
   request: PocCastRequest,
   bb_leaf_hash: B64u,
   bb_root_hash: B64u,
@@ -1130,45 +1587,65 @@ async function buildEligibilityProof(
   nullifier: Hex0x,
   challenge: B64u,
 ): Promise<PocEligibilityProof> {
-  const msg = {
-    election_id,
-    jurisdiction_id,
-    nullifier,
-    challenge,
-  };
-  const pi = await signB64u(credential.jwk_private, utf8(canonicalJson(msg)));
+  const public_inputs = { election_id, jurisdiction_id, nullifier, challenge };
+  const transcript = canonicalJson({
+    domain: 'votechain:poc:eligibility_proof:v1',
+    public_inputs,
+    credential_pub: credential.pk,
+  });
+  const msgHash = await sha256(utf8(transcript)); // 32 bytes
 
   return {
-    zk_suite: 'votechain_zk_poc_sig_v1',
-    vk_id: 'poc-vk-1',
-    public_inputs: { election_id, jurisdiction_id, nullifier, challenge },
-    pi,
-    did: credential.did,
-    did_pub_spki: credential.pub_spki,
+    zk_suite: 'votechain_zk_blind_schnorr_bip340_poc_v1',
+    vk_id: 'poc-blind-schnorr-bip340-vk-1',
+    public_inputs,
+    pi: bytesToB64u(
+      schnorr.sign(msgHash, b64uToBytes(credential.sk), randomBytes(32)),
+    ),
+    credential_pub: credential.pk,
+    issuer_blind_sig: credential.blind_sig,
   };
 }
 
 async function verifyEligibilityProof(
-  state: PocStateV1,
+  state: PocStateV2,
   proof: PocEligibilityProof,
 ): Promise<boolean> {
-  const msg = canonicalJson({
-    election_id: proof.public_inputs.election_id,
-    jurisdiction_id: proof.public_inputs.jurisdiction_id,
-    nullifier: proof.public_inputs.nullifier,
-    challenge: proof.public_inputs.challenge,
-  });
+  // ── Blind Schnorr credential verification ──
+  // Instead of directly comparing the voter's pk against a stored credential (which would
+  // link registration to voting), we verify the issuer's blind signature on the voter's pk.
+  // This proves the credential was authorized by the registration authority without
+  // revealing which signing session produced it.
+  if (!proof.issuer_blind_sig?.R || !proof.issuer_blind_sig?.s) return false;
+  if (!state.manifest?.crypto?.pk_issuer) return false;
 
-  // POC-only: recover the key from disclosed DID public material.
-  // We deliberately do NOT store any PII; the DID is pseudonymous.
-  const pubSpkiBytes = b64uToBytes(proof.did_pub_spki);
-  // We only need a public JWK to verify, but webcrypto can't import SPKI directly to ECDSA via JWK.
-  // In this POC, we use the stored credential public JWK if it matches the DID.
-  if (!state.credential || state.credential.did !== proof.did) return false;
-  // Ensure disclosed SPKI matches stored credential.
-  if (state.credential.pub_spki !== bytesToB64u(pubSpkiBytes)) return false;
+  const issuerPkBytes = b64uToBytes(state.manifest.crypto.pk_issuer);
+  const voterPkBytes = b64uToBytes(proof.credential_pub);
+  const blindSigValid = await verifyBlindSchnorr(
+    issuerPkBytes,
+    voterPkBytes,
+    b64uToBytes(proof.issuer_blind_sig.R),
+    b64uToBytes(proof.issuer_blind_sig.s),
+  );
+  if (!blindSigValid) return false;
 
-  return verifyB64u(state.credential.jwk_public, utf8(msg), proof.pi);
+  // ── BIP340 proof-of-knowledge ── (unchanged)
+  // Proves the voter owns the secret key behind credential_pub.
+  try {
+    const transcript = canonicalJson({
+      domain: 'votechain:poc:eligibility_proof:v1',
+      public_inputs: proof.public_inputs,
+      credential_pub: proof.credential_pub,
+    });
+    const msgHash = await sha256(utf8(transcript));
+    return schnorr.verify(
+      b64uToBytes(proof.pi),
+      msgHash,
+      b64uToBytes(proof.credential_pub),
+    );
+  } catch {
+    return false;
+  }
 }
 
 export async function buildCastRequest(params: {
@@ -1179,7 +1656,7 @@ export async function buildCastRequest(params: {
   const state = await ensureInitialized();
   const credential = await ensureCredential();
 
-  const nullifier = await computeNullifier(credential.pub_spki, state.election.election_id);
+  const nullifier = await computeNullifier(credential.pk, state.election.election_id);
 
   const eligibility_proof = await buildEligibilityProof(
     credential,
@@ -1207,7 +1684,8 @@ export async function buildCastRequest(params: {
 export async function encryptBallotForReview(params: {
   contests: Array<{ contest_id: string; selection: string }>;
 }): Promise<
-  { encrypted_ballot: PocEncryptedBallot; iv: B64u; plaintext: PocBallotPlaintext } | { error: string }
+  | { encrypted_ballot: PocEncryptedBallot; iv: B64u; ballot_key: B64u; plaintext: PocBallotPlaintext }
+  | { error: string }
 > {
   const state = await ensureInitialized();
 
@@ -1223,10 +1701,11 @@ export async function encryptBallotForReview(params: {
     return { error: 'Ballot is not valid for this manifest.' };
   }
 
-  const result = await encryptBallot(plaintext, state.election_secret.aes_key);
+  const result = await encryptBallot(plaintext, state.manifest);
   return {
     encrypted_ballot: result.encrypted_ballot,
     iv: bytesToB64u(result.iv),
+    ballot_key: bytesToB64u(result.ballot_key),
     plaintext: result.plaintext,
   };
 }
@@ -1234,6 +1713,7 @@ export async function encryptBallotForReview(params: {
 export async function spoilBallot(params: {
   encrypted_ballot: PocEncryptedBallot;
   iv: B64u;
+  ballot_key: B64u;
   plaintext: PocBallotPlaintext;
 }): Promise<PocSpoilResponse> {
   const state = await ensureInitialized();
@@ -1259,7 +1739,7 @@ export async function spoilBallot(params: {
   const randomness_reveal: PocBallotRandomnessReveal = {
     ballot_id: params.encrypted_ballot.ballot_id,
     iv: params.iv,
-    aes_key: state.election_secret.aes_key,
+    ballot_key: params.ballot_key,
     plaintext: params.plaintext,
   };
 
@@ -1279,13 +1759,13 @@ export async function spoilBallot(params: {
 export async function verifySpoiledBallot(params: {
   encrypted_ballot: PocEncryptedBallot;
   iv: B64u;
-  aes_key: B64u;
+  ballot_key: B64u;
   plaintext: PocBallotPlaintext;
 }): Promise<{ match: boolean; details: string }> {
   const ivBytes = b64uToBytes(params.iv);
   const key = await crypto.subtle.importKey(
     'raw',
-    toArrayBuffer(b64uToBytes(params.aes_key)),
+    toArrayBuffer(b64uToBytes(params.ballot_key)),
     { name: 'AES-GCM' },
     false,
     ['encrypt'],
@@ -1400,8 +1880,25 @@ export async function castBallot(args: {
   }
 
   // 3) Validate nullifier derivation (POC integrity)
+  const pi = args.request.eligibility_proof.public_inputs;
+  if (
+    pi.election_id !== args.request.election_id ||
+    pi.jurisdiction_id !== args.request.jurisdiction_id ||
+    pi.nullifier !== args.request.nullifier ||
+    pi.challenge !== args.request.challenge
+  ) {
+    const err = buildEwpError('EWP_PROOF_INVALID', 'Eligibility public inputs mismatch.', false);
+    state.idempotency[args.idempotencyKey] = {
+      request_hash: requestHash,
+      response: err,
+      stored_at: nowIso(),
+    };
+    saveState(state);
+    return err;
+  }
+
   const expectedNullifier = await computeNullifier(
-    args.request.eligibility_proof.did_pub_spki,
+    args.request.eligibility_proof.credential_pub,
     state.election.election_id,
   );
   if (expectedNullifier !== args.request.nullifier) {
@@ -1455,12 +1952,22 @@ export async function castBallot(args: {
     return err;
   }
 
-  // 6) Ballot validity (decrypt + check structure) [POC ONLY]
-  const plaintext = await decryptBallot(
-    args.request.encrypted_ballot.ciphertext,
-    state.election_secret.aes_key,
+  // 6) Ballot envelope integrity (POC only; real EWP uses ballot validity proofs)
+  const packed = (() => {
+    try {
+      return b64uToBytes(args.request.encrypted_ballot.ciphertext);
+    } catch {
+      return null;
+    }
+  })();
+  const ballotHashOk = packed
+    ? (await sha256B64u(packed)) === args.request.encrypted_ballot.ballot_hash
+    : false;
+  const wrapFieldsOk = Boolean(
+    args.request.encrypted_ballot.wrapped_ballot_key &&
+      args.request.encrypted_ballot.wrapped_ballot_key_epk,
   );
-  if (!plaintext || !validateBallotPlaintext(state, plaintext)) {
+  if (!ballotHashOk || !wrapFieldsOk) {
     const err = buildEwpError('EWP_BALLOT_INVALID', 'Ballot failed validity checks.', false);
     state.idempotency[args.idempotencyKey] = {
       request_hash: requestHash,
@@ -1631,7 +2138,7 @@ export async function verifyReceipt(receipt: PocCastReceipt): Promise<ReceiptVer
 }
 
 export interface DashboardSnapshot {
-  election: PocStateV1['election'];
+  election: PocStateV2['election'];
   manifest: PocElectionManifest;
   bb: {
     leaf_count: number;
@@ -1746,10 +2253,36 @@ export async function reviewFraudFlag(params: {
   return { ok: true };
 }
 
-export async function publishTally(): Promise<PocTally | { error: string }> {
+export async function publishTally(params?: {
+  shares?: PocTrusteeShareRecord[];
+}): Promise<PocTally | { error: string }> {
   const state = await ensureInitialized();
   const latestSth = state.bb.sth_history[state.bb.sth_history.length - 1];
   if (!latestSth) return { error: 'No ballots on the bulletin board.' };
+
+  const threshold = state.trustees.threshold;
+  const selectedShares = (params?.shares ?? state.trustees.shares).slice();
+  if (selectedShares.length < threshold.t) {
+    return { error: `Need at least ${threshold.t} trustee shares to decrypt the tally.` };
+  }
+
+  // Reconstruct election secret from >= t shares, then verify it matches the manifest public key.
+  selectedShares.sort((a, b) => a.x - b.x);
+  const sharesForReconstruction = selectedShares.slice(0, threshold.t).map((s) => ({
+    x: BigInt(s.x),
+    y: bytesToBigIntBE(b64uToBytes(s.share)),
+  }));
+  const electionSecret = shamirCombine(sharesForReconstruction);
+  let reconstructedPk = '';
+  try {
+    const skBytes = bigIntToBytesBE(mod(electionSecret, SECP256K1_ORDER), 32);
+    reconstructedPk = bytesToB64u(secp256k1.getPublicKey(skBytes, true));
+  } catch {
+    return { error: 'Trustee shares reconstructed an invalid election secret key.' };
+  }
+  if (reconstructedPk !== state.manifest.crypto.pk_election) {
+    return { error: 'Trustee shares did not reconstruct the manifest election key.' };
+  }
 
   // Compute totals by decrypting each ballot (POC only).
   const totals: Record<string, Record<string, number>> = {};
@@ -1762,7 +2295,16 @@ export async function publishTally(): Promise<PocTally | { error: string }> {
     const encrypted = (leaf.payload.encrypted_ballot ??
       null) as unknown as PocEncryptedBallot | null;
     if (!encrypted?.ciphertext) continue;
-    const plaintext = await decryptBallot(encrypted.ciphertext, state.election_secret.aes_key);
+    const ballotKey = await unwrapBallotKeyWithElectionSecret({
+      wrapped_ballot_key: encrypted.wrapped_ballot_key,
+      wrapped_ballot_key_epk: encrypted.wrapped_ballot_key_epk,
+      election_id: state.election.election_id,
+      ballot_id: encrypted.ballot_id,
+      election_secret: electionSecret,
+    });
+    if (!ballotKey) continue;
+
+    const plaintext = await decryptBallotWithKey(encrypted.ciphertext, ballotKey);
     if (!plaintext) continue;
     if (!validateBallotPlaintext(state, plaintext)) continue;
     for (const entry of plaintext.contests) {
@@ -2001,6 +2543,7 @@ export async function getPublicKeys(): Promise<{
   ewg: { kid: string; alg: string; jwk: JsonWebKey };
   bb: { kid: string; alg: string; jwk: JsonWebKey };
   vcl: { kid: string; alg: string; jwk: JsonWebKey };
+  issuer: { alg: string; pk: B64u };
 }> {
   const state = await ensureInitialized();
   return {
@@ -2008,6 +2551,7 @@ export async function getPublicKeys(): Promise<{
     ewg: { kid: state.keys.ewg.kid, alg: state.keys.ewg.alg, jwk: state.keys.ewg.jwk_public },
     bb: { kid: state.keys.bb.kid, alg: state.keys.bb.alg, jwk: state.keys.bb.jwk_public },
     vcl: { kid: state.keys.vcl.kid, alg: state.keys.vcl.alg, jwk: state.keys.vcl.jwk_public },
+    issuer: { alg: 'blind_schnorr_secp256k1', pk: state.issuer.pk },
   };
 }
 

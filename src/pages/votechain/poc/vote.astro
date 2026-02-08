@@ -155,12 +155,16 @@ import Icon from '../../../components/ui/Icon.astro';
           <span class="font-mono">localStorage</span> and never leaves your browser.
         </p>
         <p class="text-navy-600 text-sm mt-1.5">
-          <strong>In a real election:</strong> Your credential would be issued by a trusted
-          registration authority (e.g. your county clerk) after identity verification, and stored
-          in a secure enclave on your device. The system would use zero-knowledge proofs so you
-          can prove eligibility without revealing your identity to the election server.
+          <strong>In this POC:</strong> Your credential is certified by the registration authority
+          using a <em>blind Schnorr signature</em> &mdash; the authority signs your public key
+          without learning which key it signed. This breaks the link between registration and
+          voting: the election server verifies the issuer's signature but cannot tell which signing
+          session produced your credential.
+          <strong>In a real election:</strong> The authority would be your county clerk; the blind
+          signing would happen over a secure channel after identity verification; and a full ZK
+          membership proof would hide the public key entirely.
         </p>
-        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
             <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">DID</p>
             <p id="credential-did" class="font-mono text-xs text-navy-900 break-words">
@@ -172,6 +176,14 @@ import Icon from '../../../components/ui/Icon.astro';
               Nullifier (This Election)
             </p>
             <p id="credential-nullifier" class="font-mono text-xs text-navy-900 break-words">
+              Not generated
+            </p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
+              Blind Signature (Issuer)
+            </p>
+            <p id="credential-blind-sig" class="font-mono text-xs text-navy-900 break-words">
               Not generated
             </p>
           </div>
@@ -670,6 +682,7 @@ import Icon from '../../../components/ui/Icon.astro';
     const manifestEl = document.getElementById('manifest-json') as HTMLElement;
     const credDidEl = document.getElementById('credential-did') as HTMLElement;
     const credNullifierEl = document.getElementById('credential-nullifier') as HTMLElement;
+    const credBlindSigEl = document.getElementById('credential-blind-sig') as HTMLElement;
     const challengeEl = document.getElementById('challenge-json') as HTMLElement;
     const ballotOptionsEl = document.getElementById('ballot-options') as HTMLElement;
     const reviewPanel = document.getElementById('review-panel') as HTMLElement;
@@ -732,6 +745,7 @@ import Icon from '../../../components/ui/Icon.astro';
     let currentEncryption: {
       encrypted_ballot: PocEncryptedBallot;
       iv: string;
+      ballot_key: string;
       plaintext: PocBallotPlaintext;
     } | null = null;
     type WizardStep = 1 | 2 | 3 | 4;
@@ -1031,6 +1045,7 @@ import Icon from '../../../components/ui/Icon.astro';
       ballotSection.classList.remove('hidden');
       currentEncryption = null;
       encryptionState = 'none';
+      spoilBtn.disabled = false;
       setWizardStatus('');
       updateWizardControls();
     }
@@ -1044,14 +1059,23 @@ import Icon from '../../../components/ui/Icon.astro';
       const state = await getPocState();
       cachedState = state;
       const cred = state.credential ?? null;
-      if (!cred) {
+      if (!cred || !cred.pk) {
         credDidEl.textContent = 'Not generated';
         credNullifierEl.textContent = 'Not generated';
+        credBlindSigEl.textContent = 'Not generated';
         return;
       }
       credDidEl.textContent = cred.did;
-      const nullifier = await computeNullifier(cred.pub_spki, state.election.election_id);
+      const nullifier = await computeNullifier(cred.pk, state.election.election_id);
       credNullifierEl.textContent = nullifier;
+
+      if (cred.blind_sig?.R && cred.blind_sig?.s) {
+        const rTrunc = cred.blind_sig.R.slice(0, 12) + '...';
+        const sTrunc = cred.blind_sig.s.slice(0, 12) + '...';
+        credBlindSigEl.textContent = `R: ${rTrunc}  s: ${sTrunc}`;
+      } else {
+        credBlindSigEl.textContent = 'Not generated';
+      }
     }
 
     async function ensureReady() {
@@ -1075,10 +1099,10 @@ import Icon from '../../../components/ui/Icon.astro';
     }
 
     async function wizardEnsureCredential() {
-      setWizardStatus('Generating credential locally...');
+      setWizardStatus('Generating credential and running blind Schnorr signing ceremony...');
       await ensureCredential();
       await refreshCredential();
-      setWizardStatus('Credential ready.');
+      setWizardStatus('Credential issued with blind signature. Registration authority cannot link this to your vote.');
     }
 
     async function wizardEnsureChallenge() {
@@ -1224,20 +1248,21 @@ import Icon from '../../../components/ui/Icon.astro';
 
     // Benaloh challenge (spoil)
     spoilBtn?.addEventListener('click', async () => {
-      if (!currentEncryption) return;
+      if (!currentEncryption || encryptionState === 'spoiled') return;
       spoilBtn.disabled = true;
 
       try {
         const result = await spoilBallot({
           encrypted_ballot: currentEncryption.encrypted_ballot,
           iv: currentEncryption.iv,
+          ballot_key: currentEncryption.ballot_key,
           plaintext: currentEncryption.plaintext,
         });
 
         const verification = await verifySpoiledBallot({
           encrypted_ballot: currentEncryption.encrypted_ballot,
           iv: result.randomness_reveal.iv,
-          aes_key: result.randomness_reveal.aes_key,
+          ballot_key: result.randomness_reveal.ballot_key,
           plaintext: result.randomness_reveal.plaintext,
         });
 
@@ -1287,9 +1312,11 @@ import Icon from '../../../components/ui/Icon.astro';
         }
 
         encryptionState = 'spoiled';
+        // Keep button disabled — this ballot is already spoiled
         setWizardStatus('Ballot spoiled. Review the verification result, then re-encrypt a fresh ballot.');
         updateWizardControls();
-      } finally {
+      } catch {
+        // Re-enable only on failure so the user can retry
         spoilBtn.disabled = false;
       }
     });
