@@ -98,7 +98,8 @@ export async function getPublicKeys(): Promise<{
   ewg: { kid: string; alg: string; jwk: JsonWebKey };
   bb: { kid: string; alg: string; jwk: JsonWebKey };
   vcl: { kid: string; alg: string; jwk: JsonWebKey };
-  issuer: { alg: string; pk: string };
+  issuers: Array<{ index: number; alg: string; pk: string }>;
+  issuer_threshold: { t: number; n: number };
 }> {
   const state = await ensureInitialized();
   return {
@@ -106,7 +107,36 @@ export async function getPublicKeys(): Promise<{
     ewg: { kid: state.keys.ewg.kid, alg: state.keys.ewg.alg, jwk: state.keys.ewg.jwk_public },
     bb: { kid: state.keys.bb.kid, alg: state.keys.bb.alg, jwk: state.keys.bb.jwk_public },
     vcl: { kid: state.keys.vcl.kid, alg: state.keys.vcl.alg, jwk: state.keys.vcl.jwk_public },
-    issuer: { alg: 'blind_schnorr_secp256k1', pk: state.issuer.pk },
+    issuers: state.issuers.map((iss, i) => ({
+      index: i,
+      alg: 'blind_schnorr_secp256k1',
+      pk: iss.pk,
+    })),
+    issuer_threshold: state.issuer_threshold,
+  };
+}
+
+/** Verify that credential issuance count does not exceed voter roll commitment ceiling. */
+export async function verifyCredentialIssuanceIntegrity(): Promise<{
+  valid: boolean;
+  issuance_count: number;
+  voter_roll_total: number;
+  issuer_count: number;
+  issuer_threshold: { t: number; n: number };
+  vcl_issuance_events: number;
+}> {
+  const state = await ensureInitialized();
+  const voterRoll = state.manifest.crypto.voter_roll_commitment;
+  const vclIssuanceEvents = state.vcl.events.filter((e) => e.type === 'credential_issued').length;
+
+  return {
+    valid: state.credential_issuance_count <= voterRoll.total_eligible
+      && state.credential_issuance_count === vclIssuanceEvents,
+    issuance_count: state.credential_issuance_count,
+    voter_roll_total: voterRoll.total_eligible,
+    issuer_count: state.issuers.length,
+    issuer_threshold: state.issuer_threshold,
+    vcl_issuance_events: vclIssuanceEvents,
   };
 }
 

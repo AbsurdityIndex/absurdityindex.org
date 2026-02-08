@@ -30,6 +30,8 @@ import {
 import { blindSchnorrIssuance, verifyBlindSchnorr } from './crypto/blind-schnorr.js';
 import { signB64u } from './crypto/ecdsa.js';
 import { ensureInitialized, saveState } from './state.js';
+import { vclSignEvent } from './vcl.js';
+import { replicateIfConfigured } from './vcl-client.js';
 
 export async function computeNullifier(credentialPubB64u: string, election_id: string): Promise<Hex0x> {
   const pub = b64uToBytes(credentialPubB64u);
@@ -44,43 +46,78 @@ async function registerCredential(): Promise<PocCredential> {
   const skBytes = schnorr.utils.randomPrivateKey();
   const pkBytes = schnorr.getPublicKey(skBytes); // x-only (32 bytes)
 
-  // 2. Run the blind Schnorr issuance ceremony.
-  const issuerSkBytes = b64uToBytes(state.issuer.sk);
-  const issuerPkBytes = b64uToBytes(state.issuer.pk);
+  // 2. Run the blind Schnorr issuance ceremony with ALL independent issuers.
+  //    Each issuer independently signs without learning the voter's public key.
+  //    Requiring t-of-n signatures prevents any single rogue authority from forging credentials.
+  const blindSigs: PocCredential['blind_sigs'] = [];
 
-  const blindSig = await blindSchnorrIssuance({
-    issuer_sk: issuerSkBytes,
-    issuer_pk: issuerPkBytes,
-    voter_pk_xonly: pkBytes,
-  });
+  for (let i = 0; i < state.issuers.length; i++) {
+    const issuerSkBytes = b64uToBytes(state.issuers[i].sk);
+    const issuerPkBytes = b64uToBytes(state.issuers[i].pk);
 
-  // 3. Self-verify the blind signature (sanity check)
-  const sigValid = await verifyBlindSchnorr(
-    issuerPkBytes,
-    pkBytes,
-    blindSig.R,
-    blindSig.s,
-  );
-  if (!sigValid) {
-    throw new Error('Blind Schnorr self-verification failed — this should never happen.');
+    const blindSig = await blindSchnorrIssuance({
+      issuer_sk: issuerSkBytes,
+      issuer_pk: issuerPkBytes,
+      voter_pk_xonly: pkBytes,
+    });
+
+    // Self-verify each issuer's blind signature
+    const sigValid = await verifyBlindSchnorr(
+      issuerPkBytes,
+      pkBytes,
+      blindSig.R,
+      blindSig.s,
+    );
+    if (!sigValid) {
+      throw new Error(`Blind Schnorr self-verification failed for issuer ${i}.`);
+    }
+
+    blindSigs.push({
+      issuer_index: i,
+      R: bytesToB64u(blindSig.R),
+      s: bytesToB64u(blindSig.s),
+    });
   }
 
-  // 4. Store credential with blind signature
+  // 3. Store credential with all blind signatures
   const didSuffix = await sha256B64u(concatBytes(utf8('votechain:poc:did:v1:'), pkBytes));
   const credential: PocCredential = {
     did: `did:votechain:poc:${didSuffix}`,
     curve: 'secp256k1',
     pk: bytesToB64u(pkBytes),
     sk: bytesToB64u(skBytes),
-    blind_sig: {
-      R: bytesToB64u(blindSig.R),
-      s: bytesToB64u(blindSig.s),
-    },
+    blind_sigs: blindSigs,
     created_at: nowIso(),
   };
 
   state.credential = credential;
+
+  // 4. Log credential issuance on VCL (privacy-preserving: only sequence number, not identity)
+  state.credential_issuance_count += 1;
+  const issuanceEvent = {
+    type: 'credential_issued' as const,
+    recorded_at: nowIso(),
+    payload: {
+      election_id: state.election.election_id,
+      issuance_sequence: state.credential_issuance_count,
+      issuer_count: state.issuers.length,
+      voter_roll_ceiling: state.manifest.crypto.voter_roll_commitment.total_eligible,
+    },
+    kid: state.keys.vcl.kid,
+  };
+  const signed = await vclSignEvent(issuanceEvent, state.keys.vcl);
+  state.vcl.events.push({ ...issuanceEvent, ...signed });
+
   saveState(state);
+
+  // Fire-and-forget replication of credential_issued event to state node
+  replicateIfConfigured({
+    type: issuanceEvent.type,
+    payload: issuanceEvent.payload,
+    tx_id: signed.tx_id,
+    recorded_at: issuanceEvent.recorded_at,
+  });
+
   return credential;
 }
 
@@ -103,14 +140,14 @@ export async function buildEligibilityProof(
   const msgHash = await sha256(utf8(transcript)); // 32 bytes
 
   return {
-    zk_suite: 'votechain_zk_blind_schnorr_bip340_poc_v1',
-    vk_id: 'poc-blind-schnorr-bip340-vk-1',
+    zk_suite: 'votechain_zk_threshold_blind_schnorr_bip340_poc_v2',
+    vk_id: 'poc-threshold-blind-schnorr-bip340-vk-1',
     public_inputs,
     pi: bytesToB64u(
       schnorr.sign(msgHash, b64uToBytes(credential.sk), randomBytes(32)),
     ),
     credential_pub: credential.pk,
-    issuer_blind_sig: credential.blind_sig,
+    issuer_blind_sigs: credential.blind_sigs,
   };
 }
 
@@ -118,19 +155,34 @@ export async function verifyEligibilityProof(
   state: PocStateV2,
   proof: PocEligibilityProof,
 ): Promise<boolean> {
-  // ── Blind Schnorr credential verification ──
-  if (!proof.issuer_blind_sig?.R || !proof.issuer_blind_sig?.s) return false;
-  if (!state.manifest?.crypto?.pk_issuer) return false;
+  // ── Threshold blind Schnorr credential verification ──
+  // Check that the proof carries enough issuer signatures to meet the threshold.
+  if (!Array.isArray(proof.issuer_blind_sigs) || proof.issuer_blind_sigs.length === 0) return false;
+  if (!Array.isArray(state.manifest?.crypto?.pk_issuers)) return false;
 
-  const issuerPkBytes = b64uToBytes(state.manifest.crypto.pk_issuer);
+  const requiredThreshold = state.manifest.crypto.issuer_threshold?.t ?? 1;
+  if (proof.issuer_blind_sigs.length < requiredThreshold) return false;
+
   const voterPkBytes = b64uToBytes(proof.credential_pub);
-  const blindSigValid = await verifyBlindSchnorr(
-    issuerPkBytes,
-    voterPkBytes,
-    b64uToBytes(proof.issuer_blind_sig.R),
-    b64uToBytes(proof.issuer_blind_sig.s),
-  );
-  if (!blindSigValid) return false;
+  let validCount = 0;
+
+  for (const sig of proof.issuer_blind_sigs) {
+    // Ensure the issuer_index refers to a valid issuer in the manifest
+    if (sig.issuer_index < 0 || sig.issuer_index >= state.manifest.crypto.pk_issuers.length) {
+      continue;
+    }
+    const issuerPkBytes = b64uToBytes(state.manifest.crypto.pk_issuers[sig.issuer_index]);
+
+    const sigValid = await verifyBlindSchnorr(
+      issuerPkBytes,
+      voterPkBytes,
+      b64uToBytes(sig.R),
+      b64uToBytes(sig.s),
+    );
+    if (sigValid) validCount++;
+  }
+
+  if (validCount < requiredThreshold) return false;
 
   // ── BIP340 proof-of-knowledge ──
   try {

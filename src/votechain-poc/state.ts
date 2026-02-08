@@ -15,12 +15,13 @@ import type {
   PocElectionManifest,
   PocCredential,
 } from './types.js';
-import { nowIso, bytesToB64u } from './encoding.js';
+import { sha256, concatBytes, utf8, nowIso, bytesToB64u } from './encoding.js';
 import { bytesToBigIntBE, bigIntToBytesBE } from './crypto/bigint.js';
 import { shamirSplit } from './crypto/shamir.js';
 import { generateEcdsaKeyPair, exportKeyPair } from './crypto/ecdsa.js';
 import { signManifest } from './manifest.js';
 import { vclSignEvent } from './vcl.js';
+import { replicateIfConfigured } from './vcl-client.js';
 
 const STORAGE_KEY = 'votechain_poc_state_v2';
 
@@ -48,11 +49,12 @@ function isStateUsable(s: PocStateV2): boolean {
   // Validate that critical fields match the current code's expectations.
   // This catches stale localStorage left over from earlier development iterations
   // where the version was already 2 but the internal schema differed.
-  if (s.manifest?.crypto?.suite !== 'ewp_suite_poc_blind_schnorr_ecies_aesgcm_threshold_v1') return false;
+  if (s.manifest?.crypto?.suite !== 'ewp_suite_poc_threshold_blind_schnorr_ecies_aesgcm_v2') return false;
   if (!Array.isArray(s.trustees?.shares)) return false;
   if (s.credential && typeof s.credential.pk !== 'string') return false;
-  if (!s.issuer?.pk) return false;
-  if (!s.manifest?.crypto?.pk_issuer) return false;
+  if (!Array.isArray(s.issuers) || s.issuers.length === 0) return false;
+  if (!Array.isArray(s.manifest?.crypto?.pk_issuers)) return false;
+  if (!s.manifest?.crypto?.voter_roll_commitment) return false;
   return true;
 }
 
@@ -108,10 +110,33 @@ export async function ensureInitialized(): Promise<PocStateV2> {
   const pkElectionBytes = secp256k1.getPublicKey(electionSkBytes, true);
   const pk_election = bytesToB64u(pkElectionBytes);
 
-  // Registration authority (issuer) keypair for blind Schnorr credential issuance.
-  const issuerSkBytes = secp256k1.utils.randomSecretKey();
-  const issuerPkBytes = secp256k1.getPublicKey(issuerSkBytes, true); // 33 bytes compressed
-  const pk_issuer = bytesToB64u(issuerPkBytes);
+  // Threshold registration authorities for blind Schnorr credential issuance.
+  // 3 independent issuers; 2-of-3 required (issuer_threshold). This prevents any
+  // single rogue authority from minting unlimited valid credentials.
+  const ISSUER_COUNT = 3;
+  const issuerThreshold = { t: 2, n: ISSUER_COUNT };
+  const issuers: Array<{ sk: string; pk: string }> = [];
+  const pk_issuers: string[] = [];
+  for (let i = 0; i < ISSUER_COUNT; i++) {
+    const sk = secp256k1.utils.randomSecretKey();
+    const pk = secp256k1.getPublicKey(sk, true);
+    issuers.push({ sk: bytesToB64u(sk), pk: bytesToB64u(pk) });
+    pk_issuers.push(bytesToB64u(pk));
+  }
+
+  // Voter roll commitment: a Merkle root over simulated eligible voter entries
+  // and a total count. Monitors can verify that credential issuance never
+  // exceeds this ceiling.
+  const VOTER_ROLL_SIZE = 50_000; // POC: simulated eligible voter count
+  // POC: generate a simulated voter roll Merkle root (hash of the count + election).
+  // In production this would be a real Merkle tree over voter registration entries.
+  const voterRollRoot = await sha256(
+    concatBytes(utf8('votechain:voter_roll:v1:'), utf8(`${election_id}:${VOTER_ROLL_SIZE}`)),
+  );
+  const voter_roll_commitment = {
+    merkle_root: bytesToB64u(voterRollRoot),
+    total_eligible: VOTER_ROLL_SIZE,
+  };
 
   // POC-only: split the election secret among trustees (t-of-n).
   const shares = shamirSplit(electionSecret, threshold.t, threshold.n);
@@ -144,9 +169,11 @@ export async function ensureInitialized(): Promise<PocStateV2> {
     not_before,
     not_after,
     crypto: {
-      suite: 'ewp_suite_poc_blind_schnorr_ecies_aesgcm_threshold_v1',
+      suite: 'ewp_suite_poc_threshold_blind_schnorr_ecies_aesgcm_v2',
       pk_election,
-      pk_issuer,
+      pk_issuers,
+      issuer_threshold: issuerThreshold,
+      voter_roll_commitment,
       trustees,
       threshold,
     },
@@ -164,10 +191,9 @@ export async function ensureInitialized(): Promise<PocStateV2> {
       threshold,
       shares: trusteeShares,
     },
-    issuer: {
-      sk: bytesToB64u(issuerSkBytes),
-      pk: bytesToB64u(issuerPkBytes),
-    },
+    issuers,
+    issuer_threshold: issuerThreshold,
+    credential_issuance_count: 0,
     challenges: {},
     idempotency: {},
     bb: { leaves: [], sth_history: [] },
@@ -192,6 +218,18 @@ export async function ensureInitialized(): Promise<PocStateV2> {
   initialState.vcl.events.push({ ...manifestPublish, ...manifestPublishSig });
 
   saveState(initialState);
+
+  // Fire-and-forget replication of manifest event to federal node
+  const manifestEvent = initialState.vcl.events[0];
+  if (manifestEvent) {
+    replicateIfConfigured({
+      type: manifestEvent.type,
+      payload: manifestEvent.payload,
+      tx_id: manifestEvent.tx_id,
+      recorded_at: manifestEvent.recorded_at,
+    });
+  }
+
   return initialState;
 }
 

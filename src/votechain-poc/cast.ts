@@ -33,6 +33,7 @@ import { buildEwpError, hasUsedNullifier, recordBbSthPublished, recordEwpBallotC
 import { ensureInitialized, saveState } from './state.js';
 import { ensureCredential, computeNullifier, buildEligibilityProof, verifyEligibilityProof } from './credential.js';
 import { recordFraudFlag } from './fraud.js';
+import { replicateIfConfigured } from './vcl-client.js';
 
 // ── Receipt helpers ─────────────────────────────────────────────────────────
 
@@ -245,6 +246,19 @@ export async function castBallot(args: {
     stored_at: nowIso(),
   };
   saveState(state);
+
+  // Fire-and-forget replication of bb_sth_published and ewp_ballot_cast events to state node
+  const recentEvents = state.vcl.events.slice(-2);
+  for (const evt of recentEvents) {
+    if (evt.type === 'bb_sth_published' || evt.type === 'ewp_ballot_cast') {
+      replicateIfConfigured({
+        type: evt.type,
+        payload: evt.payload,
+        tx_id: evt.tx_id,
+        recorded_at: evt.recorded_at,
+      });
+    }
+  }
 
   return response;
 }

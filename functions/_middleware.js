@@ -15,7 +15,7 @@ const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'X-Permitted-Cross-Domain-Policies': 'none',
   'Content-Security-Policy':
-    "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com; upgrade-insecure-requests",
+    "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; upgrade-insecure-requests",
 };
 
 function applySecurityHeaders(response) {
@@ -24,6 +24,94 @@ function applySecurityHeaders(response) {
     patched.headers.set(key, value);
   }
   return patched;
+}
+
+const POC_COOKIE_NAME = 'vc_poc_access';
+const POC_PATH_PREFIX = '/votechain/poc';
+
+function parseCookieHeader(cookieHeader) {
+  const out = {};
+  if (!cookieHeader) return out;
+  for (const part of cookieHeader.split(';')) {
+    const idx = part.indexOf('=');
+    if (idx === -1) continue;
+    const k = part.slice(0, idx).trim();
+    const v = part.slice(idx + 1).trim();
+    if (!k) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+function bytesToB64u(bytes) {
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  const b64 = btoa(bin);
+  return b64.replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
+function b64uToBytes(b64u) {
+  const b64 = String(b64u).replaceAll('-', '+').replaceAll('_', '/');
+  const padLen = (4 - (b64.length % 4)) % 4;
+  const padded = b64 + '='.repeat(padLen);
+  const bin = atob(padded);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function constantTimeEqual(aBytes, bBytes) {
+  if (aBytes.length !== bBytes.length) return false;
+  let diff = 0;
+  for (let i = 0; i < aBytes.length; i += 1) diff |= aBytes[i] ^ bBytes[i];
+  return diff === 0;
+}
+
+async function hmacB64u(secret, message) {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
+  return bytesToB64u(new Uint8Array(sig));
+}
+
+function isPocIndexPath(pathname) {
+  return pathname === POC_PATH_PREFIX || pathname === `${POC_PATH_PREFIX}/`;
+}
+
+function isPocProtectedPath(pathname) {
+  if (!pathname.startsWith(`${POC_PATH_PREFIX}/`)) return false;
+  // Allow the index route itself (trailing slash variant).
+  if (isPocIndexPath(pathname)) return false;
+  return true;
+}
+
+async function isValidPocAccessCookie(cookieValue, cookieSecret) {
+  if (!cookieValue || typeof cookieValue !== 'string') return false;
+  const parts = cookieValue.split('.');
+  if (parts.length !== 2) return false;
+  const [payloadB64u, sigB64u] = parts;
+  if (!payloadB64u || !sigB64u) return false;
+
+  const expectedSig = await hmacB64u(cookieSecret, payloadB64u);
+  const okSig = constantTimeEqual(b64uToBytes(sigB64u), b64uToBytes(expectedSig));
+  if (!okSig) return false;
+
+  let payload;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(b64uToBytes(payloadB64u)));
+  } catch {
+    return false;
+  }
+
+  const exp = payload?.exp;
+  if (typeof exp !== 'number' || !Number.isFinite(exp)) return false;
+  const now = Math.floor(Date.now() / 1000);
+  return exp > now;
 }
 
 export async function onRequest(context) {
@@ -44,12 +132,6 @@ export async function onRequest(context) {
 
   const country = context.request.cf?.country;
 
-  // Allow requests with no country info (local dev, health checks, bots)
-  if (!country) {
-    const response = await context.next();
-    return applySecurityHeaders(response);
-  }
-
   // Allow US and US territories
   const allowed = new Set([
     'US', // United States
@@ -60,7 +142,37 @@ export async function onRequest(context) {
     'MP', // Northern Mariana Islands
   ]);
 
-  if (allowed.has(country)) {
+  // Allow requests with no country info (local dev, health checks, bots).
+  // If Turnstile gating is enabled, we still gate VoteChain POC module routes.
+  const isCountryAllowed = !country || allowed.has(country);
+  if (isCountryAllowed) {
+    const turnstileEnabled = Boolean(
+      context.env?.PUBLIC_TURNSTILE_SITE_KEY &&
+        context.env?.TURNSTILE_SECRET_KEY &&
+        context.env?.POC_ACCESS_COOKIE_SECRET,
+    );
+
+    if (turnstileEnabled && isPocProtectedPath(url.pathname)) {
+      const cookies = parseCookieHeader(context.request.headers.get('Cookie'));
+      const ok = await isValidPocAccessCookie(
+        cookies[POC_COOKIE_NAME],
+        context.env.POC_ACCESS_COOKIE_SECRET,
+      );
+
+      if (!ok) {
+        const next = encodeURIComponent(url.pathname + url.search);
+        return applySecurityHeaders(
+          new Response(null, {
+            status: 302,
+            headers: {
+              Location: `${POC_PATH_PREFIX}?next=${next}`,
+              'Cache-Control': 'no-store',
+            },
+          }),
+        );
+      }
+    }
+
     const response = await context.next();
     return applySecurityHeaders(response);
   }

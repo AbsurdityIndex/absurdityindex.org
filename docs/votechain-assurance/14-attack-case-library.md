@@ -143,6 +143,63 @@ POC validation (safe, local-only):
 - Patch patterns: load shedding with explicit guidance; per-tenant limits; jittered backoff
 - Regression: load tests that verify bounded error rates and no cascading failures
 
+## Case Set F: Credential Forgery (Issuance Layer)
+
+### F01: Rogue Registration Authority — Single-Issuer Credential Minting
+
+- Target: credential issuance integrity; no single authority can forge unlimited credentials
+- Preconditions: threshold credential issuance is configured (t-of-n issuers)
+- Test: attempt to issue a credential using only one issuer's private key (simulate a
+  compromised registration authority acting alone)
+- Expected: credential carries only 1-of-t required blind Schnorr signatures; cast is rejected
+  at eligibility proof verification because the threshold is not met
+- Evidence: eligibility proof failure; verifier reports insufficient valid issuer signatures;
+  cast returns `EWP_PROOF_INVALID`
+- Root causes: single-issuer trust model; missing threshold enforcement in verifier; credential
+  accepted with fewer than t valid signatures
+- Patch patterns: threshold issuance requiring t-of-n independent blind Schnorr ceremonies;
+  verifier counts valid issuer signatures and rejects if < t
+- Regression: unit test that creates a credential with only 1 issuer signature and asserts
+  eligibility verification fails
+
+POC validation (safe, local-only):
+
+1. Open browser console on `/votechain/poc/vote`
+2. Observe that credential registration runs blind Schnorr with all 3 issuers
+3. Verify via Trust Portal that all 3 issuer signatures are present
+
+### F02: Credential Issuance Exceeds Voter Roll Ceiling
+
+- Target: voter roll commitment ceiling; total credentials issued must not exceed registered voters
+- Preconditions: voter roll commitment published in manifest with `total_eligible` count
+- Test: in a controlled environment, increment `credential_issuance_count` beyond the
+  `total_eligible` ceiling and check trust portal
+- Expected: Trust Portal "Credential issuance within voter roll ceiling" check fails;
+  VCL issuance events exceed the committed count
+- Evidence: Trust Portal badge turns red; `verifyCredentialIssuanceIntegrity` returns `valid: false`
+- Root causes: no issuance ceiling enforcement; voter roll commitment not anchored pre-issuance;
+  issuance counter not on VCL
+- Patch patterns: publish voter roll commitment in manifest before issuance; log every issuance
+  as VCL event; monitors compare issuance count to commitment
+- Regression: integration test that simulates over-issuance and asserts detection
+
+### F03: Colluding Issuers Within Voter Roll Ceiling
+
+- Target: detectability of credential forgery when t issuers collude but stay within the ceiling
+- Preconditions: t colluding issuers; voter roll ceiling not exceeded
+- Test: mint credentials for non-existent voters using t colluding issuer keys, staying below ceiling
+- Expected: **this attack succeeds cryptographically** — the system cannot distinguish forged
+  credentials from legitimate ones if the threshold is met and the ceiling is not breached
+- Evidence: none (by design — this is an undetectable attack at the cryptographic level)
+- Root causes: fundamental limitation of threshold blind signatures — t colluding authorities
+  can always forge credentials
+- Patch patterns: this is mitigated by **operational controls**, not cryptography:
+  - independent issuer selection (bipartisan boards, different organizations)
+  - legal deterrence (federal election fraud statutes, potential sedition charges)
+  - audit trails binding each issuer's participation to real-world identity
+  - post-election statistical analysis comparing turnout to historical baselines
+- Regression: document this as a known residual risk in the threat model
+
 ## How To Contribute
 
 If you find a gap:

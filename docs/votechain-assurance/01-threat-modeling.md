@@ -114,6 +114,14 @@ Do not write exploit playbooks. Instead, pressure-test assumptions with question
 - If monitors go down, how quickly does non-equivocation detection degrade?
 - If a key is rotated under duress, how do clients learn the new key without trusting a single channel?
 - Can an attacker force false "duplicate nullifier" conflicts at scale (denial via conflicts)?
+- **[ROOT CONCERN] Rogue Credential Minting:** If a registration authority is compromised, can they
+  mint unlimited valid credentials and hand them to a bad actor? The blind Schnorr unlinkability
+  property that protects voter privacy also prevents auditing how many credentials a single authority
+  issued. **Mitigation:** Threshold issuance (t-of-n independent issuers) + voter roll commitment
+  (public ceiling on issuance count). See `/votechain/credential-integrity` for the full analysis.
+  Residual risk: if t issuers collude within a legitimate voter roll ceiling, over-issuance is
+  undetectable cryptographically — enforcement relies on operational controls, independent issuer
+  selection, and legal deterrence.
 
 Expected result:
 

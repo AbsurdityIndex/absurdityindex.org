@@ -1,0 +1,14 @@
+name = "votechain-state-node"
+main = "src/index.ts"
+compatibility_date = "2026-02-08"
+
+[vars]
+NODE_ID = "state-node-1"
+
+[[durable_objects.bindings]]
+name = "LEDGER"
+class_name = "LedgerDO"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LedgerDO"]

@@ -53,3 +53,7 @@ cli/pnpm-lock.yaml
 __pycache__/
 *.pyc
 *.pyo
+
+# VoteChain node local secrets
+workers/votechain-nodes/.secrets.local
+workers/votechain-nodes/**/.dev.vars

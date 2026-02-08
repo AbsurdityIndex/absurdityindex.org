@@ -227,7 +227,52 @@ import Icon from '../../../components/ui/Icon.astro';
         </div>
       </section>
 
-      <!-- Section 5: Public Keys -->
+      <!-- Section 5: Credential Issuance Integrity -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="shield" class="text-gold-600" />
+          Credential Issuance Integrity
+        </h2>
+        <p class="text-navy-600 text-sm mt-2">
+          Credentials require independent blind Schnorr signatures from multiple registration
+          authorities (threshold issuance). No single authority can forge credentials. The voter
+          roll commitment sets a public ceiling &mdash; monitors verify that total issuance never
+          exceeds the eligible voter count.
+        </p>
+        <p class="text-navy-500 text-xs mt-1.5 italic">
+          This defense mitigates rogue credential minting: even if one registration authority is
+          compromised, they cannot produce valid credentials without cooperation from the threshold
+          number of independent issuers.
+        </p>
+
+        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center">
+            <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-1">Issuers</p>
+            <p class="font-serif text-2xl text-navy-900 font-bold" id="ci-issuer-count">-</p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center">
+            <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-1">Threshold</p>
+            <p class="font-serif text-2xl text-navy-900 font-bold" id="ci-threshold">-</p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center">
+            <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-1">Issued</p>
+            <p class="font-serif text-2xl text-navy-900 font-bold" id="ci-issued">-</p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center">
+            <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-1">Roll Ceiling</p>
+            <p class="font-serif text-2xl text-navy-900 font-bold" id="ci-ceiling">-</p>
+          </div>
+        </div>
+
+        <div class="mt-3 flex items-center gap-3">
+          <p class="text-xs font-mono text-navy-500 uppercase tracking-widest">Integrity Check</p>
+          <span id="ci-badge" class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-navy-100 text-navy-500">
+            Checking...
+          </span>
+        </div>
+      </section>
+
+      <!-- Section 6: Public Keys -->
       <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
         <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
           <Icon name="key" class="text-gold-600" />
@@ -249,7 +294,7 @@ import Icon from '../../../components/ui/Icon.astro';
         </div>
       </section>
 
-      <!-- Section 6: What This Proves -->
+      <!-- Section 7: What This Proves -->
       <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
         <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
           <Icon name="info" class="text-gold-600" />
@@ -276,6 +321,10 @@ import Icon from '../../../components/ui/Icon.astro';
             <li class="flex items-start gap-2">
               <span class="text-gold-600 mt-0.5 flex-shrink-0"><Icon name="check" size={16} /></span>
               <span><strong>Tally correctness:</strong> If a tally has been published, it is signed by the election gateway and anchored on the ledger.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-gold-600 mt-0.5 flex-shrink-0"><Icon name="check" size={16} /></span>
+              <span><strong>Credential issuance integrity:</strong> Credentials require threshold signatures from independent registration authorities. Total issuance is bounded by the voter roll commitment and tracked on the ledger.</span>
             </li>
             <li class="flex items-start gap-2">
               <span class="text-gold-600 mt-0.5 flex-shrink-0"><Icon name="check" size={16} /></span>
@@ -317,6 +366,7 @@ import Icon from '../../../components/ui/Icon.astro';
       verifyBulletinBoardIntegrity,
       getPublicKeys,
       verifyTally,
+      verifyCredentialIssuanceIntegrity,
     } from '../../../votechain-poc';
     import type { DashboardSnapshot } from '../../../votechain-poc';
 
@@ -335,6 +385,11 @@ import Icon from '../../../components/ui/Icon.astro';
     const vclBadge = document.getElementById('vcl-badge') as HTMLElement;
     const vclBreakdown = document.getElementById('vcl-breakdown') as HTMLElement;
     const keysContainer = document.getElementById('keys-container') as HTMLElement;
+    const ciIssuerCount = document.getElementById('ci-issuer-count') as HTMLElement;
+    const ciThreshold = document.getElementById('ci-threshold') as HTMLElement;
+    const ciIssued = document.getElementById('ci-issued') as HTMLElement;
+    const ciCeiling = document.getElementById('ci-ceiling') as HTMLElement;
+    const ciBadge = document.getElementById('ci-badge') as HTMLElement;
     const reverifyBtn = document.getElementById('reverify-btn') as HTMLButtonElement;
     const exportBtn = document.getElementById('export-btn') as HTMLButtonElement;
     const verifyStatusEl = document.getElementById('verify-status') as HTMLElement;
@@ -541,8 +596,8 @@ import Icon from '../../../components/ui/Icon.astro';
         keysContainer.appendChild(card);
       }
 
-      // Issuer key (secp256k1 compressed point, not JWK)
-      {
+      // Issuer keys (threshold registration authorities, secp256k1 compressed points)
+      for (const issuer of keys.issuers) {
         const card = document.createElement('div');
         card.className = 'rounded-lg border border-navy-200 bg-cream-50 p-4';
 
@@ -551,11 +606,11 @@ import Icon from '../../../components/ui/Icon.astro';
 
         const title = document.createElement('p');
         title.className = 'text-xs font-mono text-navy-500 uppercase tracking-widest';
-        title.textContent = 'Registration Authority (Issuer)';
+        title.textContent = `Registration Authority #${issuer.index + 1} (${keys.issuer_threshold.t}-of-${keys.issuer_threshold.n})`;
 
         const meta = document.createElement('p');
         meta.className = 'text-[10px] font-mono text-navy-400';
-        meta.textContent = `alg: ${keys.issuer.alg} | format: secp256k1 compressed point (base64url)`;
+        meta.textContent = `alg: ${issuer.alg} | format: secp256k1 compressed point (base64url)`;
 
         header.appendChild(title);
 
@@ -563,25 +618,29 @@ import Icon from '../../../components/ui/Icon.astro';
         copyBtn.type = 'button';
         copyBtn.className = 'inline-flex items-center gap-1.5 rounded-md border border-navy-200 bg-white px-2.5 py-1.5 text-navy-800 font-sans text-xs font-semibold hover:border-gold-500 hover:shadow-sm transition-all';
 
-        function setIssuerCopyIdle() {
-          copyBtn.replaceChildren(
-            createLucideSvg({
-              size: 14,
-              nodes: [
-                { name: 'rect', attrs: { x: '9', y: '9', width: '13', height: '13', rx: '2', ry: '2' } },
-                { name: 'path', attrs: { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' } },
-              ],
-            }),
-            document.createTextNode('Copy'),
-          );
+        function makeSetIdle(btn: HTMLButtonElement) {
+          return () => {
+            btn.replaceChildren(
+              createLucideSvg({
+                size: 14,
+                nodes: [
+                  { name: 'rect', attrs: { x: '9', y: '9', width: '13', height: '13', rx: '2', ry: '2' } },
+                  { name: 'path', attrs: { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' } },
+                ],
+              }),
+              document.createTextNode('Copy'),
+            );
+          };
         }
 
-        setIssuerCopyIdle();
+        const setIdle = makeSetIdle(copyBtn);
+        setIdle();
+        const pkValue = issuer.pk;
         copyBtn.addEventListener('click', async () => {
           try {
-            await navigator.clipboard.writeText(keys.issuer.pk);
+            await navigator.clipboard.writeText(pkValue);
             copyBtn.textContent = 'Copied!';
-            setTimeout(() => { setIssuerCopyIdle(); }, 1500);
+            setTimeout(setIdle, 1500);
           } catch {
             copyBtn.textContent = 'Failed';
           }
@@ -593,13 +652,13 @@ import Icon from '../../../components/ui/Icon.astro';
 
         const desc = document.createElement('p');
         desc.className = 'text-xs text-navy-600 mt-2';
-        desc.textContent = 'Used for blind Schnorr credential issuance. The issuer certifies voter credentials without learning which credential it certified.';
+        desc.textContent = `Independent issuer for blind Schnorr credential issuance. ${keys.issuer_threshold.t} of ${keys.issuer_threshold.n} must sign for a valid credential.`;
         card.appendChild(desc);
 
         const pre = document.createElement('pre');
         pre.className = 'mt-2 rounded-lg bg-navy-800 text-cream-100 p-3 overflow-x-auto text-xs leading-relaxed font-mono';
         const code = document.createElement('code');
-        code.textContent = keys.issuer.pk;
+        code.textContent = pkValue;
         pre.appendChild(code);
         card.appendChild(pre);
 
@@ -619,6 +678,7 @@ import Icon from '../../../components/ui/Icon.astro';
           vclResult,
           bbResult,
           keys,
+          ciResult,
         ] = await Promise.all([
           getDashboardSnapshot(),
           verifyManifestSignature(),
@@ -626,6 +686,7 @@ import Icon from '../../../components/ui/Icon.astro';
           verifyAllVclEventSignatures(),
           verifyBulletinBoardIntegrity(),
           getPublicKeys(),
+          verifyCredentialIssuanceIntegrity(),
         ]);
 
         // Check manifest anchored on VCL
@@ -674,6 +735,12 @@ import Icon from '../../../components/ui/Icon.astro';
             detail: manifestAnchored ? 'election_manifest_published event found' : 'No anchor event found',
           },
           {
+            id: 'credential_issuance_integrity',
+            label: 'Credential issuance within voter roll ceiling',
+            ok: ciResult.valid,
+            detail: `${ciResult.issuance_count} issued / ${ciResult.voter_roll_total} eligible | ${ciResult.issuer_threshold.t}-of-${ciResult.issuer_threshold.n} issuers required`,
+          },
+          {
             id: 'tally_verified',
             label: 'Tally verified',
             ok: tallyExists ? tallyVerified : true,
@@ -701,6 +768,13 @@ import Icon from '../../../components/ui/Icon.astro';
         // VCL section
         setBadge(vclBadge, vclResult.all_valid);
         renderVclBreakdown(snapshot.events);
+
+        // Credential issuance section
+        ciIssuerCount.textContent = String(ciResult.issuer_count);
+        ciThreshold.textContent = `${ciResult.issuer_threshold.t}/${ciResult.issuer_threshold.n}`;
+        ciIssued.textContent = String(ciResult.issuance_count);
+        ciCeiling.textContent = ciResult.voter_roll_total.toLocaleString();
+        setBadge(ciBadge, ciResult.valid);
 
         // Keys section
         renderKeys(keys);

@@ -4,20 +4,68 @@ export type VoteChainNavItem = {
   icon: string;
 };
 
-export type VoteChainAssuranceDoc = {
+export type VoteChainSubpageItem = {
   href: string;
   label: string;
   description: string;
   icon: string;
 };
 
+export type VoteChainAssuranceDoc = VoteChainSubpageItem;
+
 export const VOTECHAIN_PRIMARY_NAV: VoteChainNavItem[] = [
   { href: '/votechain', label: 'Overview', icon: 'home' },
   { href: '/votechain/architecture', label: 'Architecture', icon: 'git-branch' },
+  { href: '/votechain/credential-integrity', label: 'Credential Integrity', icon: 'shield' },
   { href: '/votechain/prd', label: 'VoteChain PRD', icon: 'scroll' },
   { href: '/votechain/ewp', label: 'EWP PRD', icon: 'file-text' },
   { href: '/votechain/poc', label: 'POC', icon: 'vote' },
   { href: '/votechain/assurance', label: 'Assurance', icon: 'clipboard-list' },
+];
+
+export const VOTECHAIN_POC_MODULES: VoteChainSubpageItem[] = [
+  {
+    href: '/votechain/poc',
+    label: 'Home',
+    description: 'POC overview with links to all modules.',
+    icon: 'home',
+  },
+  {
+    href: '/votechain/poc/vote',
+    label: 'Voting Client',
+    description: 'Cast an encrypted ballot with credential issuance and ZK proof.',
+    icon: 'vote',
+  },
+  {
+    href: '/votechain/poc/verify',
+    label: 'Verify Receipt',
+    description: 'Independently verify a cast receipt with Merkle inclusion.',
+    icon: 'shield',
+  },
+  {
+    href: '/votechain/poc/lookup',
+    label: 'Ballot Lookup',
+    description: 'Look up a ballot by hash on the bulletin board.',
+    icon: 'search',
+  },
+  {
+    href: '/votechain/poc/dashboard',
+    label: 'Dashboard',
+    description: 'Oversight view of all VCL events, BB entries, fraud flags, and tally.',
+    icon: 'bar-chart',
+  },
+  {
+    href: '/votechain/poc/trust',
+    label: 'Trust Portal',
+    description: 'Verify every cryptographic signature and Merkle root in the election.',
+    icon: 'check-circle',
+  },
+  {
+    href: '/votechain/poc/monitor',
+    label: 'Node Monitor',
+    description: 'Real-time monitoring of the 3 distributed VoteChain ledger nodes.',
+    icon: 'activity',
+  },
 ];
 
 export const VOTECHAIN_ASSURANCE_DOCS: VoteChainAssuranceDoc[] = [

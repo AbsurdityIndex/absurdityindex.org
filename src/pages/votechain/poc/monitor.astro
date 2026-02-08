@@ -1,0 +1,755 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import OfficialSeal from '../../../components/ui/OfficialSeal.astro';
+import Icon from '../../../components/ui/Icon.astro';
+---
+
+<BaseLayout
+  title="VoteChain Node Monitor"
+  description="Real-time monitoring dashboard for the 3 VoteChain Workers nodes: federal, state, and oversight."
+  ogType="article"
+  article={{
+    publishedTime: '2026-02-08',
+    author: 'Absurdity Index',
+    section: 'Policy',
+    tags: ['votechain', 'ewp', 'poc', 'monitor', 'workers', 'nodes'],
+  }}
+>
+  <main class="bg-parchment min-h-screen">
+    <section class="relative bg-navy-900 py-10 sm:py-14">
+      <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
+        <div class="flex justify-center">
+          <OfficialSeal size="90" />
+        </div>
+        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-5 mb-2">EWP POC</p>
+        <h1 class="font-serif text-3xl sm:text-4xl text-gold-400 font-bold">
+          Node Monitor
+        </h1>
+        <p class="mt-3 text-gold-300/80 font-sans text-base max-w-3xl mx-auto">
+          Real-time monitoring of the 3 VoteChain distributed ledger nodes.
+          Configure node URLs below, then watch ledger events, health status,
+          and cross-node consistency in real time.
+        </p>
+      </div>
+    </section>
+
+    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-12 space-y-8">
+      <!-- Navigation -->
+      <div class="flex flex-wrap gap-2">
+        <a
+          href="/votechain/poc"
+          class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+        >
+          <Icon name="home" class="text-navy-700" size={18} />
+          POC Home
+        </a>
+        <a
+          href="/votechain/poc/vote"
+          class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+        >
+          <Icon name="vote" class="text-navy-700" size={18} />
+          Voting Client
+        </a>
+        <a
+          href="/votechain/poc/dashboard"
+          class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+        >
+          <Icon name="bar-chart" class="text-navy-700" size={18} />
+          Dashboard
+        </a>
+        <a
+          href="/votechain/poc/trust"
+          class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+        >
+          <Icon name="shield" class="text-navy-700" size={18} />
+          Trust Portal
+        </a>
+      </div>
+
+      <!-- Section 1: Node Configuration -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="settings" class="text-gold-600" />
+          Node Configuration
+        </h2>
+        <p class="text-navy-600 text-sm mt-2">
+          Enter the URLs for each VoteChain Workers node. These are saved to your browser's
+          localStorage. Write tokens are optional &mdash; only needed for event replication.
+        </p>
+
+        <div class="mt-4 space-y-4" id="node-config-form">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="node-inputs">
+            <!-- Populated by JS -->
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              id="save-config-btn"
+              class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-4 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors"
+              type="button"
+            >
+              <Icon name="save" class="text-gold-300" size={18} />
+              Save Configuration
+            </button>
+            <button
+              id="test-config-btn"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+              type="button"
+            >
+              <Icon name="wifi" class="text-navy-700" size={18} />
+              Test Connections
+            </button>
+          </div>
+          <p id="config-status" class="text-sm text-navy-500"></p>
+        </div>
+      </section>
+
+      <!-- Section 2: Node Health Dashboard -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="activity" class="text-gold-600" />
+            Node Health
+          </h2>
+          <div class="flex items-center gap-2">
+            <span id="auto-refresh-indicator" class="text-xs font-mono text-navy-400">Auto-refresh: off</span>
+            <button
+              id="toggle-refresh-btn"
+              class="inline-flex items-center gap-1.5 rounded-md border border-navy-200 bg-white px-3 py-1.5 text-navy-800 font-sans text-xs font-semibold hover:border-gold-500 transition-all"
+              type="button"
+            >
+              <Icon name="repeat" class="text-navy-700" size={14} />
+              Toggle Auto-refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4" id="health-cards">
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center animate-pulse">
+            <div class="h-6 bg-navy-100 rounded mb-2"></div>
+            <div class="h-4 bg-navy-100 rounded"></div>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center animate-pulse">
+            <div class="h-6 bg-navy-100 rounded mb-2"></div>
+            <div class="h-4 bg-navy-100 rounded"></div>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center animate-pulse">
+            <div class="h-6 bg-navy-100 rounded mb-2"></div>
+            <div class="h-4 bg-navy-100 rounded"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Cross-Node Consistency -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="git-merge" class="text-gold-600" />
+          Cross-Node Consistency
+        </h2>
+        <p class="text-navy-600 text-sm mt-2">
+          Compares ledger heights across all 3 nodes. In a healthy system, nodes should have
+          identical or near-identical heights. Significant drift may indicate replication issues.
+        </p>
+        <div class="mt-4" id="consistency-panel">
+          <p class="text-navy-500 text-sm">Waiting for node data...</p>
+        </div>
+      </section>
+
+      <!-- Section 4: Credential Issuance Monitor -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="shield" class="text-gold-600" />
+          Credential Issuance Monitor
+        </h2>
+        <p class="text-navy-600 text-sm mt-2">
+          Tracks credential issuance events from the state node against the voter roll ceiling.
+          If issuance exceeds the ceiling, an anomaly alert is raised.
+        </p>
+        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4" id="credential-stats">
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center">
+            <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-1">Issued</p>
+            <p class="font-serif text-2xl text-navy-900 font-bold" id="cred-issued">-</p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center">
+            <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-1">Ceiling</p>
+            <p class="font-serif text-2xl text-navy-900 font-bold" id="cred-ceiling">-</p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center">
+            <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-1">Utilization</p>
+            <p class="font-serif text-2xl text-navy-900 font-bold" id="cred-pct">-</p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4 text-center">
+            <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-1">Status</p>
+            <span id="cred-status" class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-navy-100 text-navy-500">
+              -
+            </span>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="w-full bg-navy-100 rounded-full h-3">
+            <div id="cred-bar" class="bg-gold-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Event Timeline -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="list" class="text-gold-600" />
+            Event Timeline
+          </h2>
+          <button
+            id="refresh-events-btn"
+            class="inline-flex items-center gap-1.5 rounded-md border border-navy-200 bg-white px-3 py-1.5 text-navy-800 font-sans text-xs font-semibold hover:border-gold-500 transition-all"
+            type="button"
+          >
+            <Icon name="repeat" class="text-navy-700" size={14} />
+            Refresh
+          </button>
+        </div>
+        <p class="text-navy-600 text-sm mt-2">
+          Combined feed from all 3 nodes, sorted by timestamp. Each entry shows
+          which node recorded the event.
+        </p>
+        <div class="mt-4 space-y-2 max-h-96 overflow-y-auto" id="event-timeline">
+          <p class="text-navy-500 text-sm">No events loaded yet.</p>
+        </div>
+      </section>
+
+      <!-- Section 6: Anomaly Alerts -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="alert-triangle" class="text-gold-600" />
+          Anomaly Alerts
+        </h2>
+        <p class="text-navy-600 text-sm mt-2">
+          Automatically detected anomalies across the node network: issuance ceiling breaches,
+          ledger drift beyond threshold, and node connectivity issues.
+        </p>
+        <div class="mt-4 space-y-2" id="anomaly-list">
+          <p class="text-navy-500 text-sm">No anomalies detected.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    import {
+      getNodeConfig,
+      setNodeConfig,
+      fetchNodeHealth,
+      fetchNodeInfo,
+      fetchLedgerStats,
+      fetchLedgerEntries,
+    } from '../../../votechain-poc';
+    import type {
+      VclNodeConfig,
+      NodeInfo,
+      LedgerStats,
+      LedgerEntry,
+    } from '../../../votechain-poc';
+
+    // ── DOM refs ───────────────────────────────────────────────────────────────
+
+    const nodeInputs = document.getElementById('node-inputs') as HTMLElement;
+    const saveConfigBtn = document.getElementById('save-config-btn') as HTMLButtonElement;
+    const testConfigBtn = document.getElementById('test-config-btn') as HTMLButtonElement;
+    const configStatus = document.getElementById('config-status') as HTMLElement;
+    const healthCards = document.getElementById('health-cards') as HTMLElement;
+    const consistencyPanel = document.getElementById('consistency-panel') as HTMLElement;
+    const credIssued = document.getElementById('cred-issued') as HTMLElement;
+    const credCeiling = document.getElementById('cred-ceiling') as HTMLElement;
+    const credPct = document.getElementById('cred-pct') as HTMLElement;
+    const credStatus = document.getElementById('cred-status') as HTMLElement;
+    const credBar = document.getElementById('cred-bar') as HTMLElement;
+    const eventTimeline = document.getElementById('event-timeline') as HTMLElement;
+    const anomalyList = document.getElementById('anomaly-list') as HTMLElement;
+    const toggleRefreshBtn = document.getElementById('toggle-refresh-btn') as HTMLButtonElement;
+    const autoRefreshIndicator = document.getElementById('auto-refresh-indicator') as HTMLElement;
+    const refreshEventsBtn = document.getElementById('refresh-events-btn') as HTMLButtonElement;
+
+    // ── State ──────────────────────────────────────────────────────────────────
+
+    let autoRefreshEnabled = false;
+    let refreshIntervalId: ReturnType<typeof setInterval> | null = null;
+    const REFRESH_INTERVAL_MS = 5_000;
+    const DRIFT_THRESHOLD = 5; // ledger height difference that triggers alert
+
+    // Per-node cached data
+    interface NodeState {
+      config: VclNodeConfig;
+      info: NodeInfo | null;
+      stats: LedgerStats | null;
+      online: boolean;
+      entries: LedgerEntry[];
+    }
+
+    let nodeStates: NodeState[] = [];
+
+    // ── Config form ────────────────────────────────────────────────────────────
+
+    function renderConfigForm() {
+      const configs = getNodeConfig();
+      nodeInputs.replaceChildren();
+
+      for (const cfg of configs) {
+        const card = document.createElement('div');
+        card.className = 'space-y-2';
+
+        const label = document.createElement('label');
+        label.className = 'block text-xs font-mono text-navy-500 uppercase tracking-widest';
+        label.textContent = `${cfg.name} (${cfg.role})`;
+
+        const urlInput = document.createElement('input');
+        urlInput.type = 'url';
+        urlInput.placeholder = `https://${cfg.role}.example.com`;
+        urlInput.value = cfg.url;
+        urlInput.className = 'w-full rounded-md border border-navy-200 bg-cream-50 px-3 py-2 text-sm font-mono text-navy-900 placeholder:text-navy-400 focus:border-gold-500 focus:outline-none';
+        urlInput.dataset.role = cfg.role;
+        urlInput.dataset.field = 'url';
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'password';
+        tokenInput.placeholder = 'Write token (optional)';
+        tokenInput.value = cfg.writeToken ?? '';
+        tokenInput.className = 'w-full rounded-md border border-navy-200 bg-cream-50 px-3 py-2 text-xs font-mono text-navy-900 placeholder:text-navy-400 focus:border-gold-500 focus:outline-none';
+        tokenInput.dataset.role = cfg.role;
+        tokenInput.dataset.field = 'writeToken';
+
+        card.appendChild(label);
+        card.appendChild(urlInput);
+        card.appendChild(tokenInput);
+        nodeInputs.appendChild(card);
+      }
+    }
+
+    function readConfigFromForm(): VclNodeConfig[] {
+      const configs = getNodeConfig();
+      const inputs = nodeInputs.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
+
+      for (const input of inputs) {
+        const role = input.dataset.role;
+        const field = input.dataset.field;
+        const cfg = configs.find((c) => c.role === role);
+        if (!cfg) continue;
+        if (field === 'url') cfg.url = input.value.trim();
+        if (field === 'writeToken') cfg.writeToken = input.value.trim() || undefined;
+      }
+
+      return configs;
+    }
+
+    saveConfigBtn.addEventListener('click', () => {
+      const configs = readConfigFromForm();
+      setNodeConfig(configs);
+      configStatus.textContent = 'Configuration saved.';
+      configStatus.className = 'text-sm text-green-700';
+    });
+
+    testConfigBtn.addEventListener('click', async () => {
+      configStatus.textContent = 'Testing connections...';
+      configStatus.className = 'text-sm text-navy-500';
+      const configs = readConfigFromForm();
+      setNodeConfig(configs);
+
+      const results: string[] = [];
+      for (const cfg of configs) {
+        if (!cfg.url.trim()) {
+          results.push(`${cfg.name}: not configured`);
+          continue;
+        }
+        const health = await fetchNodeHealth(cfg);
+        results.push(`${cfg.name}: ${health.online ? 'online' : `offline (${health.error})`}`);
+      }
+      configStatus.textContent = results.join(' | ');
+      configStatus.className = 'text-sm text-navy-700';
+    });
+
+    // ── Health cards ───────────────────────────────────────────────────────────
+
+    function renderHealthCards() {
+      healthCards.replaceChildren();
+
+      for (const ns of nodeStates) {
+        const card = document.createElement('div');
+        const borderColor = ns.online
+          ? 'border-green-300 bg-green-50'
+          : ns.config.url.trim()
+            ? 'border-red-300 bg-red-50'
+            : 'border-navy-200 bg-cream-50';
+        card.className = `rounded-lg border ${borderColor} p-4`;
+
+        const header = document.createElement('div');
+        header.className = 'flex items-center justify-between mb-2';
+
+        const name = document.createElement('p');
+        name.className = 'text-xs font-mono text-navy-500 uppercase tracking-widest';
+        name.textContent = `${ns.config.name} (${ns.config.role})`;
+
+        const statusDot = document.createElement('span');
+        statusDot.className = ns.online
+          ? 'inline-block w-3 h-3 rounded-full bg-green-500'
+          : 'inline-block w-3 h-3 rounded-full bg-red-400';
+
+        header.appendChild(name);
+        header.appendChild(statusDot);
+        card.appendChild(header);
+
+        if (ns.info) {
+          const details = [
+            `node_id: ${ns.info.node_id}`,
+            `role: ${ns.info.role}`,
+            `kid: ${ns.info.signing.kid.slice(0, 12)}...`,
+            `height: ${ns.info.ledger.height}`,
+            `updated: ${new Date(ns.info.ledger.updated_at).toLocaleTimeString()}`,
+          ];
+          for (const d of details) {
+            const p = document.createElement('p');
+            p.className = 'text-xs font-mono text-navy-600';
+            p.textContent = d;
+            card.appendChild(p);
+          }
+        } else if (!ns.config.url.trim()) {
+          const p = document.createElement('p');
+          p.className = 'text-xs text-navy-400';
+          p.textContent = 'Not configured';
+          card.appendChild(p);
+        } else {
+          const p = document.createElement('p');
+          p.className = 'text-xs text-red-600';
+          p.textContent = 'Offline';
+          card.appendChild(p);
+        }
+
+        healthCards.appendChild(card);
+      }
+    }
+
+    // ── Consistency ────────────────────────────────────────────────────────────
+
+    function renderConsistency() {
+      const onlineNodes = nodeStates.filter((ns) => ns.info);
+      if (onlineNodes.length < 2) {
+        consistencyPanel.innerHTML = '<p class="text-navy-500 text-sm">Need at least 2 online nodes to check consistency.</p>';
+        return;
+      }
+
+      const heights = onlineNodes.map((ns) => ({ name: ns.config.name, height: ns.info!.ledger.height }));
+      const maxH = Math.max(...heights.map((h) => h.height));
+      const minH = Math.min(...heights.map((h) => h.height));
+      const drift = maxH - minH;
+      const ok = drift <= DRIFT_THRESHOLD;
+
+      consistencyPanel.replaceChildren();
+
+      const banner = document.createElement('div');
+      banner.className = ok
+        ? 'rounded-lg border border-green-300 bg-green-50 p-4'
+        : 'rounded-lg border border-red-300 bg-red-50 p-4';
+
+      const title = document.createElement('p');
+      title.className = ok ? 'font-serif font-bold text-green-800' : 'font-serif font-bold text-red-800';
+      title.textContent = ok ? 'Nodes Consistent' : 'Ledger Drift Detected';
+
+      const detail = document.createElement('p');
+      detail.className = ok ? 'text-sm text-green-700 mt-1' : 'text-sm text-red-700 mt-1';
+      detail.textContent = `Height range: ${minH} \u2013 ${maxH} (drift: ${drift})`;
+
+      banner.appendChild(title);
+      banner.appendChild(detail);
+
+      const table = document.createElement('div');
+      table.className = 'mt-3 grid grid-cols-3 gap-2';
+      for (const h of heights) {
+        const cell = document.createElement('div');
+        cell.className = 'rounded border border-navy-200 bg-white p-2 text-center';
+        cell.innerHTML = `<p class="text-[10px] font-mono text-navy-400">${h.name}</p><p class="font-serif text-lg font-bold text-navy-900">${h.height}</p>`;
+        table.appendChild(cell);
+      }
+
+      consistencyPanel.appendChild(banner);
+      consistencyPanel.appendChild(table);
+    }
+
+    // ── Credential issuance ────────────────────────────────────────────────────
+
+    function renderCredentialMonitor() {
+      // Look for credential_issued events from the state node
+      const stateNode = nodeStates.find((ns) => ns.config.role === 'state');
+      const issuedCount = stateNode?.stats?.type_counts['credential_issued'] ?? 0;
+
+      // Try to get ceiling from a manifest event on the federal node
+      const federalNode = nodeStates.find((ns) => ns.config.role === 'federal');
+      let ceiling = 0;
+      if (federalNode?.entries) {
+        const manifestEntry = federalNode.entries.find(
+          (e) => e.event.type === 'election_manifest_published' && e.event.payload.voter_roll_ceiling,
+        );
+        if (manifestEntry) {
+          ceiling = Number(manifestEntry.event.payload.voter_roll_ceiling) || 0;
+        }
+      }
+
+      // Fall back to local POC state if no federal data
+      if (ceiling === 0) {
+        try {
+          const raw = localStorage.getItem('votechain_poc_state_v2');
+          if (raw) {
+            const pocState = JSON.parse(raw);
+            ceiling = pocState?.manifest?.crypto?.voter_roll_commitment?.total_eligible ?? 0;
+          }
+        } catch { /* ignore */ }
+      }
+
+      credIssued.textContent = String(issuedCount);
+      credCeiling.textContent = ceiling > 0 ? ceiling.toLocaleString() : '-';
+
+      if (ceiling > 0) {
+        const pct = Math.min((issuedCount / ceiling) * 100, 100);
+        credPct.textContent = `${pct.toFixed(2)}%`;
+        credBar.style.width = `${pct}%`;
+
+        if (issuedCount > ceiling) {
+          credBar.className = 'bg-red-500 h-3 rounded-full transition-all duration-500';
+          credStatus.className = 'inline-flex items-center rounded-full bg-red-600/15 px-2.5 py-1 text-xs font-semibold text-red-700';
+          credStatus.textContent = 'EXCEEDED';
+        } else {
+          credBar.className = 'bg-gold-500 h-3 rounded-full transition-all duration-500';
+          credStatus.className = 'inline-flex items-center rounded-full bg-green-600/15 px-2.5 py-1 text-xs font-semibold text-green-700';
+          credStatus.textContent = 'OK';
+        }
+      } else {
+        credPct.textContent = '-';
+        credStatus.textContent = 'NO DATA';
+        credStatus.className = 'inline-flex items-center rounded-full bg-navy-100 px-2.5 py-1 text-xs font-semibold text-navy-500';
+      }
+    }
+
+    // ── Event timeline ─────────────────────────────────────────────────────────
+
+    function renderEventTimeline() {
+      // Combine entries from all nodes
+      type TimelineEntry = LedgerEntry & { _node: string };
+      const allEntries: TimelineEntry[] = [];
+
+      for (const ns of nodeStates) {
+        for (const entry of ns.entries) {
+          allEntries.push({ ...entry, _node: ns.config.name });
+        }
+      }
+
+      // Sort by accepted_at descending (newest first)
+      allEntries.sort((a, b) => b.accepted_at.localeCompare(a.accepted_at));
+      const display = allEntries.slice(0, 50);
+
+      eventTimeline.replaceChildren();
+
+      if (display.length === 0) {
+        const p = document.createElement('p');
+        p.className = 'text-navy-500 text-sm';
+        p.textContent = 'No events loaded yet.';
+        eventTimeline.appendChild(p);
+        return;
+      }
+
+      for (const entry of display) {
+        const row = document.createElement('div');
+        row.className = 'flex items-start gap-3 border-b border-navy-100 pb-2 pt-2';
+
+        // Type badge
+        const badge = document.createElement('span');
+        const badgeColors: Record<string, string> = {
+          election_manifest_published: 'bg-blue-100 text-blue-700',
+          credential_issued: 'bg-purple-100 text-purple-700',
+          ewp_ballot_cast: 'bg-green-100 text-green-700',
+          bb_sth_published: 'bg-amber-100 text-amber-700',
+          tally_published: 'bg-gold-100 text-gold-700',
+          fraud_flag: 'bg-red-100 text-red-700',
+          fraud_flag_action: 'bg-red-100 text-red-700',
+        };
+        badge.className = `inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeColors[entry.event.type] ?? 'bg-navy-100 text-navy-600'}`;
+        badge.textContent = entry.event.type.replace(/_/g, ' ');
+
+        // Details
+        const details = document.createElement('div');
+        details.className = 'flex-1 min-w-0';
+
+        const topLine = document.createElement('div');
+        topLine.className = 'flex items-center gap-2 flex-wrap';
+
+        const nodeName = document.createElement('span');
+        nodeName.className = 'text-[10px] font-mono text-navy-400';
+        nodeName.textContent = entry._node;
+
+        const ts = document.createElement('span');
+        ts.className = 'text-[10px] font-mono text-navy-400';
+        ts.textContent = new Date(entry.accepted_at).toLocaleString();
+
+        const idx = document.createElement('span');
+        idx.className = 'text-[10px] font-mono text-navy-400';
+        idx.textContent = `#${entry.index}`;
+
+        topLine.appendChild(badge);
+        topLine.appendChild(nodeName);
+        topLine.appendChild(idx);
+        topLine.appendChild(ts);
+        details.appendChild(topLine);
+
+        // Expandable payload
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'text-[10px] font-mono text-gold-600 hover:text-gold-800 mt-1';
+        toggle.textContent = 'show payload';
+        const payloadPre = document.createElement('pre');
+        payloadPre.className = 'hidden mt-1 rounded bg-navy-800 text-cream-100 p-2 text-[10px] font-mono overflow-x-auto max-h-32';
+        payloadPre.textContent = JSON.stringify(entry.event.payload, null, 2);
+        toggle.addEventListener('click', () => {
+          const hidden = payloadPre.classList.toggle('hidden');
+          toggle.textContent = hidden ? 'show payload' : 'hide payload';
+        });
+        details.appendChild(toggle);
+        details.appendChild(payloadPre);
+
+        row.appendChild(details);
+        eventTimeline.appendChild(row);
+      }
+    }
+
+    // ── Anomaly detection ──────────────────────────────────────────────────────
+
+    function renderAnomalies() {
+      const alerts: Array<{ severity: 'error' | 'warning'; message: string }> = [];
+
+      // Check node connectivity
+      for (const ns of nodeStates) {
+        if (ns.config.url.trim() && !ns.online) {
+          alerts.push({ severity: 'error', message: `${ns.config.name} node is offline` });
+        }
+      }
+
+      // Check ledger drift
+      const onlineNodes = nodeStates.filter((ns) => ns.info);
+      if (onlineNodes.length >= 2) {
+        const heights = onlineNodes.map((ns) => ns.info!.ledger.height);
+        const drift = Math.max(...heights) - Math.min(...heights);
+        if (drift > DRIFT_THRESHOLD) {
+          alerts.push({ severity: 'warning', message: `Ledger drift of ${drift} entries detected between nodes` });
+        }
+      }
+
+      // Check credential issuance ceiling
+      const stateNode = nodeStates.find((ns) => ns.config.role === 'state');
+      const issuedCount = stateNode?.stats?.type_counts['credential_issued'] ?? 0;
+      let ceiling = 0;
+      try {
+        const raw = localStorage.getItem('votechain_poc_state_v2');
+        if (raw) ceiling = JSON.parse(raw)?.manifest?.crypto?.voter_roll_commitment?.total_eligible ?? 0;
+      } catch { /* ignore */ }
+      if (ceiling > 0 && issuedCount > ceiling) {
+        alerts.push({ severity: 'error', message: `Credential issuance (${issuedCount}) exceeds voter roll ceiling (${ceiling})` });
+      }
+
+      anomalyList.replaceChildren();
+
+      if (alerts.length === 0) {
+        const p = document.createElement('p');
+        p.className = 'text-navy-500 text-sm';
+        p.textContent = 'No anomalies detected.';
+        anomalyList.appendChild(p);
+        return;
+      }
+
+      for (const alert of alerts) {
+        const row = document.createElement('div');
+        row.className = alert.severity === 'error'
+          ? 'flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 p-3'
+          : 'flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3';
+
+        const icon = document.createElement('span');
+        icon.className = alert.severity === 'error' ? 'text-red-600 text-sm' : 'text-amber-600 text-sm';
+        icon.textContent = alert.severity === 'error' ? '\u26A0' : '\u26A0';
+
+        const msg = document.createElement('p');
+        msg.className = alert.severity === 'error' ? 'text-sm text-red-800' : 'text-sm text-amber-800';
+        msg.textContent = alert.message;
+
+        row.appendChild(icon);
+        row.appendChild(msg);
+        anomalyList.appendChild(row);
+      }
+    }
+
+    // ── Polling loop ───────────────────────────────────────────────────────────
+
+    async function refreshAll() {
+      const configs = getNodeConfig();
+
+      // Fetch all node data in parallel
+      nodeStates = await Promise.all(
+        configs.map(async (cfg): Promise<NodeState> => {
+          if (!cfg.url.trim()) {
+            return { config: cfg, info: null, stats: null, online: false, entries: [] };
+          }
+          const [health, info, stats, entriesPage] = await Promise.all([
+            fetchNodeHealth(cfg),
+            fetchNodeInfo(cfg),
+            fetchLedgerStats(cfg),
+            fetchLedgerEntries(cfg, { from: 1, limit: 50 }),
+          ]);
+          return {
+            config: cfg,
+            info: info ?? null,
+            stats: stats ?? null,
+            online: health.online,
+            entries: entriesPage?.entries ?? [],
+          };
+        }),
+      );
+
+      renderHealthCards();
+      renderConsistency();
+      renderCredentialMonitor();
+      renderEventTimeline();
+      renderAnomalies();
+    }
+
+    function startAutoRefresh() {
+      if (refreshIntervalId) return;
+      autoRefreshEnabled = true;
+      autoRefreshIndicator.textContent = 'Auto-refresh: 5s';
+      autoRefreshIndicator.className = 'text-xs font-mono text-green-600';
+
+      refreshIntervalId = setInterval(() => {
+        if (!document.hidden) {
+          refreshAll();
+        }
+      }, REFRESH_INTERVAL_MS);
+    }
+
+    function stopAutoRefresh() {
+      autoRefreshEnabled = false;
+      autoRefreshIndicator.textContent = 'Auto-refresh: off';
+      autoRefreshIndicator.className = 'text-xs font-mono text-navy-400';
+      if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+      }
+    }
+
+    toggleRefreshBtn.addEventListener('click', () => {
+      if (autoRefreshEnabled) {
+        stopAutoRefresh();
+      } else {
+        startAutoRefresh();
+        refreshAll(); // Immediate refresh
+      }
+    });
+
+    refreshEventsBtn.addEventListener('click', () => refreshAll());
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+
+    renderConfigForm();
+    refreshAll();
+  </script>
+</BaseLayout>

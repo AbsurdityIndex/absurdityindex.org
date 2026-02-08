@@ -978,10 +978,11 @@ import Icon from '../../../components/ui/Icon.astro';
       const nullifier = await computeNullifier(cred.pk, state.election.election_id);
       credNullifierEl.textContent = nullifier;
 
-      if (cred.blind_sig?.R && cred.blind_sig?.s) {
-        const rTrunc = cred.blind_sig.R.slice(0, 12) + '...';
-        const sTrunc = cred.blind_sig.s.slice(0, 12) + '...';
-        credBlindSigEl.textContent = `R: ${rTrunc}  s: ${sTrunc}`;
+      if (cred.blind_sigs?.length > 0) {
+        const parts = cred.blind_sigs.map((sig) =>
+          `#${sig.issuer_index + 1}: R:${sig.R.slice(0, 8)}.. s:${sig.s.slice(0, 8)}..`
+        );
+        credBlindSigEl.textContent = parts.join(' | ');
       } else {
         credBlindSigEl.textContent = 'Not generated';
       }

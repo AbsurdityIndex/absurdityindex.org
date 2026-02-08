@@ -86,4 +86,34 @@ export {
   verifyBulletinBoardIntegrity,
   getPublicKeys,
   verifyTally,
+  verifyCredentialIssuanceIntegrity,
 } from './trust-portal.js';
+
+// ── VCL Client (Workers interaction) ────────────────────────────────────────
+export type {
+  VclNodeConfig,
+  NodeHealthResult,
+  NodeInfo,
+  LedgerHead,
+  LedgerStats,
+  LedgerEntry,
+  EntriesPage,
+  LedgerAppendResponse,
+  ReplicationResult,
+  AllNodesHealth,
+  NodeRole,
+} from './vcl-client.js';
+export {
+  getNodeConfig,
+  setNodeConfig,
+  isConfigured as isVclConfigured,
+  fetchNodeHealth,
+  fetchNodeInfo,
+  fetchLedgerHead,
+  fetchLedgerStats,
+  fetchLedgerEntries,
+  appendEvent,
+  replicateVclEvent,
+  replicateIfConfigured,
+  fetchAllNodesHealth,
+} from './vcl-client.js';

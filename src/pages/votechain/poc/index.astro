@@ -94,20 +94,21 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
         <p class="font-bold text-lg text-navy-900 mb-3">Technical summary of the POC:</p>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">Runtime:</p>
-        <p class="mb-3">Pure client-side TypeScript compiled by Astro. All state in <code>localStorage</code> under <code>votechain_poc_state_v2</code>. No network requests. Crypto operations use <code>@noble/curves</code> (secp256k1, ed25519) and <code>@noble/hashes</code> (SHA-256). Suite identifier: <code>ewp_suite_poc_blind_schnorr_ecies_aesgcm_threshold_v1</code>.</p>
+        <p class="mb-3">Pure client-side TypeScript compiled by Astro. All state in <code>localStorage</code> under <code>votechain_poc_state_v2</code>. No network requests. Crypto operations use <code>@noble/curves</code> (secp256k1, ed25519) and <code>@noble/hashes</code> (SHA-256). Suite identifier: <code>ewp_suite_poc_threshold_blind_schnorr_ecies_aesgcm_v2</code>.</p>
 
-        <p class="font-bold text-navy-900 mt-4 mb-2">Credential issuance (blind Schnorr):</p>
+        <p class="font-bold text-navy-900 mt-4 mb-2">Credential issuance (threshold blind Schnorr):</p>
         <ul class="list-disc pl-6 space-y-2.5 mb-4">
-          <li>Issuer keypair: secp256k1, generated at state initialization. Public key published in election manifest (<code>crypto.pk_issuer</code>).</li>
-          <li>Protocol: 4-step blind Schnorr (s = k &minus; c&middot;sk convention). Voter generates blinding factors (&alpha;, &beta;), computes blinded nonce R' = R + &alpha;&middot;G + &beta;&middot;PK_I, sends blinded challenge c = c' &minus; &beta; mod q. Issuer returns s = k &minus; c&middot;sk_I. Voter unblinds: s' = s + &alpha; mod q. Signature: (R', s').</li>
+          <li>Threshold issuance: 3 independent issuer keypairs (secp256k1), 2-of-3 required for valid credential. Public keys published in election manifest (<code>crypto.pk_issuers[]</code>). Prevents any single rogue authority from minting credentials.</li>
+          <li>Protocol: 4-step blind Schnorr (s = k &minus; c&middot;sk convention) run independently with each issuer. Voter generates blinding factors (&alpha;, &beta;), computes blinded nonce R' = R + &alpha;&middot;G + &beta;&middot;PK_I, sends blinded challenge c = c' &minus; &beta; mod q. Issuer returns s = k &minus; c&middot;sk_I. Voter unblinds: s' = s + &alpha; mod q. Signature: (R', s').</li>
           <li>Message: voter's x-only public key (32 bytes). Verification: <code>s'&middot;G + c'&middot;PK_I == R'</code> where <code>c' = H("votechain:blind_schnorr:v1:" || R' || PK_I || m)</code>.</li>
-          <li>Privacy property: issuer certifies credential without learning which key it certified (registration-to-vote unlinkability).</li>
+          <li>Privacy property: each issuer certifies credential without learning which key it certified (registration-to-vote unlinkability).</li>
+          <li>Voter roll commitment: Merkle root + total eligible count published in manifest. Each credential issuance logged as VCL event. Monitors verify issuance count &le; ceiling.</li>
         </ul>
 
         <p class="font-bold text-navy-900 mt-4 mb-2">Eligibility proof &amp; verification:</p>
         <ul class="list-disc pl-6 space-y-2.5 mb-4">
           <li>Prover: builds BIP340-style Schnorr proof-of-knowledge of <code>sk</code> behind <code>credential_pub</code>, bound to election-specific challenge nonce.</li>
-          <li>Verifier: (1) verifies blind Schnorr signature against <code>manifest.crypto.pk_issuer</code> (NOT direct pk comparison), (2) verifies Schnorr proof-of-knowledge, (3) checks nullifier derivation <code>H(pk, election_id)</code>.</li>
+          <li>Verifier: (1) verifies &ge;t blind Schnorr signatures against <code>manifest.crypto.pk_issuers[]</code>, (2) verifies Schnorr proof-of-knowledge, (3) checks nullifier derivation <code>H(pk, election_id)</code>.</li>
           <li>Nullifier: SHA-256 of <code>credential_pub || election_id</code>. Collision on VCL &rarr; <code>EWP_NULLIFIER_USED</code> rejection.</li>
         </ul>
 
@@ -128,7 +129,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
         <p class="font-bold text-navy-900 mt-4 mb-2">State schema (<code>PocStateV2</code>):</p>
         <p class="mb-3"><code>election</code> (manifest, keys, trustees), <code>issuer</code> (sk/pk), <code>credential</code> (DID, pk, nullifier, blind_sig), <code>vcl</code> (ledger events array), <code>bb</code> (Merkle tree leaves + roots), <code>fraud_flags</code>, <code>tally</code>. Suite version check on load; stale state auto-cleared.</p>
 
-        <p class="text-navy-500 text-sm italic mt-4">The core implementation is in <code>src/votechain-poc/poc.ts</code> (~2,500 lines). Each module page imports and calls the relevant POC functions.</p>
+        <p class="text-navy-500 text-sm italic mt-4">The core implementation is in <code>src/votechain-poc/</code> (modular architecture). Each module page imports and calls the relevant POC functions.</p>
       </Fragment>
     </AISummarizer>
 
@@ -148,9 +149,28 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
       </div>
     </div>
 
+    <div id="poc-gate" class="hidden rounded-lg border border-gold-300 bg-cream-50 p-5 mb-8">
+      <div class="flex items-start gap-3">
+        <Icon name="shield" class="text-gold-700 mt-0.5" />
+        <div class="min-w-0">
+          <p class="text-navy-800 font-sans text-sm">
+            Abuse prevention: complete the Cloudflare verification check to unlock the
+            interactive POC modules.
+          </p>
+          <div class="mt-3">
+            <div id="poc-turnstile"></div>
+            <p id="poc-turnstile-status" class="text-navy-700 font-sans text-sm mt-2">
+              Locked.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
       <a
         href="/votechain/poc/vote"
+        data-poc-module
         class="block rounded-xl border border-navy-200 bg-white p-5 hover:border-gold-500 hover:shadow-md transition-all"
       >
         <div class="flex items-center gap-3 mb-2">
@@ -164,6 +184,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
       </a>
       <a
         href="/votechain/poc/verify"
+        data-poc-module
         class="block rounded-xl border border-navy-200 bg-white p-5 hover:border-gold-500 hover:shadow-md transition-all"
       >
         <div class="flex items-center gap-3 mb-2">
@@ -177,6 +198,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
       </a>
       <a
         href="/votechain/poc/dashboard"
+        data-poc-module
         class="block rounded-xl border border-navy-200 bg-white p-5 hover:border-gold-500 hover:shadow-md transition-all"
       >
         <div class="flex items-center gap-3 mb-2">
@@ -190,6 +212,7 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
       </a>
       <a
         href="/votechain/poc/trust"
+        data-poc-module
         class="block rounded-xl border border-navy-200 bg-white p-5 hover:border-gold-500 hover:shadow-md transition-all"
       >
         <div class="flex items-center gap-3 mb-2">
@@ -199,6 +222,20 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
         <p class="text-navy-600 text-sm">
           Independently verify every cryptographic signature, Merkle root, and ledger event
           in the election.
+        </p>
+      </a>
+      <a
+        href="/votechain/poc/monitor"
+        data-poc-module
+        class="block rounded-xl border border-navy-200 bg-white p-5 hover:border-gold-500 hover:shadow-md transition-all"
+      >
+        <div class="flex items-center gap-3 mb-2">
+          <Icon name="activity" class="text-gold-600" />
+          <h3 class="font-serif text-lg font-bold text-navy-900">Node Monitor</h3>
+        </div>
+        <p class="text-navy-600 text-sm">
+          Real-time monitoring of the 3 VoteChain distributed ledger nodes. View health,
+          ledger events, and cross-node consistency.
         </p>
       </a>
     </div>
@@ -223,5 +260,127 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
       resetPocState();
       window.location.reload();
     });
+
+    const gate = document.getElementById('poc-gate');
+    const status = document.getElementById('poc-turnstile-status');
+    const turnstileMount = document.getElementById('poc-turnstile');
+    const moduleLinks = Array.from(document.querySelectorAll('[data-poc-module]'));
+    let turnstileEnabled = false;
+    let turnstileWidgetId = null;
+
+    function isSafeNextPath(next) {
+      if (typeof next !== 'string') return false;
+      if (!next.startsWith('/votechain/poc/')) return false;
+      if (next.startsWith('//')) return false;
+      return true;
+    }
+
+    function setGateVisible(visible) {
+      if (!gate) return;
+      if (visible) gate.classList.remove('hidden');
+      else gate.classList.add('hidden');
+    }
+
+    function setLocked(locked, message) {
+      if (status && typeof message === 'string') status.textContent = message;
+      if (!turnstileEnabled) return;
+
+      for (const link of moduleLinks) {
+        if (!(link instanceof HTMLElement)) continue;
+        if (locked) link.classList.add('pointer-events-none', 'opacity-60');
+        else link.classList.remove('pointer-events-none', 'opacity-60');
+      }
+
+      if (!gate) return;
+      gate.setAttribute('data-locked', locked ? 'true' : 'false');
+    }
+
+    async function refreshSession() {
+      if (!turnstileEnabled) return;
+      try {
+        const r = await fetch('/api/votechain/poc/session', { cache: 'no-store' });
+        if (!r.ok) return;
+        const data = await r.json();
+        if (data?.enabled && data?.unlocked) {
+          setLocked(false, `Unlocked until ${data.expires_at}.`);
+          turnstileMount?.classList.add('hidden');
+        } else {
+          setLocked(true, 'Locked.');
+        }
+      } catch {}
+    }
+
+    function loadTurnstileScript() {
+      if (window.turnstile) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('turnstile_load_failed'));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function initPocGate() {
+      try {
+        const r = await fetch('/api/votechain/poc/config', { cache: 'no-store' });
+        if (!r.ok) return;
+        const cfg = await r.json();
+        if (!cfg?.enabled || typeof cfg.site_key !== 'string') return;
+
+        turnstileEnabled = true;
+        setGateVisible(true);
+        setLocked(true, 'Locked.');
+        await refreshSession();
+
+        // Session endpoint may already have unlocked us.
+        if (gate?.getAttribute('data-locked') === 'false') return;
+
+        await loadTurnstileScript();
+        if (!window.turnstile || typeof window.turnstile.render !== 'function') {
+          setLocked(true, 'Turnstile failed to load.');
+          return;
+        }
+        if (!turnstileMount) return;
+
+        turnstileWidgetId = window.turnstile.render(turnstileMount, {
+          sitekey: cfg.site_key,
+          callback: (token) => window.votechainPocTurnstileCallback(token),
+        });
+      } catch {}
+    }
+
+    window.votechainPocTurnstileCallback = async function(token) {
+      if (!turnstileEnabled) return;
+      setLocked(true, 'Verifying...');
+
+      try {
+        const r = await fetch('/api/votechain/poc/unlock', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+
+        if (!r.ok) {
+          setLocked(true, 'Verification failed.');
+          if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+          return;
+        }
+
+        const data = await r.json();
+        setLocked(false, `Unlocked until ${data.expires_at}.`);
+        turnstileMount?.classList.add('hidden');
+
+        const next = new URL(window.location.href).searchParams.get('next');
+        if (isSafeNextPath(next)) window.location.assign(next);
+      } catch {
+        setLocked(true, 'Verification failed.');
+        if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+      }
+    };
+
+    initPocGate();
   </script>
 </BaseLayout>

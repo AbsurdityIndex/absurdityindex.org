@@ -93,7 +93,16 @@ export interface PocElectionManifest {
   crypto: {
     suite: string;
     pk_election: string;
-    pk_issuer: string; // Registration authority's compressed secp256k1 public key (33 bytes)
+    // Threshold credential issuance: t-of-n independent registration authorities must sign.
+    // Each issuer runs an independent blind Schnorr ceremony — no single issuer can forge credentials.
+    pk_issuers: string[]; // Array of secp256k1 compressed public keys (33 bytes each)
+    issuer_threshold: { t: number; n: number }; // t-of-n required for valid credential
+    // Voter roll commitment: published before credential issuance begins.
+    // Monitors compare issuance count against this ceiling.
+    voter_roll_commitment: {
+      merkle_root: string; // SHA-256 Merkle root of eligible voter entries
+      total_eligible: number; // Maximum credentials that may be issued
+    };
     trustees: Array<{ id: string; pubkey: string }>;
     threshold: { t: number; n: number };
   };
@@ -118,13 +127,16 @@ export interface PocCredential {
   pk: string;
   // Private key (32 bytes, base64url). POC only: stored in localStorage.
   sk: string;
-  // Blind Schnorr signature from the registration authority (issuer).
-  // The issuer certified this credential without learning which public key it certified,
-  // breaking the link between registration and voting.
-  blind_sig: {
+  // Threshold blind Schnorr signatures from independent registration authorities.
+  // Each issuer independently certified this credential without learning which public key
+  // it certified. Requiring t-of-n issuers prevents any single rogue authority from
+  // forging credentials en masse. A credential is valid only when ≥ threshold signatures
+  // verify against the manifest's pk_issuers list.
+  blind_sigs: Array<{
+    issuer_index: number; // Index into manifest.crypto.pk_issuers
     R: string; // Unblinded nonce point R' (33 bytes compressed)
     s: string; // Unblinded scalar s' (32 bytes)
-  };
+  }>;
   created_at: string;
 }
 
@@ -153,12 +165,15 @@ export interface PocEligibilityProof {
   // derivation and BIP340 proof-of-knowledge verification), but blind Schnorr issuance makes
   // it **unlinkable to registration** — the issuer cannot tell which credential it certified.
   credential_pub: string;
-  // Blind Schnorr signature from the registration authority, proving this credential was
-  // authorized without revealing which signing session produced it.
-  issuer_blind_sig: {
+  // Threshold blind Schnorr signatures from independent registration authorities.
+  // Each entry corresponds to one issuer's blind Schnorr certification. The verifier
+  // checks that at least issuer_threshold.t signatures verify against the manifest's
+  // pk_issuers, preventing any single rogue authority from minting valid credentials.
+  issuer_blind_sigs: Array<{
+    issuer_index: number;
     R: string;
     s: string;
-  };
+  }>;
 }
 
 // ── Encrypted Ballot & Cast Request ─────────────────────────────────────────
@@ -256,6 +271,7 @@ export interface PocVclEvent {
   tx_id: Hex0x;
   type:
     | 'election_manifest_published'
+    | 'credential_issued' // Logged each time a credential is issued (privacy-preserving: contains only sequence number)
     | 'ewp_ballot_cast'
     | 'bb_sth_published'
     | 'tally_published'
@@ -385,11 +401,15 @@ export interface PocStateV2 {
     // POC-only: private shares used to reconstruct the election secret at tally time.
     shares: PocTrusteeShareRecord[];
   };
-  // Registration authority (issuer) keypair for blind Schnorr credential issuance.
-  issuer: {
+  // Threshold registration authorities for blind Schnorr credential issuance.
+  // Each issuer independently certifies credentials — t-of-n must sign for validity.
+  issuers: Array<{
     sk: string; // secp256k1 scalar (32 bytes)
     pk: string; // secp256k1 compressed point (33 bytes)
-  };
+  }>;
+  issuer_threshold: { t: number; n: number };
+  // Voter roll commitment tracking: how many credentials have been issued vs. the ceiling.
+  credential_issuance_count: number;
   credential?: PocCredential;
   challenges: Record<string, PocChallengeRecord>;
   idempotency: Record<string, PocIdempotencyRecord>;
