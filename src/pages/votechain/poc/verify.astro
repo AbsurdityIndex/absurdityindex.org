@@ -27,8 +27,9 @@ import Icon from '../../../components/ui/Icon.astro';
           Receipt Verification
         </h1>
         <p class="mt-3 text-gold-300/80 font-sans text-base max-w-3xl mx-auto">
-          Paste a cast receipt and verify: receipt signature, BB STH signature, Merkle inclusion,
-          and VoteChain anchoring.
+          After casting your ballot, you receive a signed receipt. This page lets you
+          independently verify that your vote was actually recorded &mdash; that it wasn't
+          silently dropped, altered, or excluded from the count.
         </p>
       </div>
     </section>
@@ -59,7 +60,28 @@ import Icon from '../../../components/ui/Icon.astro';
         </div>
 
         <p class="text-navy-600 text-sm mt-2">
-          If you just cast a ballot, use <span class="font-mono">Load last receipt</span>.
+          <strong>What to do:</strong> Your most recent receipt has been auto-loaded from your
+          browser's <span class="font-mono">localStorage</span> below. Click <em>Verify</em>
+          to run the checks. Each check independently confirms a different layer of the system
+          recorded your ballot correctly.
+        </p>
+        <p class="text-navy-600 text-sm mt-1.5">
+          <strong>What the checks mean:</strong> The verifier confirms that (1) the receipt's
+          signature is authentic, (2) the bulletin board's tree head was properly signed,
+          (3) your ballot is provably included in the Merkle tree, and (4) a matching anchor
+          event exists on the VoteChain ledger. All checks must pass for full confidence.
+        </p>
+        <p class="text-navy-500 text-xs mt-1.5 italic">
+          All verification runs locally in your browser against the state in
+          <span class="font-mono">localStorage</span>. Nothing is sent to any server.
+        </p>
+        <p class="text-navy-600 text-sm mt-2">
+          <strong>In a real election:</strong> Verification would check your receipt against
+          independently operated services &mdash; the bulletin board (run by the election
+          authority), the VoteChain ledger (a distributed, append-only record), and the
+          signed tree heads (published publicly for anyone to audit). Because these services
+          are separate and monitored by multiple parties, a single compromised server could
+          not forge a valid receipt or hide a missing ballot.
         </p>
 
         <div class="mt-4 flex flex-wrap gap-2">
@@ -114,13 +136,18 @@ import Icon from '../../../components/ui/Icon.astro';
         </h2>
         <div class="mt-3 text-navy-700 text-sm space-y-2">
           <p>
-            This POC verifies “recorded-as-cast” style properties inside a single browser instance.
-            In production, the bulletin board and ledger are network services with independent
-            monitors.
+            <strong>Why this matters:</strong> In traditional elections, you trust officials to
+            count your ballot correctly. With VoteChain, every voter gets a cryptographic receipt
+            that lets them independently prove their vote was included &mdash; without revealing
+            how they voted. This is called "recorded-as-cast" verification.
           </p>
           <p>
-            This demo uses signatures where the PRDs call for zero-knowledge proofs and threshold
-            cryptography.
+            <strong>POC limitation:</strong> This demo runs entirely in your browser, so the
+            bulletin board and ledger are local &mdash; stored in
+            <span class="font-mono">localStorage</span>. In a production system, these would
+            be independent network services hosted and monitored by multiple parties, making
+            tampering far more difficult to conceal. Anyone could run the same verification
+            tool against the live services and get the same result.
           </p>
         </div>
       </section>
@@ -154,10 +181,26 @@ import Icon from '../../../components/ui/Icon.astro';
       );
     }
 
+    // Auto-load last receipt on page load
+    (function autoLoadReceipt() {
+      const raw = localStorage.getItem('votechain_poc_last_receipt');
+      if (raw) {
+        receiptInput.value = raw;
+        const notice = el('p', 'text-sm text-gold-700 font-sans mt-2', 'Loaded your last cast receipt automatically.');
+        notice.id = 'auto-load-notice';
+        receiptInput.parentElement?.insertBefore(notice, receiptInput.nextSibling);
+      }
+    })();
+
     loadLastBtn?.addEventListener('click', () => {
       const raw = localStorage.getItem('votechain_poc_last_receipt');
       if (!raw) return;
       receiptInput.value = raw;
+      if (!document.getElementById('auto-load-notice')) {
+        const notice = el('p', 'text-sm text-gold-700 font-sans mt-2', 'Receipt loaded.');
+        notice.id = 'auto-load-notice';
+        receiptInput.parentElement?.insertBefore(notice, receiptInput.nextSibling);
+      }
     });
 
     verifyBtn?.addEventListener('click', async () => {

@@ -48,7 +48,7 @@ export interface PocCastReceipt {
   bb_sth: PocSignedTreeHead;
   votechain_anchor: {
     tx_id: Hex0x;
-    event_type: 'remote_ballot_cast';
+    event_type: 'ewp_ballot_cast';
     sth_root_hash: B64u;
   };
   kid: string;
@@ -160,6 +160,49 @@ export interface PocBallotPlaintext {
   cast_at: string; // ISO
 }
 
+export interface PocContest {
+  contest_id: string;
+  title: string;
+  type: 'candidate' | 'referendum';
+  options: Array<{ id: string; label: string }>;
+}
+
+export interface PocSpoilReceipt {
+  receipt_id: B64u;
+  election_id: string;
+  ballot_hash: B64u;
+  spoiled_at: string;
+  kid: string;
+  sig: B64u;
+}
+
+export interface PocBallotRandomnessReveal {
+  ballot_id: B64u;
+  iv: B64u;
+  aes_key: B64u;
+  plaintext: PocBallotPlaintext;
+}
+
+export interface PocSpoilResponse {
+  status: 'ballot_spoiled';
+  spoil_receipt: PocSpoilReceipt;
+  randomness_reveal: PocBallotRandomnessReveal;
+}
+
+export interface PocSpoiledBallotRecord {
+  ballot_hash: B64u;
+  encrypted_ballot: PocEncryptedBallot;
+  randomness_reveal: PocBallotRandomnessReveal;
+  spoil_receipt: PocSpoilReceipt;
+  spoiled_at: string;
+}
+
+interface EncryptionResult {
+  encrypted_ballot: PocEncryptedBallot;
+  iv: Uint8Array;
+  plaintext: PocBallotPlaintext;
+}
+
 interface StoredKeyPair {
   kid: string;
   alg: string;
@@ -171,7 +214,7 @@ interface PocVclEvent {
   tx_id: Hex0x;
   type:
     | 'election_manifest_published'
-    | 'remote_ballot_cast'
+    | 'ewp_ballot_cast'
     | 'bb_sth_published'
     | 'tally_published'
     | 'fraud_flag';
@@ -217,8 +260,7 @@ interface PocStateV1 {
   election: {
     election_id: string;
     jurisdiction_id: string;
-    contest_id: string;
-    options: string[];
+    contests: PocContest[];
   };
   keys: {
     manifest: StoredKeyPair;
@@ -241,6 +283,7 @@ interface PocStateV1 {
   vcl: {
     events: PocVclEvent[];
   };
+  spoiled_ballots: PocSpoiledBallotRecord[];
   tally?: PocTally;
 }
 
@@ -409,6 +452,7 @@ function saveState(state: PocStateV1) {
 
 export function resetPocState() {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('votechain_poc_last_receipt');
 }
 
 async function computeManifestId(
@@ -583,7 +627,12 @@ function buildEwpError(
 
 async function ensureInitialized(): Promise<PocStateV1> {
   const existing = loadState();
-  if (existing?.version === 1) return existing;
+  // Detect old single-contest schema and force re-init
+  if (existing?.version === 1 && Array.isArray((existing.election as any).contests) && Array.isArray(existing.spoiled_ballots)) return existing;
+  if (existing) {
+    // Old schema detected — reset and re-initialize
+    localStorage.removeItem(STORAGE_KEY);
+  }
 
   const [manifestKeyPair, ewgKeyPair, bbKeyPair, vclKeyPair] = await Promise.all([
     generateEcdsaKeyPair(),
@@ -601,8 +650,27 @@ async function ensureInitialized(): Promise<PocStateV1> {
 
   const election_id = 'poc-2026-demo';
   const jurisdiction_id = 'poc_jurisdiction_hash_0x9c1d';
-  const contest_id = 'contest-1';
-  const options = ['option-a', 'option-b', 'option-c'];
+  const contests: PocContest[] = [
+    {
+      contest_id: 'us-senate-ny-2026',
+      title: 'U.S. Senate \u2014 New York',
+      type: 'candidate',
+      options: [
+        { id: 'gutierrez-d', label: 'Maria Gutierrez (D)' },
+        { id: 'chen-r', label: 'James Chen (R)' },
+        { id: 'okafor-i', label: 'Adaeze Okafor (I)' },
+      ],
+    },
+    {
+      contest_id: 'prop-12-infrastructure',
+      title: 'Proposition 12 \u2014 Infrastructure Bond',
+      type: 'referendum',
+      options: [
+        { id: 'yes', label: 'Yes' },
+        { id: 'no', label: 'No' },
+      ],
+    },
+  ];
 
   const aesKey = randomBytes(32);
   const pkElection = await sha256B64u(concatBytes(utf8('votechain:poc:pk_election:'), aesKey));
@@ -638,7 +706,7 @@ async function ensureInitialized(): Promise<PocStateV1> {
 
   const initialState: PocStateV1 = {
     version: 1,
-    election: { election_id, jurisdiction_id, contest_id, options },
+    election: { election_id, jurisdiction_id, contests },
     keys,
     manifest,
     election_secret: { aes_key: bytesToB64u(aesKey) },
@@ -646,6 +714,7 @@ async function ensureInitialized(): Promise<PocStateV1> {
     idempotency: {},
     bb: { leaves: [], sth_history: [] },
     vcl: { events: [] },
+    spoiled_ballots: [],
   };
 
   // Anchor the manifest on the simulated VoteChain ledger.
@@ -715,7 +784,7 @@ export async function issueChallenge(client_session: B64u): Promise<PocChallenge
 
   const challenge_id = bytesToB64u(randomBytes(16));
   const challenge = bytesToB64u(randomBytes(32));
-  const expires_at = new Date(Date.now() + 3 * 60 * 1000).toISOString();
+  const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
   const unsigned = {
     challenge_id,
@@ -751,7 +820,7 @@ export async function issueChallenge(client_session: B64u): Promise<PocChallenge
 async function encryptBallot(
   plaintext: PocBallotPlaintext,
   aesKeyB64u: B64u,
-): Promise<PocEncryptedBallot> {
+): Promise<EncryptionResult> {
   const ballot_id = bytesToB64u(randomBytes(16));
   const iv = randomBytes(12);
   const key = await crypto.subtle.importKey(
@@ -762,16 +831,21 @@ async function encryptBallot(
     ['encrypt'],
   );
 
-  const body = utf8(canonicalJson({ ...plaintext, ballot_id }));
+  const fullPlaintext: PocBallotPlaintext = { ...plaintext, ballot_id };
+  const body = utf8(canonicalJson(fullPlaintext));
   const cipherBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, body);
   const cipherBytes = new Uint8Array(cipherBuf);
   const packed = concatBytes(iv, cipherBytes);
 
   return {
-    ballot_id,
-    ciphertext: bytesToB64u(packed),
-    ballot_validity_proof: bytesToB64u(utf8('poc_validity_v1')),
-    ballot_hash: await sha256B64u(packed),
+    encrypted_ballot: {
+      ballot_id,
+      ciphertext: bytesToB64u(packed),
+      ballot_validity_proof: bytesToB64u(utf8('poc_validity_v1')),
+      ballot_hash: await sha256B64u(packed),
+    },
+    iv,
+    plaintext: fullPlaintext,
   };
 }
 
@@ -802,9 +876,12 @@ function validateBallotPlaintext(state: PocStateV1, plaintext: PocBallotPlaintex
   if (plaintext.election_id !== state.election.election_id) return false;
   if (plaintext.manifest_id !== state.manifest.manifest_id) return false;
   if (!Array.isArray(plaintext.contests)) return false;
-  const contest = plaintext.contests.find((c) => c.contest_id === state.election.contest_id);
-  if (!contest) return false;
-  return state.election.options.includes(contest.selection);
+  for (const entry of plaintext.contests) {
+    const config = state.election.contests.find((c) => c.contest_id === entry.contest_id);
+    if (!config) return false;
+    if (!config.options.some((o) => o.id === entry.selection)) return false;
+  }
+  return true;
 }
 
 async function issueBbSth(state: PocStateV1): Promise<PocSignedTreeHead> {
@@ -845,14 +922,14 @@ async function verifyReceiptSig(receipt: PocCastReceipt, ewgKey: StoredKeyPair):
 
 function getAnchorEventForLeaf(state: PocStateV1, bb_leaf_hash: B64u): PocVclEvent | null {
   const match = state.vcl.events.find(
-    (evt) => evt.type === 'remote_ballot_cast' && evt.payload.bb_leaf_hash === bb_leaf_hash,
+    (evt) => evt.type === 'ewp_ballot_cast' && evt.payload.bb_leaf_hash === bb_leaf_hash,
   );
   return match ?? null;
 }
 
 function hasUsedNullifier(state: PocStateV1, nullifier: Hex0x) {
   return state.vcl.events.some(
-    (evt) => evt.type === 'remote_ballot_cast' && evt.payload.nullifier === nullifier,
+    (evt) => evt.type === 'ewp_ballot_cast' && evt.payload.nullifier === nullifier,
   );
 }
 
@@ -884,18 +961,19 @@ async function recordBbSthPublished(state: PocStateV1, sth: PocSignedTreeHead) {
   state.vcl.events.push({ ...eventUnsigned, ...signed });
 }
 
-async function recordRemoteBallotCast(
+async function recordEwpBallotCast(
   state: PocStateV1,
   request: PocCastRequest,
   bb_leaf_hash: B64u,
   bb_root_hash: B64u,
 ) {
   const eventUnsigned: Omit<PocVclEvent, 'sig' | 'tx_id'> = {
-    type: 'remote_ballot_cast',
+    type: 'ewp_ballot_cast',
     recorded_at: nowIso(),
     payload: {
       election_id: request.election_id,
       jurisdiction_id: request.jurisdiction_id,
+      deployment_mode: 'mode_3',
       nullifier: request.nullifier,
       ballot_hash: request.encrypted_ballot.ballot_hash,
       bb_leaf_hash,
@@ -958,13 +1036,12 @@ async function verifyEligibilityProof(
 }
 
 export async function buildCastRequest(params: {
-  contests: Array<{ contest_id: string; selection: string }>;
+  encrypted_ballot: PocEncryptedBallot;
   challenge: PocChallengeResponse;
   idempotencyKey?: string;
 }): Promise<{ request: PocCastRequest; idempotencyKey: string } | { error: string }> {
   const state = await ensureInitialized();
   const credential = await ensureCredential();
-  const manifest = state.manifest;
 
   const nullifier = await computeNullifier(credential.pub_spki, state.election.election_id);
 
@@ -976,10 +1053,32 @@ export async function buildCastRequest(params: {
     params.challenge.challenge,
   );
 
+  const request: PocCastRequest = {
+    ewp_version: POC_EWP_VERSION,
+    election_id: state.election.election_id,
+    jurisdiction_id: state.election.jurisdiction_id,
+    manifest_id: state.manifest.manifest_id,
+    challenge_id: params.challenge.challenge_id,
+    challenge: params.challenge.challenge,
+    nullifier,
+    eligibility_proof,
+    encrypted_ballot: params.encrypted_ballot,
+  };
+
+  return { request, idempotencyKey: params.idempotencyKey ?? crypto.randomUUID() };
+}
+
+export async function encryptBallotForReview(params: {
+  contests: Array<{ contest_id: string; selection: string }>;
+}): Promise<
+  { encrypted_ballot: PocEncryptedBallot; iv: B64u; plaintext: PocBallotPlaintext } | { error: string }
+> {
+  const state = await ensureInitialized();
+
   const plaintext: PocBallotPlaintext = {
     election_id: state.election.election_id,
-    manifest_id: manifest.manifest_id,
-    ballot_id: 'unused',
+    manifest_id: state.manifest.manifest_id,
+    ballot_id: 'unused', // replaced by encryptBallot
     contests: params.contests,
     cast_at: nowIso(),
   };
@@ -988,21 +1087,91 @@ export async function buildCastRequest(params: {
     return { error: 'Ballot is not valid for this manifest.' };
   }
 
-  const encrypted_ballot = await encryptBallot(plaintext, state.election_secret.aes_key);
+  const result = await encryptBallot(plaintext, state.election_secret.aes_key);
+  return {
+    encrypted_ballot: result.encrypted_ballot,
+    iv: bytesToB64u(result.iv),
+    plaintext: result.plaintext,
+  };
+}
 
-  const request: PocCastRequest = {
-    ewp_version: POC_EWP_VERSION,
+export async function spoilBallot(params: {
+  encrypted_ballot: PocEncryptedBallot;
+  iv: B64u;
+  plaintext: PocBallotPlaintext;
+}): Promise<PocSpoilResponse> {
+  const state = await ensureInitialized();
+
+  const receipt_id = bytesToB64u(randomBytes(16));
+  const spoiled_at = nowIso();
+
+  const receiptUnsigned = {
+    receipt_id,
     election_id: state.election.election_id,
-    jurisdiction_id: state.election.jurisdiction_id,
-    manifest_id: manifest.manifest_id,
-    challenge_id: params.challenge.challenge_id,
-    challenge: params.challenge.challenge,
-    nullifier,
-    eligibility_proof,
-    encrypted_ballot,
+    ballot_hash: params.encrypted_ballot.ballot_hash,
+    spoiled_at,
+    kid: state.keys.ewg.kid,
   };
 
-  return { request, idempotencyKey: params.idempotencyKey ?? crypto.randomUUID() };
+  const sig = await signB64u(
+    state.keys.ewg.jwk_private,
+    utf8(canonicalJson(receiptUnsigned)),
+  );
+
+  const spoil_receipt: PocSpoilReceipt = { ...receiptUnsigned, sig };
+
+  const randomness_reveal: PocBallotRandomnessReveal = {
+    ballot_id: params.encrypted_ballot.ballot_id,
+    iv: params.iv,
+    aes_key: state.election_secret.aes_key,
+    plaintext: params.plaintext,
+  };
+
+  state.spoiled_ballots.push({
+    ballot_hash: params.encrypted_ballot.ballot_hash,
+    encrypted_ballot: params.encrypted_ballot,
+    randomness_reveal,
+    spoil_receipt,
+    spoiled_at,
+  });
+
+  saveState(state);
+
+  return { status: 'ballot_spoiled', spoil_receipt, randomness_reveal };
+}
+
+export async function verifySpoiledBallot(params: {
+  encrypted_ballot: PocEncryptedBallot;
+  iv: B64u;
+  aes_key: B64u;
+  plaintext: PocBallotPlaintext;
+}): Promise<{ match: boolean; details: string }> {
+  const ivBytes = b64uToBytes(params.iv);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    toArrayBuffer(b64uToBytes(params.aes_key)),
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt'],
+  );
+
+  const body = utf8(canonicalJson(params.plaintext));
+  const cipherBuf = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: toArrayBuffer(ivBytes) },
+    key,
+    toArrayBuffer(body),
+  );
+  const cipherBytes = new Uint8Array(cipherBuf);
+  const packed = concatBytes(ivBytes, cipherBytes);
+  const recomputedCiphertext = bytesToB64u(packed);
+
+  const match = recomputedCiphertext === params.encrypted_ballot.ciphertext;
+  return {
+    match,
+    details: match
+      ? 'Ciphertext matches re-encryption. Device encrypted honestly.'
+      : 'MISMATCH: ciphertext does not match re-encryption! Device may have altered your ballot.',
+  };
 }
 
 export async function castBallot(args: {
@@ -1186,7 +1355,7 @@ export async function castBallot(args: {
   await recordBbSthPublished(state, sth);
 
   // 9) Anchor cast on VCL
-  const anchor = await recordRemoteBallotCast(state, args.request, leaf_hash, sth.root_hash);
+  const anchor = await recordEwpBallotCast(state, args.request, leaf_hash, sth.root_hash);
 
   // 10) Build receipt
   const receiptUnsigned: Omit<PocCastReceipt, 'sig'> = {
@@ -1198,7 +1367,7 @@ export async function castBallot(args: {
     bb_sth: sth,
     votechain_anchor: {
       tx_id: anchor.tx_id,
-      event_type: 'remote_ballot_cast',
+      event_type: 'ewp_ballot_cast',
       sth_root_hash: sth.root_hash,
     },
     kid: state.keys.ewg.kid,
@@ -1302,7 +1471,7 @@ export async function verifyReceipt(receipt: PocCastReceipt): Promise<ReceiptVer
     status: anchorOk ? 'ok' : 'fail',
     details: anchorOk
       ? `tx_id=${receipt.votechain_anchor.tx_id}`
-      : 'No matching remote_ballot_cast event found.',
+      : 'No matching ewp_ballot_cast event found.',
   });
 
   // Anchor event signature
@@ -1335,11 +1504,12 @@ export interface DashboardSnapshot {
   vcl: {
     event_count: number;
     fraud_flags: number;
-    remote_casts: number;
+    ewp_casts: number;
   };
   metrics: {
     verified: number;
     crypto_conflict: number;
+    spoiled: number;
     pending: number;
     provisional: number;
   };
@@ -1354,12 +1524,13 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
   const events = [...state.vcl.events].reverse();
   const leaves = [...state.bb.leaves].slice().reverse();
 
-  const remote_casts = state.vcl.events.filter((e) => e.type === 'remote_ballot_cast').length;
+  const ewp_casts = state.vcl.events.filter((e) => e.type === 'ewp_ballot_cast').length;
   const fraud_flags = state.vcl.events.filter((e) => e.type === 'fraud_flag').length;
 
   // POC: "verified" = recorded casts, "crypto_conflict" = duplicate attempts, "pending" = 0 (sync).
-  const verified = remote_casts;
+  const verified = ewp_casts;
   const crypto_conflict = fraud_flags;
+  const spoiled = state.spoiled_ballots.length;
   const pending = 0;
   const provisional = 0;
 
@@ -1373,11 +1544,12 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
     vcl: {
       event_count: state.vcl.events.length,
       fraud_flags,
-      remote_casts,
+      ewp_casts,
     },
     metrics: {
       verified,
       crypto_conflict,
+      spoiled,
       pending,
       provisional,
     },
@@ -1394,7 +1566,9 @@ export async function publishTally(): Promise<PocTally | { error: string }> {
 
   // Compute totals by decrypting each ballot (POC only).
   const totals: Record<string, Record<string, number>> = {};
-  totals[state.election.contest_id] = Object.fromEntries(state.election.options.map((o) => [o, 0]));
+  for (const contest of state.election.contests) {
+    totals[contest.contest_id] = Object.fromEntries(contest.options.map((o) => [o.id, 0]));
+  }
 
   let ballot_count = 0;
   for (const leaf of state.bb.leaves) {
@@ -1404,10 +1578,12 @@ export async function publishTally(): Promise<PocTally | { error: string }> {
     const plaintext = await decryptBallot(encrypted.ciphertext, state.election_secret.aes_key);
     if (!plaintext) continue;
     if (!validateBallotPlaintext(state, plaintext)) continue;
-    const contest = plaintext.contests.find((c) => c.contest_id === state.election.contest_id);
-    if (!contest) continue;
-    if (!state.election.options.includes(contest.selection)) continue;
-    totals[state.election.contest_id][contest.selection] += 1;
+    for (const entry of plaintext.contests) {
+      const config = state.election.contests.find((c) => c.contest_id === entry.contest_id);
+      if (!config) continue;
+      if (!config.options.some((o) => o.id === entry.selection)) continue;
+      if (totals[entry.contest_id]) totals[entry.contest_id][entry.selection] += 1;
+    }
     ballot_count += 1;
   }
 

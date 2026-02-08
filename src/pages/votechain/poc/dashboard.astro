@@ -24,14 +24,15 @@ import Icon from '../../../components/ui/Icon.astro';
         <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-5 mb-2">EWP POC</p>
         <h1 class="font-serif text-3xl sm:text-4xl text-gold-400 font-bold">Oversight Dashboard</h1>
         <p class="mt-3 text-gold-300/80 font-sans text-base max-w-4xl mx-auto">
-          Monitor local bulletin board state, signed tree heads, simulated VoteChain anchors, and
-          fraud flags.
+          This is the election observer's view. In a real election, independent monitors, auditors,
+          and the public would use a dashboard like this to watch for irregularities in real time
+          &mdash; without being able to see how anyone voted.
         </p>
       </div>
     </section>
 
     <div class="max-w-6xl mx-auto px-4 py-10 sm:py-12 space-y-8">
-      <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section class="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
           <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Verified</p>
           <p class="font-serif text-3xl text-navy-900 font-bold" id="m-verified">0</p>
@@ -43,8 +44,12 @@ import Icon from '../../../components/ui/Icon.astro';
           <p class="font-serif text-3xl text-red-600 font-bold" id="m-conflict">0</p>
         </div>
         <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
+          <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Spoiled</p>
+          <p class="font-serif text-3xl text-gold-600 font-bold" id="m-spoiled">0</p>
+        </div>
+        <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
           <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">
-            Bulletin Board Leaves
+            BB Leaves
           </p>
           <p class="font-serif text-3xl text-navy-900 font-bold" id="m-leaves">0</p>
         </div>
@@ -130,7 +135,16 @@ import Icon from '../../../components/ui/Icon.astro';
             Latest BB STH
           </h2>
           <p class="text-navy-600 text-sm mt-2">
-            Signed Tree Heads (STHs) are the append-only checkpoints that are anchored on VoteChain.
+            Every time a ballot is added, the bulletin board publishes a new <strong>Signed Tree
+            Head</strong> &mdash; a cryptographic snapshot of all ballots received so far. If
+            anyone deletes or alters a ballot later, the snapshot won't match, making tampering
+            detectable.
+          </p>
+          <p class="text-navy-500 text-xs mt-1.5 italic">
+            In this POC, STHs are stored in your browser's <span class="font-mono">localStorage</span>.
+            In a real election, they would be published to a public append-only log &mdash; independent
+            monitors, media, and political parties could all download and compare tree heads to detect
+            any inconsistency.
           </p>
           <pre
             class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="latest-sth">Loading...</code></pre>
@@ -141,8 +155,14 @@ import Icon from '../../../components/ui/Icon.astro';
             Published Tally (POC)
           </h2>
           <p class="text-navy-600 text-sm mt-2">
-            This demo tally decrypts ballots locally. Production EWP requires threshold decryption +
-            public proofs.
+            Click <em>Publish POC Tally</em> above to decrypt all ballots and count the results.
+          </p>
+          <p class="text-navy-500 text-xs mt-1.5 italic">
+            In this POC, a single AES key decrypts all ballots locally. In a real election,
+            decryption would require a quorum of independent trustees &mdash; each holding a
+            separate key share &mdash; to jointly decrypt the ballots during a public ceremony.
+            No single trustee, server, or election official could see individual votes. The
+            tally would then be anchored on the VoteChain ledger as a permanent, auditable record.
           </p>
           <pre
             class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="tally-json">Not published.</code></pre>
@@ -157,6 +177,18 @@ import Icon from '../../../components/ui/Icon.astro';
           </h2>
           <p class="text-xs font-mono text-navy-500 uppercase tracking-widest">newest first</p>
         </div>
+        <p class="text-navy-600 text-sm mt-2">
+          Every significant action &mdash; publishing the manifest, casting a ballot, issuing a
+          tree head, publishing the tally, or flagging fraud &mdash; is recorded as a signed,
+          immutable event on the VoteChain ledger. This is the public audit trail.
+        </p>
+        <p class="text-navy-500 text-xs mt-1.5 italic">
+          In this POC, the ledger is simulated in <span class="font-mono">localStorage</span>.
+          In a real election, VoteChain would be a distributed ledger operated by multiple
+          independent nodes &mdash; election authorities, civil society organizations, and
+          international observers &mdash; so that no single party could rewrite history without
+          detection.
+        </p>
         <div class="mt-4 overflow-x-auto">
           <table class="w-full border-collapse text-sm">
             <thead>
@@ -184,6 +216,18 @@ import Icon from '../../../components/ui/Icon.astro';
           </h2>
           <p class="text-xs font-mono text-navy-500 uppercase tracking-widest">newest first</p>
         </div>
+        <p class="text-navy-600 text-sm mt-2">
+          Each encrypted ballot gets its own "leaf" on the bulletin board &mdash; an append-only
+          list that anyone can inspect. You can see the encrypted ballot hashes here, but not the
+          votes themselves. The leaf hash is the identifier voters use to verify their ballot is
+          included.
+        </p>
+        <p class="text-navy-500 text-xs mt-1.5 italic">
+          In this POC, leaves are stored in <span class="font-mono">localStorage</span>.
+          In a real election, the bulletin board would be a publicly accessible, append-only
+          server &mdash; anyone could download the full list of leaves and independently verify
+          the Merkle tree, ensuring no ballot was added, removed, or modified after acceptance.
+        </p>
         <div class="mt-4 overflow-x-auto">
           <table class="w-full border-collapse text-sm">
             <thead>
@@ -211,6 +255,7 @@ import Icon from '../../../components/ui/Icon.astro';
 
     const mVerified = document.getElementById('m-verified') as HTMLElement;
     const mConflict = document.getElementById('m-conflict') as HTMLElement;
+    const mSpoiled = document.getElementById('m-spoiled') as HTMLElement;
     const mLeaves = document.getElementById('m-leaves') as HTMLElement;
     const mEvents = document.getElementById('m-events') as HTMLElement;
 
@@ -250,6 +295,7 @@ import Icon from '../../../components/ui/Icon.astro';
     function render(snapshot: any) {
       mVerified.textContent = String(snapshot.metrics.verified);
       mConflict.textContent = String(snapshot.metrics.crypto_conflict);
+      mSpoiled.textContent = String(snapshot.metrics.spoiled);
       mLeaves.textContent = String(snapshot.bb.leaf_count);
       mEvents.textContent = String(snapshot.vcl.event_count);
 

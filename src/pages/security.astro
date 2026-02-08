@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import OfficialSeal from '../components/ui/OfficialSeal.astro';
+import Divider from '../components/ui/Divider.astro';
+import Icon from '../components/ui/Icon.astro';
+import { Content as SecurityContent } from '../../SECURITY.md';
+---
+
+<BaseLayout
+  title="Security Policy"
+  description="How to report security vulnerabilities for Absurdity Index."
+  ogType="article"
+  article={{
+    publishedTime: '2026-02-06',
+    author: 'Absurdity Index',
+    section: 'Policy',
+    tags: ['security', 'vdp', 'responsible disclosure'],
+  }}
+>
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="text-center mb-10">
+      <div class="flex justify-center"><OfficialSeal size="140" /></div>
+      <p class="text-sm text-gold-600 font-mono uppercase tracking-widest mt-6 mb-2">Policy</p>
+      <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold">Security</h1>
+      <p class="text-navy-600 font-serif italic mt-3">Vulnerability reporting and response</p>
+      <div class="mt-5 flex flex-wrap justify-center gap-2">
+        <a
+          href="/votechain/assurance/bug-bounty-vdp"
+          class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-4 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors"
+        >
+          <Icon name="clipboard-list" class="text-gold-300" size={18} />
+          VoteChain Assurance (VDP)
+        </a>
+      </div>
+    </div>
+
+    <div class="gold-rule"></div>
+
+    <Divider withSeal={true} />
+
+    <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12">
+      <div class="bill-content prd-content">
+        <SecurityContent />
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
