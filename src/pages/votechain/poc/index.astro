@@ -524,6 +524,7 @@ import Icon from '../../../components/ui/Icon.astro';
     .journey-timeline {
       position: relative;
       padding-left: 2.25rem;
+      isolation: isolate; /* creates stacking context so ::before/::after z-index works */
     }
 
     /* Vertical connector line — centered on dots, spans dot-1 center to dot-3 center */
@@ -538,6 +539,7 @@ import Icon from '../../../components/ui/Icon.astro';
       /* top/bottom set by JS via CSS custom properties */
       top: var(--timeline-top, 2.2rem);
       bottom: var(--timeline-bottom, 0.9375rem);
+      z-index: -1;
     }
 
     /* Progress fill overlay — behind dots */
@@ -550,7 +552,7 @@ import Icon from '../../../components/ui/Icon.astro';
       height: 0;
       background: linear-gradient(to bottom, var(--color-gold-500, #c9a030), #16a34a);
       transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 0;
+      z-index: -1;
     }
     .journey-timeline[data-progress="done"]::after {
       background: #16a34a;
