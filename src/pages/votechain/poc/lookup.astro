@@ -1,0 +1,506 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import OfficialSeal from '../../../components/ui/OfficialSeal.astro';
+import Divider from '../../../components/ui/Divider.astro';
+import Icon from '../../../components/ui/Icon.astro';
+---
+
+<BaseLayout
+  title="VoteChain Public Ballot Lookup"
+  description="Public ballot verification: look up any ballot by hash and verify its inclusion on the bulletin board and VoteChain ledger."
+  ogType="article"
+  article={{
+    publishedTime: '2026-02-08',
+    author: 'Absurdity Index',
+    section: 'Policy',
+    tags: ['votechain', 'ewp', 'poc', 'public verification', 'ballot lookup'],
+  }}
+>
+  <main class="bg-parchment min-h-screen">
+    <section class="relative bg-navy-900 py-10 sm:py-14">
+      <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
+        <div class="flex justify-center">
+          <OfficialSeal size="90" />
+        </div>
+        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-5 mb-2">EWP POC</p>
+        <h1 class="font-serif text-3xl sm:text-4xl text-gold-400 font-bold">
+          Public Ballot Lookup
+        </h1>
+        <p class="mt-3 text-gold-300/80 font-sans text-base max-w-3xl mx-auto">
+          Anyone can verify that a specific ballot is included in the election record. Enter a
+          ballot hash to check the bulletin board, Merkle inclusion proof, and VoteChain ledger
+          anchor &mdash; all without revealing how anyone voted.
+        </p>
+      </div>
+    </section>
+
+    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-12 space-y-8">
+      <!-- Lookup form -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="search" class="text-gold-600" />
+            Look Up a Ballot
+          </h2>
+          <div class="flex flex-wrap gap-2">
+            <a
+              href="/votechain/poc/verify"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+            >
+              <Icon name="shield" class="text-navy-700" size={18} />
+              Full Receipt Verify
+            </a>
+            <a
+              href="/votechain/poc/dashboard"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+            >
+              <Icon name="bar-chart" class="text-navy-700" size={18} />
+              Dashboard
+            </a>
+            <a
+              href="/votechain/poc/trust"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+            >
+              <Icon name="shield" class="text-navy-700" size={18} />
+              Trust Portal
+            </a>
+          </div>
+        </div>
+
+        <p class="text-navy-600 text-sm mt-2">
+          <strong>How to use:</strong> After casting your ballot, you received a receipt containing a
+          <span class="font-mono">ballot_hash</span>. Paste it below and click <em>Look Up</em> to
+          verify that your ballot is on the bulletin board and anchored on the VoteChain ledger.
+        </p>
+        <p class="text-navy-600 text-sm mt-1.5">
+          <strong>What this proves:</strong> If all checks pass, your ballot was (1) recorded on the
+          bulletin board, (2) included in the Merkle tree (so it can't be silently removed), and
+          (3) anchored on the VoteChain ledger (an independent, append-only record). This is
+          "recorded-as-cast" verification &mdash; proof that the system accepted your ballot.
+        </p>
+        <p class="text-navy-600 text-sm mt-1.5">
+          <strong>Privacy:</strong> The ballot hash reveals nothing about how you voted. It's a
+          one-way cryptographic fingerprint of the encrypted ballot &mdash; even the election
+          authority can't reverse it to see your choices.
+        </p>
+        <p class="text-navy-600 text-sm mt-2">
+          <strong>In a real election:</strong> This lookup would query the public bulletin board
+          and VoteChain ledger &mdash; independent services operated by separate organizations and
+          monitored by political parties, civil society, and international observers. Anyone could
+          run their own verifier against the same public data and get the same result, ensuring no
+          single authority can fabricate or suppress verification outcomes.
+        </p>
+
+        <div class="mt-4 flex flex-col sm:flex-row gap-3">
+          <input
+            id="ballot-hash-input"
+            type="text"
+            class="flex-1 rounded-lg border border-navy-200 bg-cream-50 px-4 py-3 font-mono text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-gold-400"
+            placeholder="Paste ballot_hash here (e.g. Qv1GXJ2zwBP6NOnuWgE4N8mknIHFUHGA9KK39G7cIok)"
+          />
+          <button
+            id="lookup-btn"
+            class="inline-flex items-center justify-center gap-2 rounded-md bg-gold-500 px-6 py-3 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors whitespace-nowrap"
+            type="button"
+          >
+            <Icon name="search" class="text-navy-900" size={18} />
+            Look Up
+          </button>
+        </div>
+
+        <p id="lookup-status" class="mt-3 text-sm text-navy-500 hidden"></p>
+      </section>
+
+      <!-- Results (hidden until lookup) -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md hidden" id="results-section">
+        <!-- Result header -->
+        <div id="result-header" class="flex items-start gap-4 mb-6">
+          <div id="result-icon" class="flex-shrink-0 mt-1"></div>
+          <div class="flex-1">
+            <h2 id="result-title" class="font-serif text-xl font-bold"></h2>
+            <p id="result-subtitle" class="text-sm mt-1"></p>
+          </div>
+        </div>
+
+        <Divider withSeal={false} />
+
+        <!-- Verification checks -->
+        <div class="mt-6">
+          <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-3">
+            Verification Checks
+          </p>
+          <div id="checks-list" class="space-y-2"></div>
+        </div>
+
+        <!-- Ballot details (shown when found) -->
+        <div id="ballot-details" class="hidden mt-6">
+          <Divider withSeal={false} />
+
+          <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
+              <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
+                Ballot Record
+              </p>
+              <div class="space-y-2">
+                <div>
+                  <p class="text-[10px] font-mono text-navy-400 mb-0.5">Ballot Hash</p>
+                  <p id="detail-ballot-hash" class="font-mono text-xs text-navy-900 break-all">-</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-mono text-navy-400 mb-0.5">BB Leaf Hash</p>
+                  <p id="detail-leaf-hash" class="font-mono text-xs text-navy-900 break-all">-</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-mono text-navy-400 mb-0.5">Leaf Index</p>
+                  <p id="detail-leaf-index" class="font-mono text-xs text-navy-900">-</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-mono text-navy-400 mb-0.5">Received At</p>
+                  <p id="detail-received-at" class="font-mono text-xs text-navy-900">-</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
+              <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
+                VoteChain Anchor
+              </p>
+              <div class="space-y-2">
+                <div>
+                  <p class="text-[10px] font-mono text-navy-400 mb-0.5">Transaction ID</p>
+                  <p id="detail-tx-id" class="font-mono text-xs text-navy-900 break-all">-</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-mono text-navy-400 mb-0.5">Recorded At</p>
+                  <p id="detail-anchor-time" class="font-mono text-xs text-navy-900">-</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-mono text-navy-400 mb-0.5">Nullifier</p>
+                  <p id="detail-nullifier" class="font-mono text-xs text-navy-900 break-all">-</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
+              Merkle Inclusion Proof
+            </p>
+            <pre class="rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="proof-json">-</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- All ballots on the bulletin board -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="inbox" class="text-gold-600" />
+            Public Bulletin Board
+          </h2>
+          <p class="text-xs font-mono text-navy-500 uppercase tracking-widest">
+            all recorded ballots
+          </p>
+        </div>
+        <p class="text-navy-600 text-sm mt-2">
+          Every cast ballot is recorded as an encrypted entry on the public bulletin board. You can
+          see all ballot hashes below &mdash; click any row to look it up. The bulletin board is
+          append-only: once a ballot is added, it cannot be removed or modified without changing the
+          Merkle root, which would be detected by any observer comparing tree heads.
+        </p>
+        <p class="text-navy-500 text-xs mt-1.5 italic">
+          In this POC, the bulletin board is stored in your browser's
+          <span class="font-mono">localStorage</span>. In a real election, it would be a publicly
+          accessible server that anyone could download and audit independently.
+        </p>
+
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-navy-800 text-cream-100">
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider">#</th>
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider">
+                  Ballot Hash
+                </th>
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider">
+                  Leaf Hash
+                </th>
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider">
+                  Received
+                </th>
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider"></th>
+              </tr>
+            </thead>
+            <tbody id="bb-body" class="bg-white"></tbody>
+          </table>
+        </div>
+        <p id="bb-empty" class="mt-4 text-sm text-navy-500 hidden">
+          No ballots on the bulletin board yet. Cast a vote from the
+          <a href="/votechain/poc/vote" class="underline hover:text-gold-700">Voting Client</a>
+          to see ballots appear here.
+        </p>
+      </section>
+
+      <!-- How public verification works -->
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="info" class="text-gold-600" />
+          How Public Verification Works
+        </h2>
+        <div class="mt-3 text-navy-700 text-sm space-y-3">
+          <p>
+            <strong>The problem VoteChain solves:</strong> In traditional elections, you drop your
+            ballot in a box and hope it gets counted. You have no way to verify it wasn't lost,
+            altered, or excluded. VoteChain changes this by giving every voter a cryptographic
+            receipt that proves their ballot was recorded &mdash; without revealing how they voted.
+          </p>
+          <p>
+            <strong>Three layers of proof:</strong> Each ballot is verified at three independent levels:
+          </p>
+          <ol class="list-decimal ml-5 space-y-1.5">
+            <li>
+              <strong>Bulletin Board (BB)</strong> &mdash; Your encrypted ballot is appended to a public,
+              append-only list. A Merkle inclusion proof proves it's part of the tree. If anyone
+              deletes or alters a ballot, the tree root changes and every observer sees the mismatch.
+            </li>
+            <li>
+              <strong>Signed Tree Head (STH)</strong> &mdash; After each ballot is added, the bulletin
+              board publishes a signed snapshot (tree head). Independent monitors compare tree heads
+              to detect split views or rollbacks.
+            </li>
+            <li>
+              <strong>VoteChain Ledger (VCL)</strong> &mdash; Each cast event is anchored on the VoteChain
+              ledger, a distributed, append-only record. Even if the bulletin board operator is
+              compromised, the ledger provides an independent proof that the ballot existed.
+            </li>
+          </ol>
+          <p>
+            <strong>Anyone can verify:</strong> The bulletin board, signed tree heads, and ledger events
+            are all public data. Political parties, election observers, media organizations, and
+            individual voters can all independently run this same verification and get the same result.
+            No trust in any single authority is required.
+          </p>
+          <p>
+            <strong>What you can't see:</strong> The ballot hash is a one-way function of the
+            encrypted ballot. Neither the hash, the Merkle proof, nor the ledger anchor reveal
+            how anyone voted. Only the election trustees &mdash; acting together in a public
+            ceremony &mdash; can decrypt the ballots during the official tally.
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    import { lookupBallotByHash, getDashboardSnapshot } from '../../../votechain-poc/poc';
+    import type { BallotLookupResult } from '../../../votechain-poc/poc';
+
+    const input = document.getElementById('ballot-hash-input') as HTMLInputElement;
+    const lookupBtn = document.getElementById('lookup-btn') as HTMLButtonElement;
+    const lookupStatus = document.getElementById('lookup-status') as HTMLElement;
+    const resultsSection = document.getElementById('results-section') as HTMLElement;
+    const resultIcon = document.getElementById('result-icon') as HTMLElement;
+    const resultTitle = document.getElementById('result-title') as HTMLElement;
+    const resultSubtitle = document.getElementById('result-subtitle') as HTMLElement;
+    const checksList = document.getElementById('checks-list') as HTMLElement;
+    const ballotDetails = document.getElementById('ballot-details') as HTMLElement;
+    const detailBallotHash = document.getElementById('detail-ballot-hash') as HTMLElement;
+    const detailLeafHash = document.getElementById('detail-leaf-hash') as HTMLElement;
+    const detailLeafIndex = document.getElementById('detail-leaf-index') as HTMLElement;
+    const detailReceivedAt = document.getElementById('detail-received-at') as HTMLElement;
+    const detailTxId = document.getElementById('detail-tx-id') as HTMLElement;
+    const detailAnchorTime = document.getElementById('detail-anchor-time') as HTMLElement;
+    const detailNullifier = document.getElementById('detail-nullifier') as HTMLElement;
+    const proofJson = document.getElementById('proof-json') as HTMLElement;
+    const bbBody = document.getElementById('bb-body') as HTMLElement;
+    const bbEmpty = document.getElementById('bb-empty') as HTMLElement;
+
+    function short(value: string, n = 12) {
+      if (!value || value.length <= n * 2 + 3) return value;
+      return `${value.slice(0, n)}...${value.slice(-n)}`;
+    }
+
+    function renderChecks(checks: BallotLookupResult['checks']) {
+      checksList.replaceChildren();
+      for (const check of checks) {
+        const ok = check.status === 'ok';
+        const row = document.createElement('div');
+        row.className = 'flex items-start justify-between gap-3 border-b border-navy-100 pb-2';
+
+        const left = document.createElement('div');
+        const name = document.createElement('p');
+        name.className = 'font-mono text-xs text-navy-800';
+        name.textContent = check.name;
+        left.appendChild(name);
+        if (check.details) {
+          const detail = document.createElement('p');
+          detail.className = 'text-xs text-navy-500 mt-0.5';
+          detail.textContent = check.details;
+          left.appendChild(detail);
+        }
+
+        const badge = document.createElement('span');
+        badge.className = ok
+          ? 'inline-flex items-center rounded-full bg-green-600/15 px-2.5 py-1 text-xs font-semibold text-green-700 flex-shrink-0'
+          : 'inline-flex items-center rounded-full bg-red-600/15 px-2.5 py-1 text-xs font-semibold text-red-700 flex-shrink-0';
+        badge.textContent = ok ? 'OK' : 'FAIL';
+
+        row.appendChild(left);
+        row.appendChild(badge);
+        checksList.appendChild(row);
+      }
+    }
+
+    function showResult(result: BallotLookupResult) {
+      resultsSection.classList.remove('hidden');
+
+      const allOk = result.checks.every((c) => c.status === 'ok');
+
+      if (result.found && allOk) {
+        resultIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        resultTitle.textContent = 'Ballot Verified';
+        resultTitle.className = 'font-serif text-xl font-bold text-green-700';
+        resultSubtitle.textContent = 'This ballot is recorded on the bulletin board, included in the Merkle tree, and anchored on the VoteChain ledger. All verification checks passed.';
+        resultSubtitle.className = 'text-sm mt-1 text-green-600';
+      } else if (result.found) {
+        resultIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gold-600"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        resultTitle.textContent = 'Ballot Found (Partial Verification)';
+        resultTitle.className = 'font-serif text-xl font-bold text-gold-700';
+        resultSubtitle.textContent = 'The ballot exists on the bulletin board, but some verification checks failed. See details below.';
+        resultSubtitle.className = 'text-sm mt-1 text-gold-600';
+      } else {
+        resultIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        resultTitle.textContent = 'Ballot Not Found';
+        resultTitle.className = 'font-serif text-xl font-bold text-red-700';
+        resultSubtitle.textContent = 'No ballot with this hash was found on the bulletin board. This could mean it hasn\'t been cast yet, the hash is incorrect, or you\'re checking against a different election\'s data.';
+        resultSubtitle.className = 'text-sm mt-1 text-red-600';
+      }
+
+      renderChecks(result.checks);
+
+      if (result.found) {
+        ballotDetails.classList.remove('hidden');
+        detailBallotHash.textContent = result.ballot_hash;
+        detailLeafHash.textContent = result.leaf_hash ?? '-';
+        detailLeafIndex.textContent = result.leaf_index !== undefined ? String(result.leaf_index) : '-';
+        detailReceivedAt.textContent = result.received_at ?? '-';
+        detailTxId.textContent = result.anchor_event?.tx_id ?? 'Not anchored';
+        detailAnchorTime.textContent = result.anchor_event?.recorded_at ?? '-';
+        detailNullifier.textContent = result.anchor_event?.nullifier ?? '-';
+        proofJson.textContent = result.inclusion_proof
+          ? JSON.stringify(result.inclusion_proof, null, 2)
+          : 'N/A';
+      } else {
+        ballotDetails.classList.add('hidden');
+      }
+
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Perform lookup
+    lookupBtn?.addEventListener('click', async () => {
+      const hash = input.value.trim();
+      if (!hash) {
+        lookupStatus.textContent = 'Please enter a ballot hash.';
+        lookupStatus.classList.remove('hidden');
+        return;
+      }
+
+      lookupBtn.disabled = true;
+      lookupStatus.textContent = 'Looking up...';
+      lookupStatus.classList.remove('hidden');
+
+      try {
+        const result = await lookupBallotByHash(hash);
+        lookupStatus.classList.add('hidden');
+        showResult(result);
+      } catch (err) {
+        lookupStatus.textContent = `Error: ${String(err)}`;
+      } finally {
+        lookupBtn.disabled = false;
+      }
+    });
+
+    // Enter key triggers lookup
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') lookupBtn.click();
+    });
+
+    // Auto-fill from URL hash (e.g., /lookup#Qv1GXJ2z...)
+    if (window.location.hash.length > 1) {
+      input.value = decodeURIComponent(window.location.hash.slice(1));
+      lookupBtn.click();
+    }
+
+    // Load bulletin board entries
+    async function loadBulletinBoard() {
+      const snapshot = await getDashboardSnapshot();
+      const leaves = snapshot.leaves;
+
+      if (leaves.length === 0) {
+        bbEmpty.classList.remove('hidden');
+        return;
+      }
+
+      bbBody.replaceChildren();
+      for (let i = 0; i < leaves.length; i++) {
+        const leaf = leaves[i];
+        const ballotHash = (leaf.payload as any)?.encrypted_ballot?.ballot_hash ?? '';
+        const receivedAt = (leaf.payload as any)?.received_at ?? '';
+        // Leaves are returned newest-first from getDashboardSnapshot
+        const leafIndex = leaves.length - 1 - i;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-cream-50 cursor-pointer transition-colors';
+
+        const tdNum = document.createElement('td');
+        tdNum.className = 'px-3 py-2 border-b border-navy-100 font-mono text-xs text-navy-500';
+        tdNum.textContent = String(leafIndex);
+        tr.appendChild(tdNum);
+
+        const tdHash = document.createElement('td');
+        tdHash.className = 'px-3 py-2 border-b border-navy-100 font-mono text-xs text-navy-800';
+        tdHash.textContent = short(ballotHash);
+        tdHash.title = ballotHash;
+        tr.appendChild(tdHash);
+
+        const tdLeaf = document.createElement('td');
+        tdLeaf.className = 'px-3 py-2 border-b border-navy-100 font-mono text-xs text-navy-800';
+        tdLeaf.textContent = short(leaf.leaf_hash);
+        tdLeaf.title = leaf.leaf_hash;
+        tr.appendChild(tdLeaf);
+
+        const tdTime = document.createElement('td');
+        tdTime.className = 'px-3 py-2 border-b border-navy-100 text-xs text-navy-700';
+        tdTime.textContent = receivedAt ? new Date(receivedAt).toLocaleString() : '-';
+        tr.appendChild(tdTime);
+
+        const tdAction = document.createElement('td');
+        tdAction.className = 'px-3 py-2 border-b border-navy-100';
+        const lookupLink = document.createElement('button');
+        lookupLink.type = 'button';
+        lookupLink.className = 'text-xs font-sans font-semibold text-gold-700 hover:text-gold-900 underline';
+        lookupLink.textContent = 'Verify';
+        lookupLink.addEventListener('click', () => {
+          input.value = ballotHash;
+          lookupBtn.click();
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        tdAction.appendChild(lookupLink);
+        tr.appendChild(tdAction);
+
+        // Clicking the row also triggers lookup
+        tr.addEventListener('click', (e) => {
+          if ((e.target as HTMLElement).tagName === 'BUTTON') return;
+          input.value = ballotHash;
+          lookupBtn.click();
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        bbBody.appendChild(tr);
+      }
+    }
+
+    loadBulletinBoard();
+  </script>
+</BaseLayout>

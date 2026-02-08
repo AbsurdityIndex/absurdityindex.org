@@ -81,6 +81,13 @@ import Icon from '../../../components/ui/Icon.astro';
               Verify Receipt
             </a>
             <a
+              href="/votechain/poc/trust"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+            >
+              <Icon name="shield" class="text-navy-700" size={18} />
+              Trust Portal
+            </a>
+            <a
               href="/votechain/poc"
               class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
             >
@@ -169,6 +176,200 @@ import Icon from '../../../components/ui/Icon.astro';
         </div>
       </section>
 
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md" id="fraud">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="alert-triangle" class="text-gold-600" />
+            Fraud Flag Review Queue (POC)
+          </h2>
+          <p class="text-xs font-mono text-navy-500 uppercase tracking-widest">cases only</p>
+        </div>
+        <p class="text-navy-600 text-sm mt-2">
+          This queue simulates the reviewer workflow from the VoteChain PRD: triage, investigation,
+          escalation, and resolution. Every reviewer action is recorded as an immutable ledger event
+          (in this POC: your browser's <span class="font-mono">localStorage</span>).
+        </p>
+        <p class="text-navy-500 text-xs mt-1.5 italic">
+          Note: this is a demo. In a production system, reviewer actions would be role-gated,
+          dual-controlled where required, and signed with reviewer credentials.
+        </p>
+
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-navy-800 text-cream-100">
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider"
+                  >Flag Type</th
+                >
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider"
+                  >Status</th
+                >
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider"
+                  >Updated</th
+                >
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider"
+                  >Case</th
+                >
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider"
+                  >Nullifier</th
+                >
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider"
+                  >Assigned</th
+                >
+                <th class="text-left px-3 py-2 font-sans text-xs uppercase tracking-wider"
+                  >Action</th
+                >
+              </tr>
+            </thead>
+            <tbody id="fraud-body" class="bg-white"></tbody>
+          </table>
+        </div>
+
+        <div
+          id="fraud-detail"
+          class="mt-6 hidden rounded-xl border border-navy-200 bg-parchment p-5"
+        >
+          <div class="flex items-start justify-between flex-wrap gap-3">
+            <div>
+              <p class="text-xs font-mono text-navy-500 uppercase tracking-widest">Selected case</p>
+              <h3 id="fraud-case-title" class="font-serif text-lg text-navy-900 font-bold">
+                -
+              </h3>
+            </div>
+            <button
+              id="fraud-close"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+              type="button"
+            >
+              <Icon name="x" class="text-navy-700" size={18} />
+              Close
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            <div class="bg-white rounded-lg border border-navy-200 p-4 shadow-sm">
+              <div class="flex flex-wrap items-end gap-3">
+                <div class="flex-1 min-w-[220px]">
+                  <label
+                    for="fraud-reviewer-id"
+                    class="block text-xs font-mono text-navy-500 uppercase tracking-widest"
+                    >Reviewer ID</label
+                  >
+                  <input
+                    id="fraud-reviewer-id"
+                    type="text"
+                    class="mt-1 w-full rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-900 font-mono text-sm"
+                    placeholder="reviewer_poc_1"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="flex-1 min-w-[220px]">
+                  <label
+                    for="fraud-reason"
+                    class="block text-xs font-mono text-navy-500 uppercase tracking-widest"
+                    >Reason Code (Optional)</label
+                  >
+                  <input
+                    id="fraud-reason"
+                    type="text"
+                    class="mt-1 w-full rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-900 font-mono text-sm"
+                    placeholder="e.g., EVIDENCE_CONFIRMED"
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+
+              <div class="mt-3">
+                <label
+                  for="fraud-note"
+                  class="block text-xs font-mono text-navy-500 uppercase tracking-widest"
+                  >Note (Optional)</label
+                >
+                <textarea
+                  id="fraud-note"
+                  rows="3"
+                  class="mt-1 w-full rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-900 font-sans text-sm"
+                  placeholder="What did you check? What evidence did you rely on?"
+                ></textarea>
+              </div>
+
+              <div class="mt-4 flex flex-wrap gap-2">
+                <button
+                  id="fraud-take"
+                  class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-3 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors"
+                  type="button"
+                >
+                  <Icon name="user" class="text-gold-300" size={18} />
+                  Take / Triage
+                </button>
+                <button
+                  id="fraud-investigate"
+                  class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-3 py-2 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors"
+                  type="button"
+                >
+                  <Icon name="search" class="text-navy-900" size={18} />
+                  Investigate
+                </button>
+                <button
+                  id="fraud-escalate"
+                  class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+                  type="button"
+                >
+                  <Icon name="git-pull-request" class="text-navy-700" size={18} />
+                  Escalate
+                </button>
+                <button
+                  id="fraud-clear"
+                  class="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-white font-sans text-sm font-semibold hover:bg-green-700 transition-colors"
+                  type="button"
+                >
+                  <Icon name="check-circle" class="text-white" size={18} />
+                  Clear
+                </button>
+                <button
+                  id="fraud-confirm"
+                  class="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-white font-sans text-sm font-semibold hover:bg-red-700 transition-colors"
+                  type="button"
+                >
+                  <Icon name="alert-triangle" class="text-white" size={18} />
+                  Confirm Fraud
+                </button>
+                <button
+                  id="fraud-system-error"
+                  class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+                  type="button"
+                >
+                  <Icon name="cpu" class="text-navy-700" size={18} />
+                  System Error
+                </button>
+                <button
+                  id="fraud-note-btn"
+                  class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+                  type="button"
+                >
+                  <Icon name="message-square" class="text-navy-700" size={18} />
+                  Add Note
+                </button>
+              </div>
+
+              <p id="fraud-status" class="mt-3 text-sm text-navy-700"></p>
+            </div>
+
+            <div class="bg-white rounded-lg border border-navy-200 p-4 shadow-sm">
+              <p class="text-xs font-mono text-navy-500 uppercase tracking-widest">Flag Payload</p>
+              <pre
+                class="mt-2 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="fraud-flag-json">-</code></pre>
+
+              <p class="text-xs font-mono text-navy-500 uppercase tracking-widest mt-4"
+                >Action History</p
+              >
+              <pre
+                class="mt-2 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="fraud-actions-json">-</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
         <div class="flex items-center justify-between flex-wrap gap-3">
           <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
@@ -251,7 +452,15 @@ import Icon from '../../../components/ui/Icon.astro';
   </main>
 
   <script>
-    import { getDashboardSnapshot, publishTally, resetPocState } from '../../../votechain-poc/poc';
+    import {
+      getDashboardSnapshot,
+      publishTally,
+      resetPocState,
+      reviewFraudFlag,
+    } from '../../../votechain-poc/poc';
+    import type { PocFraudFlagAction } from '../../../votechain-poc/poc';
+
+    type Hex0x = `0x${string}`;
 
     const mVerified = document.getElementById('m-verified') as HTMLElement;
     const mConflict = document.getElementById('m-conflict') as HTMLElement;
@@ -265,11 +474,31 @@ import Icon from '../../../components/ui/Icon.astro';
     const eventsBody = document.getElementById('events-body') as HTMLElement;
     const leavesBody = document.getElementById('leaves-body') as HTMLElement;
 
+    const fraudBody = document.getElementById('fraud-body') as HTMLElement;
+    const fraudDetail = document.getElementById('fraud-detail') as HTMLElement;
+    const fraudClose = document.getElementById('fraud-close') as HTMLButtonElement;
+    const fraudCaseTitle = document.getElementById('fraud-case-title') as HTMLElement;
+    const fraudFlagJson = document.getElementById('fraud-flag-json') as HTMLElement;
+    const fraudActionsJson = document.getElementById('fraud-actions-json') as HTMLElement;
+    const fraudReviewerId = document.getElementById('fraud-reviewer-id') as HTMLInputElement;
+    const fraudReason = document.getElementById('fraud-reason') as HTMLInputElement;
+    const fraudNote = document.getElementById('fraud-note') as HTMLTextAreaElement;
+    const fraudStatus = document.getElementById('fraud-status') as HTMLElement;
+    const fraudTake = document.getElementById('fraud-take') as HTMLButtonElement;
+    const fraudInvestigate = document.getElementById('fraud-investigate') as HTMLButtonElement;
+    const fraudEscalate = document.getElementById('fraud-escalate') as HTMLButtonElement;
+    const fraudClear = document.getElementById('fraud-clear') as HTMLButtonElement;
+    const fraudConfirm = document.getElementById('fraud-confirm') as HTMLButtonElement;
+    const fraudSystemError = document.getElementById('fraud-system-error') as HTMLButtonElement;
+    const fraudNoteBtn = document.getElementById('fraud-note-btn') as HTMLButtonElement;
+
     const refreshBtn = document.getElementById('refresh') as HTMLButtonElement;
     const publishBtn = document.getElementById('publish-tally') as HTMLButtonElement;
     const exportBtn = document.getElementById('export') as HTMLButtonElement;
     const resetBtn = document.getElementById('reset') as HTMLButtonElement;
     const statusEl = document.getElementById('controls-status') as HTMLElement;
+
+    let selectedFraudCaseId: Hex0x | null = null;
 
     function short(value: unknown, n: number = 10) {
       if (!value || typeof value !== 'string') return '';
@@ -290,6 +519,131 @@ import Icon from '../../../components/ui/Icon.astro';
         'px-3 py-2 border-b border-navy-100 align-top font-mono text-xs text-navy-800';
       cell.textContent = text;
       return cell;
+    }
+
+    function statusBadge(status: string) {
+      const badge = document.createElement('span');
+      const s = status || 'unknown';
+      const resolved = s.startsWith('resolved_');
+      const cls = resolved
+        ? 'bg-green-100 text-green-800 border-green-200'
+        : s === 'escalated'
+          ? 'bg-red-100 text-red-800 border-red-200'
+          : s === 'investigating'
+            ? 'bg-gold-100 text-navy-900 border-gold-200'
+            : s === 'triaged'
+              ? 'bg-navy-100 text-navy-900 border-navy-200'
+              : 'bg-cream-100 text-navy-900 border-navy-200';
+      badge.className = `inline-flex items-center rounded-full border px-2 py-0.5 font-mono text-[11px] ${cls}`;
+      badge.textContent = s;
+      return badge;
+    }
+
+    function showFraudDetail(caseData: any) {
+      if (!caseData) {
+        selectedFraudCaseId = null;
+        fraudDetail?.classList.add('hidden');
+        return;
+      }
+
+      selectedFraudCaseId = String(caseData.case_id || '') as Hex0x;
+      fraudDetail?.classList.remove('hidden');
+
+      fraudCaseTitle.textContent = `${caseData.flag_type || 'unknown'} (${caseData.status || 'unknown'})`;
+      fraudFlagJson.textContent = JSON.stringify(caseData.flag_payload || {}, null, 2);
+      fraudActionsJson.textContent = JSON.stringify(caseData.actions || [], null, 2);
+    }
+
+    function renderFraudQueue(cases: any[]) {
+      fraudBody.replaceChildren();
+
+      if (!cases || cases.length === 0) {
+        const tr = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 7;
+        cell.className = 'px-3 py-4 border-b border-navy-100 text-sm text-navy-600';
+        cell.textContent = 'No fraud flags recorded yet. Trigger one by attempting a duplicate cast.';
+        tr.appendChild(cell);
+        fraudBody.appendChild(tr);
+        showFraudDetail(null);
+        return;
+      }
+
+      for (const c of cases) {
+        const tr = document.createElement('tr');
+
+        tr.appendChild(
+          td(String(c.flag_type || 'unknown'), 'px-3 py-2 border-b border-navy-100 align-top'),
+        );
+
+        const statusCell = document.createElement('td');
+        statusCell.className = 'px-3 py-2 border-b border-navy-100 align-top';
+        statusCell.appendChild(statusBadge(String(c.status || 'unknown')));
+        tr.appendChild(statusCell);
+
+        tr.appendChild(
+          td(String(c.updated_at || ''), 'px-3 py-2 border-b border-navy-100 align-top text-xs text-navy-700'),
+        );
+        tr.appendChild(tdCode(short(String(c.case_id || ''), 8)));
+        tr.appendChild(tdCode(short(String(c.nullifier || ''), 8)));
+        tr.appendChild(
+          td(String(c.assigned_to || ''), 'px-3 py-2 border-b border-navy-100 align-top text-xs text-navy-700'),
+        );
+
+        const actionCell = document.createElement('td');
+        actionCell.className = 'px-3 py-2 border-b border-navy-100 align-top';
+        const openBtn = document.createElement('button');
+        openBtn.type = 'button';
+        openBtn.className =
+          'inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-xs font-semibold hover:border-gold-500 hover:shadow-sm transition-all';
+        openBtn.textContent = 'Open';
+        openBtn.addEventListener('click', () => showFraudDetail(c));
+        actionCell.appendChild(openBtn);
+        tr.appendChild(actionCell);
+
+        fraudBody.appendChild(tr);
+      }
+
+      if (selectedFraudCaseId) {
+        const selected =
+          cases.find((c) => String(c.case_id) === String(selectedFraudCaseId)) ?? null;
+        if (selected) showFraudDetail(selected);
+        else showFraudDetail(null);
+      }
+    }
+
+    async function runFraudAction(action: PocFraudFlagAction) {
+      if (!selectedFraudCaseId) return;
+
+      const reviewer_id = (fraudReviewerId?.value || '').trim();
+      const reason_code = (fraudReason?.value || '').trim();
+      const note = (fraudNote?.value || '').trim();
+
+      if (!reviewer_id) {
+        fraudStatus.textContent = 'Reviewer ID is required.';
+        return;
+      }
+
+      localStorage.setItem('votechain_poc_reviewer_id', reviewer_id);
+      fraudStatus.textContent = 'Recording reviewer action on ledger...';
+
+      const res = await reviewFraudFlag({
+        case_id: selectedFraudCaseId,
+        reviewer_id,
+        action,
+        ...(reason_code ? { reason_code } : {}),
+        ...(note ? { note } : {}),
+      });
+
+      if ('error' in res) {
+        fraudStatus.textContent = res.error;
+        return;
+      }
+
+      fraudStatus.textContent = 'Action recorded.';
+      fraudReason.value = '';
+      fraudNote.value = '';
+      await refresh();
     }
 
     function render(snapshot: any) {
@@ -334,6 +688,8 @@ import Icon from '../../../components/ui/Icon.astro';
         tr.appendChild(tdCode(short(ballotHash, 12)));
         leavesBody.appendChild(tr);
       }
+
+      renderFraudQueue(snapshot.fraud_cases || []);
     }
 
     async function refresh() {
@@ -341,6 +697,28 @@ import Icon from '../../../components/ui/Icon.astro';
       render(snapshot);
       statusEl.textContent = `Updated: ${new Date().toLocaleString()}`;
     }
+
+    // Reviewer identity persistence for the demo UI
+    if (fraudReviewerId) {
+      fraudReviewerId.value = localStorage.getItem('votechain_poc_reviewer_id') || 'reviewer_poc_1';
+      fraudReviewerId.addEventListener('change', () => {
+        localStorage.setItem('votechain_poc_reviewer_id', fraudReviewerId.value);
+      });
+    }
+
+    fraudClose?.addEventListener('click', () => {
+      selectedFraudCaseId = null;
+      fraudDetail?.classList.add('hidden');
+      fraudStatus.textContent = '';
+    });
+
+    fraudTake?.addEventListener('click', () => runFraudAction('take_case'));
+    fraudInvestigate?.addEventListener('click', () => runFraudAction('start_investigation'));
+    fraudEscalate?.addEventListener('click', () => runFraudAction('escalate'));
+    fraudClear?.addEventListener('click', () => runFraudAction('resolve_cleared'));
+    fraudConfirm?.addEventListener('click', () => runFraudAction('resolve_confirmed_fraud'));
+    fraudSystemError?.addEventListener('click', () => runFraudAction('resolve_system_error'));
+    fraudNoteBtn?.addEventListener('click', () => runFraudAction('note'));
 
     refreshBtn?.addEventListener('click', () => refresh());
 

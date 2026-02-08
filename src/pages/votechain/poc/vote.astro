@@ -32,7 +32,7 @@ import Icon from '../../../components/ui/Icon.astro';
       </div>
     </section>
 
-    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-12 space-y-8">
+    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-12 space-y-8 pb-28">
       <!-- Step Indicator -->
       <div class="flex items-center justify-between max-w-3xl mx-auto" id="step-indicator">
         <div class="flex flex-col items-center flex-shrink-0" data-step="1">
@@ -84,69 +84,66 @@ import Icon from '../../../components/ui/Icon.astro';
       </div>
 
       <!-- Manifest -->
-      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
-        <div class="flex items-center justify-between flex-wrap gap-3">
-          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+      <details class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <summary class="flex items-center justify-between flex-wrap gap-3 cursor-pointer list-none">
+          <div class="flex items-center gap-2">
             <Icon name="file-text" class="text-gold-600" />
-            Election Manifest
-          </h2>
-          <a
-            href="/votechain/poc"
-            class="text-sm font-sans font-semibold text-navy-700 hover:text-gold-700 underline"
-          >
-            POC Home
-          </a>
+            <span class="font-serif text-xl text-navy-900 font-bold">Election Manifest</span>
+          </div>
+          <span class="text-xs font-mono text-navy-500 uppercase tracking-widest">
+            Toggle Details
+          </span>
+        </summary>
+        <div class="mt-4">
+          <div class="flex justify-end">
+            <a
+              href="/votechain/poc"
+              class="text-sm font-sans font-semibold text-navy-700 hover:text-gold-700 underline"
+            >
+              POC Home
+            </a>
+          </div>
+          <p class="text-navy-600 text-sm mt-2">
+            Before voting begins, the election authority publishes an <strong>election manifest</strong>
+            &mdash; a tamper-proof document that defines the contests, candidates, encryption keys, and
+            rules for this election. Think of it as the official ballot design, locked down with a
+            cryptographic signature so nobody can change it after the fact.
+          </p>
+          <p class="text-navy-600 text-sm mt-1.5">
+            <strong>Where it lives:</strong> In this POC, the manifest and all election state are
+            stored in your browser's <span class="font-mono">localStorage</span> &mdash; nothing is
+            sent to a server. You can open DevTools and inspect the
+            <span class="font-mono">votechain_poc_state_v1</span> key to see exactly what's stored.
+          </p>
+          <p class="text-navy-600 text-sm mt-1.5">
+            <strong>In a real election:</strong> The manifest would be published to a public,
+            append-only transparency log hosted by the election authority &mdash; similar to how
+            Certificate Transparency works for HTTPS. Independent monitors, political parties, and
+            the public could all download and verify the same manifest, ensuring no one silently
+            swaps candidates, changes encryption keys, or alters contest rules after publication.
+          </p>
+          <p class="text-navy-500 text-xs mt-1.5 italic">
+            The <span class="font-mono">manifest_id</span> is a SHA-256 hash of the manifest's
+            contents, and its signature is anchored on the simulated VoteChain ledger.
+          </p>
+          <pre
+            class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="manifest-json">Loading manifest...</code></pre>
         </div>
-        <p class="text-navy-600 text-sm mt-2">
-          Before voting begins, the election authority publishes an <strong>election manifest</strong>
-          &mdash; a tamper-proof document that defines the contests, candidates, encryption keys, and
-          rules for this election. Think of it as the official ballot design, locked down with a
-          cryptographic signature so nobody can change it after the fact.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>Where it lives:</strong> In this POC, the manifest and all election state are
-          stored in your browser's <span class="font-mono">localStorage</span> &mdash; nothing is
-          sent to a server. You can open DevTools and inspect the
-          <span class="font-mono">votechain_poc_state_v1</span> key to see exactly what's stored.
-        </p>
-        <p class="text-navy-600 text-sm mt-1.5">
-          <strong>In a real election:</strong> The manifest would be published to a public,
-          append-only transparency log hosted by the election authority &mdash; similar to how
-          Certificate Transparency works for HTTPS. Independent monitors, political parties, and
-          the public could all download and verify the same manifest, ensuring no one silently
-          swaps candidates, changes encryption keys, or alters contest rules after publication.
-        </p>
-        <p class="text-navy-500 text-xs mt-1.5 italic">
-          The <span class="font-mono">manifest_id</span> is a SHA-256 hash of the manifest's
-          contents, and its signature is anchored on the simulated VoteChain ledger.
-        </p>
-        <pre
-          class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="manifest-json">Loading manifest...</code></pre>
-      </section>
+      </details>
 
       <!-- Step 1: Credential -->
       <section
         class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md"
         id="credential"
       >
-        <div class="flex items-center justify-between flex-wrap gap-3">
-          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
-            <Icon name="user" class="text-gold-600" />
-            Voter Credential (POC)
-          </h2>
-          <button
-            id="credential-generate"
-            class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-4 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors"
-            type="button"
-          >
-            <Icon name="file-plus" class="text-gold-300" size={18} />
-            Generate Credential
-          </button>
-        </div>
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="user" class="text-gold-600" />
+          Voter Credential (POC)
+        </h2>
         <p class="text-navy-600 text-sm mt-2">
-          <strong>What:</strong> Click <em>Generate Credential</em> to create your voter identity.
-          This gives you a unique, anonymous ID and a cryptographic signing key &mdash; stored only
-          in your browser.
+          <strong>What:</strong> Click <strong>Generate Credential</strong> in the wizard controls
+          below. This gives you a unique, anonymous ID and a cryptographic signing key &mdash;
+          stored only in your browser.
         </p>
         <p class="text-navy-600 text-sm mt-1.5">
           <strong>Why:</strong> Your credential lets you prove you're eligible to vote without revealing
@@ -183,26 +180,16 @@ import Icon from '../../../components/ui/Icon.astro';
 
       <!-- Step 2: Challenge -->
       <section
-        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md"
+        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md hidden"
         id="challenge"
       >
-        <div class="flex items-center justify-between flex-wrap gap-3">
-          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
-            <Icon name="repeat" class="text-gold-600" />
-            Challenge (Anti-Replay)
-          </h2>
-          <button
-            id="challenge-request"
-            class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-4 py-2 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors"
-            type="button"
-          >
-            <Icon name="send" class="text-navy-900" size={18} />
-            Request Challenge
-          </button>
-        </div>
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="repeat" class="text-gold-600" />
+          Challenge (Anti-Replay)
+        </h2>
         <p class="text-navy-600 text-sm mt-2">
-          <strong>What:</strong> Click <em>Request Challenge</em> to get a one-time code from the
-          election server. This code will be baked into your ballot to prove it was cast right now,
+          <strong>What:</strong> Click <strong>Request Challenge</strong> in the wizard controls
+          below. This one-time code will be baked into your ballot to prove it was cast right now,
           not replayed from a previous session.
         </p>
         <p class="text-navy-600 text-sm mt-1.5">
@@ -225,28 +212,17 @@ import Icon from '../../../components/ui/Icon.astro';
 
       <!-- Step 3: Encrypt & Review (with Benaloh challenge) -->
       <section
-        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md"
+        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md hidden"
         id="encrypt-review"
       >
-        <div class="flex items-center justify-between flex-wrap gap-3">
-          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
-            <Icon name="vote" class="text-gold-600" />
-            Encrypt & Review
-          </h2>
-          <button
-            id="encrypt-btn"
-            class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-4 py-2 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors disabled:opacity-50"
-            type="button"
-            disabled
-          >
-            <Icon name="shield" class="text-navy-900" size={18} />
-            Encrypt Ballot
-          </button>
-        </div>
+        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+          <Icon name="vote" class="text-gold-600" />
+          Encrypt & Review
+        </h2>
         <p class="text-navy-600 text-sm mt-2">
-          <strong>What:</strong> Make your selections below and click <em>Encrypt Ballot</em>. Your
-          choices will be encrypted so that no one &mdash; not even the server &mdash; can see how
-          you voted until the official tally.
+          <strong>What:</strong> Make your selections below, then click <strong>Encrypt Ballot</strong>
+          in the wizard controls at the bottom of the page. Your choices will be encrypted so that
+          no one &mdash; not even the server &mdash; can see how you voted until the official tally.
         </p>
         <p class="text-navy-600 text-sm mt-1.5">
           <strong>What to expect:</strong> After encryption, you'll see a review screen with your
@@ -285,11 +261,19 @@ import Icon from '../../../components/ui/Icon.astro';
 
           <p class="text-navy-600 text-sm mt-4 mb-3">
             Your ballot has been encrypted. The hash below is a unique fingerprint of the ciphertext
-            &mdash; you can use it later to verify your ballot was included in the final tally. Now
-            you can either <strong>cast it</strong> (submit it for real) or <strong>challenge it</strong>
-            (force the device to prove it encrypted honestly, which discards this ballot and lets you
-            re-encrypt).
+            &mdash; you can use it later to verify your ballot was included in the final tally.
+            You have two choices:
           </p>
+          <ul class="text-navy-600 text-sm mb-3 ml-4 list-disc space-y-1">
+            <li>
+              Click <strong>Continue to Cast</strong> in the wizard controls below to proceed to the
+              final submission step.
+            </li>
+            <li>
+              Click <strong>Challenge (Spoil)</strong> above to force the device to prove it
+              encrypted your selections honestly. This discards the ballot and lets you re-encrypt.
+            </li>
+          </ul>
 
           <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
             <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
@@ -313,24 +297,14 @@ import Icon from '../../../components/ui/Icon.astro';
 
           <div class="mt-4 flex items-center justify-between flex-wrap gap-3">
             <p id="spoil-count" class="text-sm text-navy-500 font-sans">Challenges used: 0</p>
-            <div class="flex flex-wrap gap-2">
-              <button
-                id="spoil-btn"
-                class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-                type="button"
-              >
-                <Icon name="eye" class="text-navy-700" size={18} />
-                Challenge (Spoil)
-              </button>
-              <button
-                id="cast-final-btn"
-                class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-4 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors"
-                type="button"
-              >
-                <Icon name="check-square" class="text-gold-300" size={18} />
-                Cast This Ballot
-              </button>
-            </div>
+            <button
+              id="spoil-btn"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+              type="button"
+            >
+              <Icon name="eye" class="text-navy-700" size={18} />
+              Challenge (Spoil)
+            </button>
           </div>
 
           <!-- Spoil verification result (hidden until spoil) -->
@@ -376,8 +350,73 @@ import Icon from '../../../components/ui/Icon.astro';
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Cast request/response JSON (hidden until cast) -->
+      <!-- Step 4: Cast -->
+      <section
+        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md hidden"
+        id="cast-step"
+      >
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="check-square" class="text-gold-600" />
+            Cast Ballot
+          </h2>
+          <a
+            href="/votechain/poc/dashboard"
+            class="text-sm font-sans font-semibold text-navy-700 hover:text-gold-700 underline"
+          >
+            Open Dashboard
+          </a>
+        </div>
+        <p class="text-navy-600 text-sm mt-2">
+          You're about to submit your <strong>encrypted ballot</strong> along with an eligibility proof
+          and a one-time challenge. In this POC, everything is simulated locally, but the flow matches
+          the EWP concept: challenge + cast + receipt.
+        </p>
+        <p class="text-navy-600 text-sm mt-1.5">
+          Click <strong>Cast Ballot</strong> in the wizard controls below to submit. If the
+          challenge expired or the nullifier was already used, you'll see a clear error with next steps.
+        </p>
+
+        <div class="mt-5 rounded-lg border border-navy-200 bg-cream-50 p-4">
+          <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
+            Cast Summary (Local)
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <p class="text-[10px] font-mono text-navy-400 mb-0.5">Ballot Hash</p>
+              <p id="cast-summary-ballot-hash" class="font-mono text-xs text-navy-900 break-all">-</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-mono text-navy-400 mb-0.5">Ballot ID</p>
+              <p id="cast-summary-ballot-id" class="font-mono text-xs text-navy-900 break-all">-</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-mono text-navy-400 mb-0.5">Challenge ID</p>
+              <p
+                id="cast-summary-challenge-id"
+                class="font-mono text-xs text-navy-900 break-all"
+              >
+                -
+              </p>
+            </div>
+            <div>
+              <p class="text-[10px] font-mono text-navy-400 mb-0.5">Challenge Expires</p>
+              <p
+                id="cast-summary-challenge-exp"
+                class="font-mono text-xs text-navy-900 break-all"
+              >
+                -
+              </p>
+            </div>
+          </div>
+          <p class="text-navy-500 text-xs mt-2 italic" id="cast-summary-hint">
+            -
+          </p>
+        </div>
+
+        <!-- Cast request/response JSON (shown after you click Cast) -->
         <div id="cast-json-panel" class="hidden mt-6">
           <Divider withSeal={false} />
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
@@ -395,6 +434,80 @@ import Icon from '../../../components/ui/Icon.astro';
               <pre
                 class="rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="cast-response-json">Waiting...</code></pre>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Wizard Controls -->
+      <section
+        id="wizard-controls"
+        class="sticky bottom-4 z-10 bg-white rounded-xl border border-navy-200 p-4 shadow-lg"
+      >
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <button
+            id="wizard-back"
+            class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all disabled:opacity-50 disabled:hover:border-navy-200 disabled:hover:shadow-none"
+            type="button"
+          >
+            <Icon name="arrow-right" class="text-navy-700 rotate-180" size={18} />
+            Back
+          </button>
+
+          <div class="flex items-center gap-2">
+            <button
+              id="wizard-restart"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+              type="button"
+            >
+              <Icon name="repeat" class="text-navy-700" size={18} />
+              Restart
+            </button>
+
+            <button
+              id="wizard-next"
+              class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-4 py-2 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors disabled:opacity-50"
+              type="button"
+            >
+              <span id="wizard-next-label">Next</span>
+              <Icon name="arrow-right" class="text-navy-900" size={18} />
+            </button>
+          </div>
+        </div>
+
+        <p id="wizard-status" class="mt-3 text-sm text-navy-700"></p>
+      </section>
+
+      <!-- Cast error section (hidden until error) -->
+      <section
+        class="bg-white rounded-xl border-2 border-red-300 p-6 sm:p-8 shadow-md hidden"
+        id="cast-error"
+      >
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h2 class="font-serif text-xl text-red-800 font-bold">Ballot Not Cast</h2>
+            <p id="cast-error-message" class="text-red-700 text-sm mt-2"></p>
+            <p id="cast-error-hint" class="text-navy-600 text-sm mt-2"></p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button
+                id="cast-error-retry"
+                class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-4 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors"
+                type="button"
+              >
+                <Icon name="repeat" class="text-gold-300" size={18} />
+                Start Over
+              </button>
+            </div>
+            <details class="mt-4">
+              <summary class="text-xs text-navy-500 cursor-pointer hover:text-navy-700">Show raw error</summary>
+              <pre id="cast-error-raw" class="mt-2 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"></pre>
+            </details>
           </div>
         </div>
       </section>
@@ -451,12 +564,27 @@ import Icon from '../../../components/ui/Icon.astro';
           </div>
 
           <div class="mt-6 flex flex-wrap justify-center gap-3">
+            <button
+              id="copy-receipt-btn"
+              class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-4 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors"
+              type="button"
+            >
+              <Icon name="copy" class="text-gold-300" size={18} />
+              <span id="copy-receipt-label">Copy Receipt</span>
+            </button>
             <a
               href="/votechain/poc/verify"
               class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-4 py-2 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors"
             >
               <Icon name="shield" class="text-navy-900" size={18} />
               Verify Your Receipt
+            </a>
+            <a
+              href="/votechain/poc/lookup"
+              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+            >
+              <Icon name="search" class="text-navy-700" size={18} />
+              Public Ballot Lookup
             </a>
             <a
               href="/votechain/poc/dashboard"
@@ -509,22 +637,47 @@ import Icon from '../../../components/ui/Icon.astro';
       return bytesToB64u(b);
     }
 
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    function createLucideSvg(params: {
+      size?: number;
+      className?: string;
+      nodes: Array<{ name: string; attrs: Record<string, string> }>;
+    }) {
+      const size = params.size ?? 24;
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('xmlns', SVG_NS);
+      svg.setAttribute('width', String(size));
+      svg.setAttribute('height', String(size));
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('stroke-linecap', 'round');
+      svg.setAttribute('stroke-linejoin', 'round');
+      if (params.className) svg.setAttribute('class', params.className);
+
+      for (const node of params.nodes) {
+        const el = document.createElementNS(SVG_NS, node.name);
+        for (const [k, v] of Object.entries(node.attrs)) el.setAttribute(k, v);
+        svg.appendChild(el);
+      }
+
+      return svg;
+    }
+
     // DOM refs
     const manifestEl = document.getElementById('manifest-json') as HTMLElement;
     const credDidEl = document.getElementById('credential-did') as HTMLElement;
     const credNullifierEl = document.getElementById('credential-nullifier') as HTMLElement;
-    const generateCredBtn = document.getElementById('credential-generate') as HTMLButtonElement;
-    const challengeBtn = document.getElementById('challenge-request') as HTMLButtonElement;
     const challengeEl = document.getElementById('challenge-json') as HTMLElement;
     const ballotOptionsEl = document.getElementById('ballot-options') as HTMLElement;
-    const encryptBtn = document.getElementById('encrypt-btn') as HTMLButtonElement;
     const reviewPanel = document.getElementById('review-panel') as HTMLElement;
     const reviewBallotHash = document.getElementById('review-ballot-hash') as HTMLElement;
     const reviewBallotId = document.getElementById('review-ballot-id') as HTMLElement;
     const reviewSelections = document.getElementById('review-selections') as HTMLElement;
     const spoilCountEl = document.getElementById('spoil-count') as HTMLElement;
     const spoilBtn = document.getElementById('spoil-btn') as HTMLButtonElement;
-    const castFinalBtn = document.getElementById('cast-final-btn') as HTMLButtonElement;
     const spoilResult = document.getElementById('spoil-result') as HTMLElement;
     const spoilResultBox = document.getElementById('spoil-result-box') as HTMLElement;
     const spoilResultIcon = document.getElementById('spoil-result-icon') as HTMLElement;
@@ -537,11 +690,39 @@ import Icon from '../../../components/ui/Icon.astro';
     const castReqEl = document.getElementById('cast-request-json') as HTMLElement;
     const castResEl = document.getElementById('cast-response-json') as HTMLElement;
     const castSuccess = document.getElementById('cast-success') as HTMLElement;
+    const castError = document.getElementById('cast-error') as HTMLElement;
+    const castErrorMessage = document.getElementById('cast-error-message') as HTMLElement;
+    const castErrorHint = document.getElementById('cast-error-hint') as HTMLElement;
+    const castErrorRaw = document.getElementById('cast-error-raw') as HTMLElement;
+    const castErrorRetry = document.getElementById('cast-error-retry') as HTMLButtonElement;
     const successDetails = document.getElementById('success-details') as HTMLElement;
+    const copyReceiptBtn = document.getElementById('copy-receipt-btn') as HTMLButtonElement;
+    const copyReceiptLabel = document.getElementById('copy-receipt-label') as HTMLElement;
     const toggleRawJson = document.getElementById('toggle-raw-json') as HTMLButtonElement;
     const rawReceiptJson = document.getElementById('raw-receipt-json') as HTMLElement;
+    const credentialSection = document.getElementById('credential') as HTMLElement;
+    const challengeSection = document.getElementById('challenge') as HTMLElement;
     const encryptReviewSection = document.getElementById('encrypt-review') as HTMLElement;
+    const castStepSection = document.getElementById('cast-step') as HTMLElement;
     const ballotSection = document.getElementById('ballot-section') as HTMLElement;
+    const wizardControls = document.getElementById('wizard-controls') as HTMLElement;
+    const wizardBack = document.getElementById('wizard-back') as HTMLButtonElement;
+    const wizardNext = document.getElementById('wizard-next') as HTMLButtonElement;
+    const wizardNextLabel = document.getElementById('wizard-next-label') as HTMLElement;
+    const wizardRestart = document.getElementById('wizard-restart') as HTMLButtonElement;
+    const wizardStatus = document.getElementById('wizard-status') as HTMLElement;
+
+    const castSummaryBallotHash = document.getElementById(
+      'cast-summary-ballot-hash',
+    ) as HTMLElement;
+    const castSummaryBallotId = document.getElementById('cast-summary-ballot-id') as HTMLElement;
+    const castSummaryChallengeId = document.getElementById(
+      'cast-summary-challenge-id',
+    ) as HTMLElement;
+    const castSummaryChallengeExp = document.getElementById(
+      'cast-summary-challenge-exp',
+    ) as HTMLElement;
+    const castSummaryHint = document.getElementById('cast-summary-hint') as HTMLElement;
 
     // State
     let cachedState: any = null;
@@ -553,6 +734,10 @@ import Icon from '../../../components/ui/Icon.astro';
       iv: string;
       plaintext: PocBallotPlaintext;
     } | null = null;
+    type WizardStep = 1 | 2 | 3 | 4;
+    type EncryptionState = 'none' | 'encrypted' | 'spoiled';
+    let wizardStep: WizardStep = 1;
+    let encryptionState: EncryptionState = 'none';
 
     // Step indicator
     function updateStepIndicator(current: number) {
@@ -580,6 +765,163 @@ import Icon from '../../../components/ui/Icon.astro';
             ? 'step-connector flex-1 h-0.5 mx-2 bg-gold-500 transition-all'
             : 'step-connector flex-1 h-0.5 mx-2 bg-navy-200 transition-all';
       });
+    }
+
+    function setWizardStatus(message: string) {
+      wizardStatus.textContent = message;
+    }
+
+    function challengeUsed(state: any, challenge_id: string | undefined): boolean {
+      if (!challenge_id) return false;
+      const rec = state?.challenges?.[challenge_id] ?? null;
+      return !!rec?.used;
+    }
+
+    function challengeExpired(expires_at: string | undefined): boolean {
+      if (!expires_at) return false;
+      const exp = Date.parse(expires_at);
+      if (!Number.isFinite(exp)) return false;
+      return Date.now() > exp;
+    }
+
+    function isChallengeUsable(challenge: any): boolean {
+      if (!challenge) return false;
+      if (challengeExpired(String(challenge.expires_at ?? ''))) return false;
+      if (challengeUsed(cachedState, String(challenge.challenge_id ?? ''))) return false;
+      return true;
+    }
+
+    function toChallengeResponse(record: any) {
+      if (!record) return null;
+      return {
+        challenge_id: String(record.challenge_id ?? ''),
+        challenge: String(record.challenge ?? ''),
+        expires_at: String(record.expires_at ?? ''),
+        kid: String(record.kid ?? ''),
+        server_sig: String(record.server_sig ?? ''),
+      };
+    }
+
+    function pickChallengeForResume(state: any) {
+      const records = Object.values(state?.challenges ?? {}) as any[];
+      if (!records.length) return null;
+
+      const usable = records.filter((r) => !r?.used && !challengeExpired(String(r?.expires_at ?? '')));
+      const pool = usable.length ? usable : records;
+
+      // Prefer the most recent expiry window.
+      pool.sort((a, b) => String(b?.expires_at ?? '').localeCompare(String(a?.expires_at ?? '')));
+      return toChallengeResponse(pool[0]);
+    }
+
+    function hideWizard() {
+      credentialSection.classList.add('hidden');
+      challengeSection.classList.add('hidden');
+      encryptReviewSection.classList.add('hidden');
+      castStepSection.classList.add('hidden');
+      wizardControls.classList.add('hidden');
+    }
+
+    function renderCastSummary() {
+      if (!currentEncryption) {
+        castSummaryBallotHash.textContent = '-';
+        castSummaryBallotId.textContent = '-';
+        castSummaryChallengeId.textContent = '-';
+        castSummaryChallengeExp.textContent = '-';
+        castSummaryHint.textContent = 'No encrypted ballot is currently in memory. Go back and encrypt.';
+        return;
+      }
+
+      castSummaryBallotHash.textContent = currentEncryption.encrypted_ballot.ballot_hash;
+      castSummaryBallotId.textContent = currentEncryption.encrypted_ballot.ballot_id;
+      castSummaryChallengeId.textContent = cachedChallenge?.challenge_id ?? '-';
+      castSummaryChallengeExp.textContent = cachedChallenge?.expires_at ?? '-';
+
+      if (encryptionState === 'spoiled') {
+        castSummaryHint.textContent = 'This ballot was spoiled. Re-encrypt before casting.';
+        return;
+      }
+
+      castSummaryHint.textContent = isChallengeUsable(cachedChallenge)
+        ? 'Ready to cast. A receipt will be saved to localStorage on success.'
+        : 'Challenge missing/expired. Request a new challenge before casting.';
+    }
+
+    const wizardStepEls: Record<WizardStep, HTMLElement> = {
+      1: credentialSection,
+      2: challengeSection,
+      3: encryptReviewSection,
+      4: castStepSection,
+    };
+
+    function setWizardStep(step: WizardStep, opts: { scroll?: boolean } = {}) {
+      wizardStep = step;
+
+      for (const [k, el] of Object.entries(wizardStepEls)) {
+        const n = Number(k) as WizardStep;
+        if (n === step) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+
+      // Wizard implies these are mutually exclusive views.
+      castError.classList.add('hidden');
+      castSuccess.classList.add('hidden');
+      wizardControls.classList.remove('hidden');
+
+      if (step === 4) renderCastSummary();
+
+      updateStepIndicator(step);
+      updateWizardControls();
+
+      if (opts.scroll !== false) {
+        wizardStepEls[step].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function updateWizardControls() {
+      wizardBack.disabled = wizardStep === 1;
+
+      const hasCredential = !!cachedState?.credential;
+      const challengeOk = isChallengeUsable(cachedChallenge);
+
+      let nextLabel = 'Next';
+      let nextDisabled = false;
+
+      if (wizardStep === 1) {
+        nextLabel = hasCredential ? 'Continue' : 'Generate Credential';
+      } else if (wizardStep === 2) {
+        if (!hasCredential) {
+          nextLabel = 'Generate Credential';
+          nextDisabled = false;
+        } else {
+          nextLabel = challengeOk ? 'Continue' : 'Request Challenge';
+        }
+      } else if (wizardStep === 3) {
+        if (!challengeOk) {
+          nextLabel = 'Request New Challenge';
+          nextDisabled = false;
+        } else if (encryptionState === 'none') {
+          nextLabel = 'Encrypt Ballot';
+          nextDisabled = !allContestsSelected();
+        } else if (encryptionState === 'spoiled') {
+          nextLabel = 'Re-Encrypt';
+          nextDisabled = false;
+        } else {
+          nextLabel = 'Continue to Cast';
+          nextDisabled = false;
+        }
+      } else if (wizardStep === 4) {
+        if (!challengeOk) {
+          nextLabel = 'Request New Challenge';
+          nextDisabled = false;
+        } else {
+          nextLabel = 'Cast Ballot';
+          nextDisabled = encryptionState !== 'encrypted' || !currentEncryption;
+        }
+      }
+
+      wizardNextLabel.textContent = nextLabel;
+      wizardNext.disabled = nextDisabled;
     }
 
     // Multi-contest ballot rendering
@@ -617,6 +959,8 @@ import Icon from '../../../components/ui/Icon.astro';
           input.className = 'h-4 w-4';
           input.addEventListener('change', () => {
             selections[contest.contest_id] = opt.id;
+            setWizardStatus('');
+            updateWizardControls();
           });
           const text = document.createElement('span');
           text.className = 'font-sans text-sm text-navy-800';
@@ -650,7 +994,6 @@ import Icon from '../../../components/ui/Icon.astro';
       reviewPanel.classList.remove('hidden');
       spoilResult.classList.add('hidden');
       ballotSection.classList.add('hidden');
-      encryptBtn.classList.add('hidden');
 
       reviewBallotHash.textContent = encrypted.ballot_hash;
       reviewBallotId.textContent = encrypted.ballot_id;
@@ -675,6 +1018,10 @@ import Icon from '../../../components/ui/Icon.astro';
         row.appendChild(selName);
         reviewSelections.appendChild(row);
       }
+
+      encryptionState = 'encrypted';
+      setWizardStatus('Ballot encrypted. Review it, optionally challenge (spoil), then continue to cast.');
+      updateWizardControls();
     }
 
     // Reset to ballot selection (after spoil, for re-encryption)
@@ -682,8 +1029,10 @@ import Icon from '../../../components/ui/Icon.astro';
       reviewPanel.classList.add('hidden');
       spoilResult.classList.add('hidden');
       ballotSection.classList.remove('hidden');
-      encryptBtn.classList.remove('hidden');
       currentEncryption = null;
+      encryptionState = 'none';
+      setWizardStatus('');
+      updateWizardControls();
     }
 
     async function refreshManifest() {
@@ -711,57 +1060,165 @@ import Icon from '../../../components/ui/Icon.astro';
       renderBallotOptions(state);
       await refreshManifest();
       await refreshCredential();
-      updateStepIndicator(1);
+
+      cachedChallenge = pickChallengeForResume(state);
+      challengeEl.textContent = cachedChallenge ? formatJson(cachedChallenge) : 'No challenge yet.';
+
+      const start: WizardStep = !cachedState?.credential
+        ? 1
+        : isChallengeUsable(cachedChallenge)
+          ? 3
+          : 2;
+
+      setWizardStep(start, { scroll: false });
+      setWizardStatus('');
     }
 
-    // Step 1: Generate credential
-    generateCredBtn?.addEventListener('click', async () => {
-      generateCredBtn.disabled = true;
-      try {
-        await ensureCredential();
-        await refreshCredential();
-        updateStepIndicator(2);
-      } finally {
-        generateCredBtn.disabled = false;
-      }
-    });
+    async function wizardEnsureCredential() {
+      setWizardStatus('Generating credential locally...');
+      await ensureCredential();
+      await refreshCredential();
+      setWizardStatus('Credential ready.');
+    }
 
-    // Step 2: Request challenge
-    challengeBtn?.addEventListener('click', async () => {
-      challengeBtn.disabled = true;
-      encryptBtn.disabled = true;
-      try {
-        cachedChallenge = await issueChallenge(randomB64u(32));
-        challengeEl.textContent = formatJson(cachedChallenge);
-        encryptBtn.disabled = false;
-        updateStepIndicator(3);
-      } catch (err) {
-        challengeEl.textContent = `Error: ${String(err)}`;
-      } finally {
-        challengeBtn.disabled = false;
-      }
-    });
+    async function wizardEnsureChallenge() {
+      setWizardStatus('Issuing one-time challenge...');
+      cachedChallenge = await issueChallenge(randomB64u(32));
+      cachedState = await getPocState();
+      challengeEl.textContent = formatJson(cachedChallenge);
+      setWizardStatus('Challenge issued.');
+    }
 
-    // Step 3: Encrypt ballot for review
-    encryptBtn?.addEventListener('click', async () => {
+    async function wizardEncryptBallot() {
       if (!allContestsSelected()) {
-        alert('Please make a selection for every contest.');
+        setWizardStatus('Select an option for every contest before encrypting.');
         return;
       }
 
-      encryptBtn.disabled = true;
+      // Challenge isn't strictly required for encryption, but the wizard enforces the EWP flow.
+      if (!isChallengeUsable(cachedChallenge)) {
+        await wizardEnsureChallenge();
+      }
+
+      setWizardStatus('Encrypting ballot locally (WebCrypto)...');
+      const result = await encryptBallotForReview({ contests: getContestSelections() });
+      if ('error' in result) {
+        setWizardStatus(result.error);
+        return;
+      }
+
+      currentEncryption = result;
+      const state = cachedState ?? (await getPocState());
+      showReviewPanel(result.encrypted_ballot, result.plaintext, state.election.contests);
+    }
+
+    async function restartWizard() {
+      // Clear transient UI without wiping the underlying POC state.
+      castError.classList.add('hidden');
+      castSuccess.classList.add('hidden');
+
+      castJsonPanel.classList.add('hidden');
+      castReqEl.textContent = 'Waiting...';
+      castResEl.textContent = 'Waiting...';
+
+      rawReceiptJson.textContent = '';
+      successDetails.replaceChildren();
+
+      spoilCount = 0;
+      spoilCountEl.textContent = 'Challenges used: 0';
+
+      resetToSelection();
+
+      const state = await getPocState();
+      cachedState = state;
+      renderBallotOptions(state);
+      await refreshCredential();
+
+      cachedChallenge = pickChallengeForResume(state);
+      challengeEl.textContent = cachedChallenge ? formatJson(cachedChallenge) : 'No challenge yet.';
+
+      // Always restart from Step 1 so the user can review each step.
+      setWizardStep(1);
+      setWizardStatus('');
+    }
+
+    wizardBack?.addEventListener('click', () => {
+      setWizardStatus('');
+      if (wizardStep === 2) setWizardStep(1);
+      else if (wizardStep === 3) setWizardStep(2);
+      else if (wizardStep === 4) setWizardStep(3);
+    });
+
+    wizardRestart?.addEventListener('click', async () => {
+      wizardRestart.disabled = true;
+      wizardNext.disabled = true;
+      wizardBack.disabled = true;
       try {
-        const result = await encryptBallotForReview({ contests: getContestSelections() });
-        if ('error' in result) {
-          alert(result.error);
+        await restartWizard();
+      } finally {
+        wizardRestart.disabled = false;
+        updateWizardControls();
+      }
+    });
+
+    wizardNext?.addEventListener('click', async () => {
+      wizardRestart.disabled = true;
+      wizardNext.disabled = true;
+      wizardBack.disabled = true;
+
+      try {
+        if (wizardStep === 1) {
+          if (!cachedState?.credential) {
+            await wizardEnsureCredential();
+          }
+          setWizardStep(2);
           return;
         }
 
-        currentEncryption = result;
-        const state = cachedState ?? (await getPocState());
-        showReviewPanel(result.encrypted_ballot, result.plaintext, state.election.contests);
+        if (wizardStep === 2) {
+          if (!cachedState?.credential) {
+            await wizardEnsureCredential();
+          }
+          if (!isChallengeUsable(cachedChallenge)) {
+            await wizardEnsureChallenge();
+          }
+          setWizardStep(3);
+          return;
+        }
+
+        if (wizardStep === 3) {
+          if (!isChallengeUsable(cachedChallenge)) {
+            await wizardEnsureChallenge();
+            updateWizardControls();
+            return;
+          }
+
+          if (encryptionState === 'none') {
+            await wizardEncryptBallot();
+            return;
+          }
+
+          if (encryptionState === 'spoiled') {
+            resetToSelection();
+            setWizardStatus('Spoiled ballot discarded. Encrypt a fresh ballot before casting.');
+            return;
+          }
+
+          setWizardStep(4);
+          return;
+        }
+
+        if (wizardStep === 4) {
+          if (!isChallengeUsable(cachedChallenge)) {
+            await wizardEnsureChallenge();
+            renderCastSummary();
+          }
+          await performCast();
+          return;
+        }
       } finally {
-        encryptBtn.disabled = false;
+        wizardRestart.disabled = false;
+        updateWizardControls();
       }
     });
 
@@ -769,7 +1226,6 @@ import Icon from '../../../components/ui/Icon.astro';
     spoilBtn?.addEventListener('click', async () => {
       if (!currentEncryption) return;
       spoilBtn.disabled = true;
-      castFinalBtn.disabled = true;
 
       try {
         const result = await spoilBallot({
@@ -796,8 +1252,16 @@ import Icon from '../../../components/ui/Icon.astro';
         if (verification.match) {
           spoilResultBox.className =
             'rounded-lg border-2 border-green-300 bg-green-50 p-4';
-          spoilResultIcon.innerHTML =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+          spoilResultIcon.replaceChildren(
+            createLucideSvg({
+              size: 20,
+              className: 'text-green-600',
+              nodes: [
+                { name: 'path', attrs: { d: 'M22 11.08V12a10 10 0 1 1-5.93-9.14' } },
+                { name: 'polyline', attrs: { points: '22 4 12 14.01 9 11.01' } },
+              ],
+            }),
+          );
           spoilResultTitle.textContent = 'MATCH \u2014 Device Verified Honest';
           spoilResultTitle.className = 'font-sans font-semibold text-sm text-green-700';
           spoilResultDetail.textContent = verification.details;
@@ -805,17 +1269,28 @@ import Icon from '../../../components/ui/Icon.astro';
         } else {
           spoilResultBox.className =
             'rounded-lg border-2 border-red-300 bg-red-50 p-4';
-          spoilResultIcon.innerHTML =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+          spoilResultIcon.replaceChildren(
+            createLucideSvg({
+              size: 20,
+              className: 'text-red-600',
+              nodes: [
+                { name: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+                { name: 'line', attrs: { x1: '15', y1: '9', x2: '9', y2: '15' } },
+                { name: 'line', attrs: { x1: '9', y1: '9', x2: '15', y2: '15' } },
+              ],
+            }),
+          );
           spoilResultTitle.textContent = 'MISMATCH \u2014 Potential Tampering';
           spoilResultTitle.className = 'font-sans font-semibold text-sm text-red-700';
           spoilResultDetail.textContent = verification.details;
           spoilResultDetail.className = 'text-xs mt-1 text-red-600';
         }
+
+        encryptionState = 'spoiled';
+        setWizardStatus('Ballot spoiled. Review the verification result, then re-encrypt a fresh ballot.');
+        updateWizardControls();
       } finally {
         spoilBtn.disabled = false;
-        // After spoil, can't cast this ballot — must re-encrypt
-        castFinalBtn.disabled = true;
       }
     });
 
@@ -825,12 +1300,67 @@ import Icon from '../../../components/ui/Icon.astro';
       spoilCountEl.textContent = `Challenges used: ${spoilCount}`;
     });
 
-    // Step 4: Cast the committed ballot
-    castFinalBtn?.addEventListener('click', async () => {
-      if (!currentEncryption || !cachedChallenge) return;
-      castFinalBtn.disabled = true;
-      spoilBtn.disabled = true;
+    // EWP error code → user-friendly message + hint
+    const ewpErrorMessages: Record<string, { message: string; hint: string }> = {
+      EWP_CHALLENGE_EXPIRED: {
+        message: 'Your challenge has expired (they last 10 minutes).',
+        hint: 'Click "Start Over" below, then request a new challenge and re-encrypt your ballot.',
+      },
+      EWP_NULLIFIER_USED: {
+        message: 'You have already cast a ballot in this election.',
+        hint: 'Each voter can only cast once. If you believe this is an error, check the Dashboard for fraud flags. To vote again as a new voter, reset the POC state from the POC Home page.',
+      },
+      EWP_PROOF_INVALID: {
+        message: 'Your eligibility proof failed verification.',
+        hint: 'This can happen if your challenge was already used or your credential doesn\'t match. Click "Start Over" and go through the full flow again.',
+      },
+      EWP_BALLOT_INVALID: {
+        message: 'Your ballot failed validity checks.',
+        hint: 'The encrypted ballot structure doesn\'t match what the election expects. Try encrypting again.',
+      },
+      EWP_BAD_MANIFEST: {
+        message: 'The election manifest is invalid or has been tampered with.',
+        hint: 'Reset the POC state from the POC Home page and try again.',
+      },
+      EWP_IDEMPOTENCY_MISMATCH: {
+        message: 'This request conflicts with a previous submission.',
+        hint: 'Click "Start Over" and go through the full flow again.',
+      },
+    };
 
+    function showCastError(errorCode: string, rawError: unknown) {
+      const info = ewpErrorMessages[errorCode] ?? {
+        message: `Cast failed with error: ${errorCode}`,
+        hint: 'Click "Start Over" and try the full flow again.',
+      };
+
+      hideWizard();
+      castError.classList.remove('hidden');
+      castErrorMessage.textContent = info.message;
+      castErrorHint.textContent = info.hint;
+      castErrorRaw.textContent = JSON.stringify(rawError, null, 2);
+      castError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function performCast() {
+      if (!currentEncryption) {
+        showCastError('MISSING_BALLOT', { currentEncryption: !!currentEncryption });
+        return;
+      }
+
+      if (!cachedChallenge) {
+        showCastError('MISSING_CHALLENGE', { cachedChallenge: !!cachedChallenge });
+        return;
+      }
+
+      if (!isChallengeUsable(cachedChallenge)) {
+        showCastError('EWP_CHALLENGE_EXPIRED', { cachedChallenge });
+        return;
+      }
+
+      renderCastSummary();
+
+      setWizardStatus('Casting ballot...');
       castJsonPanel.classList.remove('hidden');
       castReqEl.textContent = 'Building request...';
       castResEl.textContent = 'Casting...';
@@ -842,8 +1372,7 @@ import Icon from '../../../components/ui/Icon.astro';
         });
 
         if ('error' in built) {
-          castReqEl.textContent = built.error;
-          castResEl.textContent = built.error;
+          showCastError('BUILD_ERROR', { error: built.error });
           return;
         }
 
@@ -856,15 +1385,18 @@ import Icon from '../../../components/ui/Icon.astro';
 
         castResEl.textContent = JSON.stringify(res, null, 2);
 
+        if ('error' in res) {
+          showCastError(res.error.code, res);
+          return;
+        }
+
         if ('status' in res && res.status === 'cast_recorded') {
           localStorage.setItem('votechain_poc_last_receipt', JSON.stringify(res.cast_receipt));
           updateStepIndicator(5); // all complete
 
-          // Show success section
-          encryptReviewSection.classList.add('hidden');
+          hideWizard();
           castSuccess.classList.remove('hidden');
 
-          // Populate receipt details
           const receipt = res.cast_receipt;
           successDetails.replaceChildren();
           const items = [
@@ -893,12 +1425,57 @@ import Icon from '../../../components/ui/Icon.astro';
           }
 
           rawReceiptJson.textContent = JSON.stringify(receipt, null, 2);
+          castSuccess.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       } catch (err) {
         castResEl.textContent = `Error: ${String(err)}`;
-      } finally {
-        castFinalBtn.disabled = false;
-        spoilBtn.disabled = false;
+        showCastError('EXCEPTION', { message: String(err) });
+      }
+    }
+
+    // Cast error "Start Over" restarts the flow
+    castErrorRetry?.addEventListener('click', () => {
+      window.location.reload();
+    });
+
+    // Copy receipt to clipboard
+    copyReceiptBtn?.addEventListener('click', async () => {
+      const receiptStr = localStorage.getItem('votechain_poc_last_receipt');
+      if (!receiptStr) return;
+      try {
+        await navigator.clipboard.writeText(receiptStr);
+        copyReceiptLabel.textContent = 'Copied!';
+        copyReceiptBtn.disabled = true;
+        setTimeout(() => {
+          copyReceiptLabel.textContent = 'Copy Receipt';
+          copyReceiptBtn.disabled = false;
+        }, 2000);
+      } catch {
+        // Clipboard access isn't available. Reveal the raw receipt JSON and select a hidden textarea
+        // so the user can press Ctrl/Cmd+C manually.
+        rawReceiptJson.classList.remove('hidden');
+        toggleRawJson.textContent = 'Hide raw receipt JSON';
+
+        const ta = document.createElement('textarea');
+        ta.value = receiptStr;
+        ta.style.position = 'fixed';
+        ta.style.left = '0';
+        ta.style.top = '0';
+        ta.style.width = '1px';
+        ta.style.height = '1px';
+        ta.style.opacity = '0';
+        ta.setAttribute('readonly', 'true');
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+
+        copyReceiptLabel.textContent = 'Press Ctrl/Cmd+C';
+        copyReceiptBtn.disabled = true;
+        setTimeout(() => {
+          document.body.removeChild(ta);
+          copyReceiptLabel.textContent = 'Copy Receipt';
+          copyReceiptBtn.disabled = false;
+        }, 2500);
       }
     });
 

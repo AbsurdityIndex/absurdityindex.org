@@ -217,11 +217,58 @@ interface PocVclEvent {
     | 'ewp_ballot_cast'
     | 'bb_sth_published'
     | 'tally_published'
-    | 'fraud_flag';
+    | 'fraud_flag'
+    | 'fraud_flag_action';
   recorded_at: string;
   payload: Record<string, unknown>;
   kid: string;
   sig: B64u;
+}
+
+export type PocFraudFlagStatus =
+  | 'pending_review'
+  | 'triaged'
+  | 'investigating'
+  | 'escalated'
+  | 'resolved_cleared'
+  | 'resolved_confirmed_fraud'
+  | 'resolved_system_error';
+
+export type PocFraudFlagAction =
+  | 'take_case'
+  | 'start_investigation'
+  | 'escalate'
+  | 'resolve_cleared'
+  | 'resolve_confirmed_fraud'
+  | 'resolve_system_error'
+  | 'note';
+
+export interface PocFraudCaseActionRecord {
+  tx_id: Hex0x;
+  recorded_at: string;
+  action: PocFraudFlagAction | string;
+  reviewer_id: string;
+  from_status: PocFraudFlagStatus | string;
+  to_status: PocFraudFlagStatus | string;
+  reason_code?: string;
+  note?: string;
+  assigned_to?: string;
+}
+
+export interface PocFraudCase {
+  case_id: Hex0x;
+  created_at: string;
+  updated_at: string;
+  status: PocFraudFlagStatus | string;
+  flag_type: string;
+  severity?: string;
+  evidence_strength?: string;
+  election_id?: string;
+  jurisdiction_id?: string;
+  nullifier?: string;
+  assigned_to?: string;
+  flag_payload: Record<string, unknown>;
+  actions: PocFraudCaseActionRecord[];
 }
 
 interface PocBbLeaf {
@@ -944,6 +991,95 @@ async function recordFraudFlag(state: PocStateV1, flag: Record<string, unknown>)
   state.vcl.events.push({ ...eventUnsigned, ...signed });
 }
 
+async function recordFraudFlagAction(state: PocStateV1, action: Record<string, unknown>) {
+  const eventUnsigned: Omit<PocVclEvent, 'sig' | 'tx_id'> = {
+    type: 'fraud_flag_action',
+    recorded_at: nowIso(),
+    payload: action,
+    kid: state.keys.vcl.kid,
+  };
+  const signed = await vclSignEvent(eventUnsigned, state.keys.vcl);
+  state.vcl.events.push({ ...eventUnsigned, ...signed });
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function isResolvedFraudStatus(status: string) {
+  return status.startsWith('resolved_');
+}
+
+function deriveFraudCases(state: PocStateV1): PocFraudCase[] {
+  const createEvents = state.vcl.events.filter((e) => e.type === 'fraud_flag');
+  const actionEvents = state.vcl.events.filter((e) => e.type === 'fraud_flag_action');
+
+  const actionsByCase = new Map<string, PocFraudCaseActionRecord[]>();
+  for (const evt of actionEvents) {
+    const case_id = asString(evt.payload.case_id);
+    if (!case_id) continue;
+
+    const actionRecord: PocFraudCaseActionRecord = {
+      tx_id: evt.tx_id,
+      recorded_at: evt.recorded_at,
+      action: asString(evt.payload.action) ?? 'unknown',
+      reviewer_id: asString(evt.payload.reviewer_id) ?? 'unknown',
+      from_status: asString(evt.payload.from_status) ?? 'unknown',
+      to_status: asString(evt.payload.to_status) ?? (asString(evt.payload.from_status) ?? 'unknown'),
+      reason_code: asString(evt.payload.reason_code),
+      note: asString(evt.payload.note),
+      assigned_to: asString(evt.payload.assigned_to),
+    };
+
+    const list = actionsByCase.get(case_id) ?? [];
+    list.push(actionRecord);
+    actionsByCase.set(case_id, list);
+  }
+
+  const cases: PocFraudCase[] = [];
+  for (const create of createEvents) {
+    const case_id = create.tx_id;
+    const actions = actionsByCase.get(case_id)?.slice() ?? [];
+    actions.sort((a, b) => a.recorded_at.localeCompare(b.recorded_at));
+
+    const flag_type = asString(create.payload.flag_type) ?? 'unknown';
+    const severity = asString(create.payload.severity);
+    const evidence_strength = asString(create.payload.evidence_strength);
+    const election_id = asString(create.payload.election_id);
+    const jurisdiction_id = asString(create.payload.jurisdiction_id);
+    const nullifier = asString(create.payload.nullifier);
+
+    let status: string = asString(create.payload.status) ?? 'pending_review';
+    let updated_at = create.recorded_at;
+    let assigned_to: string | undefined;
+
+    for (const a of actions) {
+      if (a.to_status) status = a.to_status;
+      if (a.assigned_to) assigned_to = a.assigned_to;
+      updated_at = a.recorded_at;
+    }
+
+    cases.push({
+      case_id,
+      created_at: create.recorded_at,
+      updated_at,
+      status,
+      flag_type,
+      severity,
+      evidence_strength,
+      election_id,
+      jurisdiction_id,
+      nullifier,
+      assigned_to,
+      flag_payload: create.payload,
+      actions,
+    });
+  }
+
+  cases.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  return cases;
+}
+
 async function recordBbSthPublished(state: PocStateV1, sth: PocSignedTreeHead) {
   const eventUnsigned: Omit<PocVclEvent, 'sig' | 'tx_id'> = {
     type: 'bb_sth_published',
@@ -1513,6 +1649,7 @@ export interface DashboardSnapshot {
     pending: number;
     provisional: number;
   };
+  fraud_cases: PocFraudCase[];
   events: PocVclEvent[];
   leaves: PocBbLeaf[];
   tally?: PocTally;
@@ -1553,10 +1690,60 @@ export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
       pending,
       provisional,
     },
+    fraud_cases: deriveFraudCases(state),
     events,
     leaves,
     tally: state.tally,
   };
+}
+
+export async function reviewFraudFlag(params: {
+  case_id: Hex0x;
+  reviewer_id: string;
+  action: PocFraudFlagAction;
+  note?: string;
+  reason_code?: string;
+}): Promise<{ ok: true } | { error: string }> {
+  const state = await ensureInitialized();
+
+  const reviewer_id = params.reviewer_id.trim();
+  if (!reviewer_id) return { error: 'Reviewer ID is required.' };
+
+  const exists = state.vcl.events.some((e) => e.type === 'fraud_flag' && e.tx_id === params.case_id);
+  if (!exists) return { error: 'Unknown fraud case id.' };
+
+  const current = deriveFraudCases(state).find((c) => c.case_id === params.case_id);
+  const currentStatus = (current?.status ?? 'pending_review') as string;
+
+  if (isResolvedFraudStatus(currentStatus) && params.action !== 'note') {
+    return { error: `Case is already ${currentStatus}. Only notes are allowed.` };
+  }
+
+  const nextStatusByAction: Partial<Record<PocFraudFlagAction, PocFraudFlagStatus>> = {
+    take_case: 'triaged',
+    start_investigation: 'investigating',
+    escalate: 'escalated',
+    resolve_cleared: 'resolved_cleared',
+    resolve_confirmed_fraud: 'resolved_confirmed_fraud',
+    resolve_system_error: 'resolved_system_error',
+  };
+
+  const to_status = nextStatusByAction[params.action] ?? currentStatus;
+
+  const actionPayload: Record<string, unknown> = {
+    case_id: params.case_id,
+    action: params.action,
+    reviewer_id,
+    from_status: currentStatus,
+    to_status,
+    ...(params.reason_code ? { reason_code: params.reason_code } : {}),
+    ...(params.note ? { note: params.note } : {}),
+    ...(params.action === 'take_case' ? { assigned_to: reviewer_id } : {}),
+  };
+
+  await recordFraudFlagAction(state, actionPayload);
+  saveState(state);
+  return { ok: true };
 }
 
 export async function publishTally(): Promise<PocTally | { error: string }> {
@@ -1619,6 +1806,209 @@ export async function publishTally(): Promise<PocTally | { error: string }> {
 
   saveState(state);
   return tally;
+}
+
+export interface BallotLookupResult {
+  found: boolean;
+  ballot_hash: string;
+  leaf_hash?: string;
+  leaf_index?: number;
+  received_at?: string;
+  inclusion_proof?: PocInclusionProof;
+  anchor_event?: {
+    tx_id: string;
+    recorded_at: string;
+    nullifier?: string;
+  };
+  latest_sth?: PocSignedTreeHead;
+  checks: Array<{ name: string; status: VerifyStatus; details?: string }>;
+}
+
+export async function lookupBallotByHash(ballotHash: string): Promise<BallotLookupResult> {
+  const state = await ensureInitialized();
+  const checks: Array<{ name: string; status: VerifyStatus; details?: string }> = [];
+
+  // Find the leaf containing this ballot hash
+  const leafIndex = state.bb.leaves.findIndex(
+    (l) => (l.payload as any)?.encrypted_ballot?.ballot_hash === ballotHash,
+  );
+
+  if (leafIndex === -1) {
+    checks.push({
+      name: 'ballot_on_bulletin_board',
+      status: 'fail',
+      details: 'No ballot with this hash found on the bulletin board.',
+    });
+    return { found: false, ballot_hash: ballotHash, checks };
+  }
+
+  const leaf = state.bb.leaves[leafIndex];
+  const receivedAt = (leaf.payload as any)?.received_at as string | undefined;
+
+  checks.push({
+    name: 'ballot_on_bulletin_board',
+    status: 'ok',
+    details: `Found at leaf index ${leafIndex} (leaf_hash: ${leaf.leaf_hash.slice(0, 16)}...)`,
+  });
+
+  // Compute inclusion proof
+  const leafHashes = state.bb.leaves.map((l) => l.leaf_hash);
+  const proof = await computeInclusionProof(leafHashes, leafIndex);
+  const proofOk = proof ? await verifyInclusionProof(proof) : false;
+
+  checks.push({
+    name: 'merkle_inclusion_proof',
+    status: proofOk ? 'ok' : 'fail',
+    details: proofOk
+      ? `Verified at leaf_index=${leafIndex}, tree_size=${leafHashes.length}`
+      : 'Inclusion proof verification failed.',
+  });
+
+  // Check for VCL anchor event
+  const anchorEvent = state.vcl.events.find(
+    (evt) => evt.type === 'ewp_ballot_cast' && evt.payload.ballot_hash === ballotHash,
+  );
+
+  checks.push({
+    name: 'votechain_anchor',
+    status: anchorEvent ? 'ok' : 'fail',
+    details: anchorEvent
+      ? `Anchored: tx_id=${anchorEvent.tx_id.slice(0, 16)}...`
+      : 'No matching ewp_ballot_cast event found on the ledger.',
+  });
+
+  // Verify anchor event signature
+  if (anchorEvent) {
+    const sigOk = await vclVerifyEvent(anchorEvent, state.keys.vcl);
+    checks.push({
+      name: 'anchor_signature',
+      status: sigOk ? 'ok' : 'fail',
+      details: sigOk ? `Signature valid (kid=${anchorEvent.kid})` : 'VCL event signature invalid.',
+    });
+  }
+
+  // Latest STH
+  const latestSth = state.bb.sth_history[state.bb.sth_history.length - 1] ?? undefined;
+  if (latestSth) {
+    const sthOk = await verifyBbSth(latestSth, state.keys.bb);
+    checks.push({
+      name: 'latest_sth_signature',
+      status: sthOk ? 'ok' : 'fail',
+      details: sthOk
+        ? `STH tree_size=${latestSth.tree_size}, signed by ${latestSth.kid}`
+        : 'Latest STH signature invalid.',
+    });
+  }
+
+  return {
+    found: true,
+    ballot_hash: ballotHash,
+    leaf_hash: leaf.leaf_hash,
+    leaf_index: leafIndex,
+    received_at: receivedAt,
+    inclusion_proof: proof ?? undefined,
+    anchor_event: anchorEvent
+      ? {
+          tx_id: anchorEvent.tx_id,
+          recorded_at: anchorEvent.recorded_at,
+          nullifier: anchorEvent.payload.nullifier as string | undefined,
+        }
+      : undefined,
+    latest_sth: latestSth,
+    checks,
+  };
+}
+
+// ── Trust Portal API ────────────────────────────────────────────────────────
+// These functions wrap existing internal crypto operations for the Public Trust
+// Portal, enabling independent verification of every signature and data
+// structure in the system.
+
+export async function verifyManifestSignature(): Promise<{
+  valid: boolean;
+  manifest_id: string;
+  kid: string;
+}> {
+  const state = await ensureInitialized();
+  const valid = await verifyManifest(state.manifest, state.keys.manifest);
+  return {
+    valid,
+    manifest_id: state.manifest.manifest_id,
+    kid: state.manifest.signing.kid,
+  };
+}
+
+export async function verifyAllSthSignatures(): Promise<{
+  total: number;
+  all_valid: boolean;
+  results: Array<{ tree_size: number; timestamp: string; valid: boolean }>;
+}> {
+  const state = await ensureInitialized();
+  const results: Array<{ tree_size: number; timestamp: string; valid: boolean }> = [];
+  for (const sth of state.bb.sth_history) {
+    const valid = await verifyBbSth(sth, state.keys.bb);
+    results.push({ tree_size: sth.tree_size, timestamp: sth.timestamp, valid });
+  }
+  return {
+    total: results.length,
+    all_valid: results.every((r) => r.valid),
+    results,
+  };
+}
+
+export async function verifyAllVclEventSignatures(): Promise<{
+  total: number;
+  all_valid: boolean;
+  results: Array<{ tx_id: string; type: string; valid: boolean }>;
+}> {
+  const state = await ensureInitialized();
+  const results: Array<{ tx_id: string; type: string; valid: boolean }> = [];
+  for (const event of state.vcl.events) {
+    const valid = await vclVerifyEvent(event, state.keys.vcl);
+    results.push({ tx_id: event.tx_id, type: event.type, valid });
+  }
+  return {
+    total: results.length,
+    all_valid: results.every((r) => r.valid),
+    results,
+  };
+}
+
+export async function verifyBulletinBoardIntegrity(): Promise<{
+  valid: boolean;
+  tree_size: number;
+  computed_root: string;
+  latest_sth_root: string;
+}> {
+  const state = await ensureInitialized();
+  const leafHashes = state.bb.leaves.map((l) => l.leaf_hash);
+  const computedRootBytes = await computeMerkleRootFromLeafHashes(leafHashes);
+  const computed_root = bytesToB64u(computedRootBytes);
+  const latestSth = state.bb.sth_history[state.bb.sth_history.length - 1];
+  const latest_sth_root = latestSth?.root_hash ?? '';
+  // If there are no STHs and no leaves, the tree is trivially valid (empty state)
+  const valid = latestSth ? computed_root === latest_sth_root : leafHashes.length === 0;
+  return {
+    valid,
+    tree_size: leafHashes.length,
+    computed_root,
+    latest_sth_root,
+  };
+}
+
+export async function getPublicKeys(): Promise<{
+  manifest: { kid: string; alg: string; jwk: JsonWebKey };
+  ewg: { kid: string; alg: string; jwk: JsonWebKey };
+  bb: { kid: string; alg: string; jwk: JsonWebKey };
+  vcl: { kid: string; alg: string; jwk: JsonWebKey };
+}> {
+  const state = await ensureInitialized();
+  return {
+    manifest: { kid: state.keys.manifest.kid, alg: state.keys.manifest.alg, jwk: state.keys.manifest.jwk_public },
+    ewg: { kid: state.keys.ewg.kid, alg: state.keys.ewg.alg, jwk: state.keys.ewg.jwk_public },
+    bb: { kid: state.keys.bb.kid, alg: state.keys.bb.alg, jwk: state.keys.bb.jwk_public },
+    vcl: { kid: state.keys.vcl.kid, alg: state.keys.vcl.alg, jwk: state.keys.vcl.jwk_public },
+  };
 }
 
 export async function verifyTally(tally: PocTally): Promise<ReceiptVerificationResult> {

@@ -43,7 +43,7 @@ import Icon from '../../../components/ui/Icon.astro';
           <h2 class="text-gold-400 font-serif text-xl text-center">What This Demonstrates</h2>
         </div>
         <div class="p-6 sm:p-8">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a
               href="/votechain/poc/vote"
               class="block rounded-lg border border-navy-200 p-5 hover:border-gold-500 hover:shadow-md transition-all"
@@ -81,6 +81,19 @@ import Icon from '../../../components/ui/Icon.astro';
               <p class="text-navy-600 text-sm">
                 View simulated VoteChain events, bulletin board leaves/STHs, fraud flags, and
                 publish a POC tally.
+              </p>
+            </a>
+            <a
+              href="/votechain/poc/trust"
+              class="block rounded-lg border border-navy-200 p-5 hover:border-gold-500 hover:shadow-md transition-all"
+            >
+              <div class="flex items-center gap-3 mb-2">
+                <Icon name="shield" class="text-gold-600" />
+                <h3 class="font-serif text-lg font-bold text-navy-900">Trust Portal</h3>
+              </div>
+              <p class="text-navy-600 text-sm">
+                Independently verify every cryptographic signature, Merkle root, and ledger event
+                in the election.
               </p>
             </a>
           </div>
