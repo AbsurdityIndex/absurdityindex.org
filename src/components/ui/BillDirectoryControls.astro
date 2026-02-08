@@ -245,6 +245,7 @@ function toCategorySlug(value: string) {
   if (!billsGrid || !controlsContainer) {
     // No directory controls found on this page.
   } else {
+    const billsGridEl = billsGrid;
     let billItems = Array.from(document.querySelectorAll('.bill-item')) as HTMLElement[];
     let activeCategory = 'all';
     const defaultSortValue = controlsContainer.getAttribute('data-default-sort') || 'newest';
@@ -945,7 +946,7 @@ function toCategorySlug(value: string) {
           fragment.appendChild(item);
         });
 
-        billsGrid.appendChild(fragment);
+        billsGridEl.appendChild(fragment);
 
         const resolvedPage = typeof payload.page === 'number' ? payload.page : pageToLoad;
         loadedPages.add(resolvedPage);
@@ -1096,7 +1097,7 @@ function toCategorySlug(value: string) {
         item.style.display = '';
         fragment.appendChild(item);
       });
-      billsGrid.appendChild(fragment);
+      billsGridEl.appendChild(fragment);
 
       const visibleCount = visibleItems.length;
       const hasActiveFilters = query.length > 0 || activeCategory !== 'all';
@@ -1111,7 +1112,7 @@ function toCategorySlug(value: string) {
       if (noResults) {
         noResults.classList.toggle('hidden', visibleCount > 0);
       }
-      billsGrid.classList.toggle('hidden', visibleCount === 0);
+      billsGridEl.classList.toggle('hidden', visibleCount === 0);
 
       syncUrlState(rawQuery, sortValue);
       updateLoadMoreUi();

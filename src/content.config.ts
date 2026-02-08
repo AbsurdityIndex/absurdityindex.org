@@ -296,7 +296,16 @@ const bills = defineCollection({
             type: z.string(),
             date: z.coerce.date(),
             text: z.string(),
-            icon: z.string(),
+            icon: z.enum([
+              'file-text',
+              'users',
+              'check-square',
+              'vote',
+              'git-merge',
+              'pen-tool',
+              'award',
+              'x-circle',
+            ]),
           }),
         )
         .optional(),

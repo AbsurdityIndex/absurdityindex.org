@@ -80,142 +80,196 @@
 </section>
 
 <script>
-  const dateEl = document.getElementById('today-front-date');
-  const loadingEl = document.getElementById('today-front-loading');
-  const errorEl = document.getElementById('today-front-error');
-  const contentEl = document.getElementById('today-front-content');
-  const deckEl = document.getElementById('today-front-deck');
-  const houseStatusEl = document.getElementById('today-front-house-status');
-  const houseLineEl = document.getElementById('today-front-house-line');
-  const senateStatusEl = document.getElementById('today-front-senate-status');
-  const senateLineEl = document.getElementById('today-front-senate-line');
-  const bulletsEl = document.getElementById('today-front-bullets');
-  const meetingsEl = document.getElementById('today-front-meetings');
+  (() => {
+    type TodayMeeting = {
+      chamber?: string;
+      time?: string;
+      committee?: string;
+      title?: string;
+      focus?: string;
+      relatedBillCount?: number;
+      relatedNominationCount?: number;
+      isClosed?: boolean;
+    };
 
-  function truncate(text, max = 170) {
-    if (!text || text.length <= max) return text || '';
-    return `${text.slice(0, max - 1).trim()}...`;
-  }
+    const dateEl = document.getElementById('today-front-date');
+    const loadingEl = document.getElementById('today-front-loading');
+    const errorEl = document.getElementById('today-front-error');
+    const contentEl = document.getElementById('today-front-content');
+    const deckEl = document.getElementById('today-front-deck');
+    const houseStatusEl = document.getElementById('today-front-house-status');
+    const houseLineEl = document.getElementById('today-front-house-line');
+    const senateStatusEl = document.getElementById('today-front-senate-status');
+    const senateLineEl = document.getElementById('today-front-senate-line');
+    const bulletsEl = document.getElementById('today-front-bullets');
+    const meetingsEl = document.getElementById('today-front-meetings');
 
-  function statusColor(status) {
-    if (/adjourned/i.test(status || '')) return 'text-red-700';
-    if (/session/i.test(status || '')) return 'text-green-700';
-    return 'text-navy-900';
-  }
+    if (
+      !(dateEl instanceof HTMLElement) ||
+      !(loadingEl instanceof HTMLElement) ||
+      !(errorEl instanceof HTMLElement) ||
+      !(contentEl instanceof HTMLElement) ||
+      !(deckEl instanceof HTMLElement) ||
+      !(houseStatusEl instanceof HTMLElement) ||
+      !(houseLineEl instanceof HTMLElement) ||
+      !(senateStatusEl instanceof HTMLElement) ||
+      !(senateLineEl instanceof HTMLElement) ||
+      !(bulletsEl instanceof HTMLUListElement) ||
+      !(meetingsEl instanceof HTMLUListElement)
+    ) {
+      // Markup changed or script is running in a non-DOM context.
+      // Fail closed: keep the page static and avoid noisy errors.
+      return;
+    }
 
-  function appendListItems(target, items) {
-    target.replaceChildren();
-    items.forEach((item) => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      target.appendChild(li);
-    });
-  }
+    const safeDateEl: HTMLElement = dateEl;
+    const safeLoadingEl: HTMLElement = loadingEl;
+    const safeErrorEl: HTMLElement = errorEl;
+    const safeContentEl: HTMLElement = contentEl;
+    const safeDeckEl: HTMLElement = deckEl;
+    const safeHouseStatusEl: HTMLElement = houseStatusEl;
+    const safeHouseLineEl: HTMLElement = houseLineEl;
+    const safeSenateStatusEl: HTMLElement = senateStatusEl;
+    const safeSenateLineEl: HTMLElement = senateLineEl;
+    const safeBulletsEl: HTMLUListElement = bulletsEl;
+    const safeMeetingsEl: HTMLUListElement = meetingsEl;
 
-  async function requestTodayData() {
-    const endpoints = ['/api/today.json', '/api/today-fallback.json'];
-    let lastError;
+    function truncate(text: string, max = 170): string {
+      if (!text || text.length <= max) return text || '';
+      return `${text.slice(0, max - 1).trim()}...`;
+    }
 
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          headers: { Accept: 'application/json' },
-        });
-        if (!response.ok) {
-          lastError = new Error(`${endpoint} returned HTTP ${response.status}`);
-          continue;
+    function statusColor(status: string): string {
+      if (/adjourned/i.test(status || '')) return 'text-red-700';
+      if (/session/i.test(status || '')) return 'text-green-700';
+      return 'text-navy-900';
+    }
+
+    function appendListItems(target: HTMLUListElement, items: string[]) {
+      target.replaceChildren();
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        target.appendChild(li);
+      });
+    }
+
+    async function requestTodayData() {
+      const endpoints = ['/api/today.json', '/api/today-fallback.json'];
+      let lastError: unknown;
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(endpoint, {
+            headers: { Accept: 'application/json' },
+          });
+          if (!response.ok) {
+            lastError = new Error(`${endpoint} returned HTTP ${response.status}`);
+            continue;
+          }
+          const data = await response.json();
+          return data;
+        } catch (error: unknown) {
+          lastError = error;
         }
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        lastError = error;
+      }
+
+      throw lastError instanceof Error
+        ? lastError
+        : new Error('Unable to load today data from available endpoints.');
+    }
+
+    async function loadTodayFront() {
+      try {
+        const data = await requestTodayData();
+        safeDateEl.textContent = data?.today?.label || 'Today';
+
+        const house = data?.chambers?.house || {};
+        safeHouseStatusEl.textContent = house.status || 'No update';
+        safeHouseStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(house.status)}`;
+
+        const houseLine = house.latestAction?.text
+          ? `${house.latestAction.time ? `${house.latestAction.time}: ` : ''}${house.latestAction.text}`
+          : house.nextConvene
+            ? `Next House meeting: ${house.nextConvene}`
+            : 'No House floor action posted yet.';
+        safeHouseLineEl.textContent = truncate(houseLine);
+
+        const senate = data?.chambers?.senate || {};
+        safeSenateStatusEl.textContent = senate.status || 'No update';
+        safeSenateStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(senate.status)}`;
+
+        const senateLine =
+          senate.previousSummary ||
+          (senate.nextConvene
+            ? `Next Senate meeting: ${senate.nextConvene}`
+            : 'No Senate floor summary posted yet.');
+        safeSenateLineEl.textContent = truncate(senateLine);
+
+        safeDeckEl.textContent =
+          data?.summary?.deck ||
+          'Satire desk is still warming up the teleprompter for this legislative day.';
+
+        const bullets = Array.isArray(data?.summary?.bullets)
+          ? data.summary.bullets.slice(0, 4).map(String)
+          : ['No summary available yet.'];
+        appendListItems(safeBulletsEl, bullets);
+
+        const meetings = Array.isArray(data?.committees?.meetings)
+          ? data.committees.meetings.slice(0, 4)
+          : [];
+        if (meetings.length === 0) {
+          appendListItems(safeMeetingsEl, ['No House or Senate committee meetings listed today.']);
+        } else {
+          appendListItems(
+            safeMeetingsEl,
+            meetings.map((meeting: TodayMeeting) => {
+              const chamber = meeting.chamber || 'Committee';
+              const time = meeting.time ? `${meeting.time} - ` : '';
+              const title = meeting.committee || meeting.title || 'Committee meeting';
+              const focus = meeting.focus ? ` (${meeting.focus})` : '';
+              const extras = [];
+              const relatedBillCount =
+                typeof meeting.relatedBillCount === 'number' ? meeting.relatedBillCount : null;
+              if (
+                typeof relatedBillCount === 'number' &&
+                Number.isFinite(relatedBillCount) &&
+                relatedBillCount > 0
+              ) {
+                extras.push(`${relatedBillCount} bill${relatedBillCount === 1 ? '' : 's'}`);
+              }
+              const relatedNominationCount =
+                typeof meeting.relatedNominationCount === 'number'
+                  ? meeting.relatedNominationCount
+                  : null;
+              if (
+                typeof relatedNominationCount === 'number' &&
+                Number.isFinite(relatedNominationCount) &&
+                relatedNominationCount > 0
+              ) {
+                extras.push(
+                  `${relatedNominationCount} nomination${relatedNominationCount === 1 ? '' : 's'}`,
+                );
+              }
+              if (meeting.isClosed) {
+                extras.push('closed');
+              }
+              const extraText = extras.length > 0 ? ` [${extras.join(', ')}]` : '';
+              return `${time}${chamber}: ${truncate(`${title}${focus}${extraText}`, 120)}`;
+            }),
+          );
+        }
+
+        safeLoadingEl.classList.add('hidden');
+        safeErrorEl.classList.add('hidden');
+        safeContentEl.classList.remove('hidden');
+      } catch (_error) {
+        safeLoadingEl.classList.add('hidden');
+        safeContentEl.classList.add('hidden');
+        safeErrorEl.classList.remove('hidden');
       }
     }
 
-    throw lastError || new Error('Unable to load today data from available endpoints.');
-  }
-
-  async function loadTodayFront() {
-    try {
-      const data = await requestTodayData();
-      dateEl.textContent = data?.today?.label || 'Today';
-
-      const house = data?.chambers?.house || {};
-      houseStatusEl.textContent = house.status || 'No update';
-      houseStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(house.status)}`;
-
-      const houseLine = house.latestAction?.text
-        ? `${house.latestAction.time ? `${house.latestAction.time}: ` : ''}${house.latestAction.text}`
-        : house.nextConvene
-          ? `Next House meeting: ${house.nextConvene}`
-          : 'No House floor action posted yet.';
-      houseLineEl.textContent = truncate(houseLine);
-
-      const senate = data?.chambers?.senate || {};
-      senateStatusEl.textContent = senate.status || 'No update';
-      senateStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(senate.status)}`;
-
-      const senateLine =
-        senate.previousSummary ||
-        (senate.nextConvene
-          ? `Next Senate meeting: ${senate.nextConvene}`
-          : 'No Senate floor summary posted yet.');
-      senateLineEl.textContent = truncate(senateLine);
-
-      deckEl.textContent =
-        data?.summary?.deck ||
-        'Satire desk is still warming up the teleprompter for this legislative day.';
-
-      const bullets = Array.isArray(data?.summary?.bullets)
-        ? data.summary.bullets.slice(0, 4)
-        : ['No summary available yet.'];
-      appendListItems(bulletsEl, bullets);
-
-      const meetings = Array.isArray(data?.committees?.meetings)
-        ? data.committees.meetings.slice(0, 4)
-        : [];
-      if (meetings.length === 0) {
-        appendListItems(meetingsEl, ['No House or Senate committee meetings listed today.']);
-      } else {
-        appendListItems(
-          meetingsEl,
-          meetings.map((meeting) => {
-            const chamber = meeting.chamber || 'Committee';
-            const time = meeting.time ? `${meeting.time} - ` : '';
-            const title = meeting.committee || meeting.title || 'Committee meeting';
-            const focus = meeting.focus ? ` (${meeting.focus})` : '';
-            const extras = [];
-            if (Number.isFinite(meeting.relatedBillCount) && meeting.relatedBillCount > 0) {
-              extras.push(
-                `${meeting.relatedBillCount} bill${meeting.relatedBillCount === 1 ? '' : 's'}`,
-              );
-            }
-            if (
-              Number.isFinite(meeting.relatedNominationCount) &&
-              meeting.relatedNominationCount > 0
-            ) {
-              extras.push(
-                `${meeting.relatedNominationCount} nomination${meeting.relatedNominationCount === 1 ? '' : 's'}`,
-              );
-            }
-            if (meeting.isClosed) {
-              extras.push('closed');
-            }
-            const extraText = extras.length > 0 ? ` [${extras.join(', ')}]` : '';
-            return `${time}${chamber}: ${truncate(`${title}${focus}${extraText}`, 120)}`;
-          }),
-        );
-      }
-
-      loadingEl.classList.add('hidden');
-      errorEl.classList.add('hidden');
-      contentEl.classList.remove('hidden');
-    } catch (_error) {
-      loadingEl.classList.add('hidden');
-      contentEl.classList.add('hidden');
-      errorEl.classList.remove('hidden');
-    }
-  }
-
-  loadTodayFront();
+    loadTodayFront();
+  })();
 </script>

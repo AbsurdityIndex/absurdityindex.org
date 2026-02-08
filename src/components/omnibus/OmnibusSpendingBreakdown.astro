@@ -52,7 +52,7 @@ const barColors = [
 >
   <div class="px-5 py-4 border-b border-gold-200 flex items-center justify-between">
     <h2 class="font-serif text-lg font-bold text-navy-900 flex items-center gap-2">
-      <Icon name="bar-chart-2" size={18} class="text-gold-600" />
+      <Icon name="bar-chart" size={18} class="text-gold-600" />
       Spending Breakdown
     </h2>
     <span class="text-xs font-mono text-navy-500">{divisions.length} divisions</span>
@@ -60,7 +60,7 @@ const barColors = [
 
   <div class="p-5 space-y-2.5">
     {
-      sorted.map((div, sortIdx) => {
+      sorted.map((div) => {
         const pct = totalSpending > 0 ? (div.spending / totalSpending) * 100 : 0;
         const barWidth = maxSpending > 0 ? (div.spending / maxSpending) * 100 : 0;
         const divLetter = String.fromCharCode(65 + div.index);
@@ -96,7 +96,7 @@ const barColors = [
 
   <div class="px-5 py-3 bg-cream-200 border-t border-gold-200 text-center">
     <p class="text-xs text-navy-500">
-      <Icon name="mouse-pointer" size={12} class="inline -mt-0.5 mr-1" />
+      <Icon name="link" size={12} class="inline -mt-0.5 mr-1" />
       Click any bar to jump to that division
     </p>
   </div>

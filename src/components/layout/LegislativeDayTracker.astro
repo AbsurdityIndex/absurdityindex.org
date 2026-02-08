@@ -16,18 +16,6 @@ function daysSince(dateStr: string): number {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
-// Format date nicely
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-}
-
-// Get day of week
-function getDayOfWeek(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
-}
-
 const house = sessionData.house;
 const senate = sessionData.senate;
 
@@ -62,11 +50,6 @@ const statusMeta =
 
 // The "day of week" that's been going on
 const legislativeDayOfWeek = featured.data.currentLegislativeDay.startDayOfWeek;
-
-// Calculate efficiency (session days / calendar days as percentage)
-const efficiency = Math.round(
-  (featured.data.totalSessionDays / featured.data.totalCalendarDays) * 100,
-);
 ---
 
 <div class="legislative-day-tracker">

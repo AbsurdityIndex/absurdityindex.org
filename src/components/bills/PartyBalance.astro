@@ -41,14 +41,7 @@ interface Props {
   totalPork?: number;
 }
 
-const {
-  sponsor,
-  sponsorParty,
-  cosponsors = [],
-  cosponsorCount,
-  billEvolution = [],
-  totalPork = 0,
-} = Astro.props;
+const { sponsor, sponsorParty, cosponsors = [], cosponsorCount, billEvolution = [] } = Astro.props;
 
 // Parse sponsor party from string if not explicitly provided
 // Handles formats like "Rep. Name (R-GA)" or "Sen. Name (D-CA)"
@@ -61,7 +54,7 @@ function parseSponsorParty(sponsorStr?: string, explicitParty?: string): string 
 }
 
 // Get party color classes
-function getPartyBgColor(party?: string): string {
+function getPartyBgColor(party?: string | null): string {
   if (!party) return 'bg-navy-100';
   const p = party.toUpperCase();
   if (p === 'R' || p === 'REPUBLICAN') return 'bg-red-100';
@@ -72,7 +65,7 @@ function getPartyBgColor(party?: string): string {
   return 'bg-navy-100';
 }
 
-function getPartyTextColor(party?: string): string {
+function getPartyTextColor(party?: string | null): string {
   if (!party) return 'text-navy-600';
   const p = party.toUpperCase();
   if (p === 'R' || p === 'REPUBLICAN') return 'text-red-700';
@@ -83,18 +76,7 @@ function getPartyTextColor(party?: string): string {
   return 'text-navy-600';
 }
 
-function getPartyBarColor(party?: string): string {
-  if (!party) return 'bg-navy-300';
-  const p = party.toUpperCase();
-  if (p === 'R' || p === 'REPUBLICAN') return 'bg-red-500';
-  if (p === 'D' || p === 'DEMOCRAT' || p === 'DEMOCRATIC') return 'bg-blue-500';
-  if (p === 'I' || p === 'INDEPENDENT') return 'bg-purple-500';
-  if (p === 'L' || p === 'LIBERTARIAN') return 'bg-yellow-500';
-  if (p === 'G' || p === 'GREEN') return 'bg-green-500';
-  return 'bg-navy-300';
-}
-
-function formatPartyLetter(party?: string): string {
+function formatPartyLetter(party?: string | null): string {
   if (!party) return '?';
   const p = party.toUpperCase();
   if (p === 'REPUBLICAN') return 'R';

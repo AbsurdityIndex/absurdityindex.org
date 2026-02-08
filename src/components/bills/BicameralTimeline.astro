@@ -9,13 +9,7 @@
  * Mobile: Vertical timeline with chamber sections
  */
 import Icon from '../ui/Icon.astro';
-import {
-  parseBillType,
-  analyzeChamberProgress,
-  formatChamberName,
-  type BillTypeInfo,
-  type ChamberProgress,
-} from '../../utils/billParser';
+import { parseBillType, analyzeChamberProgress, formatChamberName } from '../../utils/billParser';
 
 interface Props {
   billNumber: string;
@@ -24,7 +18,7 @@ interface Props {
   actions?: Array<{ date: Date; text: string; chamber?: 'house' | 'senate' | 'both' }>;
 }
 
-const { billNumber, status, dateIntroduced, actions = [] } = Astro.props;
+const { billNumber, dateIntroduced, actions = [] } = Astro.props;
 
 // Parse bill type
 const billType = parseBillType(billNumber);
@@ -58,7 +52,6 @@ interface Stage {
 }
 
 function getStages(): Stage[] {
-  const s = status.toLowerCase();
   const stages: Stage[] = [];
 
   // Origin chamber stages
@@ -70,10 +63,6 @@ function getStages(): Stage[] {
     current: false,
   });
 
-  const originInCommittee =
-    progress?.originPhase === 'committee' ||
-    progress?.originPhase === 'floor' ||
-    progress?.originPhase === 'passed';
   stages.push({
     id: 'origin-committee',
     label: 'Committee',
@@ -94,11 +83,6 @@ function getStages(): Stage[] {
 
   // Only show receiving chamber if bicameral
   if (isBicameral) {
-    const receivingReceived =
-      progress?.receivingPhase === 'received' ||
-      progress?.receivingPhase === 'committee' ||
-      progress?.receivingPhase === 'floor' ||
-      progress?.receivingPhase === 'passed';
     stages.push({
       id: 'receiving-received',
       label: `Received in ${formatChamberName(receivingChamber)}`,
@@ -142,8 +126,6 @@ function getStages(): Stage[] {
 
   // President stage (if applicable)
   if (needsPresident) {
-    const presidentComplete =
-      progress?.presidentPhase === 'signed' || progress?.presidentPhase === 'vetoed';
     stages.push({
       id: 'president',
       label:
@@ -167,7 +149,6 @@ const stages = getStages();
 // Group stages by chamber for mobile view
 const originStages = stages.filter((s) => s.chamber === 'origin');
 const receivingStages = stages.filter((s) => s.chamber === 'receiving');
-const conferenceStages = stages.filter((s) => s.chamber === 'conference');
 const presidentStages = stages.filter((s) => s.chamber === 'president');
 
 // Colors
@@ -195,15 +176,6 @@ function getStageColor(stage: Stage) {
   if (stage.current) return getChamberColor(stage.chamber);
   return COLORS.pending;
 }
-
-// Find current stage index for progress bar
-const currentStageIndex = stages.findIndex((s) => s.current);
-const progressPercent =
-  currentStageIndex >= 0
-    ? ((currentStageIndex + 0.5) / stages.length) * 100
-    : stages.every((s) => s.completed)
-      ? 100
-      : 0;
 ---
 
 <div class="bicameral-timeline mb-8">

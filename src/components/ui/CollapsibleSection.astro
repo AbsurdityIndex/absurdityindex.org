@@ -8,13 +8,16 @@
  * </CollapsibleSection>
  */
 import Icon from './Icon.astro';
+import type { ComponentProps } from 'astro/types';
+
+type IconName = ComponentProps<typeof Icon>['name'];
 
 interface Props {
   title: string;
   count?: number | string;
   defaultOpen?: boolean;
   variant?: 'default' | 'compact';
-  icon?: string;
+  icon?: IconName;
 }
 
 const { title, count, defaultOpen = false, variant = 'default', icon } = Astro.props;

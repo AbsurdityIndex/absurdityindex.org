@@ -1,0 +1,356 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import OfficialSeal from '../../../components/ui/OfficialSeal.astro';
+import Divider from '../../../components/ui/Divider.astro';
+import Icon from '../../../components/ui/Icon.astro';
+---
+
+<BaseLayout
+  title="VoteChain POC Voting Client"
+  description="POC voter client for the VoteChain Election Web Protocol (EWP): challenge + cast + receipt."
+  ogType="article"
+  article={{
+    publishedTime: '2026-02-08',
+    author: 'Absurdity Index',
+    section: 'Policy',
+    tags: ['votechain', 'ewp', 'poc', 'receipt verification'],
+  }}
+>
+  <main class="bg-parchment min-h-screen">
+    <section class="relative bg-navy-900 py-10 sm:py-14">
+      <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
+        <div class="flex justify-center">
+          <OfficialSeal size="90" />
+        </div>
+        <p class="text-sm text-gold-500 font-mono uppercase tracking-widest mt-5 mb-2">EWP POC</p>
+        <h1 class="font-serif text-3xl sm:text-4xl text-gold-400 font-bold">Voting Client</h1>
+        <p class="mt-3 text-gold-300/80 font-sans text-base max-w-3xl mx-auto">
+          Generate a POC credential, request a challenge, cast an encrypted ballot, and receive a
+          signed cast receipt.
+        </p>
+      </div>
+    </section>
+
+    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-12 space-y-8">
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="file-text" class="text-gold-600" />
+            Election Manifest
+          </h2>
+          <a
+            href="/votechain/poc"
+            class="text-sm font-sans font-semibold text-navy-700 hover:text-gold-700 underline"
+          >
+            POC Home
+          </a>
+        </div>
+        <p class="text-navy-600 text-sm mt-2">
+          The manifest is signed, hashed into <span class="font-mono">manifest_id</span>, and
+          anchored on the simulated VoteChain ledger.
+        </p>
+        <pre
+          class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="manifest-json">Loading manifest...</code></pre>
+      </section>
+
+      <section
+        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md"
+        id="credential"
+      >
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="user" class="text-gold-600" />
+            Voter Credential (POC)
+          </h2>
+          <button
+            id="credential-generate"
+            class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-4 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors"
+            type="button"
+          >
+            <Icon name="file-plus" class="text-gold-300" size={18} />
+            Generate Credential
+          </button>
+        </div>
+        <p class="text-navy-600 text-sm mt-2">
+          In the real PRD, eligibility proof is zero-knowledge. In this POC, a credential is a
+          pseudonymous DID + signing key stored in your browser.
+        </p>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">DID</p>
+            <p id="credential-did" class="font-mono text-xs text-navy-900 break-words">
+              Not generated
+            </p>
+          </div>
+          <div class="rounded-lg border border-navy-200 bg-cream-50 p-4">
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
+              Nullifier (This Election)
+            </p>
+            <p id="credential-nullifier" class="font-mono text-xs text-navy-900 break-words">
+              Not generated
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md"
+        id="challenge"
+      >
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="repeat" class="text-gold-600" />
+            Challenge (Anti-Replay)
+          </h2>
+          <button
+            id="challenge-request"
+            class="inline-flex items-center gap-2 rounded-md bg-gold-500 px-4 py-2 text-navy-900 font-sans text-sm font-semibold hover:bg-gold-400 transition-colors"
+            type="button"
+          >
+            <Icon name="send" class="text-navy-900" size={18} />
+            Request Challenge
+          </button>
+        </div>
+        <p class="text-navy-600 text-sm mt-2">
+          The challenge binds the eligibility proof to a specific session to prevent replay.
+        </p>
+        <pre
+          class="mt-4 rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="challenge-json">No challenge yet.</code></pre>
+      </section>
+
+      <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md" id="cast">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+            <Icon name="vote" class="text-gold-600" />
+            Cast Ballot
+          </h2>
+          <div class="flex items-center gap-2">
+            <button
+              id="cast-submit"
+              class="inline-flex items-center gap-2 rounded-md bg-navy-800 px-4 py-2 text-gold-200 font-sans text-sm font-semibold hover:bg-navy-700 transition-colors disabled:opacity-50"
+              type="button"
+              disabled
+            >
+              <Icon name="check-square" class="text-gold-300" size={18} />
+              Cast
+            </button>
+          </div>
+        </div>
+        <p class="text-navy-600 text-sm mt-2">
+          This demo ballot has a single contest with a single selection. The encrypted ballot is
+          written to a local bulletin board and anchored on a local VoteChain ledger.
+        </p>
+
+        <div class="mt-5 rounded-lg border border-navy-200 bg-cream-50 p-4">
+          <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-3">Contest</p>
+          <div id="ballot-options" class="space-y-2"></div>
+        </div>
+
+        <Divider withSeal={false} />
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
+              Cast Request
+            </p>
+            <pre
+              class="rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="cast-request-json">Waiting...</code></pre>
+          </div>
+          <div>
+            <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-2">
+              Cast Response
+            </p>
+            <pre
+              class="rounded-lg bg-navy-800 text-cream-100 p-4 overflow-x-auto text-xs leading-relaxed font-mono"><code id="cast-response-json">Waiting...</code></pre>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-3">
+          <a
+            href="/votechain/poc/verify"
+            class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+          >
+            <Icon name="shield" class="text-navy-700" size={18} />
+            Verify A Receipt
+          </a>
+          <a
+            href="/votechain/poc/dashboard"
+            class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-4 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
+          >
+            <Icon name="bar-chart" class="text-navy-700" size={18} />
+            Open Dashboard
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    import {
+      bytesToB64u,
+      buildCastRequest,
+      castBallot,
+      computeNullifier,
+      ensureCredential,
+      getManifest,
+      getPocState,
+      issueChallenge,
+    } from '../../../votechain-poc/poc';
+
+    function formatJson(value: unknown) {
+      return JSON.stringify(value, null, 2);
+    }
+
+    function randomB64u(n: number) {
+      const b = new Uint8Array(n);
+      crypto.getRandomValues(b);
+      return bytesToB64u(b);
+    }
+
+    const manifestEl = document.getElementById('manifest-json') as HTMLElement;
+    const credDidEl = document.getElementById('credential-did') as HTMLElement;
+    const credNullifierEl = document.getElementById('credential-nullifier') as HTMLElement;
+    const generateCredBtn = document.getElementById('credential-generate') as HTMLButtonElement;
+
+    const challengeBtn = document.getElementById('challenge-request') as HTMLButtonElement;
+    const challengeEl = document.getElementById('challenge-json') as HTMLElement;
+
+    const castBtn = document.getElementById('cast-submit') as HTMLButtonElement;
+    const ballotOptionsEl = document.getElementById('ballot-options') as HTMLElement;
+    const castReqEl = document.getElementById('cast-request-json') as HTMLElement;
+    const castResEl = document.getElementById('cast-response-json') as HTMLElement;
+
+    let cachedState: any = null;
+    let cachedChallenge: any = null;
+    let selectedOption: string | null = null;
+
+    async function refreshManifest() {
+      const manifest = await getManifest();
+      manifestEl.textContent = formatJson(manifest);
+    }
+
+    function renderBallotOptions(state: any) {
+      ballotOptionsEl.replaceChildren();
+      const title = document.createElement('p');
+      title.className = 'font-serif text-lg font-bold text-navy-900 mb-2';
+      title.textContent = 'Choose one option:';
+      ballotOptionsEl.appendChild(title);
+
+      for (const opt of state.election.options) {
+        const row = document.createElement('label');
+        row.className =
+          'flex items-center gap-3 rounded-md border border-navy-200 bg-white p-3 hover:border-gold-500 transition-colors cursor-pointer';
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'poc-selection';
+        input.value = opt;
+        input.className = 'h-4 w-4';
+        input.addEventListener('change', () => {
+          selectedOption = opt;
+        });
+        const text = document.createElement('span');
+        text.className = 'font-sans text-sm text-navy-800';
+        text.textContent = opt;
+        row.appendChild(input);
+        row.appendChild(text);
+        ballotOptionsEl.appendChild(row);
+      }
+    }
+
+    async function refreshCredential() {
+      const state = await getPocState();
+      cachedState = state;
+      const cred = state.credential ?? null;
+      if (!cred) {
+        credDidEl.textContent = 'Not generated';
+        credNullifierEl.textContent = 'Not generated';
+        return;
+      }
+      credDidEl.textContent = cred.did;
+      const nullifier = await computeNullifier(cred.pub_spki, state.election.election_id);
+      credNullifierEl.textContent = nullifier;
+    }
+
+    async function ensureReady() {
+      const state = await getPocState();
+      cachedState = state;
+      renderBallotOptions(state);
+      await refreshManifest();
+      await refreshCredential();
+    }
+
+    generateCredBtn?.addEventListener('click', async () => {
+      generateCredBtn.disabled = true;
+      try {
+        await ensureCredential();
+        await refreshCredential();
+      } finally {
+        generateCredBtn.disabled = false;
+      }
+    });
+
+    challengeBtn?.addEventListener('click', async () => {
+      challengeBtn.disabled = true;
+      castBtn.disabled = true;
+      try {
+        cachedChallenge = await issueChallenge(randomB64u(32));
+        challengeEl.textContent = formatJson(cachedChallenge);
+        castBtn.disabled = false;
+      } catch (err) {
+        challengeEl.textContent = `Error: ${String(err)}`;
+      } finally {
+        challengeBtn.disabled = false;
+      }
+    });
+
+    castBtn?.addEventListener('click', async () => {
+      castBtn.disabled = true;
+      castReqEl.textContent = 'Building request...';
+      castResEl.textContent = 'Casting...';
+
+      try {
+        const state = cachedState ?? (await getPocState());
+        const challenge = cachedChallenge;
+        if (!challenge) {
+          castResEl.textContent = 'Error: No challenge (request one first).';
+          return;
+        }
+        if (!selectedOption) {
+          castResEl.textContent = 'Error: Select an option first.';
+          return;
+        }
+
+        const built = await buildCastRequest({
+          contests: [{ contest_id: state.election.contest_id, selection: selectedOption }],
+          challenge,
+        });
+
+        if ('error' in built) {
+          castReqEl.textContent = built.error;
+          castResEl.textContent = built.error;
+          return;
+        }
+
+        castReqEl.textContent = JSON.stringify(built.request, null, 2);
+
+        const res = await castBallot({
+          request: built.request,
+          idempotencyKey: built.idempotencyKey,
+        });
+
+        castResEl.textContent = JSON.stringify(res, null, 2);
+
+        if ('status' in res && res.status === 'cast_recorded') {
+          localStorage.setItem('votechain_poc_last_receipt', JSON.stringify(res.cast_receipt));
+        }
+      } catch (err) {
+        castResEl.textContent = `Error: ${String(err)}`;
+      } finally {
+        castBtn.disabled = false;
+      }
+    });
+
+    // Initialize page
+    ensureReady();
+  </script>
+</BaseLayout>

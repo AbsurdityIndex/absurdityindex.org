@@ -1,10 +1,13 @@
 ---
 import Icon from '../ui/Icon.astro';
+import type { ComponentProps } from 'astro/types';
 import ActionsTimeline from './ActionsTimeline.astro';
 import AmendmentsList from './AmendmentsList.astro';
 import CosponsorsList from './CosponsorsList.astro';
 import RelatedBillsList from './RelatedBillsList.astro';
 import TextVersions from './TextVersions.astro';
+
+type IconName = ComponentProps<typeof Icon>['name'];
 
 interface Props {
   actions?: any[];
@@ -36,7 +39,15 @@ const relatedCount = relatedBills?.length || 0;
 const textCount = textVersions?.length || 0;
 
 // Determine which tabs to show
-const tabs = [
+type Tab = {
+  id: string;
+  label: string;
+  count: number;
+  icon: IconName;
+  show: boolean;
+};
+
+const allTabs: Tab[] = [
   { id: 'actions', label: 'Actions', count: actionsCount, icon: 'clock', show: actionsCount > 0 },
   {
     id: 'amendments',
@@ -54,7 +65,9 @@ const tabs = [
   },
   { id: 'related', label: 'Related', count: relatedCount, icon: 'link', show: relatedCount > 0 },
   { id: 'text', label: 'Text', count: textCount, icon: 'file-text', show: textCount > 0 },
-].filter((t) => t.show);
+];
+
+const tabs = allTabs.filter((t) => t.show);
 
 // If no tabs to show, return nothing
 if (tabs.length === 0) {

@@ -3,10 +3,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Divider from '../components/ui/Divider.astro';
 import Icon from '../components/ui/Icon.astro';
+import type { ComponentProps } from 'astro/types';
+
+type IconName = ComponentProps<typeof Icon>['name'];
 
 const lastUpdated = 'February 6, 2026';
 
-const collectionItems = [
+const collectionItems: Array<{ icon: IconName; title: string; detail: string }> = [
   {
     icon: 'x-circle',
     title: 'No user accounts',

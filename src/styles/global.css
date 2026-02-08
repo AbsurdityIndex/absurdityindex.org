@@ -112,6 +112,14 @@ body {
   padding-left: 2rem;
 }
 
+.bill-content ul {
+  list-style-type: disc;
+}
+
+.bill-content ol {
+  list-style-type: decimal;
+}
+
 .bill-content li {
   margin-bottom: 0.5rem;
 }

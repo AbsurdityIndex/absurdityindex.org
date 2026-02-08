@@ -40,6 +40,8 @@ const SKIP_EXTENSIONS = new Set([
 ]);
 
 function shouldSkipFile(file) {
+  // Don't scan the scanner. It contains patterns like `\u{...}` in comments/regexes.
+  if (file === 'scripts/check-no-unicode-icons.mjs') return true;
   const ext = path.extname(file).toLowerCase();
   return SKIP_EXTENSIONS.has(ext);
 }

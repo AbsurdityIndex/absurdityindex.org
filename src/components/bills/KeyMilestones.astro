@@ -13,6 +13,9 @@
  * - Presidential action
  */
 import Icon from '../ui/Icon.astro';
+import type { ComponentProps } from 'astro/types';
+
+type IconName = ComponentProps<typeof Icon>['name'];
 
 interface Action {
   date: Date;
@@ -24,7 +27,7 @@ interface Milestone {
   date: Date;
   text: string;
   type: string;
-  icon: string;
+  icon: IconName | string;
 }
 
 interface Props {
@@ -34,12 +37,12 @@ interface Props {
   keyMilestones?: Milestone[]; // AI-extracted milestones from frontmatter
 }
 
-const { actions, status, totalActions, keyMilestones } = Astro.props;
+const { actions, totalActions, keyMilestones } = Astro.props;
 
 // Fallback: Extract key milestones from actions via keyword matching
 // Used when AI-extracted milestones aren't available
 const getMilestonesFromActions = (actions: Action[]) => {
-  const milestones: Array<{ date: Date; text: string; type: string; icon: string }> = [];
+  const milestones: Array<{ date: Date; text: string; type: string; icon: IconName }> = [];
 
   // Sort by date ascending
   const sorted = [...actions].sort(
@@ -172,7 +175,7 @@ const formatDate = (date: Date) => {
         />
 
         <div class="space-y-0">
-          {milestones.map((milestone, i) => (
+          {milestones.map((milestone) => (
             <div class="flex items-start gap-3 relative">
               {/* Icon with background to cover the line */}
               <div
@@ -185,7 +188,7 @@ const formatDate = (date: Date) => {
                       : 'bg-gold-100 text-gold-700 border-gold-200',
                 ]}
               >
-                <Icon name={milestone.icon} size={14} />
+                <Icon name={milestone.icon as IconName} size={14} />
               </div>
               <div class="flex-1 min-w-0 pb-4">
                 <time class="text-xs font-mono text-navy-400 block mb-0.5">

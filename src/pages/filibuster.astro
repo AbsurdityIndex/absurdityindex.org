@@ -389,7 +389,20 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
     </div>
   </div>
 
-  <script is:inline define:vars={{ filibusterSnippets, funFacts, congressionalSalaryPerHour }}>
+  <script
+    is:inline
+    data-filibuster-snippets={JSON.stringify(filibusterSnippets)}
+    data-fun-facts={JSON.stringify(funFacts)}
+    data-salary-per-hour={congressionalSalaryPerHour}
+  >
+    const scriptEl =
+      document.currentScript instanceof HTMLScriptElement ? document.currentScript : null;
+    const filibusterSnippets = scriptEl
+      ? JSON.parse(scriptEl.dataset.filibusterSnippets || '[]')
+      : [];
+    const funFacts = scriptEl ? JSON.parse(scriptEl.dataset.funFacts || '[]') : [];
+    const congressionalSalaryPerHour = scriptEl ? Number(scriptEl.dataset.salaryPerHour || '0') : 0;
+
     // State
     let isRunning = false;
     let elapsedSeconds = 0;

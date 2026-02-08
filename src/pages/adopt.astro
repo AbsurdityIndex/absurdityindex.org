@@ -10,9 +10,6 @@ const needsPairing = bills.filter((b) => b.data.billType === 'real' && !b.data.p
 
 // Bills with short summaries (needs more detail)
 const needsDetail = bills.filter((b) => b.data.summary.length < 100);
-
-// Get unique bills that need attention
-const allNeedingAttention = [...new Set([...needsPairing, ...needsDetail])];
 ---
 
 <BaseLayout

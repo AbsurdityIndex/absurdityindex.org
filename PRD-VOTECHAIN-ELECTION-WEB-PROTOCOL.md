@@ -1,9 +1,12 @@
 # PRD: VoteChain Election Web Protocol (EWP) — Ballot Integrity Protocol
 
-> Status: **Preview / Draft (EWP/0.1)**
-> Date: 2026-02-08
-> Scope: End-to-end ballot integrity layer that completes **VoteChain** voter verification — the cryptographic chain of custody from cast to tally.
-> Non-claim: This document is not an endorsement of immediate nationwide unsupervised Internet voting. It is a buildable protocol for ensuring every ballot — whether cast at a polling place, a supervised kiosk, or (with appropriate gating) a remote device — is encrypted, recorded, included, and counted correctly. Intended for controlled pilots, red teaming, and standards work (NIST/EAC/CISA + external review).
+> **Status:** Preview / Draft (EWP/0.1)
+>
+> **Date:** 2026-02-08
+>
+> **Scope:** End-to-end ballot integrity layer that completes **VoteChain** voter verification — the cryptographic chain of custody from cast to tally.
+>
+> **Non-claim:** This document is not an endorsement of immediate nationwide unsupervised Internet voting. It is a buildable protocol for ensuring every ballot — whether cast at a polling place, a supervised kiosk, or (with appropriate gating) a remote device — is encrypted, recorded, included, and counted correctly. Intended for controlled pilots, red teaming, and standards work (NIST/EAC/CISA + external review).
 
 ## 0. Relationship To The VoteChain PRD
 
@@ -35,9 +38,10 @@ EWP preserves all VoteChain invariants:
 - **G1: Complete the VoteChain system.** Provide the cryptographic chain of custody from ballot cast to published tally — the ballot integrity layer that VoteChain's verification layer was designed to feed into.
 - **G2: Eligibility without identity disclosure.** A voter proves eligibility for `election_id` + `jurisdiction_id` without revealing who they are.
 - **G3: Ballot secrecy.** No single gateway operator can learn vote selections from protocol transcripts.
-- **G4: End-to-end verifiability (E2E-V).** Voters and auditors can verify:
-  - (a) their encrypted ballot was recorded (inclusion), and
-  - (b) the final tally corresponds to the recorded encrypted ballots (counted-as-recorded).
+- **G4: End-to-end verifiability (E2E-V).** The complete E2E chain with no trust gaps:
+  - (a) **cast-as-intended** — the voter can verify their encrypted ballot actually encodes their selections (via Benaloh challenge/spoil),
+  - (b) **recorded-as-cast** — the voter can verify their encrypted ballot was recorded on the bulletin board (inclusion proof), and
+  - (c) **counted-as-recorded** — anyone can verify the final tally corresponds to the recorded encrypted ballots (tally proofs).
 - **G5: Anti-replay + anti-duplication.** Prevent replay of cast requests; prevent counting more than one ballot per eligible credential per election (with optional revoting extension).
 - **G6: Transparency without a public blockchain.** Use a public bulletin board (append-only log) whose signed checkpoints are anchored into VoteChain.
 - **G7: Interoperability.** Provide an HTTP(S) profile with explicit message schemas, versioning, and algorithm agility.
@@ -62,20 +66,24 @@ EWP defends against these adversaries across all deployment modes. Where a threa
 - **A3: Insider operator** (key theft, log manipulation, selective suppression). *All modes.*
 - **A4: Malicious voter** (double-vote attempts, malformed ballots). *All modes.*
 - **A5: Coercer** (demands vote proof; observes voter while voting). *Primarily Mode 3 (unsupervised remote). In Mode 1 (polling place) and Mode 2 (supervised), coercion is mitigated by the physical environment — privacy booths, poll worker oversight, and controlled access.*
-- **A6: Client malware** (modifies selections before encryption; steals credentials). *Primarily Mode 3. In Mode 1, devices are institution-controlled with HSM attestation. In Mode 2, devices are supervised with controlled software loads.*
+- **A6: Compromised voter client** (modifies selections before encryption; steals credentials). *All modes. In Mode 1 and Mode 2, risk is reduced by institution-controlled hardware with HSM attestation and code signing — but a subtly backdoored build that passes attestation could still alter votes silently. In Mode 3, the risk is highest (personal device, no attestation guarantee). The Benaloh challenge (Section 6.7) is the protocol-level defense across all modes: voters can audit their encrypted ballot before casting, catching a cheating client without trusting it.*
 - **A7: Trustee compromise** (tries to decrypt individual ballots). *All modes.*
 - **A8: Physical chain-of-custody attacker** (tampers with ballots between casting and counting — the threat EWP exists to eliminate). *This adversary is the primary motivation for the protocol. Traditional physical ballot transport relies on sealed boxes, transport vans, and counting-room access control. EWP replaces these trust assumptions with cryptographic proof.*
 
 ### 2.2 Security Properties Claimed (And Boundaries)
 
-EWP targets these properties under explicit assumptions. Properties P1–P6 are claimed across all deployment modes. Coercion resistance varies by mode.
+EWP targets these properties under explicit assumptions. Properties P0–P7 are claimed across all deployment modes. Coercion resistance varies by mode.
 
+The E2E verifiability chain — **cast-as-intended → recorded-as-cast → counted-as-recorded** — is the core contribution of EWP. Every link in this chain is cryptographically verifiable with no trust assumptions on any single device, operator, or authority.
+
+- **P0: Cast-as-intended.** A voter can verify that their encrypted ballot actually encodes their selections — without trusting the device that performed the encryption. This is achieved via the Benaloh challenge (Section 6.7): the voter may challenge any ballot before casting, forcing the device to reveal the encryption randomness for independent verification. A challenged ballot is spoiled (not counted); the voter then re-encrypts and either challenges again or casts. A cheating device cannot predict which ballots will be challenged and is therefore deterred from systematic manipulation.
 - **P1: Eligibility soundness.** Only holders of valid VoteChain credentials can produce an accepted cast.
 - **P2: Uniqueness.** At most one ballot per (credential, election) is *counted* (strict mode) or *final* (revoting extension).
 - **P3: Ballot privacy.** If fewer than `t` trustees collude (threshold model), no party learns individual votes.
 - **P4: Recorded-as-cast.** Voter can verify their ballot ciphertext appears on the bulletin board (BB) and is anchored on VoteChain.
 - **P5: Counted-as-recorded.** Anyone can verify that the published tally is computed from the set of BB-recorded ballots.
 - **P6: Non-equivocation of the BB.** A BB operator cannot present inconsistent views without detection by monitors. Monitor diversity and SLA requirements are specified in Section 10.
+- **P7: Device-independence.** The correctness of the election outcome does not depend on trusting any single device or software component. P0 (cast-as-intended via Benaloh challenge) ensures the voter can audit the client; P4–P5 ensure the ballot transport and tally are independently verifiable; P6 ensures the public log is consistent. No single point of compromise can silently alter the outcome.
 
 Not claimed:
 
@@ -226,8 +234,12 @@ BB acts like a transparency log:
 
 ### 4.6 Crypto Suite: `ewp_suite_eg_elgamal_v1` (Baseline Profile)
 
-This suite is intended as a concrete, buildable baseline compatible with well-studied E2E schemes
-(Helios/ElectionGuard-style design patterns). It is not the only acceptable suite.
+This suite is intended as a concrete, buildable baseline compatible with well-studied E2E schemes.
+It is not the only acceptable suite, but it is the one with the strongest real-world validation.
+
+**Reference implementation: [ElectionGuard](https://github.com/microsoft/electionguard)** (MIT license, open source). ElectionGuard is an SDK developed by Microsoft Research that implements exponential ElGamal encryption, Chaum-Pedersen ballot validity proofs, threshold key ceremonies, homomorphic tallying, and the Benaloh challenge for cast-as-intended verification. It has been used in real U.S. public elections in Wisconsin, California, Idaho, Utah, and Maryland, as well as in Congressional caucus elections.
+
+The `ewp_suite_eg_elgamal_v1` baseline profile is designed to be compatible with ElectionGuard's cryptosystem. An EWP implementation using ElectionGuard as its crypto engine SHOULD be conformant with this suite without modification to ElectionGuard's core primitives. EWP adds the HTTP transport profile, VoteChain anchoring, and bulletin board transparency layer on top.
 
 Suite identifiers:
 
@@ -295,7 +307,23 @@ Trustees jointly decrypt `B / A^x = g^(sum m_i)` and recover `sum m_i` (in a bou
 
 Trustees MUST publish decryption proofs (e.g., Chaum-Pedersen) for their partial decryptions so anyone can verify tally correctness.
 
-#### 4.6.6 Encoding For HTTP Transport
+#### 4.6.6 Cast-As-Intended Verification (Benaloh Challenge)
+
+The Benaloh challenge enables cast-as-intended verification (P0) by allowing the voter to audit the encryption process.
+
+Mechanism:
+
+1. Device computes `C_j = Enc(PK_e, m_j; r_j)` for each selection `j`, where `r_j` is fresh randomness.
+2. Device commits to the full ballot ciphertext (publishes or sends `ballot_hash = H(C_1 || ... || C_n)`).
+3. Voter chooses: **challenge** or **cast**.
+4. On **challenge**: device reveals all `{r_j, m_j}`. Verifier recomputes each `C_j' = Enc(PK_e, m_j; r_j)` and checks `C_j' == C_j`. If any mismatch, the device is provably cheating.
+5. On **cast**: the ballot proceeds to the gateway. The randomness `r_j` is never revealed (preserving ballot secrecy).
+
+Security requirement: the challenge/cast decision MUST be unpredictable to the device at the time of encryption. Implementations MUST NOT allow the device to observe the voter's challenge decision before committing to the ciphertext.
+
+Compatibility note: this is the same mechanism implemented in ElectionGuard's `CiphertextBallot.challenge()` / `CiphertextBallot.cast()` API.
+
+#### 4.6.7 Encoding For HTTP Transport
 
 To avoid JSON canonicalization footguns for large algebraic objects:
 
@@ -325,6 +353,15 @@ sequenceDiagram
   VC->>VC: Build eligibility ZK proof bound to challenge
   VC->>VC: Encrypt ballot to PK_e + build ballot validity proof
 
+  rect rgb(255, 248, 230)
+  Note over VC,EWG: Cast-as-intended verification (Benaloh challenge)
+  VC->>EWG: POST /spoil (encrypted ballot + validity proof)
+  EWG-->>VC: Spoil receipt (ballot_hash confirmed)
+  VC->>VC: Reveal encryption randomness r, verify ciphertext matches selections
+  Note over VC: If mismatch → device is cheating. Abort + alert.
+  Note over VC: If match → re-encrypt with fresh randomness for real cast.
+  end
+
   VC->>EWG: POST /cast (nullifier, ZK proof, encrypted ballot, validity proof)
   EWG->>BB: Append encrypted ballot leaf
   BB-->>EWG: leaf_hash + sth
@@ -336,6 +373,8 @@ sequenceDiagram
   BB-->>VC: Merkle inclusion proof
   VC->>VCL: Verify anchored sth_hash exists on-chain
 ```
+
+> **The Benaloh challenge step is optional for each individual ballot** — voters may choose to challenge zero, one, or multiple times before casting. The security property holds probabilistically: even a small fraction of voters challenging deters systematic device manipulation, because the device cannot predict which ballots will be challenged. See Section 6.7 for protocol details.
 
 ## 6. HTTP(S) Profile
 
@@ -548,13 +587,84 @@ HTTP status code mapping (minimum):
 - `429` rate limited (MUST include `Retry-After`)
 - `503` overloaded (MUST include alternate gateways if known)
 
-### 6.7 Cast Status (If Async)
+### 6.7 Ballot Challenge / Spoil (Benaloh Challenge — Cast-As-Intended Verification)
+
+This endpoint enables **cast-as-intended verification** (P0) — the first link in the E2E chain. It allows a voter to verify that their encrypted ballot actually encodes their selections, without trusting the device that performed the encryption.
+
+**How it works:**
+
+1. The voter client encrypts the ballot using randomness `r` and produces ciphertext `C` + validity proof.
+2. Before casting, the voter may choose to **challenge** this ballot.
+3. On challenge, the client sends the encrypted ballot to the gateway via `POST /spoil`. The gateway records a commitment to the ballot hash.
+4. The client then reveals the encryption randomness `r` to the voter (displayed on screen or via an independent verification device/app).
+5. Using `r`, the election public key `PK_e`, and the ballot selections, the voter (or an independent verifier) can recompute the expected ciphertext and check it matches `C`. If it matches, the device encrypted honestly. If not, the device is cheating.
+6. The spoiled ballot is **permanently marked as not-for-counting**. The voter re-encrypts with fresh randomness and may challenge again or cast for real.
+
+**Why the device can't cheat:** The device must commit to the ciphertext *before* knowing whether the voter will challenge or cast. If it encodes the wrong selections, it risks being caught on challenge. If it always encodes correctly, the challenge succeeds — but so does the real cast. The device cannot selectively cheat only on non-challenged ballots because the challenge decision happens *after* encryption.
+
+`POST /v1/elections/{election_id}/spoil`
+
+Request:
+```json
+{
+  "ewp_version": "0.1-preview",
+  "election_id": "2026-general-federal",
+  "manifest_id": "b64u(...)",
+  "challenge_id": "b64u(...)",
+
+  "encrypted_ballot": {
+    "ballot_id": "b64u(16_random_bytes)",
+    "ciphertext": "b64u(...)",
+    "ballot_validity_proof": "b64u(...)",
+    "ballot_hash": "b64u(sha256(...))"
+  }
+}
+```
+
+Note: The spoil request does NOT include the nullifier or eligibility proof. No nullifier is consumed by a spoil — the voter is not casting, only auditing the device. This prevents spoil requests from counting toward the one-ballot-per-election limit.
+
+Response:
+```json
+{
+  "status": "ballot_spoiled",
+  "spoil_receipt": {
+    "receipt_id": "b64u(...)",
+    "election_id": "2026-general-federal",
+    "ballot_hash": "b64u(...)",
+    "spoiled_at": "2026-11-03T15:01:45Z",
+    "sig": "b64u(...)"
+  }
+}
+```
+
+After receiving the spoil receipt, the voter client reveals the encryption randomness:
+
+```json
+{
+  "ballot_id": "b64u(...)",
+  "encryption_randomness": {
+    "contest_id": "president",
+    "selections": [
+      { "option_id": "candidate_a", "r": "b64u(...)", "m": 1 },
+      { "option_id": "candidate_b", "r": "b64u(...)", "m": 0 }
+    ]
+  }
+}
+```
+
+The voter (or an independent verification app) recomputes each ciphertext using the revealed `r` and `m` values and checks against the committed ciphertext. If any mismatch is found, the device is provably cheating.
+
+**Rate limiting:** Gateways SHOULD allow at least 3 spoil attempts per challenge session. Excessive spoil requests (e.g., > 10) MAY be rate-limited but MUST NOT prevent the voter from eventually casting.
+
+**Spoiled ballot publication:** Spoiled ballots and their revealed randomness SHOULD be published on the bulletin board after election close. This allows independent auditors to verify that the spoil/reveal process was conducted honestly across the election and provides a statistical sample of device integrity.
+
+### 6.8 Cast Status (If Async)
 
 `GET /v1/elections/{election_id}/casts/{cast_id}`
 
 Returns either `cast_pending` or `cast_recorded` with a full receipt.
 
-### 6.8 Bulletin Board API (Minimum)
+### 6.9 Bulletin Board API (Minimum)
 
 The BB is logically separate from EWG (may be same operator but separate keying).
 
@@ -562,7 +672,7 @@ The BB is logically separate from EWG (may be same operator but separate keying)
 - `GET /v1/elections/{election_id}/leaves/{bb_leaf_hash}` -> returns leaf payload (encrypted ballot artifact)
 - `GET /v1/elections/{election_id}/proof/{bb_leaf_hash}?root=<root_hash>` -> returns Merkle inclusion proof for a particular STH root
 
-### 6.9 Tally Publication
+### 6.10 Tally Publication
 
 At election close, trustees publish:
 
@@ -628,6 +738,23 @@ Anchors the final tally artifact hash and proof bundle hashes.
 ## 8. Security Proof Sketch (Why This Works)
 
 This is a "proof outline" that the protocol reduces its claims to standard crypto assumptions.
+
+### 8.0 Cast-As-Intended (P0)
+
+Claim: A voter can detect if their device encrypted different selections than what the voter chose.
+
+Mechanism (Benaloh challenge):
+
+- The device commits to ciphertext `C = Enc(PK_e, m; r)` before knowing whether the voter will challenge or cast.
+- On challenge, the device reveals `r`. The voter (or independent verifier) recomputes `Enc(PK_e, m_expected; r)` and checks equality with `C`.
+- If the device encoded `m' != m_expected`, the recomputed ciphertext will not match `C` (with overwhelming probability under the IND-CPA security of the encryption scheme).
+
+Reduces to:
+
+- Binding property of the encryption scheme: given `PK_e` and `r`, there is exactly one plaintext `m` that produces ciphertext `C`. The device cannot produce a `C` that decrypts to `m'` but verifies as `m` under the revealed randomness.
+- Unpredictability of the voter's challenge decision: the device must commit to `C` before knowing whether the ballot will be challenged or cast. A cheating device that always encodes incorrect selections will be caught with probability equal to the challenge rate.
+
+Detection guarantee: If a fraction `p` of voters challenge, a device that systematically cheats on a fraction `f` of ballots will be caught with probability `1 - (1-p)^{n*f}` over `n` ballots. Even `p = 0.05` (5% challenge rate) makes undetected systematic manipulation negligible at election scale.
 
 ### 8.1 Eligibility Soundness (P1)
 
@@ -722,7 +849,8 @@ The following mitigations apply specifically to unsupervised remote deployments:
 
 - **M1: Revoting extension (optional):** allow multiple casts; only the last valid cast before close is counted. This reduces coercion (voter can later re-cast privately) but does not eliminate it. See Appendix B for protocol details.
 - **M2: In-person override:** a verified in-person ballot can override any remote cast (jurisdiction policy), with an on-chain audit trail. This provides a guaranteed escape path for coerced voters.
-- **M3: Challenge/spoil auditing (optional):** allow voters to generate "test ballots" that are decrypted immediately (and not counted) to audit client correctness. This deters large-scale client-side manipulation (A6) when combined with randomized selection.
+
+> **Note:** The Benaloh challenge (Section 6.7) is a **first-class protocol feature for all deployment modes**, not a Mode 3 mitigation. It addresses cast-as-intended verification (P0) — ensuring the device encrypted the voter's actual selections — regardless of where the voter client runs. It is listed as security property P0, not as a coercion mitigation, because its purpose is device integrity auditing, not coercion resistance.
 
 ### 9.3 Receipt-Freeness (All Modes)
 

@@ -75,7 +75,7 @@ function getStageLabel(stage: TimelineStage, index: number) {
   <div class="timeline-track">
     {
       stages.map((stage, i) => {
-        const { isCompleted, isCurrent, isFinal, isFinalWithOutcome, isSuccess, isFailed } =
+        const { isCompleted, isCurrent, isFinalWithOutcome, isSuccess, isFailed } =
           getStageState(i);
         const isLast = i === stages.length - 1;
 

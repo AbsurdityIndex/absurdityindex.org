@@ -376,7 +376,10 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
     </div>
   </div>
 
-  <script define:vars={{ repsData, minDate: minDate.getTime(), maxDate: maxDate.getTime() }}>
+  <script
+    is:inline
+    define:vars={{ repsData, minDate: minDate.getTime(), maxDate: maxDate.getTime() }}
+  >
     const startSlider = document.getElementById('date-slider-start');
     const endSlider = document.getElementById('date-slider-end');
     const startLabel = document.getElementById('start-date-label');

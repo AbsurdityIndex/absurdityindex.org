@@ -9,7 +9,6 @@ const { title, summary, url } = Astro.props;
 
 const encodedUrl = encodeURIComponent(url);
 const encodedTitle = encodeURIComponent(title);
-const encodedSummary = encodeURIComponent(summary);
 const twitterText = encodeURIComponent(`${title}\n\n${summary}`);
 ---
 

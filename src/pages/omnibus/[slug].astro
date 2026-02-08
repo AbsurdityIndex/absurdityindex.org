@@ -86,7 +86,7 @@ const billSchema = {
     tags: d.tags,
   }}
 >
-  <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(billSchema)} />
 
   {/* 1. Satire banner */}
   <div class="bg-navy-900 border-b-2 border-gold-500">

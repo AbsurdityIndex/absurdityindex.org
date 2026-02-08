@@ -8,8 +8,11 @@
  */
 import Icon from '../ui/Icon.astro';
 import ProgressTimeline from '../ui/ProgressTimeline.astro';
+import type { ComponentProps } from 'astro/types';
 import { parseBillType, getAllBillTypes } from '../../utils/billParser';
 import { getBillProgress, type LegislativePath } from '../../utils/billProgress';
+
+type IconName = ComponentProps<typeof Icon>['name'];
 
 interface Props {
   billNumber: string;
@@ -23,7 +26,7 @@ const allTypes = getAllBillTypes();
 
 // Get progress from shared utility
 const progress = getBillProgress(billNumber, status);
-const { path: currentPath, currentStageIndex, outcome, isFinalWithOutcome } = progress;
+const { path: currentPath, currentStageIndex, outcome } = progress;
 
 // Group bill types by their legislative path
 const pathGroups = {
@@ -41,7 +44,7 @@ const pathDescriptions: Record<
     stages: string[];
     description: string;
     note: string;
-    icon: string;
+    icon: IconName;
     accentClass: string;
   }
 > = {

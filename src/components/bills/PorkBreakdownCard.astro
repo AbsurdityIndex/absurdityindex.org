@@ -6,6 +6,9 @@
  * detailed sponsor/committee attribution, vote records, and satirical commentary.
  */
 import Icon from '../ui/Icon.astro';
+import type { ComponentProps } from 'astro/types';
+
+type IconName = ComponentProps<typeof Icon>['name'];
 
 interface Sponsor {
   name: string;
@@ -56,7 +59,10 @@ interface Props {
 const { item, compact = false } = Astro.props;
 
 // Category display config
-const categoryConfig = {
+const categoryConfig: Record<
+  PorkItem['category'],
+  { label: string; icon: IconName; color: string }
+> = {
   earmark: {
     label: 'Earmark',
     icon: 'tag',

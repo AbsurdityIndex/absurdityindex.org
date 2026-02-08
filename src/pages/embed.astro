@@ -86,14 +86,18 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
         <div class="flex-1">
           <p class="text-xs font-mono text-navy-500 mb-2 uppercase tracking-wide">Light Theme</p>
           <div class="bg-white p-4 rounded border border-cream-300">
-            <script src="/embed.js" data-bill={sampleRealBill?.id || 'real-hr-25'}></script>
+            <script is:inline src="/embed.js" data-bill={sampleRealBill?.id || 'real-hr-25'}
+            ></script>
           </div>
         </div>
         <div class="flex-1">
           <p class="text-xs font-mono text-navy-500 mb-2 uppercase tracking-wide">Dark Theme</p>
           <div class="bg-navy-800 p-4 rounded">
-            <script src="/embed.js" data-bill={sampleRealBill?.id || 'real-hr-25'} data-theme="dark"
-            ></script>
+            <script
+              is:inline
+              src="/embed.js"
+              data-bill={sampleRealBill?.id || 'real-hr-25'}
+              data-theme="dark"></script>
           </div>
         </div>
       </div>
@@ -103,7 +107,7 @@ const sampleNotBill = bills.find((b) => b.data.billType !== 'real');
           <>
             <p class="text-navy-600 text-sm mb-4">And here's a satirical "not-bill":</p>
             <div class="bg-white p-4 rounded border border-cream-300 max-w-md">
-              <script src="/embed.js" data-bill={sampleNotBill.id} />
+              <script is:inline src="/embed.js" data-bill={sampleNotBill.id} />
             </div>
           </>
         )

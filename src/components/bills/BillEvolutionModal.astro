@@ -12,7 +12,6 @@
  * - Pork breakdown cards for each spending addition
  */
 import Icon from '../ui/Icon.astro';
-import PorkMeter from './PorkMeter.astro';
 import PorkBreakdownCard from './PorkBreakdownCard.astro';
 import EvolutionTimeline from './EvolutionTimeline.astro';
 
@@ -78,14 +77,7 @@ interface Props {
   originChamber?: 'house' | 'senate'; // For resolving origin/receiving labels
 }
 
-const {
-  billNumber,
-  billTitle,
-  stages,
-  totalPork,
-  congressDotGovUrl,
-  originChamber = 'house',
-} = Astro.props;
+const { billNumber, billTitle, stages, congressDotGovUrl, originChamber = 'house' } = Astro.props;
 
 // Resolve chamber-agnostic names to display labels
 const receivingChamber = originChamber === 'house' ? 'Senate' : 'House';
@@ -1368,8 +1360,26 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
   }
 </style>
 
-<script define:vars={{ modalId, stagesCount: stages.length, stagePorkData }}>
+<script
+  is:inline
+  data-modal-id={modalId}
+  data-stages-count={stages.length}
+  data-stage-pork-data={JSON.stringify(stagePorkData)}
+>
   // Modal functionality
+  const script = document.currentScript;
+  if (!(script instanceof HTMLScriptElement)) {
+    throw new Error('BillEvolutionModal: expected currentScript to be an HTMLScriptElement');
+  }
+
+  const modalId = script.dataset.modalId;
+  const stagesCount = Number(script.dataset.stagesCount);
+  const stagePorkData = JSON.parse(script.dataset.stagePorkData || '[]');
+
+  if (!modalId) {
+    throw new Error('BillEvolutionModal: missing data-modal-id');
+  }
+
   const trigger = document.getElementById(`${modalId}-trigger`);
   const modal = document.getElementById(modalId);
   const backdrop = document.getElementById(`${modalId}-backdrop`);

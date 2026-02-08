@@ -103,7 +103,7 @@ const toolLinks = [
     const footerVisitorRow = document.getElementById('footer-visitor-counter');
     const footerVisitorValue = document.getElementById('footer-visitor-count');
 
-    function formatVisitorCount(value) {
+    function formatVisitorCount(value: number): string {
       if (!Number.isFinite(value)) return '--';
       return new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(value)));
     }

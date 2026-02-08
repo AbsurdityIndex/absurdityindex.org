@@ -89,7 +89,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     tags: d.tags,
   }}
 >
-  <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(billSchema)} />
 
   {/* Site-wide satire banner */}
   <div class="bg-navy-900 border-b-2 border-gold-500">

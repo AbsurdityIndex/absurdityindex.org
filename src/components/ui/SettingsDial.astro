@@ -505,8 +505,10 @@
   // ── DOM refs ──
   const trigger = document.getElementById('settings-dial-trigger');
   const panel = document.getElementById('settings-dial-panel');
-  const themeButtons = Array.from(document.querySelectorAll('[data-theme-value]'));
-  const fontButtons = Array.from(document.querySelectorAll('[data-font-value]'));
+  const themeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-value]'),
+  );
+  const fontButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-font-value]'));
 
   // ── State ──
   let isOpen = false;
@@ -531,7 +533,7 @@
   }
 
   // ── Theme application ──
-  function applyTheme(theme) {
+  function applyTheme(theme: string) {
     const html = document.documentElement;
     html.setAttribute('data-theme', theme);
 
@@ -550,8 +552,10 @@
   }
 
   // ── Font application ──
-  function applyFont(id) {
-    const pairing = FONT_PAIRINGS[id];
+  function applyFont(id: string) {
+    if (!Object.prototype.hasOwnProperty.call(FONT_PAIRINGS, id)) return;
+
+    const pairing = FONT_PAIRINGS[id as keyof typeof FONT_PAIRINGS];
     if (!pairing) return;
 
     const html = document.documentElement;
@@ -593,7 +597,7 @@
   init();
 
   // ── Event listeners ──
-  trigger?.addEventListener('click', (e) => {
+  trigger?.addEventListener('click', (e: MouseEvent) => {
     e.stopPropagation();
     togglePanel();
   });
@@ -613,7 +617,7 @@
   });
 
   // Close on Escape
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key === 'Escape' && isOpen) {
       closePanel();
       trigger?.focus();
@@ -621,7 +625,7 @@
   });
 
   // Close on outside click
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', (e: MouseEvent) => {
     if (!isOpen) return;
     const target = e.target;
     if (target instanceof Node && !panel?.contains(target) && !trigger?.contains(target)) {
@@ -630,7 +634,12 @@
   });
 
   // Keyboard navigation within radiogroups
-  function handleRadiogroupKeydown(e, buttons, applyFn, dataAttr) {
+  function handleRadiogroupKeydown(
+    e: KeyboardEvent,
+    buttons: HTMLButtonElement[],
+    applyFn: (value: string) => void,
+    dataAttr: string,
+  ) {
     const current = buttons.findIndex((btn) => btn === document.activeElement);
     if (current < 0) return;
 
@@ -656,14 +665,14 @@
     }
   }
 
-  const themeGroup = document.querySelector('.settings-theme-grid');
-  const fontGroup = document.querySelector('.settings-font-grid');
+  const themeGroup = document.querySelector('.settings-theme-grid') as HTMLElement | null;
+  const fontGroup = document.querySelector('.settings-font-grid') as HTMLElement | null;
 
-  themeGroup?.addEventListener('keydown', (e) => {
+  themeGroup?.addEventListener('keydown', function (e) {
     handleRadiogroupKeydown(e, themeButtons, applyTheme, 'themeValue');
   });
 
-  fontGroup?.addEventListener('keydown', (e) => {
+  fontGroup?.addEventListener('keydown', function (e) {
     handleRadiogroupKeydown(e, fontButtons, applyFont, 'fontValue');
   });
 </script>

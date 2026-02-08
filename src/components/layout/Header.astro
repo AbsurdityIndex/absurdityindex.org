@@ -252,9 +252,9 @@ function isActivePath(href: string) {
   const toolsMenu = document.getElementById('tools-menu');
   const toolsMenuChevron = document.getElementById('tools-menu-chevron');
   const toolsMenuItems = toolsMenu
-    ? Array.from(toolsMenu.querySelectorAll('a[role=\"menuitem\"]'))
+    ? Array.from(toolsMenu.querySelectorAll<HTMLElement>('a[role=\"menuitem\"]'))
     : [];
-  let toolsCloseTimeoutId = null;
+  let toolsCloseTimeoutId: number | null = null;
 
   function clearToolsCloseTimeout() {
     if (toolsCloseTimeoutId !== null) {
@@ -302,12 +302,12 @@ function isActivePath(href: string) {
     }
   }
 
-  toolsMenuButton?.addEventListener('click', (event) => {
+  toolsMenuButton?.addEventListener('click', (event: MouseEvent) => {
     event.preventDefault();
     toggleToolsMenu();
   });
 
-  toolsMenuButton?.addEventListener('keydown', (event) => {
+  toolsMenuButton?.addEventListener('keydown', (event: KeyboardEvent) => {
     if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       openToolsMenu(true);
@@ -317,7 +317,7 @@ function isActivePath(href: string) {
     }
   });
 
-  toolsMenu?.addEventListener('keydown', (event) => {
+  toolsMenu?.addEventListener('keydown', (event: KeyboardEvent) => {
     if (toolsMenuItems.length === 0) return;
 
     const currentIndex = toolsMenuItems.findIndex((item) => item === document.activeElement);
@@ -354,9 +354,10 @@ function isActivePath(href: string) {
     item.addEventListener('click', () => closeToolsMenu());
   });
 
-  document.addEventListener('click', (event) => {
+  document.addEventListener('click', (event: MouseEvent) => {
     if (!toolsMenuContainer) return;
-    if (!toolsMenuContainer.contains(event.target)) {
+    const targetNode = event.target instanceof Node ? event.target : null;
+    if (targetNode && !toolsMenuContainer.contains(targetNode)) {
       closeToolsMenu();
     }
   });
@@ -382,8 +383,8 @@ function isActivePath(href: string) {
   );
 
   let isMobileMenuOpen = false;
-  let mobileCloseTimeoutId = null;
-  let previousFocusedElement = null;
+  let mobileCloseTimeoutId: number | null = null;
+  let previousFocusedElement: HTMLElement | null = null;
 
   function clearMobileCloseTimeout() {
     if (mobileCloseTimeoutId !== null) {
@@ -402,19 +403,21 @@ function isActivePath(href: string) {
     document.body.classList.remove('overflow-hidden');
   }
 
-  function getMobileFocusableElements() {
+  function getMobileFocusableElements(): HTMLElement[] {
     if (!mobileMenuPanel) return [];
 
     const selector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex=\"-1\"])';
-    return Array.from(mobileMenuPanel.querySelectorAll(selector)).filter((element) => {
-      if (!(element instanceof HTMLElement)) return false;
-      if (element.hidden || element.closest('[hidden]')) return false;
-      const style = window.getComputedStyle(element);
-      return style.display !== 'none' && style.visibility !== 'hidden';
-    });
+    return Array.from(mobileMenuPanel.querySelectorAll(selector)).filter(
+      (element): element is HTMLElement => {
+        if (!(element instanceof HTMLElement)) return false;
+        if (element.hidden || element.closest('[hidden]')) return false;
+        const style = window.getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      },
+    );
   }
 
-  function setMobileSectionState(sectionName, expanded) {
+  function setMobileSectionState(sectionName: string, expanded: boolean) {
     const sectionToggle = document.querySelector(`[data-mobile-section-toggle=\"${sectionName}\"]`);
     const section = document.querySelector(`[data-mobile-section=\"${sectionName}\"]`);
     const icon = document.querySelector(`[data-mobile-section-icon=\"${sectionName}\"]`);
@@ -429,7 +432,7 @@ function isActivePath(href: string) {
   function initializeMobileSections() {
     const sectionNames = mobileSectionToggles
       .map((sectionToggle) => sectionToggle.getAttribute('data-mobile-section-toggle'))
-      .filter((sectionName) => Boolean(sectionName));
+      .filter((sectionName): sectionName is string => Boolean(sectionName));
 
     const expandedSections = sectionNames.filter((sectionName) => {
       const sectionToggle = document.querySelector(
@@ -488,7 +491,7 @@ function isActivePath(href: string) {
     clearMobileCloseTimeout();
   }
 
-  function closeMobileMenu(options = {}) {
+  function closeMobileMenu(options: { restoreFocus?: boolean } = {}) {
     if (!mobileMenu || !mobileMenuPanel || !isMobileMenuOpen) return;
 
     const { restoreFocus = true } = options;
@@ -496,7 +499,7 @@ function isActivePath(href: string) {
     document.removeEventListener('keydown', handleMobileMenuKeydown);
     mobileMenuPanel.classList.add('translate-x-full');
 
-    const onTransitionEnd = (event) => {
+    const onTransitionEnd = (event: TransitionEvent) => {
       if (event.target !== mobileMenuPanel) return;
       finishMobileMenuClose(restoreFocus);
     };
@@ -529,7 +532,7 @@ function isActivePath(href: string) {
     });
   }
 
-  function handleMobileMenuKeydown(event) {
+  function handleMobileMenuKeydown(event: KeyboardEvent) {
     if (!isMobileMenuOpen) return;
 
     if (event.key === 'Escape') {
@@ -564,7 +567,7 @@ function isActivePath(href: string) {
   });
 
   const desktopMediaQuery = window.matchMedia('(min-width: 768px)');
-  const handleDesktopMediaChange = (event) => {
+  const handleDesktopMediaChange = (event: MediaQueryListEvent) => {
     if (event.matches) {
       closeMobileMenu({ restoreFocus: false });
     }
@@ -572,8 +575,12 @@ function isActivePath(href: string) {
 
   if (typeof desktopMediaQuery.addEventListener === 'function') {
     desktopMediaQuery.addEventListener('change', handleDesktopMediaChange);
-  } else if (typeof desktopMediaQuery.addListener === 'function') {
-    desktopMediaQuery.addListener(handleDesktopMediaChange);
+  } else {
+    // Older Safari: `addListener` / `removeListener`.
+    const legacyMq = desktopMediaQuery as unknown as {
+      addListener?: (cb: (event: MediaQueryListEvent) => void) => void;
+    };
+    legacyMq.addListener?.(handleDesktopMediaChange);
   }
 
   initializeMobileSections();
@@ -584,7 +591,7 @@ function isActivePath(href: string) {
     document.dispatchEvent(new CustomEvent('open-founding-docs'));
   });
 
-  document.addEventListener('keydown', (event) => {
+  document.addEventListener('keydown', (event: KeyboardEvent) => {
     if (event.key === 'Escape' && isToolsMenuOpen()) {
       closeToolsMenu(true);
     }

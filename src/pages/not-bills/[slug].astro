@@ -81,7 +81,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
     }
   </style>
 
-  <script type="application/ld+json" set:html={JSON.stringify(billSchema)} />
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(billSchema)} />
 
   <div class="max-w-4xl mx-auto px-4 py-12">
     <article class="bg-parchment rounded-lg shadow-lg overflow-hidden">

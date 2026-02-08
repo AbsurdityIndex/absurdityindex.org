@@ -714,8 +714,10 @@ const categories = [...new Set(generatedBills.map((b) => b.category))].sort();
     </div>
   </div>
 
-  <script is:inline define:vars={{ generatedBills }}>
-    const bills = generatedBills;
+  <script is:inline data-generated-bills={JSON.stringify(generatedBills)}>
+    const scriptEl =
+      document.currentScript instanceof HTMLScriptElement ? document.currentScript : null;
+    const bills = scriptEl ? JSON.parse(scriptEl.dataset.generatedBills || '[]') : [];
 
     const categorySelect = document.getElementById('category');
     const absurditySlider = document.getElementById('absurdity');

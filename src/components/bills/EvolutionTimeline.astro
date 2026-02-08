@@ -6,6 +6,9 @@
  * current stage highlighting, pork deltas, and dates.
  */
 import Icon from '../ui/Icon.astro';
+import type { ComponentProps } from 'astro/types';
+
+type IconName = ComponentProps<typeof Icon>['name'];
 
 interface Stage {
   stage: string; // Chamber-agnostic stage names
@@ -29,7 +32,7 @@ const receivingChamber = originChamber === 'house' ? 'Senate' : 'House';
 const originLabel = originChamber === 'house' ? 'House' : 'Senate';
 
 // Comprehensive stage label mapping for the new chamber-agnostic schema
-const stageLabels: Record<string, { label: string; icon: string }> = {
+const stageLabels: Record<string, { label: string; icon: IconName }> = {
   // Introduction
   introduced: { label: 'Introduced', icon: 'file-plus' },
 
@@ -83,7 +86,7 @@ const stageLabels: Record<string, { label: string; icon: string }> = {
 };
 
 // Fallback for unknown stages
-function getStageConfig(stage: string): { label: string; icon: string } {
+function getStageConfig(stage: string): { label: string; icon: IconName } {
   return (
     stageLabels[stage] || {
       label: stage.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
