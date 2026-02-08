@@ -34,48 +34,23 @@ import Icon from '../../../components/ui/Icon.astro';
     </section>
 
     <div class="max-w-5xl mx-auto px-4 py-10 sm:py-12 space-y-8">
-      <!-- Navigation -->
-      <div class="flex flex-wrap gap-2">
-        <a
-          href="/votechain/poc"
-          class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-        >
-          <Icon name="home" class="text-navy-700" size={18} />
-          POC Home
-        </a>
-        <a
-          href="/votechain/poc/vote"
-          class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-        >
-          <Icon name="vote" class="text-navy-700" size={18} />
-          Voting Client
-        </a>
-        <a
-          href="/votechain/poc/dashboard"
-          class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-        >
-          <Icon name="bar-chart" class="text-navy-700" size={18} />
-          Dashboard
-        </a>
-        <a
-          href="/votechain/poc/trust"
-          class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-        >
-          <Icon name="shield" class="text-navy-700" size={18} />
-          Trust Portal
-        </a>
-      </div>
-
       <!-- Section 1: Node Configuration -->
       <section class="bg-white rounded-xl border border-navy-200 p-6 sm:p-8 shadow-md">
-        <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
-          <Icon name="settings" class="text-gold-600" />
-          Node Configuration
-        </h2>
-        <p class="text-navy-600 text-sm mt-2">
-          Enter the URLs for each VoteChain Workers node. These are saved to your browser's
-          localStorage. Write tokens are optional &mdash; only needed for event replication.
-        </p>
+        <details>
+          <summary class="flex items-center gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none">
+            <Icon name="chevron-right" class="text-navy-400 transition-transform details-chevron" size={16} />
+            <h2 class="font-serif text-xl text-navy-900 font-bold flex items-center gap-2">
+              <Icon name="settings" class="text-gold-600" />
+              Node Configuration
+            </h2>
+            <span class="inline-flex items-center rounded-full bg-green-600/15 px-2 py-0.5 text-[10px] font-semibold text-green-700 ml-2">
+              Auto-configured
+            </span>
+          </summary>
+          <p class="text-navy-600 text-sm mt-3">
+            Nodes are pre-configured to the live VoteChain Workers. Write tokens are optional
+            &mdash; only needed if you want to replicate POC events to the distributed ledger.
+          </p>
 
         <div class="mt-4 space-y-4" id="node-config-form">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="node-inputs">
@@ -101,6 +76,7 @@ import Icon from '../../../components/ui/Icon.astro';
           </div>
           <p id="config-status" class="text-sm text-navy-500"></p>
         </div>
+        </details>
       </section>
 
       <!-- Section 2: Node Health Dashboard -->
@@ -752,4 +728,10 @@ import Icon from '../../../components/ui/Icon.astro';
     renderConfigForm();
     refreshAll();
   </script>
+
+  <style>
+    details[open] > summary .details-chevron {
+      transform: rotate(90deg);
+    }
+  </style>
 </BaseLayout>

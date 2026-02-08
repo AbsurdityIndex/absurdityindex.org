@@ -49,7 +49,7 @@ export type { PocInclusionProof } from './bulletin-board.js';
 export { verifyInclusionProof } from './bulletin-board.js';
 
 // ── State management ────────────────────────────────────────────────────────
-export { resetPocState, getPocState, getManifest, getTrusteeShares, getCredential } from './state.js';
+export { resetPocState, invalidateCredential, getPocState, getManifest, getTrusteeShares, getCredential } from './state.js';
 
 // ── Credential & challenge ──────────────────────────────────────────────────
 export { ensureCredential, computeNullifier, issueChallenge } from './credential.js';
@@ -107,6 +107,7 @@ export {
   getNodeConfig,
   setNodeConfig,
   isConfigured as isVclConfigured,
+  isReadable as isVclReadable,
   fetchNodeHealth,
   fetchNodeInfo,
   fetchLedgerHead,

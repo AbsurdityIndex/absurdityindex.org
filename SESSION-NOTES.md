@@ -76,7 +76,7 @@ const progress = getBillProgress(billNumber, status);
 
 ## My Thoughts on This Project
 
-### What Absurdity-Index.io Is Doing
+### What Absurdity Index (absurdityindex.org) Is Doing
 
 This is a clever civic education project that makes Congressional legislation accessible and entertaining. The "Absurdity Index" concept is brilliant - it takes the inherently dry subject of legislative procedure and adds personality through:
 

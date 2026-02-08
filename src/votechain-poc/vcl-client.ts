@@ -136,7 +136,14 @@ export function setNodeConfig(nodes: VclNodeConfig[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(nodes));
 }
 
+/** Check if any node has both a URL and a write token configured (needed for replication). */
 export function isConfigured(): boolean {
+  const nodes = getNodeConfig();
+  return nodes.some((n) => n.url.trim().length > 0 && n.writeToken?.trim());
+}
+
+/** Check if any node has a URL configured (sufficient for read-only monitoring). */
+export function isReadable(): boolean {
   const nodes = getNodeConfig();
   return nodes.some((n) => n.url.trim().length > 0);
 }

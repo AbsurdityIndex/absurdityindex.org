@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   resetPocState,
+  invalidateCredential,
   getPocState,
   getManifest,
   getTrusteeShares,
@@ -55,6 +56,30 @@ describe('VoteChain POC — Full Integration', () => {
       const state2 = await getPocState();
       // Different random keys, so manifest_id will differ
       expect(state2.manifest.manifest_id).not.toBe(mid1);
+    });
+
+    it('invalidateCredential preserves election but clears credential', async () => {
+      const state1 = await getPocState();
+      const mid1 = state1.manifest.manifest_id;
+
+      // Get a credential first
+      await ensureCredential();
+      const cred1 = await getCredential();
+      expect(cred1).not.toBeNull();
+
+      // Invalidate — election stays, credential goes
+      invalidateCredential();
+
+      const state2 = await getPocState();
+      expect(state2.manifest.manifest_id).toBe(mid1); // same election
+      expect(state2.credential).toBeUndefined(); // credential cleared
+      expect(state2.challenges).toEqual({}); // challenges cleared
+
+      // Can get a new credential (different key pair)
+      await ensureCredential();
+      const cred2 = await getCredential();
+      expect(cred2).not.toBeNull();
+      expect(cred2!.pk).not.toBe(cred1!.pk);
     });
 
     it('manifest is self-consistent', async () => {

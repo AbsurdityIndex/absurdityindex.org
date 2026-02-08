@@ -240,20 +240,36 @@ import AISummarizer from '../../../components/votechain/AISummarizer.astro';
       </a>
     </div>
 
-    <div class="flex justify-center">
+    <div class="flex justify-center gap-3">
+      <button
+        id="poc-new-voter"
+        class="inline-flex items-center gap-2 rounded-md bg-navy-700 px-4 py-2 text-white font-sans text-sm font-semibold hover:bg-navy-800 transition-colors"
+        type="button"
+        title="Clear your credential and vote — election stays intact on the Workers ledger"
+      >
+        <Icon name="user-plus" class="text-white" size={18} />
+        New Voter Session
+      </button>
       <button
         id="poc-reset"
-        class="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white font-sans text-sm font-semibold hover:bg-red-700 transition-colors"
+        class="inline-flex items-center gap-2 rounded-md border border-red-300 px-4 py-2 text-red-600 font-sans text-sm font-semibold hover:bg-red-50 transition-colors"
         type="button"
+        title="Destroy the entire election and regenerate all keys — use only if state is corrupted"
       >
-        <Icon name="x" class="text-white" size={18} />
-        Reset POC State
+        <Icon name="x" class="text-red-500" size={18} />
+        Reset Election
       </button>
     </div>
   </div>
 
   <script>
-    import { resetPocState } from '../../../votechain-poc';
+    import { resetPocState, invalidateCredential } from '../../../votechain-poc';
+
+    const newVoterBtn = document.getElementById('poc-new-voter');
+    newVoterBtn?.addEventListener('click', () => {
+      invalidateCredential();
+      window.location.reload();
+    });
 
     const resetButton = document.getElementById('poc-reset');
     resetButton?.addEventListener('click', () => {

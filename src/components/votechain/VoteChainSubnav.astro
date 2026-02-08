@@ -183,16 +183,16 @@ const activePocModule = inPoc
 
 <style>
   /* Rotate chevron when open */
-  .assurance-subnav[open] > summary .assurance-subnav-chevron {
+  .section-subnav[open] > summary .section-subnav-chevron {
     transform: rotate(90deg);
   }
 
   /* On md+ screens: hide summary, always show pills */
   @media (min-width: 768px) {
-    .assurance-subnav > summary {
+    .section-subnav > summary {
       display: none;
     }
-    .assurance-subnav > .assurance-subnav-pills {
+    .section-subnav > .section-subnav-pills {
       display: flex !important;
       padding-top: 0;
     }

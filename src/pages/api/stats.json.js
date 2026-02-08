@@ -85,7 +85,7 @@ export async function GET() {
 
   const funFacts = [
     `At current rates, Congress will pass ${Math.round(realBills.length * 0.1)} of these bills. The rest will die in committee, like your hopes.`,
-    `The average bill title is ${Math.round(bills.reduce((sum, b) => sum + b.data.title.length, 0) / bills.length)} characters. Brevity is not Congress's strong suit.`,
+    `The average bill title is ${Math.round(bills.reduce((sum, b) => sum + b.data.title.length, 0) / bills.length)} characters. Brevity isn't Congress's strong suit.`,
     `${sensibleBills.length} satirical bills actually make more sense than ${realBills.length} real ones. Democracy!`,
   ];
 

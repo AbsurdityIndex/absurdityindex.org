@@ -17,7 +17,7 @@ import Icon from '../../../components/ui/Icon.astro';
 >
   <main class="bg-parchment min-h-screen">
     <section class="relative bg-navy-900 py-10 sm:py-14">
-      <div class="max-w-6xl mx-auto px-4 text-center relative z-10">
+      <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
         <div class="flex justify-center">
           <OfficialSeal size="90" />
         </div>
@@ -31,7 +31,7 @@ import Icon from '../../../components/ui/Icon.astro';
       </div>
     </section>
 
-    <div class="max-w-6xl mx-auto px-4 py-10 sm:py-12 space-y-8">
+    <div class="max-w-5xl mx-auto px-4 py-10 sm:py-12 space-y-8">
       <section class="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div class="bg-white rounded-lg border border-navy-200 p-6 text-center shadow-md">
           <p class="text-navy-500 font-mono text-xs uppercase tracking-wider mb-2">Verified</p>
@@ -65,36 +65,6 @@ import Icon from '../../../components/ui/Icon.astro';
             <Icon name="clipboard-list" class="text-gold-600" />
             Controls
           </h2>
-          <div class="flex flex-wrap gap-2">
-            <a
-              href="/votechain/poc/vote"
-              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-            >
-              <Icon name="vote" class="text-navy-700" size={18} />
-              Voting Client
-            </a>
-            <a
-              href="/votechain/poc/verify"
-              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-            >
-              <Icon name="shield" class="text-navy-700" size={18} />
-              Verify Receipt
-            </a>
-            <a
-              href="/votechain/poc/trust"
-              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-            >
-              <Icon name="shield" class="text-navy-700" size={18} />
-              Trust Portal
-            </a>
-            <a
-              href="/votechain/poc"
-              class="inline-flex items-center gap-2 rounded-md border border-navy-200 bg-white px-3 py-2 text-navy-800 font-sans text-sm font-semibold hover:border-gold-500 hover:shadow-sm transition-all"
-            >
-              <Icon name="home" class="text-navy-700" size={18} />
-              POC Home
-            </a>
-          </div>
         </div>
 
         <div class="mt-4 flex flex-wrap gap-2">
@@ -123,12 +93,22 @@ import Icon from '../../../components/ui/Icon.astro';
             Export Snapshot
           </button>
           <button
-            id="reset"
-            class="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white font-sans text-sm font-semibold hover:bg-red-700 transition-colors"
+            id="new-voter"
+            class="inline-flex items-center gap-2 rounded-md bg-navy-700 px-4 py-2 text-white font-sans text-sm font-semibold hover:bg-navy-800 transition-colors"
             type="button"
+            title="Clear credential and vote — election stays intact"
           >
-            <Icon name="x" class="text-white" size={18} />
-            Reset
+            <Icon name="user-plus" class="text-white" size={18} />
+            New Voter
+          </button>
+          <button
+            id="reset"
+            class="inline-flex items-center gap-2 rounded-md border border-red-300 px-4 py-2 text-red-600 font-sans text-sm font-semibold hover:bg-red-50 transition-colors"
+            type="button"
+            title="Destroy election and regenerate all keys"
+          >
+            <Icon name="x" class="text-red-500" size={18} />
+            Reset Election
           </button>
         </div>
 
@@ -477,6 +457,7 @@ import Icon from '../../../components/ui/Icon.astro';
       getTrusteeShares,
       publishTally,
       resetPocState,
+      invalidateCredential,
       reviewFraudFlag,
     } from '../../../votechain-poc';
     import type { PocFraudFlagAction, PocTrusteeShareRecord } from '../../../votechain-poc';
@@ -516,6 +497,7 @@ import Icon from '../../../components/ui/Icon.astro';
     const refreshBtn = document.getElementById('refresh') as HTMLButtonElement;
     const publishBtn = document.getElementById('publish-tally') as HTMLButtonElement;
     const exportBtn = document.getElementById('export') as HTMLButtonElement;
+    const newVoterBtn = document.getElementById('new-voter') as HTMLButtonElement;
     const resetBtn = document.getElementById('reset') as HTMLButtonElement;
     const statusEl = document.getElementById('controls-status') as HTMLElement;
 
@@ -832,6 +814,11 @@ import Icon from '../../../components/ui/Icon.astro';
       a.download = `votechain-poc-snapshot-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
+    });
+
+    newVoterBtn?.addEventListener('click', () => {
+      invalidateCredential();
+      window.location.reload();
     });
 
     resetBtn?.addEventListener('click', () => {

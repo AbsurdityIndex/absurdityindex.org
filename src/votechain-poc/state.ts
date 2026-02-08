@@ -45,6 +45,29 @@ export function resetPocState(): void {
   localStorage.removeItem('votechain_poc_last_receipt');
 }
 
+/**
+ * Invalidate the current voter credential without destroying the election.
+ *
+ * Clears: credential, challenges, idempotency, spoiled ballots, last receipt.
+ * Preserves: manifest, keys, trustees, issuers, BB, VCL events,
+ *            credential_issuance_count (so the monitor's issuance counter keeps climbing).
+ *
+ * This lets the user walk through the voter flow again as a "new voter" while
+ * the election and its audit trail on the Workers nodes remain intact.
+ */
+export function invalidateCredential(): void {
+  const state = loadState();
+  if (!state) return;
+
+  delete state.credential;
+  state.challenges = {};
+  state.idempotency = {};
+  state.spoiled_ballots = [];
+
+  saveState(state);
+  localStorage.removeItem('votechain_poc_last_receipt');
+}
+
 function isStateUsable(s: PocStateV2): boolean {
   // Validate that critical fields match the current code's expectations.
   // This catches stale localStorage left over from earlier development iterations
