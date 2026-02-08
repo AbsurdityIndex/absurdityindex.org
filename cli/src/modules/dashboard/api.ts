@@ -17,6 +17,8 @@ import { fetchCongressActions } from '../trending/congress-watch.js';
 import { fetchRssFeeds } from '../trending/rss-feeds.js';
 import { aggregateTrends } from '../trending/aggregator.js';
 import { scoreTrend } from '../scoring/composite-scorer.js';
+import { readLimiter, tweetLimiter } from '../x-api/rate-limiter.js';
+import { fetchAnthropicCosts, type AnthropicCostData } from '../claude/admin-api.js';
 import type { DashboardDaemonManager } from './daemon-manager.js';
 import type { WatchOptions } from '../engage/watch-daemon.js';
 import type { PromptType, PromptContext } from '../claude/prompts/index.js';
@@ -38,6 +40,9 @@ export interface FullApiDeps {
   dryRun: boolean;
   daemon?: DashboardDaemonManager;
 }
+
+// Admin API cost data — refreshed asynchronously, read synchronously by getOverview
+let adminCosts: AnthropicCostData | null = null;
 
 export function handleApi(deps: ApiDeps, pathname: string, url: URL, _req: IncomingMessage, res: ServerResponse): void {
   const { db, config } = deps;
@@ -78,6 +83,18 @@ export function handleApi(deps: ApiDeps, pathname: string, url: URL, _req: Incom
         break;
       case '/api/daemon-status':
         json(res, deps.daemon ? deps.daemon.status() : { running: false, startedAt: null, stoppedAt: null, lastError: null, options: null });
+        break;
+      case '/api/cycle-detail': {
+        const cycleId = intParam(url, 'id', 0);
+        if (!cycleId) {
+          json(res, { error: 'id is required' }, 400);
+          break;
+        }
+        json(res, getCycleDetail(db, cycleId));
+        break;
+      }
+      case '/api/daily-stats':
+        json(res, getDailyStats(db, intParam(url, 'days', 7)));
         break;
       case '/api/author-stats': {
         const authorId = url.searchParams.get('authorId') ?? '';
@@ -165,6 +182,17 @@ export function handleSSE(deps: ApiDeps, _req: IncomingMessage, res: ServerRespo
     }
   }, 5000);
 
+  // Refresh Admin API costs periodically (has its own 5-min cache)
+  const adminKey = deps.config?.anthropicAdminApiKey;
+  let adminCostTimer: ReturnType<typeof setInterval> | null = null;
+  if (adminKey) {
+    const refreshAdminCosts = () => {
+      fetchAnthropicCosts(adminKey).then(c => { if (c) adminCosts = c; }).catch(() => {});
+    };
+    refreshAdminCosts(); // Initial fetch
+    adminCostTimer = setInterval(refreshAdminCosts, 60000);
+  }
+
   // Heartbeat every 15s
   const heartbeat = setInterval(() => {
     res.write(': heartbeat\n\n');
@@ -173,6 +201,7 @@ export function handleSSE(deps: ApiDeps, _req: IncomingMessage, res: ServerRespo
   res.on('close', () => {
     clearInterval(interval);
     clearInterval(heartbeat);
+    if (adminCostTimer) clearInterval(adminCostTimer);
   });
 }
 
@@ -196,6 +225,9 @@ export async function handlePostApi(deps: FullApiDeps, pathname: string, req: In
       case '/api/feed-refresh':
         await handleFeedRefresh(deps, req, res);
         break;
+      case '/api/feed-archive-all':
+        await handleFeedArchiveAll(deps, req, res);
+        break;
       case '/api/feed-item-star':
         await handleFeedItemStar(deps, req, res);
         break;
@@ -207,6 +239,12 @@ export async function handlePostApi(deps: FullApiDeps, pathname: string, req: In
         break;
       case '/api/post-compose':
         await handlePostCompose(deps, req, res);
+        break;
+      case '/api/post-delete':
+        await handlePostDelete(deps, req, res);
+        break;
+      case '/api/post-draft':
+        await handlePostDraft(deps, req, res);
         break;
       case '/api/posts-refresh-metrics':
         await handlePostsRefreshMetrics(deps, req, res);
@@ -693,29 +731,93 @@ async function handleFeedRefresh(deps: FullApiDeps, _req: IncomingMessage, res: 
 
   // Basic feed: mentions of your account (excluding your own tweets).
   const query = `@${username} -from:${username} -is:retweet`;
-  const { tweets, authors } = await deps.xReader.searchTweetsExpanded(query, 50);
+  const sinceId = (() => {
+    try {
+      if (!tableExists(deps.writeDb!, 'x_inbox_items')) return undefined;
+      const row = deps.writeDb!.prepare('SELECT MAX(CAST(tweet_id AS INTEGER)) as max_id FROM x_inbox_items').get() as { max_id: number | null };
+      return row?.max_id ? String(row.max_id) : undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+
+  const { tweets, authors, refTweets } = await deps.xReader.searchTweetsExpanded(query, 50, { sinceId });
 
   const inbox = createXInboxModel(deps.writeDb);
   let upserted = 0;
   for (const t of tweets) {
     const m = t.public_metrics;
+    const author = authors.get(t.author_id ?? '');
+
+    // Classify kind from referenced_tweets
+    const refs = (t as any).referenced_tweets as Array<{ type: string; id: string }> | undefined;
+    let kind: 'mention' | 'reply' | 'quote' = 'mention';
+    let inReplyToUsername: string | undefined;
+    let quotedTweetUsername: string | undefined;
+
+    if (refs) {
+      const quotedRef = refs.find(r => r.type === 'quoted');
+      const repliedRef = refs.find(r => r.type === 'replied_to');
+
+      if (quotedRef) {
+        kind = 'quote';
+        const qt = refTweets.get(quotedRef.id);
+        if (qt?.author_id) {
+          quotedTweetUsername = authors.get(qt.author_id)?.username;
+        }
+      } else if (repliedRef) {
+        kind = 'reply';
+        const rt = refTweets.get(repliedRef.id);
+        if (rt?.author_id) {
+          inReplyToUsername = authors.get(rt.author_id)?.username;
+        }
+      }
+    }
+
     inbox.upsert({
-      kind: 'mention',
+      kind,
       tweet_id: t.id,
       author_id: t.author_id ?? 'unknown',
-      author_username: authors.get(t.author_id ?? '') ?? undefined,
+      author_username: author?.username,
       text: t.text,
       conversation_id: (t as any).conversation_id ?? undefined,
       created_at: t.created_at ?? undefined,
+      in_reply_to_tweet_id: refs?.find(r => r.type === 'replied_to')?.id,
+      quoted_tweet_id: refs?.find(r => r.type === 'quoted')?.id,
       likes: m?.like_count ?? 0,
       retweets: m?.retweet_count ?? 0,
       replies: m?.reply_count ?? 0,
       quotes: m?.quote_count ?? 0,
+      author_name: author?.name,
+      author_verified: author?.verified,
+      author_verified_type: author?.verifiedType,
+      author_followers: author?.followerCount,
+      in_reply_to_username: inReplyToUsername,
+      quoted_tweet_username: quotedTweetUsername,
     });
     upserted++;
   }
 
-  json(res, { success: true, query, scanned: tweets.length, upserted });
+  json(res, { success: true, query, sinceId, scanned: tweets.length, upserted });
+}
+
+// ── POST /api/feed-archive-all ───────────────────────
+
+async function handleFeedArchiveAll(deps: FullApiDeps, _req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+  if (!tableExists(deps.writeDb, 'x_inbox_items')) {
+    json(res, { success: true, changed: 0 });
+    return;
+  }
+
+  const info = deps.writeDb.prepare(
+    "UPDATE x_inbox_items SET status = 'archived' WHERE discarded = 0 AND status = 'new'"
+  ).run();
+
+  json(res, { success: true, changed: info.changes });
 }
 
 // ── POST /api/feed-item-star ─────────────────────────
@@ -878,6 +980,125 @@ async function handlePostCompose(deps: FullApiDeps, req: IncomingMessage, res: S
   }
 
   json(res, { success: true, dryRun: false, postId: post.id, tweetUrl: result.tweetUrl ?? null, tweetId: result.tweetId ?? null });
+}
+
+// ── POST /api/post-delete ────────────────────────────
+
+async function handlePostDelete(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!deps.writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+
+  const body = await parseBody<{ id: number }>(req);
+  if (!body.id) {
+    json(res, { error: 'id is required' }, 400);
+    return;
+  }
+
+  const posts = createPostModel(deps.writeDb);
+  const existing = posts.getById(body.id);
+  if (!existing) {
+    json(res, { error: 'Post not found' }, 404);
+    return;
+  }
+
+  if (existing.status === 'posted') {
+    json(res, { error: 'Cannot delete a posted tweet — delete it on X directly' }, 400);
+    return;
+  }
+
+  posts.delete(body.id);
+  json(res, { success: true });
+}
+
+// ── POST /api/post-draft ────────────────────────────
+
+async function handlePostDraft(deps: FullApiDeps, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const { writeDb, xWriter, claude, config } = deps;
+
+  if (!writeDb) {
+    json(res, { error: 'Write DB not configured' }, 503);
+    return;
+  }
+
+  const body = await parseBody<{ id: number }>(req);
+  if (!body.id) {
+    json(res, { error: 'id is required' }, 400);
+    return;
+  }
+
+  const posts = createPostModel(writeDb);
+  const post = posts.getById(body.id);
+  if (!post) {
+    json(res, { error: 'Post not found' }, 404);
+    return;
+  }
+
+  if (post.status !== 'draft' && post.status !== 'queued') {
+    json(res, { error: 'Post is not a draft (status: ' + post.status + ')' }, 400);
+    return;
+  }
+
+  // Re-run safety check
+  if (claude && config) {
+    const safety = await runHotPotDetector({ content: post.content, claude, config });
+    if (safety.verdict === 'REJECT') {
+      posts.updateStatus(post.id, 'rejected');
+      json(res, {
+        success: false,
+        safetyRejected: true,
+        safetyReason: safety.reasons.join(', '),
+        safetyScore: safety.score,
+      });
+      return;
+    }
+  }
+
+  if (!xWriter) {
+    json(res, { error: 'X writer not configured' }, 503);
+    return;
+  }
+
+  // Post to X based on type
+  const postType = post.x_post_type ?? 'tweet';
+  let result;
+  if (postType === 'reply' && post.parent_tweet_id) {
+    result = await xWriter.reply(post.content, post.parent_tweet_id);
+  } else if (postType === 'quote' && post.parent_tweet_id) {
+    result = await xWriter.quote(post.content, post.parent_tweet_id);
+  } else {
+    result = await xWriter.tweet(post.content);
+  }
+
+  if (!result.success) {
+    posts.markFailed(post.id, 'X posting failed');
+    json(res, { success: false, error: 'Failed to post to X' });
+    return;
+  }
+
+  // Update post record
+  if (result.tweetId) {
+    posts.markPosted(post.id, result.tweetId);
+  } else {
+    posts.updateStatus(post.id, 'posted');
+  }
+
+  // Mark opportunity as engaged if this was an engagement post
+  if (post.parent_tweet_id && (postType === 'reply' || postType === 'quote')) {
+    try {
+      const opportunities = createOpportunityModel(writeDb);
+      opportunities.markEngaged(post.parent_tweet_id, post.id);
+    } catch {
+      // Non-fatal — opportunity may not exist
+    }
+  }
+
+  json(res, {
+    success: true,
+    tweetUrl: result.tweetUrl ?? null,
+    tweetId: result.tweetId ?? null,
+  });
 }
 
 // ── POST /api/posts-refresh-metrics ──────────────────
@@ -1072,17 +1293,62 @@ function getOverview(db: Database.Database) {
     ? (db.prepare("SELECT COUNT(*) as c FROM x_inbox_items WHERE discarded = 0 AND status = 'new'").get() as { c: number }).c
     : 0;
 
+  // Trend arrows: compare today vs yesterday
+  const postsYesterday = (db.prepare(
+    "SELECT COUNT(*) as c FROM posts WHERE status = 'posted' AND posted_at >= date('now', '-1 day') AND posted_at < date('now')"
+  ).get() as { c: number }).c;
+
+  const engagementsYesterday = (db.prepare(
+    "SELECT COUNT(*) as c FROM opportunities WHERE status = 'engaged' AND last_evaluated >= date('now', '-1 day') AND last_evaluated < date('now')"
+  ).get() as { c: number }).c;
+
+  // 7-day average cost for comparison
+  const costAvg7d = costWeek / 7;
+
+  const trendDir = (current: number, previous: number): 'up' | 'down' | 'flat' => {
+    if (current > previous) return 'up';
+    if (current < previous) return 'down';
+    return 'flat';
+  };
+
+  // Last posted time for zero-state context
+  let lastPostedAgo: string | null = null;
+  if (postsToday === 0) {
+    const lastPost = db.prepare(
+      "SELECT posted_at FROM posts WHERE status = 'posted' ORDER BY posted_at DESC LIMIT 1"
+    ).get() as { posted_at: string } | undefined;
+    if (lastPost?.posted_at) {
+      const ms = Date.now() - new Date(lastPost.posted_at + (lastPost.posted_at.includes('Z') ? '' : 'Z')).getTime();
+      const h = Math.floor(ms / 3600000);
+      lastPostedAgo = h > 0 ? h + 'h ago' : '<1h ago';
+    }
+  }
+
   return {
     postsToday,
     postsTotal,
     engagementsToday,
+    lastPostedAgo,
     safetyRejectRate: safetyStats.total > 0 ? safetyStats.rejected / safetyStats.total : 0,
     safetyTotal: safetyStats.total,
     safetyRejected: safetyStats.rejected,
     safetyReview: safetyStats.review,
     costTodayCents: costToday,
     costWeekCents: costWeek,
+    trends: {
+      posts: { direction: trendDir(postsToday, postsYesterday), delta: postsToday - postsYesterday },
+      engagements: { direction: trendDir(engagementsToday, engagementsYesterday), delta: engagementsToday - engagementsYesterday },
+      cost: { direction: trendDir(costToday, costAvg7d), delta: Math.round(costToday - costAvg7d) },
+    },
     opportunities: oppStats,
+    credits: {
+      xReads: { available: readLimiter.available, max: 100, window: '15m' },
+      xTweets: { available: tweetLimiter.available, max: 50, window: '24h' },
+      claudeSpendTodayCents: adminCosts?.todayCents ?? costToday,
+      claudeSpendWeekCents: adminCosts?.weekCents ?? costWeek,
+      claudeSpendMonthCents: adminCosts?.monthCents ?? null,
+      claudeSource: adminCosts ? 'admin-api' : 'local',
+    },
     counts: {
       cycles: cycleCount,
       opportunities: oppStats.total,
@@ -1093,6 +1359,37 @@ function getOverview(db: Database.Database) {
       trends: safeCount(db, 'trends'),
     },
   };
+}
+
+function getDailyStats(db: Database.Database, days: number) {
+  const results: { date: string; posts: number; engagements: number; costCents: number }[] = [];
+
+  for (let i = days - 1; i >= 0; i--) {
+    const offset = `-${i} days`;
+
+    const posts = (db.prepare(
+      "SELECT COUNT(*) as c FROM posts WHERE status = 'posted' AND posted_at >= date('now', ?) AND posted_at < date('now', ?)"
+    ).get(offset, i === 0 ? '+1 day' : `-${i - 1} days`) as { c: number }).c;
+
+    const engagements = (db.prepare(
+      "SELECT COUNT(*) as c FROM opportunities WHERE status = 'engaged' AND last_evaluated >= date('now', ?) AND last_evaluated < date('now', ?)"
+    ).get(offset, i === 0 ? '+1 day' : `-${i - 1} days`) as { c: number }).c;
+
+    const costCents = (db.prepare(
+      "SELECT COALESCE(SUM(cost_cents), 0) as c FROM generations WHERE created_at >= date('now', ?) AND created_at < date('now', ?)"
+    ).get(offset, i === 0 ? '+1 day' : `-${i - 1} days`) as { c: number }).c;
+
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    results.push({
+      date: d.toISOString().slice(0, 10),
+      posts,
+      engagements,
+      costCents,
+    });
+  }
+
+  return results;
 }
 
 function getAuthorStats(db: Database.Database, authorId: string, config?: Config) {
@@ -1146,6 +1443,100 @@ function getCycles(db: Database.Database, limit: number) {
   return db.prepare(
     'SELECT * FROM daemon_cycles ORDER BY started_at DESC LIMIT ?'
   ).all(limit);
+}
+
+function getCycleDetail(db: Database.Database, cycleId: number) {
+  if (!tableExists(db, 'daemon_cycles')) return { error: 'No cycles table' };
+
+  const cycle = db.prepare('SELECT * FROM daemon_cycles WHERE id = ?').get(cycleId) as Record<string, unknown> | undefined;
+  if (!cycle) return { error: 'Cycle not found' };
+
+  const startedAt = cycle.started_at as string | null;
+  const completedAt = cycle.completed_at as string | null;
+
+  if (!startedAt) {
+    return { cycle, posts: [], opportunities: [], generations: [], safetyChecks: [], costSummary: { totalCents: 0, calls: 0, byPurpose: {} } };
+  }
+
+  // Use completed_at as upper bound, or datetime('now') if still running
+  const endClause = completedAt ? "datetime(?)" : "datetime('now')";
+  const endParam = completedAt || undefined;
+
+  const timeParams = endParam ? [startedAt, endParam] : [startedAt];
+
+  const posts = tableExists(db, 'posts')
+    ? db.prepare(
+        `SELECT id, tweet_id, content, prompt_type, status, safety_score, safety_verdict, created_at, posted_at
+         FROM posts WHERE created_at >= datetime(?) AND created_at <= ${endClause}
+         ORDER BY created_at DESC`
+      ).all(...timeParams)
+    : [];
+
+  const newOpportunities = tableExists(db, 'opportunities')
+    ? db.prepare(
+        `SELECT tweet_id, author_username, text, score, status, recommended_action, matched_bill_slug, first_seen, last_evaluated
+         FROM opportunities WHERE first_seen >= datetime(?) AND first_seen <= ${endClause}
+         ORDER BY score DESC`
+      ).all(...timeParams)
+    : [];
+
+  const reevaluatedOpportunities = tableExists(db, 'opportunities')
+    ? db.prepare(
+        `SELECT tweet_id, author_username, text, score, status, recommended_action, matched_bill_slug, first_seen, last_evaluated
+         FROM opportunities WHERE last_evaluated >= datetime(?) AND last_evaluated <= ${endClause}
+           AND first_seen < datetime(?)
+         ORDER BY score DESC`
+      ).all(...(endParam ? [startedAt, endParam, startedAt] : [startedAt, startedAt]))
+    : [];
+
+  const generations = tableExists(db, 'generations')
+    ? db.prepare(
+        `SELECT id, purpose, model, input_tokens, output_tokens, cost_cents, created_at
+         FROM generations WHERE created_at >= datetime(?) AND created_at <= ${endClause}
+         ORDER BY created_at DESC`
+      ).all(...timeParams) as Array<{ id: number; purpose: string; model: string; input_tokens: number; output_tokens: number; cost_cents: number; created_at: string }>
+    : [];
+
+  const safetyChecks = tableExists(db, 'safety_log')
+    ? db.prepare(
+        `SELECT id, score, verdict, created_at
+         FROM safety_log WHERE created_at >= datetime(?) AND created_at <= ${endClause}
+         ORDER BY created_at DESC`
+      ).all(...timeParams)
+    : [];
+
+  // Aggregate costs
+  let totalCents = 0;
+  let calls = 0;
+  const byPurpose: Record<string, { costCents: number; calls: number }> = {};
+  for (const g of generations) {
+    totalCents += g.cost_cents;
+    calls++;
+    if (!byPurpose[g.purpose]) byPurpose[g.purpose] = { costCents: 0, calls: 0 };
+    byPurpose[g.purpose]!.costCents += g.cost_cents;
+    byPurpose[g.purpose]!.calls++;
+  }
+
+  // Parse trace data if available
+  let trace = null;
+  try {
+    if (cycle.trace_json) {
+      trace = JSON.parse(cycle.trace_json as string);
+    }
+  } catch {
+    // Invalid JSON — ignore
+  }
+
+  return {
+    cycle,
+    posts,
+    newOpportunities,
+    reevaluatedOpportunities,
+    generations,
+    safetyChecks,
+    costSummary: { totalCents, calls, byPurpose },
+    trace,
+  };
 }
 
 function getPosts(db: Database.Database, limit: number) {

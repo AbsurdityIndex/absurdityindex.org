@@ -135,11 +135,11 @@ import { Content as PRDContent } from '../../PRD-VOTER-VERIFICATION-CHAIN.md';
         <!-- Scanning state -->
         <div id="ai-scanning" class="ai-scanning">
           <div class="ai-scan-lines font-mono text-sm text-navy-500 space-y-2 py-8">
-            <p id="scan-1" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Reading 1,525 lines across 19 sections...</p>
-            <p id="scan-2" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Analyzing 5 verification pillars...</p>
-            <p id="scan-3" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Cross-referencing threat models &amp; cost data...</p>
-            <p id="scan-4" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Evaluating rollout strategy...</p>
-            <p id="scan-5" class="ai-scan-line opacity-0"><span class="ai-cursor">&#9608;</span> Compiling summary...</p>
+            <p id="scan-1" class="ai-scan-line opacity-0"><span class="ai-cursor" aria-hidden="true"></span> Reading 1,525 lines across 19 sections...</p>
+            <p id="scan-2" class="ai-scan-line opacity-0"><span class="ai-cursor" aria-hidden="true"></span> Analyzing 5 verification pillars...</p>
+            <p id="scan-3" class="ai-scan-line opacity-0"><span class="ai-cursor" aria-hidden="true"></span> Cross-referencing threat models &amp; cost data...</p>
+            <p id="scan-4" class="ai-scan-line opacity-0"><span class="ai-cursor" aria-hidden="true"></span> Evaluating rollout strategy...</p>
+            <p id="scan-5" class="ai-scan-line opacity-0"><span class="ai-cursor" aria-hidden="true"></span> Compiling summary...</p>
           </div>
         </div>
 
@@ -463,7 +463,13 @@ import { Content as PRDContent } from '../../PRD-VOTER-VERIFICATION-CHAIN.md';
     }
 
     .ai-cursor {
-      color: var(--color-gold-500);
+      display: inline-block;
+      width: 0.6em;
+      height: 0.9em;
+      margin-right: 0.35em;
+      background: var(--color-gold-500);
+      border-radius: 1px;
+      vertical-align: -0.1em;
       animation: blink 0.8s step-end infinite;
     }
 

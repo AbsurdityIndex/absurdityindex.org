@@ -45,7 +45,7 @@ export function registerEngageCommand(program: Command): void {
           if (tweet.text.startsWith('RT @')) continue;
           opportunities.push({
             text: tweet.text,
-            author: authors.get(tweet.author_id ?? '') ?? tweet.author_id ?? 'unknown',
+            author: authors.get(tweet.author_id ?? '')?.username ?? tweet.author_id ?? 'unknown',
             id: tweet.id,
           });
         }
@@ -310,8 +310,8 @@ export function registerEngageCommand(program: Command): void {
           );
           console.log(`    ${opp.text.slice(0, 100)}${opp.text.length > 100 ? '...' : ''}`);
           console.log(
-            chalk.dim(`    ❤ ${opp.likes}  🔁 ${opp.retweets}  💬 ${opp.replies}`) +
-            (opp.matched_bill_slug ? chalk.magenta(`  📋 ${opp.matched_bill_slug}`) : '')
+            chalk.dim(`    likes: ${opp.likes}  rts: ${opp.retweets}  replies: ${opp.replies}`) +
+            (opp.matched_bill_slug ? chalk.magenta(`  bill: ${opp.matched_bill_slug}`) : '')
           );
         }
       }

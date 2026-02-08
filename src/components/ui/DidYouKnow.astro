@@ -1,4 +1,6 @@
 ---
+import Icon from './Icon.astro';
+
 const facts = [
   "The 110th Congress named 109 post offices — nearly 20% of all laws passed.",
   "The FairTax Act (H.R. 25) has been introduced every Congress since 1999 without ever reaching a floor vote.",
@@ -32,15 +34,13 @@ for (let i = 0; i < count; i++) {
 
 <aside class="bg-cream-50 border border-gold-300 rounded-sm p-6 shadow-sm">
   <div class="flex items-center gap-2 mb-4">
-    <svg class="w-5 h-5 text-gold-500 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-      <path d="M10 2a6 6 0 00-2 11.66V16a2 2 0 104 0v-2.34A6 6 0 0010 2zm0 2a4 4 0 012.6 7.04.75.75 0 01-.35.64l-.25.15V14H8v-2.17l-.25-.15a.75.75 0 01-.35-.64A4 4 0 0110 4z"/>
-    </svg>
+    <Icon name="lightbulb" size={20} class="text-gold-500 shrink-0" />
     <h3 class="font-serif text-lg font-bold text-navy-900">Did You Know?</h3>
   </div>
   <ul class="space-y-3">
     {selectedFacts.map((fact) => (
       <li class="flex gap-2 text-sm font-sans text-navy-700 leading-relaxed">
-        <span class="text-gold-500 shrink-0 mt-0.5">&starf;</span>
+        <Icon name="star" size={14} class="text-gold-500 shrink-0 mt-0.5" />
         <span>{fact}</span>
       </li>
     ))}

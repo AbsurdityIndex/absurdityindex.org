@@ -460,7 +460,7 @@ async function runBatchMode(args: BatchModeOpts): Promise<void> {
 
   for (const item of results) {
     if (item.error) {
-      console.log(chalk.red(`  ✗ ${item.customId}: ${item.error}`));
+      console.log(chalk.red(`  X ${item.customId}: ${item.error}`));
       continue;
     }
 

@@ -180,7 +180,7 @@ const randomComment = wittyComments[Math.floor(today.getDate() % wittyComments.l
         {daysUntilChange} {daysUntilChange === 1 ? 'day' : 'days'}
       </p>
       <p class="font-sans text-xs text-navy-500">
-        {nextChange.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+        {nextChange.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
       </p>
     </div>
   )}

@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Divider from '../components/ui/Divider.astro';
+import Icon from '../components/ui/Icon.astro';
 
 // Historic filibuster records
 const historicFilibusters = [
@@ -210,17 +211,15 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
           </div>
 
           <!-- Share Button -->
-          <div class="text-center">
-            <button
-              id="share-btn"
-              class="px-6 py-3 bg-navy-800 text-gold-400 font-serif font-bold rounded-lg hover:bg-navy-700 transition-colors inline-flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-              </svg>
-              Share Your Filibuster
-            </button>
-          </div>
+	          <div class="text-center">
+	            <button
+	              id="share-btn"
+	              class="px-6 py-3 bg-navy-800 text-gold-400 font-serif font-bold rounded-lg hover:bg-navy-700 transition-colors inline-flex items-center gap-2"
+	            >
+	              <Icon name="share" size={18} class="text-gold-400" />
+	              <span id="share-btn-label">Share Your Filibuster</span>
+	            </button>
+	          </div>
 
         </div>
 
@@ -230,7 +229,7 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
           <!-- Your Record -->
           <div class="bg-white rounded-lg border border-navy-200 p-6 shadow-md">
             <h2 class="font-serif text-xl text-navy-900 font-bold mb-4 flex items-center gap-2">
-              <span class="text-2xl">&#127942;</span>
+              <Icon name="trophy" size={20} class="text-gold-600" />
               Your Personal Best
             </h2>
             <div class="bg-cream-200 rounded-lg p-4 text-center">
@@ -242,7 +241,7 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
           <!-- Historic Leaderboard -->
           <div class="bg-navy-800 rounded-lg p-6 border border-navy-700 shadow-lg">
             <h2 class="font-serif text-xl text-gold-400 font-bold mb-4 flex items-center gap-2">
-              <span class="text-2xl">&#128220;</span>
+              <Icon name="clipboard-list" size={20} class="text-gold-500" />
               Historic Filibusters
             </h2>
             <div class="space-y-3">
@@ -271,7 +270,7 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
           <!-- Fun Facts -->
           <div class="bg-cream-200 rounded-lg border border-gold-300 p-6">
             <h2 class="font-serif text-xl text-navy-900 font-bold mb-4 flex items-center gap-2">
-              <span class="text-2xl">&#128161;</span>
+              <Icon name="lightbulb" size={20} class="text-gold-600" />
               Filibuster Facts
             </h2>
             <div id="fun-fact" class="font-sans text-navy-700 text-sm leading-relaxed">
@@ -281,9 +280,7 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
               id="new-fact-btn"
               class="mt-4 text-gold-600 hover:text-gold-700 font-mono text-xs uppercase tracking-wide flex items-center gap-1"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-              </svg>
+              <Icon name="repeat" size={14} class="text-gold-600" />
               Another fact
             </button>
           </div>
@@ -367,17 +364,44 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
     const wordsCounter = document.getElementById('words-counter');
     const costCounter = document.getElementById('cost-counter');
     const sidebarCost = document.getElementById('sidebar-cost');
-    const startBtn = document.getElementById('start-btn');
-    const startBtnText = document.getElementById('start-btn-text');
-    const resetBtn = document.getElementById('reset-btn');
-    const textContent = document.getElementById('text-content');
-    const transcriptStatus = document.getElementById('transcript-status');
-    const leaderboardTime = document.getElementById('leaderboard-time');
-    const personalBestEl = document.getElementById('personal-best');
-    const shareBtn = document.getElementById('share-btn');
-    const funFactEl = document.getElementById('fun-fact');
-    const newFactBtn = document.getElementById('new-fact-btn');
-    const speedBtns = document.querySelectorAll('.speed-btn');
+	    const startBtn = document.getElementById('start-btn');
+	    const startBtnText = document.getElementById('start-btn-text');
+	    const resetBtn = document.getElementById('reset-btn');
+	    const textContentEl = document.getElementById('text-content');
+	    const transcriptStatus = document.getElementById('transcript-status');
+	    const leaderboardTime = document.getElementById('leaderboard-time');
+	    const personalBestEl = document.getElementById('personal-best');
+	    const shareBtn = document.getElementById('share-btn');
+	    const shareBtnLabel = document.getElementById('share-btn-label');
+	    const funFactEl = document.getElementById('fun-fact');
+	    const newFactBtn = document.getElementById('new-fact-btn');
+	    const speedBtns = document.querySelectorAll('.speed-btn');
+
+	    let transcriptTextNode = null;
+	    let transcriptCursor = null;
+
+	    function setTranscriptPlaceholder() {
+	      transcriptTextNode = null;
+	      transcriptCursor = null;
+
+	      if (!textContentEl) return;
+	      const p = document.createElement('p');
+	      p.className = 'text-navy-500 italic';
+	      p.textContent = 'Press \"Start Filibuster\" to begin the proceedings...';
+	      textContentEl.replaceChildren(p);
+	    }
+
+	    function ensureTranscriptParagraph() {
+	      if (!textContentEl || transcriptTextNode) return;
+
+	      const p = document.createElement('p');
+	      transcriptTextNode = document.createTextNode('');
+	      transcriptCursor = document.createElement('span');
+	      transcriptCursor.className = 'animate-pulse';
+	      transcriptCursor.textContent = '|';
+	      p.append(transcriptTextNode, transcriptCursor);
+	      textContentEl.replaceChildren(p);
+	    }
 
     // Format time as HH:MM:SS
     function formatTime(seconds) {
@@ -457,10 +481,10 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
     let currentSnippet = '';
 
     // Type out text character by character
-    function typeText() {
-      if (!isRunning) return;
+	    function typeText() {
+	      if (!isRunning) return;
 
-      const speed = speeds[currentSpeed];
+	      const speed = speeds[currentSpeed];
 
       // If we've finished the current snippet, get a new one
       if (currentCharIndex >= currentSnippet.length) {
@@ -479,16 +503,17 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
 
       // Add characters
       const charsToAdd = Math.min(speed.chars, currentSnippet.length - currentCharIndex);
-      currentCharIndex += charsToAdd;
+	      currentCharIndex += charsToAdd;
 
-      // Update display with the text typed so far
-      const visibleText = displayedText + currentSnippet.slice(0, currentCharIndex);
-      textContent.innerHTML = `<p>${visibleText}<span class="animate-pulse">|</span></p>`;
+	      // Update display with the text typed so far
+	      const visibleText = displayedText + currentSnippet.slice(0, currentCharIndex);
+	      ensureTranscriptParagraph();
+	      if (transcriptTextNode) transcriptTextNode.data = visibleText;
 
-      // Scroll to bottom
-      const container = textContent.parentElement;
-      container.scrollTop = container.scrollHeight;
-    }
+	      // Scroll to bottom
+	      const container = textContentEl?.parentElement;
+	      if (container) container.scrollTop = container.scrollHeight;
+	    }
 
     // Start the filibuster
     function startFilibuster() {
@@ -527,22 +552,22 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
     }
 
     // Reset the filibuster
-    function resetFilibuster() {
-      pauseFilibuster();
-      elapsedSeconds = 0;
-      wordsSpoken = 0;
+	    function resetFilibuster() {
+	      pauseFilibuster();
+	      elapsedSeconds = 0;
+	      wordsSpoken = 0;
       currentSnippetIndex = 0;
       currentCharIndex = 0;
       displayedText = '';
       currentSnippet = '';
       shuffledSnippets = shuffleArray(filibusterSnippets);
 
-      startBtnText.textContent = 'Start Filibuster';
-      transcriptStatus.textContent = 'AWAITING SPEAKER';
-      textContent.innerHTML = '<p class="text-navy-500 italic">Press "Start Filibuster" to begin the proceedings...</p>';
+	      startBtnText.textContent = 'Start Filibuster';
+	      transcriptStatus.textContent = 'AWAITING SPEAKER';
+	      setTranscriptPlaceholder();
 
-      updateDisplays();
-    }
+	      updateDisplays();
+	    }
 
     // Set speed
     function setSpeed(speed) {
@@ -567,12 +592,15 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
       }
     }
 
-    // Show random fun fact
-    let currentFactIndex = 0;
-    function showRandomFact() {
-      currentFactIndex = (currentFactIndex + 1) % funFacts.length;
-      funFactEl.innerHTML = `<p class="italic">"${funFacts[currentFactIndex]}"</p>`;
-    }
+	    // Show random fun fact
+	    let currentFactIndex = 0;
+	    function showRandomFact() {
+	      currentFactIndex = (currentFactIndex + 1) % funFacts.length;
+	      const p = document.createElement('p');
+	      p.className = 'italic';
+	      p.textContent = `\"${funFacts[currentFactIndex]}\"`;
+	      funFactEl.replaceChildren(p);
+	    }
 
     // Share functionality
     function shareFilibuster() {
@@ -594,15 +622,15 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
       }
     }
 
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        const originalText = shareBtn.innerHTML;
-        shareBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg> Copied!';
-        setTimeout(() => {
-          shareBtn.innerHTML = originalText;
-        }, 2000);
-      });
-    }
+	    function copyToClipboard(text) {
+	      navigator.clipboard.writeText(text).then(() => {
+	        const originalText = shareBtnLabel?.textContent || '';
+	        if (shareBtnLabel) shareBtnLabel.textContent = 'Copied!';
+	        setTimeout(() => {
+	          if (shareBtnLabel) shareBtnLabel.textContent = originalText;
+	        }, 2000);
+	      });
+	    }
 
     // Event Listeners
     startBtn.addEventListener('click', () => {
@@ -622,10 +650,11 @@ const congressionalSalaryPerHour = congressionalSalaryPerYear / 2080; // ~$83.65
     newFactBtn.addEventListener('click', showRandomFact);
     shareBtn.addEventListener('click', shareFilibuster);
 
-    // Initialize
-    loadPersonalBest();
-    updateDisplays();
-  </script>
+	    // Initialize
+	    loadPersonalBest();
+	    updateDisplays();
+	    setTranscriptPlaceholder();
+	  </script>
 
   <style>
     /* Cursor animation */

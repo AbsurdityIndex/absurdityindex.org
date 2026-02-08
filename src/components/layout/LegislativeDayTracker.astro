@@ -19,13 +19,13 @@ function daysSince(dateStr: string): number {
 // Format date nicely
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
 // Get day of week
 function getDayOfWeek(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { weekday: 'long' });
+  return date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
 }
 
 const house = sessionData.house;

@@ -439,19 +439,27 @@ function toCategorySlug(value: string) {
       return Boolean(apiPagePath) && loadedPages.size < totalPages;
     }
 
-    function toNumber(value: string | undefined): number {
-      const parsed = Number.parseFloat(value ?? '');
-      return Number.isNaN(parsed) ? 0 : parsed;
-    }
+	    function toNumber(value: string | undefined): number {
+	      const parsed = Number.parseFloat(value ?? '');
+	      return Number.isNaN(parsed) ? 0 : parsed;
+	    }
 
-    function escapeHtml(value: string): string {
-      return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+	    function safeHref(value: string | undefined, fallback: string): string {
+	      const candidate = String(value ?? '').trim();
+	      if (!candidate) return fallback;
+	      if (candidate.startsWith('/')) return candidate;
+
+	      try {
+	        const parsed = new URL(candidate, window.location.origin);
+	        if (parsed.origin === window.location.origin) {
+	          return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+	        }
+	      } catch (_err) {
+	        // Ignore invalid URL.
+	      }
+
+	      return fallback;
+	    }
 
     function toCategorySlug(value: string): string {
       return value.toLowerCase().replace(/\s+&\s+/g, '-').replace(/\s+/g, '-');
@@ -465,11 +473,11 @@ function toCategorySlug(value: string) {
       return sponsor.match(/\(([^)]+)\)/)?.[1] || '';
     }
 
-    function getDateLabel(dateIso: string, fallbackLabel?: string): string {
-      if (fallbackLabel) return fallbackLabel;
-      const date = new Date(dateIso);
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-    }
+	    function getDateLabel(dateIso: string, fallbackLabel?: string): string {
+	      if (fallbackLabel) return fallbackLabel;
+	      const date = new Date(dateIso);
+	      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+	    }
 
     function getScoreBadgeClasses(score: number): string {
       if (score <= 3) return 'bg-green-100 text-green-800 border-green-200';
@@ -529,96 +537,181 @@ function toCategorySlug(value: string) {
       url?: string;
     };
 
-    type ApplySource =
-      | 'initial'
-      | 'search'
+	    type ApplySource =
+	      | 'initial'
+	      | 'search'
       | 'sort'
       | 'category'
       | 'reset'
       | 'load_more'
-      | 'auto_hydrate'
-      | 'unknown';
+	      | 'auto_hydrate'
+	      | 'unknown';
 
-    function renderAbsurdityBar(score: number): string {
-      const clamped = Math.max(1, Math.min(10, Math.round(score)));
-      const segments = Array.from({ length: 10 }, (_, index) => {
-        const segment = index + 1;
-        let activeClass = 'bg-red-600';
-        if (segment <= 3) activeClass = 'bg-green-600';
-        else if (segment <= 6) activeClass = 'bg-yellow-500';
-        else if (segment <= 8) activeClass = 'bg-orange-500';
+	    function buildAbsurdityBar(score: number): HTMLDivElement {
+	      const bar = document.createElement('div');
+	      bar.className = 'flex gap-0.5';
 
-        return `<span class="h-1.5 flex-1 rounded-sm ${segment <= clamped ? activeClass : 'bg-cream-200'}"></span>`;
-      });
+	      const clamped = Math.max(1, Math.min(10, Math.round(score)));
+	      for (let segment = 1; segment <= 10; segment += 1) {
+	        let activeClass = 'bg-red-600';
+	        if (segment <= 3) activeClass = 'bg-green-600';
+	        else if (segment <= 6) activeClass = 'bg-yellow-500';
+	        else if (segment <= 8) activeClass = 'bg-orange-500';
 
-      return segments.join('');
-    }
+	        const span = document.createElement('span');
+	        span.className = `h-1.5 flex-1 rounded-sm ${segment <= clamped ? activeClass : 'bg-cream-200'}`;
+	        bar.appendChild(span);
+	      }
 
-    function renderCardHtml(bill: ApiBill): string {
-      const isReal = bill.billType === 'real';
-      const isRealGridCard = cardVariant === 'real-grid' && isReal;
-      const detailHref = bill.url || (isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`);
-      const sponsorName = bill.sponsorName || getSponsorName(bill.sponsor);
-      const sponsorParty = bill.sponsorParty || getSponsorParty(bill.sponsor);
-      const categorySlug = bill.categorySlug || toCategorySlug(bill.category);
-      const dateLabel = getDateLabel(bill.dateIntroduced, bill.dateIntroducedLabel);
-      const score = typeof bill.absurdityIndex === 'number' ? bill.absurdityIndex : null;
-      const featured = Boolean(bill.featured);
-      const stage = getStageBadge(bill.status || '');
-      const scoreBadge = score !== null
-        ? `<span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-mono font-bold min-[375px]:text-xs ${getScoreBadgeClasses(score)}">${score}/10</span>`
-        : '';
-      const typeBadge = isReal
-        ? '<span class="inline-flex items-center rounded-full border border-navy-800 bg-navy-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs">Real Bill</span>'
-        : '<span class="inline-flex items-center rounded-full border border-green-800 bg-green-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs">Not Bill</span>';
-      const statusMarkup = isReal
-        ? `<div class="mb-2.5 min-[375px]:mb-3"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-sans font-medium min-[375px]:text-xs ${stage.classes}">${escapeHtml(stage.label)}</span></div>`
-        : '';
-      const absurdityMarkup = isReal && score !== null
-        ? `<div class="mb-3.5 space-y-1 min-[375px]:mb-4"><div class="text-xs font-sans font-medium text-navy-500">Absurdity</div><div class="flex gap-0.5">${renderAbsurdityBar(score)}</div></div>`
-        : '';
-      const topBarClass = featured
-        ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400'
-        : isReal
-          ? 'bg-navy-600'
-          : 'bg-green-600';
+	      return bar;
+	    }
 
-      return `
-        <article class="group relative min-h-full overflow-hidden bg-white shadow-sm transition-all duration-200 hover:shadow-lg ${isRealGridCard ? 'rounded-xl hover:-translate-y-0.5 border border-gold-300 hover:border-gold-500' : 'rounded-lg border border-gold-200 hover:border-gold-400'} ${featured ? 'ring-2 ring-gold-400 border-gold-400' : ''}">
-          <div class="h-1 ${topBarClass}"></div>
-          ${featured ? '<div class="absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono">FEATURED</div>' : ''}
-          <div class="p-4 min-[375px]:p-5 ${isRealGridCard ? 'space-y-0.5' : ''}">
-            <div class="mb-2 flex items-center justify-between gap-2">
-              <span class="inline-flex items-center rounded-full bg-navy-800 px-2.5 py-1 text-[11px] font-mono font-semibold tracking-wide text-gold-400 min-[375px]:text-xs">${escapeHtml(bill.billNumber)}</span>
-              ${isRealGridCard && scoreBadge ? scoreBadge : typeBadge}
-            </div>
-            ${statusMarkup}
-            <h3 class="mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700 ${isRealGridCard ? 'text-[1.06rem] min-[375px]:text-lg min-[430px]:text-xl' : 'text-[1.04rem] min-[375px]:text-lg'}">
-              <a href="${escapeHtml(detailHref)}" class="after:absolute after:inset-0">${escapeHtml(bill.title)}</a>
-            </h3>
-            <p class="mb-3.5 text-[13px] leading-relaxed text-navy-600 min-[375px]:mb-4 min-[375px]:text-sm ${isRealGridCard ? 'line-clamp-3' : 'line-clamp-2'}">${escapeHtml(bill.summary)}</p>
-            ${absurdityMarkup}
-            <div class="space-y-2 border-t border-cream-200 pt-2.5 min-[375px]:pt-3">
-              <div class="flex items-center gap-1.5 text-[13px] min-[375px]:text-sm">
-                <span class="truncate font-medium text-navy-700" title="${escapeHtml(bill.sponsor)}">${escapeHtml(sponsorName)}</span>
-                ${sponsorParty ? `<span class="flex-shrink-0 font-mono text-[11px] text-navy-500 min-[375px]:text-xs">(${escapeHtml(sponsorParty)})</span>` : ''}
-              </div>
-              <div class="flex flex-col items-start gap-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
-                <a href="/category/${escapeHtml(categorySlug)}" class="relative z-10 inline-flex items-center rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-xs">
-                  ${escapeHtml(bill.category)}
-                </a>
-                <time datetime="${escapeHtml(bill.dateIntroduced)}" class="text-[11px] text-navy-500 min-[375px]:text-xs">${escapeHtml(dateLabel)}</time>
-              </div>
-            </div>
-          </div>
-        </article>
-      `;
-    }
+	    function renderCardElement(bill: ApiBill): HTMLElement {
+	      const isReal = bill.billType === 'real';
+	      const isRealGridCard = cardVariant === 'real-grid' && isReal;
+	      const fallbackHref = isReal ? `/bills/${bill.id}` : `/not-bills/${bill.id}`;
+	      const detailHref = safeHref(bill.url, fallbackHref);
+	      const sponsorName = bill.sponsorName || getSponsorName(bill.sponsor);
+	      const sponsorParty = bill.sponsorParty || getSponsorParty(bill.sponsor);
+	      const categorySlug = bill.categorySlug || toCategorySlug(bill.category);
+	      const dateLabel = getDateLabel(bill.dateIntroduced, bill.dateIntroducedLabel);
+	      const score = typeof bill.absurdityIndex === 'number' ? bill.absurdityIndex : null;
+	      const featured = Boolean(bill.featured);
+	      const stage = getStageBadge(bill.status || '');
+	      const topBarClass = featured
+	        ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400'
+	        : isReal
+	          ? 'bg-navy-600'
+	          : 'bg-green-600';
 
-    function createBillItemFromApi(bill: ApiBill): HTMLElement {
-      const item = document.createElement('div');
-      const titleLower = (bill.title || '').toLowerCase();
-      const categoryLower = (bill.category || '').toLowerCase();
+	      const article = document.createElement('article');
+	      const variantClass = isRealGridCard
+	        ? 'rounded-xl hover:-translate-y-0.5 border border-gold-300 hover:border-gold-500'
+	        : 'rounded-lg border border-gold-200 hover:border-gold-400';
+	      article.className = `group relative min-h-full overflow-hidden bg-white shadow-sm transition-all duration-200 hover:shadow-lg ${variantClass}${featured ? ' ring-2 ring-gold-400 border-gold-400' : ''}`;
+
+	      const topBar = document.createElement('div');
+	      topBar.className = `h-1 ${topBarClass}`;
+	      article.appendChild(topBar);
+
+	      if (featured) {
+	        const featuredLabel = document.createElement('div');
+	        featuredLabel.className = 'absolute top-1 right-0 bg-gold-500 text-navy-900 text-xs font-bold px-3 py-0.5 rounded-bl-lg font-mono';
+	        featuredLabel.textContent = 'FEATURED';
+	        article.appendChild(featuredLabel);
+	      }
+
+	      const body = document.createElement('div');
+	      body.className = `p-4 min-[375px]:p-5${isRealGridCard ? ' space-y-0.5' : ''}`;
+	      article.appendChild(body);
+
+	      const headerRow = document.createElement('div');
+	      headerRow.className = 'mb-2 flex items-center justify-between gap-2';
+	      body.appendChild(headerRow);
+
+	      const billNumberEl = document.createElement('span');
+	      billNumberEl.className = 'inline-flex items-center rounded-full bg-navy-800 px-2.5 py-1 text-[11px] font-mono font-semibold tracking-wide text-gold-400 min-[375px]:text-xs';
+	      billNumberEl.textContent = bill.billNumber || '';
+	      headerRow.appendChild(billNumberEl);
+
+	      let badgeEl: HTMLElement | null = null;
+	      if (isRealGridCard && score !== null) {
+	        const scoreBadge = document.createElement('span');
+	        scoreBadge.className = `inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-mono font-bold min-[375px]:text-xs ${getScoreBadgeClasses(score)}`;
+	        scoreBadge.textContent = `${score}/10`;
+	        badgeEl = scoreBadge;
+	      } else {
+	        const typeBadge = document.createElement('span');
+	        typeBadge.className = isReal
+	          ? 'inline-flex items-center rounded-full border border-navy-800 bg-navy-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs'
+	          : 'inline-flex items-center rounded-full border border-green-800 bg-green-700/90 px-2.5 py-0.5 text-[11px] font-sans font-semibold text-white min-[375px]:text-xs';
+	        typeBadge.textContent = isReal ? 'Real Bill' : 'Not Bill';
+	        badgeEl = typeBadge;
+	      }
+
+	      if (badgeEl) headerRow.appendChild(badgeEl);
+
+	      if (isReal) {
+	        const statusWrap = document.createElement('div');
+	        statusWrap.className = 'mb-2.5 min-[375px]:mb-3';
+	        const statusPill = document.createElement('span');
+	        statusPill.className = `inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-sans font-medium min-[375px]:text-xs ${stage.classes}`;
+	        statusPill.textContent = stage.label;
+	        statusWrap.appendChild(statusPill);
+	        body.appendChild(statusWrap);
+	      }
+
+	      const h3 = document.createElement('h3');
+	      h3.className = `mb-2 font-serif font-bold leading-snug text-navy-900 transition-colors group-hover:text-navy-700 ${isRealGridCard ? 'text-[1.06rem] min-[375px]:text-lg min-[430px]:text-xl' : 'text-[1.04rem] min-[375px]:text-lg'}`;
+	      const link = document.createElement('a');
+	      link.href = detailHref;
+	      link.className = 'after:absolute after:inset-0';
+	      link.textContent = bill.title || '';
+	      h3.appendChild(link);
+	      body.appendChild(h3);
+
+	      const summary = document.createElement('p');
+	      summary.className = `mb-3.5 text-[13px] leading-relaxed text-navy-600 min-[375px]:mb-4 min-[375px]:text-sm ${isRealGridCard ? 'line-clamp-3' : 'line-clamp-2'}`;
+	      summary.textContent = bill.summary || '';
+	      body.appendChild(summary);
+
+	      if (isReal && score !== null) {
+	        const absurdWrap = document.createElement('div');
+	        absurdWrap.className = 'mb-3.5 space-y-1 min-[375px]:mb-4';
+
+	        const label = document.createElement('div');
+	        label.className = 'text-xs font-sans font-medium text-navy-500';
+	        label.textContent = 'Absurdity';
+
+	        absurdWrap.append(label, buildAbsurdityBar(score));
+	        body.appendChild(absurdWrap);
+	      }
+
+	      const meta = document.createElement('div');
+	      meta.className = 'space-y-2 border-t border-cream-200 pt-2.5 min-[375px]:pt-3';
+	      body.appendChild(meta);
+
+	      const sponsorRow = document.createElement('div');
+	      sponsorRow.className = 'flex items-center gap-1.5 text-[13px] min-[375px]:text-sm';
+
+	      const sponsorEl = document.createElement('span');
+	      sponsorEl.className = 'truncate font-medium text-navy-700';
+	      sponsorEl.title = bill.sponsor || '';
+	      sponsorEl.textContent = sponsorName;
+	      sponsorRow.appendChild(sponsorEl);
+
+	      if (sponsorParty) {
+	        const partyEl = document.createElement('span');
+	        partyEl.className = 'flex-shrink-0 font-mono text-[11px] text-navy-500 min-[375px]:text-xs';
+	        partyEl.textContent = `(${sponsorParty})`;
+	        sponsorRow.appendChild(partyEl);
+	      }
+
+	      meta.appendChild(sponsorRow);
+
+	      const bottomRow = document.createElement('div');
+	      bottomRow.className = 'flex flex-col items-start gap-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between';
+
+	      const cat = document.createElement('a');
+	      cat.href = `/category/${categorySlug}`;
+	      cat.className = 'relative z-10 inline-flex items-center rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-navy-600 transition-colors hover:bg-cream-200 min-[375px]:text-xs';
+	      cat.textContent = bill.category || '';
+
+	      const time = document.createElement('time');
+	      time.dateTime = bill.dateIntroduced || '';
+	      time.className = 'text-[11px] text-navy-500 min-[375px]:text-xs';
+	      time.textContent = dateLabel;
+
+	      bottomRow.append(cat, time);
+	      meta.appendChild(bottomRow);
+
+	      return article;
+	    }
+
+	    function createBillItemFromApi(bill: ApiBill): HTMLElement {
+	      const item = document.createElement('div');
+	      const titleLower = (bill.title || '').toLowerCase();
+	      const categoryLower = (bill.category || '').toLowerCase();
       const sponsorLower = (bill.sponsor || '').toLowerCase();
       const committeeLower = (bill.committee || '').toLowerCase();
       const tagsLower = (bill.tags || []).join(',').toLowerCase();
@@ -634,14 +727,14 @@ function toCategorySlug(value: string) {
       item.dataset.type = bill.billType;
       item.dataset.sponsor = sponsorLower;
       item.dataset.committee = committeeLower;
-      item.dataset.tags = tagsLower;
-      item.dataset.featured = bill.featured ? '1' : '0';
-      item.dataset.score = String(bill.absurdityIndex ?? 0);
-      item.dataset.date = String(introducedTs);
-      item.innerHTML = renderCardHtml(bill);
+	      item.dataset.tags = tagsLower;
+	      item.dataset.featured = bill.featured ? '1' : '0';
+	      item.dataset.score = String(bill.absurdityIndex ?? 0);
+	      item.dataset.date = String(introducedTs);
+	      item.appendChild(renderCardElement(bill));
 
-      return item;
-    }
+	      return item;
+	    }
 
     function setCategoryButtonState(button: HTMLButtonElement, isActive: boolean) {
       button.classList.toggle('bg-navy-800', isActive);

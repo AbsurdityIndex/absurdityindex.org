@@ -27,7 +27,7 @@ export function registerMonitorCommand(program: Command): void {
       const db = opts.dryRun ? null : getDb(config.dbPath);
       const trends = db ? createTrendModel(db) : null;
 
-      console.log(chalk.bold('🔍 Trend Monitor Started'));
+      console.log(chalk.bold('Trend Monitor Started'));
       console.log(chalk.dim(`Checking every ${opts.interval} minutes. Press Ctrl+C to stop.\n`));
 
       const runScan = async () => {
@@ -58,10 +58,10 @@ export function registerMonitorCommand(program: Command): void {
 
           // Display top trends
           for (const t of topTrends.slice(0, 10)) {
-            const sourceIcons = t.sources.map(s =>
-              s === 'x-trends' ? '𝕏' : s === 'congress-watch' ? '🏛️' : '📰'
-            ).join('');
-            console.log(`  ${chalk.cyan(t.score.toString().padStart(3))} ${sourceIcons} ${t.topic}`);
+            const sourceLabels = t.sources
+              .map((s) => (s === 'x-trends' ? 'X' : s === 'congress-watch' ? 'CONG' : 'RSS'))
+              .join('+');
+            console.log(`  ${chalk.cyan(t.score.toString().padStart(3))} [${sourceLabels}] ${t.topic}`);
           }
 
           // Save to database

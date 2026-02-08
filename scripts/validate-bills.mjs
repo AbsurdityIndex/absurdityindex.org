@@ -476,13 +476,6 @@ function checkCommonMistakes(data, filename) {
     errors.push("Uses 'vote:' instead of 'votes:' (plural) - field name mismatch");
   }
 
-  // Check date format (ISO vs plain)
-  if (data.dateIntroduced && typeof data.dateIntroduced === 'string') {
-    if (data.dateIntroduced.includes('T')) {
-      warnings.push(`dateIntroduced uses ISO format (${data.dateIntroduced}) - prefer plain date (YYYY-MM-DD)`);
-    }
-  }
-
   // Check absurdityIndex range for real bills
   if (data.billType === 'real') {
     if (data.absurdityIndex !== undefined) {
@@ -582,6 +575,8 @@ function parseFrontmatter(content) {
 function validateBill(filepath) {
   const filename = path.basename(filepath);
   const content = fs.readFileSync(filepath, 'utf-8');
+  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  const frontmatterRaw = frontmatterMatch?.[1] || '';
   const data = parseFrontmatter(content);
 
   if (!data) {
@@ -594,6 +589,14 @@ function validateBill(filepath) {
 
   const errors = [];
   const warnings = [];
+
+  // Enforce editorial date-only convention (YYYY-MM-DD) for frontmatter dates.
+  // We scan raw frontmatter because YAML loaders may coerce timestamps into Date objects.
+  const timestampMatches = frontmatterRaw.match(/\b\d{4}-\d{2}-\d{2}T[0-9:.+-]+Z?\b/g);
+  if (timestampMatches && timestampMatches.length > 0) {
+    const unique = Array.from(new Set(timestampMatches));
+    errors.push(`Frontmatter contains timestamp date(s): ${unique.join(', ')}. Use date-only YYYY-MM-DD.`);
+  }
 
   // Check required fields for all bill types
   Object.entries(REQUIRED_ALL).forEach(([field, component]) => {
@@ -729,9 +732,9 @@ function main() {
 
     categoryResults.forEach(result => {
       if (result.errors.length === 0 && result.warnings.length === 0) {
-        console.log(`  ${colors.green}✓${colors.reset} ${result.filename}`);
+        console.log(`  ${colors.green}OK${colors.reset} ${result.filename}`);
       } else {
-        console.log(`  ${result.errors.length > 0 ? colors.red + '✗' : colors.yellow + '⚠'}${colors.reset} ${result.filename}`);
+        console.log(`  ${result.errors.length > 0 ? colors.red + 'ERR' : colors.yellow + 'WARN'}${colors.reset} ${result.filename}`);
 
         result.errors.forEach(err => {
           console.log(`    ${colors.red}ERROR:${colors.reset} ${err}`);

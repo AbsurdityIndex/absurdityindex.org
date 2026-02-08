@@ -105,11 +105,11 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
             <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
               <Icon name="calendar" size={14} class="text-green-700" />
             </div>
-            <div class="min-w-0">
-              <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">Introduced</dt>
-              <dd class="font-serif text-navy-900 text-sm">{d.dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</dd>
+              <div class="min-w-0">
+                <dt class="text-xs font-sans font-medium text-navy-500 uppercase tracking-wide">Introduced</dt>
+              <dd class="font-serif text-navy-900 text-sm">{d.dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</dd>
+              </div>
             </div>
-          </div>
           <div class="flex items-start gap-3">
             <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
               <Icon name="check-circle" size={14} class="text-green-700" />

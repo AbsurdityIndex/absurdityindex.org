@@ -19,7 +19,7 @@ export function registerTestSafetyCommand(program: Command): void {
       const config = loadConfig();
       createLogger(config.logLevel);
 
-      console.log(chalk.bold('\n🔥 Hot Pot Detector'));
+      console.log(chalk.bold('\nHot Pot Detector'));
       console.log(chalk.dim('━'.repeat(50)));
       console.log(`Testing: "${text}"`);
       console.log(chalk.dim('━'.repeat(50)));
@@ -27,18 +27,18 @@ export function registerTestSafetyCommand(program: Command): void {
       // Layer 1: Blocklist (always fast)
       const blockResult = checkBlocklist(text, config.dataDir);
       if (blockResult.blocked) {
-        console.log(chalk.red.bold('\n⛔ INSTANT REJECT'));
+        console.log(chalk.red.bold('\nINSTANT REJECT'));
         console.log(chalk.red(`Blocklist match: ${blockResult.matchedTerm} (${blockResult.reason})`));
         return;
       }
-      console.log(chalk.green('✓ Blocklist: Clear'));
+      console.log(chalk.green('OK Blocklist: Clear'));
 
       // Layer 5: Content filter (fast, rule-based)
       const filterResult = checkContentFilter(text);
       console.log(
         filterResult.score === 0
-          ? chalk.green('✓ Content filter: Clean')
-          : chalk.yellow(`⚠ Content filter: ${filterResult.score}/20 — ${filterResult.issues.join(', ')}`)
+          ? chalk.green('OK Content filter: Clean')
+          : chalk.yellow(`WARN Content filter: ${filterResult.score}/20 - ${filterResult.issues.join(', ')}`)
       );
 
       if (opts.skipClaude) {
@@ -84,13 +84,13 @@ function printVerdict(verdict: string, score: number): void {
   console.log(chalk.bold('\nVerdict:'));
   switch (verdict) {
     case 'SAFE':
-      console.log(chalk.green.bold(`  ✅ SAFE (score: ${score}) — Auto-post in YOLO mode`));
+      console.log(chalk.green.bold(`  SAFE (score: ${score}) - Auto-post in YOLO mode`));
       break;
     case 'REVIEW':
-      console.log(chalk.yellow.bold(`  ⚠️  REVIEW (score: ${score}) — Queued for human review`));
+      console.log(chalk.yellow.bold(`  REVIEW (score: ${score}) - Queued for human review`));
       break;
     case 'REJECT':
-      console.log(chalk.red.bold(`  ⛔ REJECT (score: ${score}) — Content discarded`));
+      console.log(chalk.red.bold(`  REJECT (score: ${score}) - Content discarded`));
       break;
   }
 }

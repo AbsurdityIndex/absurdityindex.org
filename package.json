@@ -26,12 +26,14 @@
     "validate": "node scripts/validate-bills.mjs",
     "validate:strict": "node scripts/validate-bills.mjs --strict-warnings",
     "validate:ci": "node scripts/validate-bills.mjs --strict-warnings",
+    "check:icons": "node scripts/check-no-unicode-icons.mjs",
     "validate:build": "npm run validate && npm run build",
     "security:audit": "npm audit --omit=dev --audit-level=high && npm audit --prefix cli --omit=dev --audit-level=high",
     "security:scan-secrets": "node scripts/scan-secrets.mjs",
     "security:ci": "npm run security:audit && npm run security:scan-secrets",
     "release:check": "node scripts/release-check.mjs",
-    "verify": "npm run validate:ci && npm run security:ci && npm run build && npm run build --prefix cli && npm test --prefix cli",
+    "test": "node --test tests/*.test.js",
+    "verify": "npm run check:icons && npm run validate:ci && npm test && npm run security:ci && npm run build && npm run build --prefix cli && npm test --prefix cli",
     "cli": "node cli/bin/absurdity-index.mjs",
     "cli:build": "cd cli && npm run build",
     "cli:dev": "cd cli && npx tsx src/index.ts"
@@ -48,6 +50,14 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0"
+    "@astrojs/check": "^0.9.6",
+    "@eslint/js": "^10.0.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^10.0.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.9.3"
   }
 }

@@ -36,9 +36,29 @@
     <text x="0" y="30" text-anchor="middle" font-size="24" fill="#C5A572" font-family="'Libre Caslon Text', serif" letter-spacing="6">CONGRESS</text>
   </g>
 
-  <!-- Stars flanking the seal -->
-  <text x="440" y="270" text-anchor="middle" font-size="20" fill="#C5A572" opacity="0.5">&#9733;  &#9733;  &#9733;</text>
-  <text x="760" y="270" text-anchor="middle" font-size="20" fill="#C5A572" opacity="0.5">&#9733;  &#9733;  &#9733;</text>
+  <!-- Stars flanking the seal (SVG shapes; no Unicode glyphs) -->
+  <g opacity="0.5" fill="#C5A572">
+    <g transform="translate(416 270) scale(0.7) translate(-12 -12)">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </g>
+    <g transform="translate(440 270) scale(0.7) translate(-12 -12)">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </g>
+    <g transform="translate(464 270) scale(0.7) translate(-12 -12)">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </g>
+  </g>
+  <g opacity="0.5" fill="#C5A572">
+    <g transform="translate(736 270) scale(0.7) translate(-12 -12)">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </g>
+    <g transform="translate(760 270) scale(0.7) translate(-12 -12)">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </g>
+    <g transform="translate(784 270) scale(0.7) translate(-12 -12)">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </g>
+  </g>
 
   <!-- Title -->
   <text x="600" y="450" text-anchor="middle" font-size="56" font-weight="700" fill="#C5A572" font-family="'Libre Caslon Text', serif" letter-spacing="8">ABSURDITY INDEX</text>

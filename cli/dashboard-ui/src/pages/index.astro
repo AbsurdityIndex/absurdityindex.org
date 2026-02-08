@@ -18,10 +18,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <circle cx="59" cy="32" r="2" fill="#C5A572"/>
         </svg>
         <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <h1 class="text-base font-serif font-bold text-cream-100 tracking-tight leading-none">Absurdity Index</h1>
-            <span id="mode-pill" class="hidden text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-slate-700/40 text-slate-400">--</span>
-          </div>
+          <h1 class="text-base font-serif font-bold text-cream-100 tracking-tight leading-none">Absurdity Index</h1>
           <div class="text-[10px] text-slate-400 font-mono tracking-wider uppercase">Engagement Control Room</div>
         </div>
       </div>
@@ -39,7 +36,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <div class="surface rounded-xl p-3 flex items-center justify-between gap-3">
         <div class="min-w-0">
-          <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Daemon</div>
+          <div class="flex items-center gap-2">
+            <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Daemon</div>
+            <span id="mode-pill" class="hidden text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-slate-700/40 text-slate-400">--</span>
+          </div>
           <div id="daemon-status" class="text-xs text-slate-200 font-mono tabular-nums truncate">--</div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
@@ -141,11 +141,32 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="min-w-0 min-h-0 flex flex-col">
       <header class="px-8 py-4 border-b border-slate-700/25 flex items-center justify-between bg-navy-950/30 backdrop-blur shrink-0">
         <div class="min-w-0">
-          <div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Dashboard</div>
+          <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Dashboard</div>
           <div id="page-title" class="text-lg font-serif font-bold text-cream-100 tracking-tight leading-tight truncate">Cycles</div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
+          <div id="credit-indicators" class="hidden flex items-center gap-2 text-[10px] font-mono">
+            <span id="credit-x" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700/30 bg-navy-950/30 text-slate-400" title="X API reads remaining (15min window)">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+              <span>X: --</span>
+            </span>
+            <span id="credit-claude" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700/30 bg-navy-950/30 text-slate-400" title="Claude API spend today">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+              <span>Claude: --</span>
+            </span>
+          </div>
           <button class="ghost-btn" onclick="toggleCompose(true)" type="button" title="Compose a post">Compose</button>
+          <button id="btn-notifications" class="ghost-btn relative" onclick="toggleNotifications()" type="button" title="Notifications">
+            <span class="inline-flex items-center gap-1.5">
+              <span id="notif-bell" class="text-slate-200"></span>
+              <span class="hidden sm:inline">Notifications</span>
+            </span>
+            <span
+              id="notif-badge"
+              class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-mono tabular-nums flex items-center justify-center border border-rose-500/40"
+              >0</span
+            >
+          </button>
           <button class="ghost-btn" onclick="toggleHelp(true)" type="button" title="Keyboard shortcuts">Help</button>
           <button id="btn-refresh" class="ghost-btn" onclick="loadTab(currentTab)" title="Refresh">Refresh</button>
         </div>
@@ -155,31 +176,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <section class="grid grid-cols-2 xl:grid-cols-4 gap-3 px-8 py-4 shrink-0">
         <div class="surface rounded-xl p-3.5">
           <div class="flex items-baseline justify-between">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Posts Today</span>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Posts Today <button class="stat-info-btn" onclick="toggleStatInfo(this)" type="button" title="What does this measure?"><svg class="w-3 h-3 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button></span>
             <span id="stat-posts-total" class="text-[10px] text-slate-500 font-mono"></span>
           </div>
           <div id="stat-posts" class="text-2xl font-bold text-cream-100 mt-1 font-mono tabular-nums">--</div>
+          <div id="spark-posts" class="mt-1 h-4"></div>
+          <div class="stat-popover hidden">Tweets posted to X today via any method: automated bill roasts, engagement replies/quotes, or manual compose. "All-time" counts every post ever made through the CLI.</div>
         </div>
         <div class="surface rounded-xl p-3.5">
           <div class="flex items-baseline justify-between">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Engagements</span>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Engagements <button class="stat-info-btn" onclick="toggleStatInfo(this)" type="button" title="What does this measure?"><svg class="w-3 h-3 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button></span>
             <span id="stat-tracked" class="text-[10px] text-slate-500 font-mono"></span>
           </div>
           <div id="stat-engagements" class="text-2xl font-bold text-emerald-400 mt-1 font-mono tabular-nums">--</div>
+          <div id="spark-engagements" class="mt-1 h-4"></div>
+          <div class="stat-popover hidden">Tweets from other accounts that the daemon replied to or quoted today. "Tracked" = tweets sitting in your inbox waiting for you to engage or discard.</div>
         </div>
         <div class="surface rounded-xl p-3.5">
           <div class="flex items-baseline justify-between">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Safety Reject</span>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Safety Reject <button class="stat-info-btn" onclick="toggleStatInfo(this)" type="button" title="What does this measure?"><svg class="w-3 h-3 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button></span>
             <span id="stat-safety-detail" class="text-[10px] text-slate-500 font-mono"></span>
           </div>
           <div id="stat-safety" class="text-2xl font-bold text-amber-300 mt-1 font-mono tabular-nums">--</div>
+          <div class="stat-popover hidden">How often the Hot Pot safety pipeline blocked content from posting in the last 7 days. 0% means nothing was rejected. A high rate may mean your prompts are generating risky content.</div>
         </div>
         <div class="surface rounded-xl p-3.5">
           <div class="flex items-baseline justify-between">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Cost Today</span>
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Cost Today <button class="stat-info-btn" onclick="toggleStatInfo(this)" type="button" title="What does this measure?"><svg class="w-3 h-3 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></button></span>
             <span id="stat-cost-week" class="text-[10px] text-slate-500 font-mono"></span>
           </div>
           <div id="stat-cost" class="text-2xl font-bold text-gold-400 mt-1 font-mono tabular-nums">--</div>
+          <div id="spark-cost" class="mt-1 h-4"></div>
+          <div class="stat-popover hidden">Claude API spend today across all generation, research, fact-checking, and safety calls. "Week" is your rolling 7-day total.</div>
         </div>
       </section>
 
@@ -196,13 +224,35 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <!-- Footer -->
       <footer class="border-t border-slate-700/20 px-8 py-2 text-[10px] text-slate-500 font-mono flex justify-between shrink-0 bg-navy-950/20 backdrop-blur">
-        <span class="text-slate-600">absurdityindex.org</span>
-        <span class="text-slate-600">Engagement Control Room</span>
+        <span class="text-slate-500">absurdityindex.org</span>
+        <span class="text-slate-500">Engagement Control Room</span>
       </footer>
     </div>
   </div>
 
   <div id="toast-root" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <div id="notif-scrim" class="fixed inset-0 hidden z-30" onclick="toggleNotifications(false)"></div>
+  <div id="notif-panel" class="fixed top-16 right-6 z-40 hidden w-[420px] max-w-[calc(100vw-2rem)]">
+    <div class="surface rounded-xl border border-slate-700/25 overflow-hidden shadow-xl">
+      <div class="flex items-center justify-between gap-3 px-3 py-2 border-b border-slate-700/20">
+        <div class="min-w-0">
+          <div class="text-[10px] text-slate-400 font-mono uppercase tracking-wider">Notifications</div>
+          <div id="notif-subtitle" class="text-[10px] text-slate-600 font-mono truncate"></div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button class="ghost-btn" onclick="refreshNotifications(true)" type="button" title="Sync from X">Sync</button>
+          <button id="btn-notif-archive-all" class="ghost-btn" onclick="archiveAllNotifications()" type="button" title="Archive all">Archive all</button>
+          <button class="ghost-btn" onclick="toggleNotifications(false)" type="button" title="Close">Close</button>
+        </div>
+      </div>
+      <div id="notif-body" class="max-h-[calc(100vh-190px)] overflow-y-auto p-3"></div>
+      <div class="px-3 py-2 border-t border-slate-700/20 flex items-center justify-between gap-2 text-[10px] text-slate-500 font-mono">
+        <button class="ghost-btn" onclick="openFeedFromNotifications()" type="button" title="Open Feed tab">Open feed</button>
+        <span id="notif-sync-status" class="truncate"></span>
+      </div>
+    </div>
+  </div>
 
   <div id="context-menu" class="fixed z-50 hidden">
     <div class="surface rounded-xl border border-slate-700/25 overflow-hidden shadow-xl min-w-[200px]">
@@ -232,6 +282,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <div><span class="kbd">P</span> post (or dry run)</div>
         <div><span class="kbd">C</span> compose</div>
         <div><span class="kbd">S</span> discard</div>
+      </div>
+      <div class="mt-4 mb-1">
+        <div class="text-xs font-semibold text-cream-100 mb-2">Badges</div>
+        <div id="help-badge-legend" class="grid grid-cols-2 gap-2 text-xs text-slate-200"></div>
       </div>
       <div class="mt-3 text-[10px] text-slate-400 font-mono">
         Tip: use filters to keep the inbox focused on high-score, tracked items.

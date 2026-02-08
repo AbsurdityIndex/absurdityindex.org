@@ -24,7 +24,7 @@ export function registerScheduleCommand(program: Command): void {
         return;
       }
 
-      console.log(chalk.bold(`\n📋 Post Queue (${queue.size()} total):\n`));
+      console.log(chalk.bold(`\nPost Queue (${queue.size()} total):\n`));
       for (const post of queued) {
         console.log(
           chalk.cyan(`#${post.id}`) +

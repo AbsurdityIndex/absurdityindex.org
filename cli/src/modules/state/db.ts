@@ -271,6 +271,19 @@ const MIGRATIONS = [
   `
   ALTER TABLE daemon_cycles ADD COLUMN phase TEXT;
   `,
+  // Migration 015: Author metadata + reply/quote context for enriched notification feed
+  `
+  ALTER TABLE x_inbox_items ADD COLUMN author_name TEXT;
+  ALTER TABLE x_inbox_items ADD COLUMN author_verified INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE x_inbox_items ADD COLUMN author_verified_type TEXT;
+  ALTER TABLE x_inbox_items ADD COLUMN author_followers INTEGER DEFAULT 0;
+  ALTER TABLE x_inbox_items ADD COLUMN in_reply_to_username TEXT;
+  ALTER TABLE x_inbox_items ADD COLUMN quoted_tweet_username TEXT;
+  `,
+  // Migration 016: Structured trace data for cycle map evidence rendering
+  `
+  ALTER TABLE daemon_cycles ADD COLUMN trace_json TEXT;
+  `,
 ];
 
 export function getDb(dbPath: string): Database.Database {

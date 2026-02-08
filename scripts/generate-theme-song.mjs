@@ -125,7 +125,7 @@ const compositionPlan = {
 // ─── Generate ────────────────────────────────────────────────────
 
 async function generate() {
-  console.log("🎵 Generating Absurdity Index theme song...");
+  console.log("Generating Absurdity Index theme song...");
   console.log("   Style:", compositionPlan.positive_global_styles.join(", "));
   console.log(
     "   Sections:",
@@ -174,9 +174,9 @@ async function generate() {
         if (part.contentType?.includes("audio")) {
           const outPath = resolve(ROOT, "public", "theme-song.mp3");
           writeFileSync(outPath, part.body);
-          console.log(`✅ Saved to ${outPath} (${(part.body.length / 1024).toFixed(1)} KB)`);
+          console.log(`Saved to ${outPath} (${(part.body.length / 1024).toFixed(1)} KB)`);
         } else if (part.contentType?.includes("json")) {
-          console.log("📋 Metadata:", part.body.toString("utf-8"));
+          console.log("Metadata:", part.body.toString("utf-8"));
         }
       }
     }
@@ -185,10 +185,10 @@ async function generate() {
     const buffer = Buffer.from(await response.arrayBuffer());
     const outPath = resolve(ROOT, "public", "theme-song.mp3");
     writeFileSync(outPath, buffer);
-    console.log(`✅ Saved to ${outPath} (${(buffer.length / 1024).toFixed(1)} KB)`);
+    console.log(`Saved to ${outPath} (${(buffer.length / 1024).toFixed(1)} KB)`);
   }
 
-  console.log("\n🎶 Done! Theme song generated.");
+  console.log("\nDone! Theme song generated.");
 }
 
 function splitMultipart(buffer, boundary) {

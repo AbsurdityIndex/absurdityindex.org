@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   output: 'static',
   outDir: '../dist/dashboard-ui',
+  build: { format: 'file' },
   vite: {
     plugins: [tailwindcss()],
     server: {

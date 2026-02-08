@@ -29,6 +29,7 @@ export interface Config {
 
   // Anthropic
   anthropicApiKey: string;
+  anthropicAdminApiKey: string;
 
   // Congress.gov
   congressApiKey: string;
@@ -127,6 +128,7 @@ export function loadConfig(overrides: Partial<Config> = {}): Config {
     browserStatePath: env('BROWSER_STATE_PATH', path.resolve(CLI_ROOT, 'data/.browser-state')),
     headless: (process.env.BROWSER_HEADLESS ?? 'true') !== 'false',
     anthropicApiKey: env('ANTHROPIC_API_KEY'),
+    anthropicAdminApiKey: env('ANTHROPIC_ADMIN_API_KEY'),
     congressApiKey: env('CONGRESS_API_KEY') || env('CONGRESS_GOV_API_KEY'),
     imgflipUsername: env('IMGFLIP_USERNAME'),
     imgflipPassword: env('IMGFLIP_PASSWORD'),

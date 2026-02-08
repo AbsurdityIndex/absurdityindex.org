@@ -14,7 +14,7 @@ ${bill?.porkPerCapita ? `PORK PER CAPITA: $${bill.porkPerCapita.toFixed(2)}` : '
 ${context.additionalContext ? `SPENDING DETAIL: ${context.additionalContext}` : ''}
 ${context.overlapContext ? `\n${context.overlapContext}` : ''}
 
-Format: "🐷 PORK REPORT:" opener
+Format: "PORK REPORT:" opener
 Style: "Your tax dollars at work" — deadpan itemization of how money is being spent.
 Always end with #PorkReport
 

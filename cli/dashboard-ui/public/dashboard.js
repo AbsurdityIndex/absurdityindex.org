@@ -6,6 +6,7 @@ let capabilities = {
   canGenerate: false,
   canWrite: false,
   canRefreshMetrics: false,
+  canRefreshFeed: false,
   canStartDaemon: false,
   canPost: false,
   dryRun: false,
@@ -20,6 +21,7 @@ let oppData = []; // cached opportunity list
 let oppFilters = loadOppFilters();
 let feedData = []; // cached feed items
 let feedFilters = loadFeedFilters();
+let postFilters = loadPostFilters();
 let tweetEmbedResizeHandler = null;
 let embedInteractive = false;
 let daemonState = { running: false, startedAt: null, stoppedAt: null, lastError: null, options: null };
@@ -29,6 +31,17 @@ let lastCyclesRenderKey = null;
 let cyclesShowUnfinished = (() => {
   try { return localStorage.getItem('ai-dashboard-cycles-show-unfinished') === '1'; } catch { return false; }
 })();
+let cycleDetailCache = new Map();
+let cycleDetailLoading = new Set();
+let cycleExpandedIds = new Set();
+let quietAggregateExpanded = new Set(); // track expanded quiet-cycle groups
+
+// Notifications (X inbox)
+let notifItems = [];
+let notifSyncTimer = null;
+let notifSyncBackoffMs = 60000;
+let notifSyncInFlight = false;
+let notifLastSyncAt = null;
 
 const TAB_META = {
   cycles: { title: 'Cycles' },
@@ -54,11 +67,29 @@ function isComposeOpen() {
   return el && !el.classList.contains('hidden');
 }
 
+function isNotificationsOpen() {
+  const el = document.getElementById('notif-panel');
+  return el && !el.classList.contains('hidden');
+}
+
 function toggleHelp(show) {
   const el = document.getElementById('help-overlay');
   if (!el) return;
   const shouldShow = typeof show === 'boolean' ? show : el.classList.contains('hidden');
-  if (shouldShow) { el.classList.remove('hidden'); el.classList.add('flex'); }
+  if (shouldShow) {
+    toggleNotifications(false);
+    el.classList.remove('hidden'); el.classList.add('flex');
+    // Populate badge legend
+    const legend = document.getElementById('help-badge-legend');
+    if (legend && !legend.dataset.populated) {
+      legend.dataset.populated = '1';
+      legend.innerHTML =
+        '<div>' + typeBadge('original') + ' <span class="text-slate-400 ml-1">New post from topic</span></div>' +
+        '<div>' + typeBadge('quote') + ' <span class="text-slate-400 ml-1">Quote-tweet engagement</span></div>' +
+        '<div>' + typeBadge('reply') + ' <span class="text-slate-400 ml-1">Reply engagement</span></div>' +
+        '<div>' + typeBadge('engagement') + ' <span class="text-slate-400 ml-1">Engagement scan cycle</span></div>';
+    }
+  }
   else { el.classList.add('hidden'); el.classList.remove('flex'); }
 }
 
@@ -67,6 +98,7 @@ function toggleCompose(show) {
   if (!el) return;
   const shouldShow = typeof show === 'boolean' ? show : el.classList.contains('hidden');
   if (shouldShow) {
+    toggleNotifications(false);
     el.classList.remove('hidden'); el.classList.add('flex');
     const banner = document.getElementById('compose-banner');
     if (banner) { banner.classList.add('hidden'); banner.textContent = ''; }
@@ -89,6 +121,14 @@ function toggleCyclesUnfinished() {
   if (currentTab === 'cycles') renderCycles().catch(() => {});
 }
 
+function toggleStatInfo(btn) {
+  const card = btn.closest('.surface');
+  if (!card) return;
+  const pop = card.querySelector('.stat-popover');
+  if (!pop) return;
+  pop.classList.toggle('hidden');
+}
+
 function toast(msg, kind) {
   const root = document.getElementById('toast-root');
   if (!root || !msg) return;
@@ -103,6 +143,299 @@ function toast(msg, kind) {
   el.textContent = msg;
   root.appendChild(el);
   setTimeout(() => { el.classList.add('toast-out'); setTimeout(() => el.remove(), 220); }, 2400);
+}
+
+// ── Notifications (X Inbox) ──────────────────────────
+function updateNotificationBell(count) {
+  const c = Number(count) || 0;
+  const badge = document.getElementById('notif-badge');
+  if (badge) {
+    if (c > 0) {
+      badge.textContent = c > 99 ? '99+' : String(c);
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
+
+  const btn = document.getElementById('btn-notifications');
+  if (btn) btn.classList.toggle('notif-hot', c > 0);
+
+  const subtitle = document.getElementById('notif-subtitle');
+  if (subtitle) subtitle.textContent = c > 0 ? (c + ' unread') : 'All caught up';
+
+  const archiveAllBtn = document.getElementById('btn-notif-archive-all');
+  if (archiveAllBtn) {
+    const disabled = (c === 0) || !capabilities.canWrite;
+    archiveAllBtn.disabled = disabled;
+    archiveAllBtn.classList.toggle('opacity-50', disabled);
+    archiveAllBtn.classList.toggle('cursor-not-allowed', disabled);
+  }
+}
+
+function setNotifSyncStatus(text) {
+  const el = document.getElementById('notif-sync-status');
+  if (el) el.textContent = text || '';
+}
+
+function toggleNotifications(show) {
+  const panel = document.getElementById('notif-panel');
+  const scrim = document.getElementById('notif-scrim');
+  if (!panel || !scrim) return;
+
+  const shouldShow = typeof show === 'boolean' ? show : panel.classList.contains('hidden');
+  if (shouldShow) {
+    closeContextMenu();
+    scrim.classList.remove('hidden');
+    panel.classList.remove('hidden');
+    // Restart animation
+    panel.classList.remove('fade-in');
+    void panel.offsetWidth;
+    panel.classList.add('fade-in');
+
+    loadNotificationsList().catch(() => {});
+  } else {
+    panel.classList.add('hidden');
+    scrim.classList.add('hidden');
+  }
+}
+
+function unescHtml(s) {
+  if (!s) return '';
+  const d = document.createElement('textarea');
+  d.innerHTML = s;
+  return d.value;
+}
+
+function toggleNotifExpand(btn) {
+  const card = btn.closest('.notif-card');
+  if (!card) return;
+  const textEl = card.querySelector('.notif-text');
+  if (!textEl) return;
+  const isExpanded = textEl.classList.toggle('notif-expanded');
+  btn.textContent = isExpanded ? 'show less' : 'show more';
+}
+
+async function loadNotificationsList() {
+  const body = document.getElementById('notif-body');
+  if (!body) return;
+
+  body.innerHTML = '<div class="text-xs text-slate-500 font-mono">Loading...</div>';
+
+  const data = await fetchJson('/api/feed?limit=30&kind=all&status=new&includeDiscarded=0');
+  notifItems = Array.isArray(data) ? data : [];
+
+  if (notifItems.length === 0) {
+    body.innerHTML = emptyState(
+      'No new notifications',
+      capabilities.canRefreshFeed
+        ? 'Mentions and replies will appear here automatically.'
+        : 'Sync disabled. Configure `X_BEARER_TOKEN` + `X_USERNAME` to pull notifications from X.',
+    );
+    return;
+  }
+
+  const TRUNCATE_LEN = 220;
+
+  body.innerHTML =
+    '<div class="space-y-2">' +
+      notifItems.map((i) => {
+        const author = esc(i.author_username || i.author_id || 'unknown');
+        const starred = (i.starred === 1 || i.starred === true);
+        const when = ago(i.created_at || i.last_seen);
+
+        // Decode HTML entities from API, then re-escape for safe HTML insertion
+        const rawText = unescHtml(i.text || '');
+        const escapedText = esc(rawText);
+        const linkedText = linkify(escapedText);
+        const needsTruncate = rawText.length > TRUNCATE_LEN;
+
+        const replyBtn = `<button class="notif-action-btn" type="button" onclick="openComposeFor('reply','${i.tweet_id}')" title="Reply">${lucide('reply', 'w-3.5 h-3.5')}</button>`;
+        const quoteBtn = `<button class="notif-action-btn" type="button" onclick="openComposeFor('quote','${i.tweet_id}')" title="Quote">${lucide('message-square', 'w-3.5 h-3.5')}</button>`;
+        const starBtn = `<button class="notif-action-btn${starred ? ' notif-action-active' : ''}" type="button" onclick="starNotification('${i.tweet_id}',${!starred})" title="${starred ? 'Unstar' : 'Star'}">${lucide('star', 'w-3.5 h-3.5')}</button>`;
+        const archiveBtn = `<button class="notif-action-btn" type="button" onclick="archiveNotification('${i.tweet_id}')" title="Archive">${lucide('check', 'w-3.5 h-3.5')}</button>`;
+        const discardBtn = `<button class="notif-action-btn" type="button" onclick="discardNotification('${i.tweet_id}')" title="Discard">${lucide('ban', 'w-3.5 h-3.5')}</button>`;
+        const openBtn = `<a class="notif-action-btn inline-flex items-center" href="https://x.com/i/status/${i.tweet_id}" target="_blank" rel="noopener" title="Open on X">${lucide('external-link', 'w-3.5 h-3.5')}</a>`;
+
+        const displayName = i.author_name ? esc(i.author_name) : null;
+        const vBadge = verifiedBadge(i.author_verified, i.author_verified_type);
+        const ctx = feedContextLine(i.kind, i.in_reply_to_username, i.quoted_tweet_username);
+        const followers = i.author_followers ? '<span class="text-[10px] text-slate-500 font-mono">' + fmtK(i.author_followers) + ' followers</span>' : '';
+
+        return (
+          '<div class="notif-card rounded-xl px-3.5 py-3 border ' + (starred ? 'border-gold-500/25 bg-gold-500/5' : 'border-slate-700/15 bg-navy-950/10') + '">' +
+            // Header row: display name, verified, @username, kind, timestamp
+            '<div class="flex items-center gap-2 min-w-0">' +
+              (displayName
+                ? '<span class="text-sm font-semibold text-slate-200 truncate">' + displayName + '</span>' + vBadge + '<span class="text-xs text-slate-400 truncate">@' + author + '</span>'
+                : '<span class="text-sm font-semibold text-slate-200 truncate">@' + author + '</span>' + vBadge) +
+              feedKindBadge(i.kind) +
+              '<span class="ml-auto text-[10px] text-slate-500 font-mono shrink-0">' + when + '</span>' +
+            '</div>' +
+            ctx +
+            (followers ? '<div class="mt-0.5">' + followers + '</div>' : '') +
+            // Tweet text — full width, truncated if long
+            '<div class="notif-text text-[13px] text-slate-300/90 leading-relaxed mt-1.5 whitespace-pre-wrap' + (needsTruncate ? '' : ' notif-expanded') + '">' + linkedText + '</div>' +
+            (needsTruncate ? '<button type="button" class="text-[10px] text-cyan-400 hover:text-cyan-300 mt-0.5 cursor-pointer" onclick="toggleNotifExpand(this)">show more</button>' : '') +
+            // Bottom row: metrics left, actions right
+            '<div class="flex items-center justify-between mt-2">' +
+              '<div class="flex items-center gap-3 text-[10px] text-slate-500 font-mono">' +
+                '<span title="Likes" class="inline-flex items-center gap-1">' + lucide('heart', 'w-3 h-3') + fmtK(i.likes || 0) + '</span>' +
+                '<span title="Retweets" class="inline-flex items-center gap-1">' + lucide('repeat-2', 'w-3 h-3') + fmtK(i.retweets || 0) + '</span>' +
+                '<span title="Replies" class="inline-flex items-center gap-1">' + lucide('message-circle', 'w-3 h-3') + fmtK(i.replies || 0) + '</span>' +
+                '<span title="Quotes" class="inline-flex items-center gap-1">' + lucide('message-square', 'w-3 h-3') + fmtK(i.quotes || 0) + '</span>' +
+              '</div>' +
+              '<div class="flex items-center gap-0.5">' +
+                replyBtn + quoteBtn + starBtn + archiveBtn + discardBtn + openBtn +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('') +
+    '</div>';
+}
+
+async function refreshNotifications(manual) {
+  if (notifSyncInFlight) return;
+  if (!capabilities.canRefreshFeed) {
+    if (manual) toast('Sync requires Tweets + Writes + X_USERNAME', 'warning');
+    return;
+  }
+
+  notifSyncInFlight = true;
+  setNotifSyncStatus('Syncing...');
+  if (manual) toast('Syncing notifications...', 'info');
+
+  try {
+    const r = await fetch('/api/feed-refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      if (manual) toast(data.error || 'Sync failed', 'error');
+      setNotifSyncStatus('Sync failed');
+      notifSyncBackoffMs = Math.min(notifSyncBackoffMs * 2, 15 * 60 * 1000);
+      return;
+    }
+
+    notifLastSyncAt = Date.now();
+    notifSyncBackoffMs = 60000;
+    const up = data.upserted ?? 0;
+
+    setNotifSyncStatus('Synced ' + timeShort(new Date()) + (up ? (' (+' + up + ')') : ''));
+    if (manual) toast('Synced (' + up + ')', 'success');
+
+    if (isNotificationsOpen()) await loadNotificationsList();
+    loadTab(currentTab);
+  } catch (err) {
+    if (manual) toast('Sync failed: ' + (err?.message || 'network'), 'error');
+    setNotifSyncStatus('Sync failed');
+    notifSyncBackoffMs = Math.min(notifSyncBackoffMs * 2, 15 * 60 * 1000);
+  } finally {
+    notifSyncInFlight = false;
+  }
+}
+
+function startNotificationsAutoSync() {
+  if (notifSyncTimer) return;
+  if (!capabilities.canRefreshFeed) return;
+
+  const tick = async () => {
+    // Pause if backgrounded
+    if (document.hidden) {
+      notifSyncTimer = setTimeout(tick, 5 * 60 * 1000);
+      return;
+    }
+
+    await refreshNotifications(false);
+    notifSyncTimer = setTimeout(tick, notifSyncBackoffMs);
+  };
+
+  // Start soon after boot; let the server/UI settle first.
+  notifSyncTimer = setTimeout(tick, 2500);
+}
+
+function openFeedFromNotifications() {
+  toggleNotifications(false);
+  switchTab('feed');
+}
+
+async function archiveNotification(tweetId) {
+  if (!capabilities.canWrite) { toast('Writes disabled', 'warning'); return; }
+  try {
+    const r = await fetch('/api/feed-item-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tweetId, status: 'archived' }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Archive failed', 'error');
+      return;
+    }
+    toast('Archived', 'success');
+    if (isNotificationsOpen()) await loadNotificationsList();
+    loadTab(currentTab);
+  } catch (err) {
+    toast('Archive failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+async function discardNotification(tweetId) {
+  if (!capabilities.canWrite) { toast('Writes disabled', 'warning'); return; }
+  try {
+    const r = await fetch('/api/feed-item-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tweetId, discarded: true }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Discard failed', 'error');
+      return;
+    }
+    toast('Discarded', 'success');
+    if (isNotificationsOpen()) await loadNotificationsList();
+    loadTab(currentTab);
+  } catch (err) {
+    toast('Discard failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+async function starNotification(tweetId, starred) {
+  if (!capabilities.canWrite) { toast('Writes disabled', 'warning'); return; }
+  try {
+    const r = await fetch('/api/feed-item-star', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tweetId, starred: !!starred }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Star failed', 'error');
+      return;
+    }
+    toast(starred ? 'Starred' : 'Unstarred', 'success');
+    if (isNotificationsOpen()) await loadNotificationsList();
+    loadTab(currentTab);
+  } catch (err) {
+    toast('Star failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+async function archiveAllNotifications() {
+  if (!capabilities.canWrite) { toast('Writes disabled', 'warning'); return; }
+  try {
+    const r = await fetch('/api/feed-archive-all', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Archive all failed', 'error');
+      return;
+    }
+    toast('Archived ' + (data.changed ?? 0), 'success');
+    if (isNotificationsOpen()) await loadNotificationsList();
+    loadTab(currentTab);
+  } catch (err) {
+    toast('Archive all failed: ' + (err?.message || 'network'), 'error');
+  }
 }
 
 function applyCapabilities(c) {
@@ -129,12 +462,20 @@ function applyCapabilities(c) {
   // Compose controls depend on dry-run + write/post capability.
   updateComposeButtons();
   updateDaemonControls();
+  startNotificationsAutoSync();
 }
 
 function pillDot(ok, label) {
   const cls = ok ? 'bg-emerald-400' : 'bg-slate-600';
   const txt = ok ? 'text-slate-200' : 'text-slate-500';
-  return '<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700/30 bg-navy-950/30 ' + txt + '">' +
+  const tooltips = {
+    'Tweets': 'X API read access',
+    'Generate': 'Claude content generation',
+    'Post': 'X API write access',
+    'Post (dry)': 'X API write access (dry run)',
+  };
+  const title = tooltips[label] || label;
+  return '<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700/30 bg-navy-950/30 ' + txt + '" title="' + esc(title) + '">' +
     '<span class="w-1.5 h-1.5 rounded-full ' + cls + '"></span>' +
     '<span>' + esc(label) + '</span>' +
   '</span>';
@@ -318,6 +659,78 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
+// Cross-tab navigation from cycle detail panel
+function navigateToItem(tab, opts) {
+  opts = opts || {};
+  switchTab(tab);
+
+  // Wait for tab render then drill down to the specific item
+  function tryDrillDown(attempts) {
+    if (attempts <= 0) return;
+    requestAnimationFrame(function() {
+      if (tab === 'opportunities' && opts.tweetId) {
+        // Check if the opp is in the current filtered list
+        var idx = oppData.findIndex(function(o) { return o.tweet_id === opts.tweetId; });
+        if (idx >= 0) {
+          selectOpportunity(idx);
+          highlightElement(document.querySelector('.opp-card[data-idx="' + idx + '"]'));
+          return;
+        }
+        // Not found — maybe filtered out; reset filters to 'all' and re-render
+        if (oppFilters.status !== 'all' || oppFilters.minScore > 0 || oppFilters.q || oppFilters.starredOnly) {
+          setOppFilter({ status: 'all', minScore: 0, q: '', starredOnly: false });
+          // Re-check after re-render
+          setTimeout(function() { tryDrillDown(attempts - 1); }, 300);
+          return;
+        }
+        // Still not found after reset — may be loading; retry
+        if (oppData.length === 0) {
+          setTimeout(function() { tryDrillDown(attempts - 1); }, 300);
+          return;
+        }
+      }
+      if (tab === 'posts' && opts.postId != null) {
+        // Posts tab rows use id="post-N" where N is the index in the rendered list
+        // Find the row by scanning for matching post data in the table
+        var rows = document.querySelectorAll('#tab-posts .detail-row');
+        var target = null;
+        rows.forEach(function(r) {
+          // The detail-row id is "post-{index}" and the preceding row has the post data
+          // Check the preceding sibling's content for the post tweet_id or ID
+          var prev = r.previousElementSibling;
+          if (prev && prev.textContent && prev.textContent.includes(String(opts.postId))) {
+            target = r;
+          }
+        });
+        if (target) {
+          if (!target.classList.contains('open')) target.classList.add('open');
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          highlightElement(target);
+          return;
+        }
+        // Not rendered yet — retry
+        if (rows.length === 0) {
+          setTimeout(function() { tryDrillDown(attempts - 1); }, 300);
+        }
+      }
+    });
+  }
+
+  tryDrillDown(5);
+}
+
+function highlightElement(el) {
+  if (!el) return;
+  el.classList.remove('nav-highlight');
+  // Force reflow so re-adding the class restarts the animation
+  void el.offsetWidth;
+  el.classList.add('nav-highlight');
+  el.addEventListener('animationend', function handler() {
+    el.classList.remove('nav-highlight');
+    el.removeEventListener('animationend', handler);
+  });
+}
+
 	// Keyboard shortcuts
 	document.addEventListener('keydown', (e) => {
 	  if (isTextInput(e.target)) return;
@@ -326,6 +739,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 	  if (e.key === 'Escape') {
 	    if (isHelpOpen()) { toggleHelp(false); return; }
 	    if (isComposeOpen()) { toggleCompose(false); return; }
+	    if (isNotificationsOpen()) { toggleNotifications(false); return; }
 	    if (isContextMenuOpen()) { closeContextMenu(); return; }
 	    closeDetailPanel();
 	    return;
@@ -354,7 +768,10 @@ function connectSSE() {
   es.addEventListener('new-cycle', () => { if (currentTab === 'cycles') loadTab('cycles'); });
   es.addEventListener('new-post', () => { if (currentTab === 'posts') loadTab('posts'); });
   es.addEventListener('new-opportunity', () => { if (currentTab === 'opportunities') loadTab('opportunities'); });
-  es.addEventListener('new-feed', () => { if (currentTab === 'feed') loadTab('feed'); });
+  es.addEventListener('new-feed', () => {
+    if (currentTab === 'feed') loadTab('feed');
+    if (isNotificationsOpen()) loadNotificationsList().catch(() => {});
+  });
   es.onerror = () => {
     setLive(false);
     setTimeout(() => setLive(true), 6000);
@@ -396,6 +813,11 @@ async function toggleDaemon() {
     return;
   }
 
+  // Confirm before stopping a running daemon
+  if (running && !confirm('Stop the watch daemon? Active scans will be interrupted.')) {
+    return;
+  }
+
   try {
     const url = running ? '/api/daemon-stop' : '/api/daemon-start';
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
@@ -428,28 +850,201 @@ setInterval(() => loadTab(currentTab), 30000);
 // ── Overview ──
 function updateOverview(d) {
   setText('stat-posts', d.postsToday);
-  setText('stat-posts-total', d.postsTotal + ' total');
+  // 2A: Contextual secondary text for posts
+  const postsSecondary = d.postsToday === 0 && d.lastPostedAgo
+    ? 'last: ' + d.lastPostedAgo
+    : d.postsTotal + ' all-time';
+  setText('stat-posts-total', postsSecondary);
+
   setText('stat-engagements', d.engagementsToday);
-  setText('stat-tracked', d.opportunities?.tracked + ' tracked');
-  setText('stat-safety', (d.safetyRejectRate * 100).toFixed(0) + '%');
-  setText('stat-safety-detail', d.safetyRejected + '/' + d.safetyTotal + ' (7d)');
+  // 2A/2B: Contextual secondary text for engagements
+  const engSecondary = d.engagementsToday === 0
+    ? (daemonState.running ? 'daemon scanning' : 'daemon stopped')
+    : d.opportunities?.tracked + ' tracked';
+  setText('stat-tracked', engSecondary);
+
+  // 2A/2B: Safety with contextual zero
+  const safetyPct = (d.safetyRejectRate * 100).toFixed(0) + '%';
+  setText('stat-safety', d.safetyRejectRate === 0 ? '0%' : safetyPct);
+  const safetyDetail = d.safetyRejectRate === 0 && d.safetyTotal > 0
+    ? 'all clear'
+    : d.safetyRejected + ' rejected / ' + d.safetyTotal + ' checked';
+  setText('stat-safety-detail', safetyDetail);
+  // Color the safety detail green when all clear
+  const safetyDetailEl = document.getElementById('stat-safety-detail');
+  if (safetyDetailEl) {
+    safetyDetailEl.classList.toggle('text-emerald-400', d.safetyRejectRate === 0 && d.safetyTotal > 0);
+    safetyDetailEl.classList.toggle('text-slate-500', !(d.safetyRejectRate === 0 && d.safetyTotal > 0));
+  }
+
   setText('stat-cost', formatCost(d.costTodayCents));
-  setText('stat-cost-week', formatCost(d.costWeekCents) + ' /7d');
+  setText('stat-cost-week', 'week: ' + formatCost(d.costWeekCents));
   setText('last-update', timeShort(new Date()));
-  // Badges
+
+  // Trend arrows
+  if (d.trends) renderTrendArrows(d.trends);
+
+  // Sparklines
+  fetchAndRenderSparklines();
+
+  // Badges — hide zero-count badges except Cycles
   if (d.counts) {
     setText('badge-cycles', d.counts.cycles || '0');
-    setText('badge-opportunities', d.counts.opportunities || '0');
+
+    setBadgeWithVisibility('badge-opportunities', d.counts.opportunities);
     if (document.getElementById('badge-feed')) {
-      setText('badge-feed', d.counts.feed || '0');
+      setBadgeWithVisibility('badge-feed', d.counts.feed);
     }
-    setText('badge-posts', d.counts.posts || '0');
-    setText('badge-safety', d.counts.safety || '0');
-    setText('badge-costs', d.counts.generations || '0');
+    setBadgeWithVisibility('badge-posts', d.counts.posts);
+    setBadgeWithVisibility('badge-safety', d.counts.safety);
+    setBadgeWithVisibility('badge-costs', d.counts.generations);
     if (document.getElementById('badge-intel')) {
-      setText('badge-intel', d.counts.trends != null ? String(d.counts.trends) : '0');
+      setBadgeWithVisibility('badge-intel', d.counts.trends);
     }
+
+    // Inbox urgency escalation
+    updateInboxUrgency(d.counts.feed || 0);
   }
+
+  updateNotificationBell(d.counts?.feed ?? 0);
+
+  // Credit indicators
+  if (d.credits) updateCreditIndicators(d.credits);
+}
+
+function setBadgeWithVisibility(id, count) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const n = Number(count || 0);
+  el.textContent = n > 0 ? String(n) : '0';
+  el.classList.toggle('hidden', n === 0);
+}
+
+function updateInboxUrgency(feedCount) {
+  const badgeEl = document.getElementById('badge-opportunities');
+  const bellEl = document.getElementById('notif-bell');
+  if (badgeEl) {
+    badgeEl.classList.remove('inbox-urgent', 'inbox-hot');
+    if (feedCount >= 100) badgeEl.classList.add('inbox-urgent');
+    else if (feedCount >= 50) badgeEl.classList.add('inbox-hot');
+  }
+}
+
+function updateCreditIndicators(credits) {
+  const wrap = document.getElementById('credit-indicators');
+  if (wrap) wrap.classList.remove('hidden');
+
+  const xEl = document.getElementById('credit-x');
+  if (xEl && credits.xReads) {
+    const pct = credits.xReads.available / credits.xReads.max;
+    const dot = pct > 0.3 ? 'bg-emerald-400' : pct > 0.1 ? 'bg-amber-400' : 'bg-rose-400';
+    const txt = pct > 0.3 ? 'text-slate-200' : pct > 0.1 ? 'text-amber-200' : 'text-rose-200';
+    xEl.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700/30 bg-navy-950/30 ' + txt;
+    xEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full ' + dot + '"></span>' +
+      '<span>X: ' + credits.xReads.available + ' left</span>';
+    xEl.title = 'X API reads: ' + credits.xReads.available + ' of ' + credits.xReads.max + ' remaining (' + credits.xReads.window + ' window)';
+  }
+
+  const claudeEl = document.getElementById('credit-claude');
+  if (claudeEl) {
+    const cents = credits.claudeSpendTodayCents || 0;
+    const weekCents = credits.claudeSpendWeekCents || 0;
+    const monthCents = credits.claudeSpendMonthCents;
+    const cost = formatCost(cents);
+    const weekCost = formatCost(weekCents);
+    const dot = cents < 500 ? 'bg-emerald-400' : cents < 2000 ? 'bg-amber-400' : 'bg-rose-400';
+    const txt = cents < 500 ? 'text-slate-200' : cents < 2000 ? 'text-amber-200' : 'text-rose-200';
+    const src = credits.claudeSource === 'admin-api' ? ' (API)' : '';
+    claudeEl.className = 'inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700/30 bg-navy-950/30 ' + txt;
+    claudeEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full ' + dot + '"></span>' +
+      '<span>Claude: ' + cost + src + '</span>';
+    claudeEl.title = 'Claude spend today: ' + cost + ' | Week: ' + weekCost +
+      (monthCents != null ? ' | Month: ' + formatCost(monthCents) : '') +
+      (credits.claudeSource === 'admin-api' ? ' (via Admin API)' : ' (local estimate)');
+  }
+}
+
+// ── Trend arrows ──
+function renderTrendArrows(trends) {
+  const arrowSvg = (dir, isGoodUp) => {
+    if (dir === 'flat') return '<svg class="inline-block w-3 h-3 ml-1 text-slate-500" viewBox="0 0 12 12"><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+    const up = dir === 'up';
+    const color = (up === isGoodUp) ? 'text-emerald-400' : 'text-amber-400';
+    const path = up
+      ? '<polyline points="1,8 6,3 11,8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+      : '<polyline points="1,4 6,9 11,4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+    return '<svg class="inline-block w-3 h-3 ml-1 ' + color + '" viewBox="0 0 12 12">' + path + '</svg>';
+  };
+
+  const postsEl = document.getElementById('stat-posts');
+  if (postsEl && trends.posts) {
+    const existing = postsEl.querySelector('.trend-arrow');
+    if (existing) existing.remove();
+    postsEl.insertAdjacentHTML('beforeend', '<span class="trend-arrow">' + arrowSvg(trends.posts.direction, true) + '</span>');
+  }
+
+  const engEl = document.getElementById('stat-engagements');
+  if (engEl && trends.engagements) {
+    const existing = engEl.querySelector('.trend-arrow');
+    if (existing) existing.remove();
+    engEl.insertAdjacentHTML('beforeend', '<span class="trend-arrow">' + arrowSvg(trends.engagements.direction, true) + '</span>');
+  }
+
+  const costEl = document.getElementById('stat-cost');
+  if (costEl && trends.cost) {
+    const existing = costEl.querySelector('.trend-arrow');
+    if (existing) existing.remove();
+    costEl.insertAdjacentHTML('beforeend', '<span class="trend-arrow">' + arrowSvg(trends.cost.direction, false) + '</span>');
+  }
+}
+
+// ── Sparklines ──
+let sparklineCache = null;
+let sparklineCacheAt = 0;
+
+async function fetchAndRenderSparklines() {
+  const now = Date.now();
+  if (sparklineCache && (now - sparklineCacheAt) < 300000) {
+    renderSparklines(sparklineCache);
+    return;
+  }
+  const data = await fetchJson('/api/daily-stats?days=7');
+  if (data && Array.isArray(data)) {
+    sparklineCache = data;
+    sparklineCacheAt = now;
+    renderSparklines(data);
+  }
+}
+
+function sparklineSvg(values, color) {
+  if (!values || values.length < 2) return '';
+  const w = 60, h = 16;
+  const max = Math.max(...values, 1);
+  const min = Math.min(...values, 0);
+  const range = max - min || 1;
+  const points = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 2) - 1;
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  return '<svg class="inline-block" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+    '<polyline points="' + points + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>' +
+  '</svg>';
+}
+
+function renderSparklines(data) {
+  const posts = data.map(d => d.posts);
+  const engagements = data.map(d => d.engagements);
+  const costs = data.map(d => d.costCents);
+
+  const sparkPosts = document.getElementById('spark-posts');
+  if (sparkPosts) sparkPosts.innerHTML = sparklineSvg(posts, '#FAF7F0');
+
+  const sparkEng = document.getElementById('spark-engagements');
+  if (sparkEng) sparkEng.innerHTML = sparklineSvg(engagements, '#34d399');
+
+  const sparkCost = document.getElementById('spark-cost');
+  if (sparkCost) sparkCost.innerHTML = sparklineSvg(costs, '#C5A572');
 }
 
 // ── Tab loader ──
@@ -604,49 +1199,85 @@ async function renderCycles() {
     const phaseHtml = phaseText
       ? ('<span class="text-[10px] text-slate-500 font-mono">Phase: <span class="text-slate-300">' + esc(phaseText) + '</span></span>')
       : '';
-    const timing = cycleTiming(c);
     const err = c.error
       ? '<div class="mt-3 text-xs text-red-300/90 font-mono bg-red-500/10 rounded-lg px-3 py-2 leading-relaxed border border-red-500/15">' + esc(c.error) + '</div>'
       : '';
 
+    // Classify cycle for anomaly highlighting
+    const scanned = Number(c.scanned || 0);
+    const engaged = Number(c.engaged || 0);
+    const tracked = Number(c.tracked || 0);
+    const posted = c.posted ? 1 : 0;
+    const isActionable = engaged > 0 || posted > 0;
+    const isQuiet = !c.error && status === 'complete' && scanned === 0 && engaged === 0 && tracked === 0 && !posted;
+    const anomalyClass = c.error ? '' : (isActionable ? ' cycle-card-actionable' : (isQuiet ? ' cycle-card-quiet' : ''));
+
+    // Outcome summary line
+    let outcomeSummary = '';
+    if (c.cycle_type === 'original') {
+      const topicPart = c.topic ? esc(c.topic) : 'No topic';
+      const resultPart = posted ? 'Posted' : 'Skipped';
+      outcomeSummary = '<span class="text-[10px] text-slate-400 font-mono">' + esc(topicPart) + ' &rarr; ' + resultPart + '</span>';
+    } else if (status !== 'running' && status !== 'unfinished') {
+      outcomeSummary = '<span class="text-[10px] text-slate-400 font-mono">Scanned ' + scanned + ' &rarr; Engaged ' + engaged + '</span>';
+    }
+
+    // Body: only show non-zero stats
     let body = '';
     if (c.cycle_type === 'original') {
       body =
         '<div class="mt-2 flex flex-wrap items-center gap-3 text-sm">' +
-          (c.topic ? '<span class="text-slate-400">Topic: <span class="text-fuchsia-300">' + esc(c.topic) + '</span></span>' : '<span class="text-slate-500">No topic</span>') +
-          (c.posted ? '<span class="bg-emerald-500/15 text-emerald-300 text-xs px-2 py-0.5 rounded-full border border-emerald-500/25">Posted</span>' : '<span class="text-slate-500 text-xs">Not posted</span>') +
+          (c.topic ? '<span class="text-slate-400">Topic: <span class="text-fuchsia-300">' + esc(c.topic) + '</span></span>' : '') +
+          (posted ? '<span class="bg-emerald-500/15 text-emerald-300 text-xs px-2 py-0.5 rounded-full border border-emerald-500/25">Posted</span>' : '') +
+          (!c.topic && !posted ? '<span class="text-xs text-slate-600">No activity</span>' : '') +
         '</div>';
     } else {
-      const noMatches = !c.error && c.completed_at && Number(c.scanned || 0) === 0;
-      body =
-        '<div class="mt-2 flex flex-wrap gap-5 text-sm">' +
-          stat('Scanned', c.scanned, 'text-cyan-400') +
-          stat('Engaged', c.engaged, 'text-emerald-400') +
-          stat('Tracked', c.tracked, 'text-yellow-400') +
-          stat('Expired', c.expired, 'text-slate-500') +
-        '</div>' +
-        (noMatches ? '<div class="mt-2 text-xs text-slate-500">No tweets matched your scan queries this cycle.</div>' : '');
+      const stats = [];
+      if (scanned > 0) stats.push(stat('Scanned', c.scanned, 'text-cyan-400'));
+      if (engaged > 0) stats.push(stat('Engaged', c.engaged, 'text-emerald-400'));
+      if (tracked > 0) stats.push(stat('Tracked', c.tracked, 'text-yellow-400'));
+      if (Number(c.expired || 0) > 0) stats.push(stat('Expired', c.expired, 'text-slate-500'));
+
+      if (stats.length > 0) {
+        body = '<div class="mt-2 flex flex-wrap gap-5 text-sm">' + stats.join('') + '</div>';
+      } else if (status === 'complete') {
+        body = '<div class="mt-2 text-xs text-slate-600">No activity</div>';
+      }
     }
 
+    const detailId = 'cycle-detail-' + c.id;
+    const isExpanded = cycleExpandedIds.has(c.id);
+    const chevron = isExpanded ? lucide('chevron-up', 'w-3.5 h-3.5') : lucide('chevron-down', 'w-3.5 h-3.5');
+
     return (
-      '<div class="surface rounded-xl px-4 py-3">' +
+      '<div class="surface rounded-xl px-4 py-3 row-clickable' + anomalyClass + '" onclick="toggleCycleDetail(' + c.id + ', \'' + detailId + '\', event)">' +
         '<div class="flex items-start gap-3">' +
           '<div class="min-w-0 flex-1">' +
             '<div class="flex items-center gap-2 flex-wrap">' +
-              '<span class="font-serif font-semibold text-cream-100 tracking-tight">Cycle ' + esc(String(c.id)) + '</span>' +
-              '<span class="font-mono text-[10px] text-slate-600">#' + esc(String(c.cycle_index)) + '</span>' +
               badge +
               statusPill +
               phaseHtml +
+              outcomeSummary +
             '</div>' +
             body +
             (status === 'unfinished' ? '<div class="mt-2 text-xs text-amber-200/70">Daemon is stopped. This cycle never recorded completion.</div>' : '') +
             err +
           '</div>' +
-          '<div class="text-right text-[10px] text-slate-600 font-mono shrink-0">' +
-            '<div title="' + esc(String(c.started_at || '')) + '">' + esc(ago(c.started_at)) + '</div>' +
-            '<div class="mt-0.5 text-slate-500">' + esc(timing) + '</div>' +
+          '<div class="flex flex-col items-end gap-1 shrink-0">' +
+            '<div class="flex items-center gap-2 text-right">' +
+              '<span class="text-[10px] text-slate-500 font-mono" title="' + esc(String(c.started_at || '')) + '">' + esc(ago(c.started_at)) + '</span>' +
+              '<span class="text-[10px] text-slate-600 font-mono">Cycle ' + esc(String(c.id)) + '</span>' +
+            '</div>' +
+            '<div class="flex items-center gap-1 mt-1">' +
+              '<a href="/cycle-map.html?id=' + c.id + '" class="map-link-btn" title="View algorithm map" onclick="event.stopPropagation()">' +
+                lucide('git-branch', 'w-3.5 h-3.5') +
+              '</a>' +
+              '<span class="text-slate-500">' + chevron + '</span>' +
+            '</div>' +
           '</div>' +
+        '</div>' +
+        '<div id="' + detailId + '" class="cycle-detail-panel' + (isExpanded ? '' : ' hidden') + '">' +
+          (isExpanded && cycleDetailCache.has(c.id) ? renderCycleDetailContent(cycleDetailCache.get(c.id)) : (isExpanded ? cycleDetailShimmer() : '')) +
         '</div>' +
       '</div>'
     );
@@ -658,11 +1289,337 @@ async function renderCycles() {
     return true;
   });
 
-  const listHtml = (list.length > 0)
-    ? ('<div class="space-y-2">' + list.map(cycleCard).join('') + '</div>')
-    : emptyState('No completed cycles yet', daemonRunning ? 'The daemon is running. A cycle will appear here when it completes.' : 'Start the daemon from the left sidebar to begin.');
+  // Build list HTML with quiet-cycle aggregation
+  let listHtml = '';
+  if (list.length > 0) {
+    const isQuietCycle = (c) => {
+      if (c.error) return false;
+      if (!c.completed_at) return false;
+      const s = Number(c.scanned || 0), e = Number(c.engaged || 0), t = Number(c.tracked || 0), p = c.posted ? 1 : 0;
+      return s === 0 && e === 0 && t === 0 && !p;
+    };
 
-  el.innerHTML = summary + listHtml;
+    const chunks = [];
+    let i = 0;
+    while (i < list.length) {
+      if (isQuietCycle(list[i])) {
+        let j = i;
+        while (j < list.length && isQuietCycle(list[j])) j++;
+        const run = list.slice(i, j);
+        if (run.length >= 3) {
+          chunks.push({ type: 'quiet-group', cycles: run });
+        } else {
+          for (const c of run) chunks.push({ type: 'single', cycle: c });
+        }
+        i = j;
+      } else {
+        chunks.push({ type: 'single', cycle: list[i] });
+        i++;
+      }
+    }
+
+    const parts = chunks.map((chunk, chunkIdx) => {
+      if (chunk.type === 'single') return cycleCard(chunk.cycle);
+      const run = chunk.cycles;
+      const groupKey = 'qg-' + run[0].id;
+      const expanded = quietAggregateExpanded.has(groupKey);
+      const first = run[run.length - 1]; // oldest
+      const last = run[0]; // newest (data is DESC)
+      const timeRange = ago(first.started_at) + ' \u2013 ' + ago(last.started_at);
+      if (expanded) {
+        return '<div class="quiet-aggregate rounded-xl px-4 py-2 cursor-pointer" onclick="toggleQuietAggregate(\'' + groupKey + '\')">' +
+          '<div class="flex items-center justify-between">' +
+            '<span class="text-xs text-slate-500 font-mono">' + run.length + ' quiet cycles (' + esc(timeRange) + ')</span>' +
+            '<span class="text-slate-500">' + lucide('chevron-up', 'w-3.5 h-3.5') + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="space-y-2">' + run.map(cycleCard).join('') + '</div>';
+      }
+      return '<div class="quiet-aggregate rounded-xl px-4 py-2 cursor-pointer" onclick="toggleQuietAggregate(\'' + groupKey + '\')">' +
+        '<div class="flex items-center justify-between">' +
+          '<span class="text-xs text-slate-500 font-mono">' + run.length + ' quiet cycles (' + esc(timeRange) + ') \u2014 no activity</span>' +
+          '<span class="text-slate-500">' + lucide('chevron-down', 'w-3.5 h-3.5') + '</span>' +
+        '</div>' +
+      '</div>';
+    });
+
+    listHtml = '<div class="space-y-2">' + parts.join('') + '</div>';
+  } else {
+    listHtml = emptyState('No completed cycles yet', daemonRunning ? 'The daemon is running. A cycle will appear here when it completes.' : 'Start the daemon from the left sidebar to begin.');
+  }
+
+  // Session summary when daemon is stopped and there are cycles
+  let sessionSummary = '';
+  if (!daemonRunning && list.length > 0) {
+    const totalCycles = list.length;
+    const totalEngaged = list.reduce((s, c) => s + Number(c.engaged || 0), 0);
+    const totalPosted = list.filter(c => c.posted).length;
+    const first = list[list.length - 1]; // oldest (DESC order)
+    const last = list[0]; // newest
+    const firstTime = parseIsoish(first.started_at);
+    const lastTime = parseIsoish(last.completed_at || last.started_at);
+    const durationText = (firstTime && lastTime) ? fmtDurationMs(lastTime - firstTime) : '';
+    sessionSummary = '<div class="text-xs text-slate-400 font-mono px-1 py-2 mb-2">' +
+      totalCycles + ' cycles' +
+      (durationText ? ' over ' + durationText : '') +
+      (totalEngaged > 0 ? ' | ' + totalEngaged + ' engaged' : '') +
+      (totalPosted > 0 ? ' | ' + totalPosted + ' posted' : '') +
+    '</div>';
+  }
+
+  el.innerHTML = summary + sessionSummary + listHtml;
+
+  // Restore expanded panels that were fetched before the re-render
+  for (const cid of cycleExpandedIds) {
+    const panel = document.getElementById('cycle-detail-' + cid);
+    if (panel && cycleDetailCache.has(cid)) {
+      panel.innerHTML = renderCycleDetailContent(cycleDetailCache.get(cid));
+      panel.classList.remove('hidden');
+    } else if (panel && !cycleDetailCache.has(cid) && !cycleDetailLoading.has(cid)) {
+      // Need to fetch
+      fetchCycleDetail(cid, panel);
+    }
+  }
+}
+
+function toggleQuietAggregate(groupKey) {
+  if (quietAggregateExpanded.has(groupKey)) {
+    quietAggregateExpanded.delete(groupKey);
+  } else {
+    quietAggregateExpanded.add(groupKey);
+  }
+  renderCycles().catch(() => {});
+}
+
+// ── Cycle Detail (expandable panels) ──
+
+function toggleCycleDetail(cycleId, detailId, event) {
+  // Don't toggle when clicking links or buttons inside the panel
+  let el = event.target;
+  while (el && el !== event.currentTarget) {
+    if (el.tagName === 'A' || (el.tagName === 'BUTTON' && !el.closest('.row-clickable[onclick]'))) return;
+    el = el.parentElement;
+  }
+
+  const panel = document.getElementById(detailId);
+  if (!panel) return;
+
+  const isHidden = panel.classList.contains('hidden');
+  if (isHidden) {
+    // Expand
+    cycleExpandedIds.add(cycleId);
+    panel.classList.remove('hidden');
+    if (cycleDetailCache.has(cycleId)) {
+      panel.innerHTML = renderCycleDetailContent(cycleDetailCache.get(cycleId));
+    } else {
+      panel.innerHTML = cycleDetailShimmer();
+      fetchCycleDetail(cycleId, panel);
+    }
+    // Update chevron
+    const card = panel.closest('.row-clickable');
+    if (card) {
+      const chevSpan = card.querySelector('.text-slate-500.mt-1');
+      if (chevSpan) chevSpan.innerHTML = lucide('chevron-up', 'w-3.5 h-3.5');
+    }
+  } else {
+    // Collapse
+    cycleExpandedIds.delete(cycleId);
+    panel.classList.add('hidden');
+    const card = panel.closest('.row-clickable');
+    if (card) {
+      const chevSpan = card.querySelector('.text-slate-500.mt-1');
+      if (chevSpan) chevSpan.innerHTML = lucide('chevron-down', 'w-3.5 h-3.5');
+    }
+  }
+}
+
+async function fetchCycleDetail(cycleId, panel) {
+  if (cycleDetailLoading.has(cycleId)) return;
+  cycleDetailLoading.add(cycleId);
+  try {
+    const data = await fetchJson('/api/cycle-detail?id=' + cycleId);
+    if (data && !data.error) {
+      cycleDetailCache.set(cycleId, data);
+      // Only render if panel is still visible
+      if (!panel.classList.contains('hidden')) {
+        panel.innerHTML = renderCycleDetailContent(data);
+      }
+    } else {
+      panel.innerHTML = '<div class="text-xs text-red-300">' + esc(data?.error || 'Failed to load detail') + '</div>';
+    }
+  } catch {
+    panel.innerHTML = '<div class="text-xs text-red-300">Failed to load cycle detail</div>';
+  } finally {
+    cycleDetailLoading.delete(cycleId);
+  }
+}
+
+function cycleDetailShimmer() {
+  return '<div class="space-y-2 py-1">' +
+    '<div class="loading-shimmer h-3 rounded w-1/3"></div>' +
+    '<div class="loading-shimmer h-3 rounded w-2/3"></div>' +
+    '<div class="loading-shimmer h-3 rounded w-1/2"></div>' +
+  '</div>';
+}
+
+function sectionBlock(title, iconName, html, navAction) {
+  var headingClass = 'cycle-detail-heading flex items-center gap-1.5';
+  var navHtml = '';
+  if (navAction) {
+    navHtml = '<span class="cd-nav-link ml-auto" onclick="' + navAction + '">' +
+      lucide('arrow-up-right', 'w-3 h-3') + '</span>';
+  }
+  return '<div class="cycle-detail-section">' +
+    '<div class="' + headingClass + '">' +
+      (iconName ? lucide(iconName, 'w-3 h-3') : '') +
+      esc(title) +
+      navHtml +
+    '</div>' +
+    html +
+  '</div>';
+}
+
+function renderCycleDetailContent(data) {
+  if (!data || !data.cycle) return '<div class="text-xs text-slate-500">No data</div>';
+  const c = data.cycle;
+  const uid = c.id || Math.random().toString(36).slice(2, 8);
+  let html = '';
+
+  // Helper: render a view-link icon (small, muted) — stopPropagation prevents triggering parent onclick
+  function viewLink(tweetId) {
+    if (!tweetId) return '';
+    return ' <a href="https://x.com/i/status/' + esc(tweetId) + '" target="_blank" rel="noopener" ' +
+      'onclick="event.stopPropagation()" ' +
+      'class="inline-flex text-slate-500 hover:text-slate-300 transition-colors" title="View on X">' +
+      lucide('external-link', 'w-3 h-3') + '</a>';
+  }
+
+  // Helper: render a capped list with show-more toggle
+  function cappedList(items, renderFn, cap, sectionKey) {
+    if (items.length <= cap) return '<div class="space-y-2">' + items.map(renderFn).join('') + '</div>';
+    const visible = items.slice(0, cap).map(renderFn).join('');
+    const hidden = items.slice(cap).map(renderFn).join('');
+    var toggleId = 'cd-more-' + sectionKey + '-' + uid;
+    return '<div class="space-y-2">' + visible +
+      '<div id="' + toggleId + '" class="hidden space-y-2">' + hidden + '</div>' +
+      '</div>' +
+      '<button onclick="var el=document.getElementById(\'' + toggleId + '\');var show=el.classList.toggle(\'hidden\');this.textContent=show?\'' +
+        'Show ' + (items.length - cap) + ' more\':\'Show less\'" ' +
+        'class="text-[11px] text-slate-500 hover:text-gold-400 mt-2 font-mono transition-colors">' +
+        'Show ' + (items.length - cap) + ' more</button>';
+  }
+
+  // 1. Timing
+  var timingParts = [];
+  if (c.started_at) timingParts.push('<div class="flex items-baseline gap-2"><span class="text-slate-500 text-[11px]">Started</span> <span class="text-slate-300">' + esc(agoWithTime(c.started_at)) + '</span></div>');
+  if (c.completed_at) timingParts.push('<div class="flex items-baseline gap-2"><span class="text-slate-500 text-[11px]">Completed</span> <span class="text-slate-300">' + esc(agoWithTime(c.completed_at)) + '</span></div>');
+  if (c.duration_ms != null) timingParts.push('<div class="flex items-baseline gap-2"><span class="text-slate-500 text-[11px]">Duration</span> <span class="text-cream-100 font-semibold">' + esc(fmtDurationMs(c.duration_ms)) + '</span></div>');
+  if (c.phase) timingParts.push('<div class="flex items-baseline gap-2"><span class="text-slate-500 text-[11px]">Phase</span> <span class="text-slate-300">' + esc(phaseLabel(c.phase)) + '</span></div>');
+  if (timingParts.length > 0) {
+    html += sectionBlock('Timing', 'clock',
+      '<div class="flex flex-wrap gap-x-5 gap-y-2 text-xs font-mono">' + timingParts.join('') + '</div>'
+    );
+  }
+
+  // 2. Posts — only show if there are posts (no empty state for expected no-post cycles)
+  if (data.posts && data.posts.length > 0) {
+    var postsHtml = '<div class="space-y-2">' + data.posts.map(function(p) {
+      var preview = (p.content || '').slice(0, 140) + ((p.content || '').length > 140 ? '...' : '');
+      var postClickId = p.tweet_id || p.id || '';
+      return '<div class="cd-clickable rounded-lg px-3 py-2.5 border border-slate-700/10 bg-navy-950/20" ' +
+        'onclick="navigateToItem(\'posts\', {postId:\'' + esc(String(postClickId)) + '\'})" title="View in Posts">' +
+          '<div class="flex items-center gap-2 mb-1.5">' +
+            statusBadge(p.status) +
+            verdictBadge(p.safety_verdict) +
+            '<span class="text-[11px] text-slate-500 font-mono">' + esc(p.prompt_type) + '</span>' +
+            '<span class="ml-auto">' + viewLink(p.tweet_id) + '</span>' +
+          '</div>' +
+          '<div class="text-[13px] text-slate-300/90 leading-relaxed">' + esc(preview) + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+    html += sectionBlock('Posts (' + data.posts.length + ')', 'send', postsHtml,
+      "switchTab('posts')");
+  }
+
+  // 3. Opportunities — split into new vs re-evaluated
+  // Support both new API (newOpportunities/reevaluatedOpportunities) and legacy (opportunities)
+  var newOpps = data.newOpportunities || [];
+  var reOpps = data.reevaluatedOpportunities || [];
+  // Fallback for legacy API responses that still have flat `opportunities`
+  if (!data.newOpportunities && data.opportunities) {
+    newOpps = data.opportunities;
+    reOpps = [];
+  }
+
+  function renderOppItem(o) {
+    var preview = (o.text || '').slice(0, 120) + ((o.text || '').length > 120 ? '...' : '');
+    var oppTid = o.tweet_id ? esc(o.tweet_id) : '';
+    var sc = (o.score ?? 0) >= 70 ? 'text-emerald-300' : (o.score ?? 0) >= 40 ? 'text-amber-300' : 'text-slate-400';
+    return '<div class="' + (oppTid ? 'cd-clickable ' : '') + 'rounded-lg px-3 py-2.5 border border-slate-700/10 bg-navy-950/20" ' +
+      (oppTid ? 'onclick="navigateToItem(\'opportunities\', {tweetId:\'' + oppTid + '\'})" title="View in Inbox"' : '') + '>' +
+        '<div class="flex items-center gap-2 mb-1.5">' +
+          '<span class="font-mono font-bold text-xs tabular-nums ' + sc + '">' + (o.score ?? 0) + '</span>' +
+          statusBadge(o.status) +
+          (o.author_username ? '<span class="text-[11px] text-slate-400 font-medium">@' + esc(o.author_username) + '</span>' : '') +
+          '<span class="ml-auto">' + viewLink(o.tweet_id) + '</span>' +
+        '</div>' +
+        '<div class="text-[13px] text-slate-300/90 leading-relaxed">' + esc(preview) + '</div>' +
+    '</div>';
+  }
+
+  if (newOpps.length > 0) {
+    html += sectionBlock('New (' + newOpps.length + ')', 'search',
+      cappedList(newOpps, renderOppItem, 5, 'new'),
+      "switchTab('opportunities')");
+  }
+  if (reOpps.length > 0) {
+    html += sectionBlock('Re-evaluated (' + reOpps.length + ')', 'refresh-cw',
+      '<div class="text-[13px] text-slate-400 font-mono">' + reOpps.length + ' existing opportunit' + (reOpps.length === 1 ? 'y' : 'ies') + ' re-scored</div>');
+  }
+  if (newOpps.length === 0 && reOpps.length === 0) {
+    html += sectionBlock('Opportunities', 'search', '<div class="text-[13px] text-slate-500">No opportunities evaluated during this cycle.</div>');
+  }
+
+  // 4. Cost — heading links to Costs tab
+  const cs = data.costSummary;
+  if (cs && cs.calls > 0) {
+    const purposeRows = Object.entries(cs.byPurpose).map(function(entry) {
+      return '<span class="text-slate-500">' + esc(entry[0]) + ':</span> <span class="text-slate-300">' + formatCost(entry[1].costCents) + ' (' + entry[1].calls + ')</span>';
+    }).join('<span class="text-slate-700 mx-1">/</span>');
+    html += sectionBlock('Cost', 'dollar-sign',
+      '<div class="font-mono">' +
+        '<span class="text-gold-400 font-bold text-base">' + formatCost(cs.totalCents) + '</span>' +
+        '<span class="text-slate-500 ml-2 text-xs">from ' + cs.calls + ' API call' + (cs.calls === 1 ? '' : 's') + '</span>' +
+        (purposeRows ? '<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-xs">' + purposeRows + '</div>' : '') +
+      '</div>',
+      "switchTab('costs')"
+    );
+  } else {
+    html += sectionBlock('Cost', 'dollar-sign', '<div class="text-[13px] text-slate-500">No API calls during this cycle.</div>');
+  }
+
+  // 5. Safety — heading links to Safety tab
+  if (data.safetyChecks && data.safetyChecks.length > 0) {
+    const counts = { SAFE: 0, REVIEW: 0, REJECT: 0 };
+    data.safetyChecks.forEach(function(s) { counts[s.verdict] = (counts[s.verdict] || 0) + 1; });
+    const parts = [];
+    if (counts.SAFE) parts.push('<span class="text-emerald-400">' + counts.SAFE + ' Safe</span>');
+    if (counts.REVIEW) parts.push('<span class="text-amber-300">' + counts.REVIEW + ' Review</span>');
+    if (counts.REJECT) parts.push('<span class="text-red-300">' + counts.REJECT + ' Reject</span>');
+    html += sectionBlock('Safety (' + data.safetyChecks.length + ')', 'shield',
+      '<div class="text-[13px] font-mono flex gap-4">' + parts.join('') + '</div>',
+      "switchTab('safety')"
+    );
+  }
+
+  // 6. Error (full text)
+  if (c.error) {
+    html += sectionBlock('Error', 'alert-triangle',
+      '<div class="text-[13px] text-red-300/90 font-mono bg-red-500/10 rounded-lg px-3.5 py-2.5 leading-relaxed border border-red-500/15">' + esc(c.error) + '</div>'
+    );
+  }
+
+  return html;
 }
 
 // ── Opportunities (split-pane) ──
@@ -843,6 +1800,11 @@ async function renderOppList() {
     const text = esc(o.text || '');
     const bill = o.matched_bill_slug ? '<span class="text-fuchsia-300 truncate" title="' + esc(o.matched_bill_slug) + '">' + esc(o.matched_bill_slug) + '</span>' : '';
     const starIcon = starred ? '<span class="text-gold-400" title="Starred">' + lucide('star', 'w-3.5 h-3.5') + '</span>' : '';
+    const dismissBtn =
+      '<button type="button" class="opp-dismiss-btn p-1.5 rounded-lg border border-slate-700/25 bg-navy-950/20 text-slate-400" ' +
+        'onclick="event.stopPropagation(); setOppStatus(\'skipped\', oppData[' + i + '].tweet_id)" title="Dismiss">' +
+        lucide('x', 'w-4 h-4') +
+      '</button>';
     const menuBtn =
       '<button type="button" class="p-1.5 rounded-lg border border-slate-700/25 bg-navy-950/20 text-slate-400 hover:text-cream-100 hover:bg-navy-800/40" ' +
         'onclick="openOppMenuFromBtn(event,' + i + ')" title="Actions">' +
@@ -859,6 +1821,7 @@ async function renderOppList() {
             reco +
             '<div class="ml-auto flex items-center gap-2 shrink-0">' +
               '<span class="text-[10px] text-slate-500 font-mono">' + ago(o.first_seen) + '</span>' +
+              dismissBtn +
               menuBtn +
             '</div>' +
           '</div>' +
@@ -1011,7 +1974,7 @@ function renderDetailPanel(opp) {
                 '<div class="text-[10px] text-slate-500 font-mono">' + ago(opp.first_seen) + '</div>' +
               '</div>' +
             '</div>' +
-            '<div class="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">' + linkify(esc(opp.text || '')) + '</div>' +
+            '<div class="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">' + linkify(esc(unescHtml(opp.text || ''))) + '</div>' +
             '<div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-xs text-slate-400 font-mono">' +
               '<span><span id="detail-likes" class="text-slate-200 tabular-nums">' + fmtK(opp.likes) + '</span> likes</span>' +
               '<span><span id="detail-retweets" class="text-slate-200 tabular-nums">' + fmtK(opp.retweets) + '</span> RTs</span>' +
@@ -1470,7 +2433,7 @@ async function fetchLiveTweetContext(tweetId) {
           '<div class="flex items-center gap-1.5 mb-1">' +
             '<span class="text-xs font-medium text-cream-100">@' + esc(qt.author.username) + '</span>' +
           '</div>' +
-          '<div class="text-xs text-slate-300 leading-relaxed">' + linkify(esc(qt.text)) + '</div>' +
+          '<div class="text-xs text-slate-300 leading-relaxed">' + linkify(esc(unescHtml(qt.text))) + '</div>' +
         '</div>';
     }
     if (ctx.repliedToTweet) {
@@ -1481,7 +2444,7 @@ async function fetchLiveTweetContext(tweetId) {
           '<div class="flex items-center gap-1.5 mb-1">' +
             '<span class="text-xs font-medium text-cream-100">@' + esc(rt.author.username) + '</span>' +
           '</div>' +
-          '<div class="text-xs text-slate-300 leading-relaxed">' + linkify(esc(rt.text)) + '</div>' +
+          '<div class="text-xs text-slate-300 leading-relaxed">' + linkify(esc(unescHtml(rt.text))) + '</div>' +
         '</div>';
     }
   } catch { /* non-fatal */ }
@@ -1878,6 +2841,27 @@ function feedKindBadge(kind) {
   return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border ' + cls + '">' + esc(kind || '') + '</span>';
 }
 
+function verifiedBadge(verified, verifiedType) {
+  if (!verified) return '';
+  const colorMap = {
+    blue: 'text-blue-400',
+    business: 'text-gold-400',
+    government: 'text-slate-300',
+  };
+  const cls = colorMap[verifiedType] || 'text-blue-400';
+  return '<span class="inline-flex ' + cls + '" title="Verified' + (verifiedType ? ' (' + esc(verifiedType) + ')' : '') + '">' + lucide('badge-check', 'w-3.5 h-3.5') + '</span>';
+}
+
+function feedContextLine(kind, inReplyToUsername, quotedTweetUsername) {
+  if (kind === 'reply' && inReplyToUsername) {
+    return '<div class="text-[10px] text-slate-500 mt-0.5">' + lucide('corner-down-right', 'w-3 h-3 inline') + ' replying to <span class="text-slate-400">@' + esc(inReplyToUsername) + '</span></div>';
+  }
+  if (kind === 'quote' && quotedTweetUsername) {
+    return '<div class="text-[10px] text-slate-500 mt-0.5">' + lucide('quote', 'w-3 h-3 inline') + ' quoting <span class="text-slate-400">@' + esc(quotedTweetUsername) + '</span></div>';
+  }
+  return '';
+}
+
 async function setFeedStar(tweetId, starred) {
   try {
     const r = await fetch('/api/feed-item-star', {
@@ -1961,16 +2945,24 @@ async function renderFeedList() {
     const discardBtn = '<button class="ghost-btn" type="button" onclick="discardFeedItem(\'' + i.tweet_id + '\')" title="Discard">' + lucide('ban', 'w-4 h-4') + '</button>';
     const replyBtn = '<button class="ghost-btn" type="button" onclick="openComposeFor(\'reply\',\'' + i.tweet_id + '\')" title="Reply">' + lucide('reply', 'w-4 h-4') + '</button>';
     const quoteBtn = '<button class="ghost-btn" type="button" onclick="openComposeFor(\'quote\',\'' + i.tweet_id + '\')" title="Quote">' + lucide('message-square', 'w-4 h-4') + '</button>';
+    const displayName = i.author_name ? esc(i.author_name) : null;
+    const vBadge = verifiedBadge(i.author_verified, i.author_verified_type);
+    const ctx = feedContextLine(i.kind, i.in_reply_to_username, i.quoted_tweet_username);
+    const followers = i.author_followers ? '<span class="text-[10px] text-slate-500 font-mono">' + fmtK(i.author_followers) + ' followers</span>' : '';
     return '<div class="opp-card rounded-xl px-3.5 py-3 border ' + (starred ? 'border-gold-500/25 bg-gold-500/5' : 'border-slate-700/15 bg-navy-950/10') + '">' +
       '<div class="flex items-start gap-3">' +
         '<div class="min-w-0 flex-1">' +
           '<div class="flex items-center gap-2 min-w-0">' +
-            '<span class="text-sm font-semibold text-slate-200 truncate">@' + author + '</span>' +
+            (displayName
+              ? '<span class="text-sm font-semibold text-slate-200 truncate">' + displayName + '</span>' + vBadge + '<span class="text-xs text-slate-400 truncate">@' + author + '</span>'
+              : '<span class="text-sm font-semibold text-slate-200 truncate">@' + author + '</span>' + vBadge) +
             feedKindBadge(i.kind) +
             (i.status ? statusBadge(i.status) : '') +
             '<span class="ml-auto text-[10px] text-slate-500 font-mono shrink-0">' + ago(i.created_at || i.last_seen) + '</span>' +
           '</div>' +
-          '<div class="text-xs text-slate-300/90 leading-relaxed mt-1 whitespace-pre-wrap">' + linkify(esc(i.text || '')) + '</div>' +
+          ctx +
+          (followers ? '<div class="mt-0.5">' + followers + '</div>' : '') +
+          '<div class="text-xs text-slate-300/90 leading-relaxed mt-1 whitespace-pre-wrap">' + linkify(esc(unescHtml(i.text || ''))) + '</div>' +
           '<div class="flex items-center gap-3 mt-2 text-[10px] text-slate-400 font-mono">' +
             '<span title="Likes" class="inline-flex items-center gap-1">' + lucide('heart', 'w-3 h-3') + fmtK(i.likes || 0) + '</span>' +
             '<span title="Retweets" class="inline-flex items-center gap-1">' + lucide('repeat-2', 'w-3 h-3') + fmtK(i.retweets || 0) + '</span>' +
@@ -1990,32 +2982,128 @@ async function renderFeedList() {
 }
 
 // ── Posts ──
+function loadPostFilters() {
+  try {
+    const raw = localStorage.getItem('ai-dashboard-post-filters');
+    if (!raw) return { status: 'all' };
+    const parsed = JSON.parse(raw);
+    return { status: parsed.status || 'all' };
+  } catch {
+    return { status: 'all' };
+  }
+}
+
+function savePostFilters() {
+  try { localStorage.setItem('ai-dashboard-post-filters', JSON.stringify(postFilters)); } catch {}
+}
+
+function setPostFilter(next) {
+  postFilters = { ...postFilters, ...next };
+  savePostFilters();
+  renderPosts();
+}
+
 async function renderPosts() {
   const el = document.getElementById('tab-posts');
-  const data = await fetchJson('/api/posts?limit=50');
+  const data = await fetchJson('/api/posts?limit=100');
   if (!data || data.length === 0) {
     el.innerHTML = emptyState('No posts generated yet', 'Posts appear here after the daemon generates content.');
     return;
   }
 
-  const canRefresh = !!capabilities.canRefreshMetrics;
-  const header =
-    '<div class="flex items-center justify-between mb-3">' +
-      '<div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Recent posts</div>' +
-      '<div class="flex items-center gap-2">' +
-        '<button class="ghost-btn' + (canRefresh ? '' : ' opacity-50 cursor-not-allowed') + '" type="button" onclick="refreshPostMetrics()" ' + (canRefresh ? '' : 'disabled') + ' title="Fetch latest metrics from X">Refresh metrics</button>' +
-      '</div>' +
-    '</div>';
+  const drafts = data.filter(function(p) { return p.status === 'draft' || p.status === 'queued'; });
+  drafts.sort(function(a, b) { return (a.created_at || '').localeCompare(b.created_at || ''); });
 
-  el.innerHTML = header + '<table class="w-full text-sm"><thead><tr class="text-left text-[10px] text-gray-500 uppercase tracking-wider border-b border-gray-700/30">' +
+  const canRefresh = !!capabilities.canRefreshMetrics;
+  const canWrite = !!capabilities.canWrite;
+  const canPost = !!capabilities.canPost;
+  const isDryRun = !!capabilities.dryRun;
+
+  var html = '';
+
+  // Draft Queue section
+  if (drafts.length > 0) {
+    html += '<div class="mb-6">' +
+      '<div class="flex items-center justify-between mb-3">' +
+        '<div class="flex items-center gap-2">' +
+          '<div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Draft Queue</div>' +
+          '<span class="text-[10px] font-mono text-gold-400 bg-gold-400/10 px-2 py-0.5 rounded-full">' + drafts.length + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="space-y-2">' + drafts.map(function(p) {
+        var preview = (p.content || '').slice(0, 200) + ((p.content || '').length > 200 ? '...' : '');
+        var kind = (p.x_post_type === 'quote') ? 'quote' : (p.x_post_type === 'reply') ? 'reply' : 'original';
+        var postBtnLabel = isDryRun ? 'Save' : 'Post';
+        var postBtnTitle = canPost ? postBtnLabel : (isDryRun ? 'Write DB not configured' : 'Configure API keys to post');
+        var postBtnDisabled = !canPost && !isDryRun;
+        return '<div class="draft-card rounded-xl px-4 py-3.5 border border-gold-500/15 bg-gold-500/5">' +
+          '<div class="flex items-center gap-2 mb-2">' +
+            typeBadge(kind) +
+            '<span class="text-[10px] text-slate-500 font-mono">' + esc(p.prompt_type) + '</span>' +
+            (p.parent_tweet_id ? '<a href="https://x.com/i/status/' + p.parent_tweet_id + '" target="_blank" rel="noopener" class="text-[10px] text-cyan-400 hover:underline font-mono" onclick="event.stopPropagation()" title="Target tweet">' + lucide('external-link', 'w-3 h-3 inline') + ' target</a>' : '') +
+            '<span class="ml-auto text-[10px] text-slate-500 font-mono">' + ago(p.created_at) + '</span>' +
+          '</div>' +
+          '<div class="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed mb-3">' + esc(preview) + '</div>' +
+          '<div class="flex items-center gap-2">' +
+            '<button type="button" class="ghost-btn text-emerald-400 border-emerald-500/25 hover:bg-emerald-500/10 hover:border-emerald-500/35' + (postBtnDisabled ? ' opacity-50 cursor-not-allowed' : '') + '" ' +
+              (postBtnDisabled ? 'disabled' : '') + ' onclick="event.stopPropagation(); postDraft(' + p.id + ')" title="' + postBtnTitle + '">' +
+              lucide('send', 'w-3.5 h-3.5 inline mr-1') + postBtnLabel +
+            '</button>' +
+            '<button type="button" class="ghost-btn draft-delete-btn' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" ' +
+              (canWrite ? '' : 'disabled') + ' onclick="event.stopPropagation(); deletePost(' + p.id + ')" title="Delete draft">' +
+              lucide('trash-2', 'w-3.5 h-3.5 inline mr-1') + 'Delete' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') + '</div>' +
+    '</div>';
+  }
+
+  // Post History section
+  var filterStatus = postFilters.status || 'all';
+  var historyPosts = data.filter(function(p) { return p.status !== 'draft' && p.status !== 'queued'; });
+  if (filterStatus !== 'all') {
+    historyPosts = historyPosts.filter(function(p) { return p.status === filterStatus; });
+  }
+
+  var statusChips = ['all', 'posted', 'failed', 'rejected'].map(function(s) {
+    var active = filterStatus === s;
+    var label = s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1);
+    return '<button type="button" class="chip' + (active ? ' chip-active' : '') + '" onclick="setPostFilter({status:\'' + s + '\'})">' + label + '</button>';
+  }).join('');
+
+  html += '<div class="flex items-center justify-between mb-3">' +
+    '<div class="flex items-center gap-3">' +
+      '<div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Post History</div>' +
+      '<div class="flex items-center gap-1.5">' + statusChips + '</div>' +
+    '</div>' +
+    '<div class="flex items-center gap-2">' +
+      '<button class="ghost-btn' + (canRefresh ? '' : ' opacity-50 cursor-not-allowed') + '" type="button" onclick="refreshPostMetrics()" ' + (canRefresh ? '' : 'disabled') + ' title="Fetch latest metrics from X">Refresh metrics</button>' +
+    '</div>' +
+  '</div>';
+
+  if (historyPosts.length === 0) {
+    html += emptyState('No posts match filter', 'Try changing the status filter above.');
+    el.innerHTML = html;
+    return;
+  }
+
+  html += '<table class="w-full text-sm"><thead><tr class="text-left text-[10px] text-gray-500 uppercase tracking-wider border-b border-gray-700/30">' +
     '<th class="pb-2 pr-2 w-16">Status</th><th class="pb-2 pr-2 w-24">Kind</th><th class="pb-2 pr-2">Content</th>' +
     '<th class="pb-2 pr-2 w-20">Safety</th><th class="pb-2 w-16 text-right">When</th>' +
-  '</tr></thead><tbody>' + data.map((p, i) => {
-    const sb = statusBadge(p.status);
-    const vb = verdictBadge(p.safety_verdict);
-    const kind = (p.x_post_type === 'quote') ? 'quote' : (p.x_post_type === 'reply') ? 'reply' : 'original';
-    const kindCell = typeBadge(kind) + '<div class="text-[10px] text-gray-600 font-mono mt-1 truncate">' + esc(p.prompt_type) + '</div>';
-    const rid = 'post-' + i;
+  '</tr></thead><tbody>' + historyPosts.map(function(p, i) {
+    var sb = statusBadge(p.status);
+    var vb = verdictBadge(p.safety_verdict);
+    var kind = (p.x_post_type === 'quote') ? 'quote' : (p.x_post_type === 'reply') ? 'reply' : 'original';
+    var kindCell = typeBadge(kind) + '<div class="text-[10px] text-gray-600 font-mono mt-1 truncate">' + esc(p.prompt_type) + '</div>';
+    var rid = 'post-hist-' + i;
+    var isPosted = p.status === 'posted';
+    var deleteBtn = isPosted
+      ? '<div class="text-[10px] text-slate-500 mt-2 pt-2 border-t border-gray-700/25">' + lucide('info', 'w-3 h-3 inline mr-1') + 'Posted to X — delete on X directly</div>'
+      : '<button type="button" class="ghost-btn draft-delete-btn mt-2' + (canWrite ? '' : ' opacity-50 cursor-not-allowed') + '" ' +
+          (canWrite ? '' : 'disabled') + ' onclick="event.stopPropagation(); deletePost(' + p.id + ')" title="Delete post">' +
+          lucide('trash-2', 'w-3.5 h-3.5 inline mr-1') + 'Delete' +
+        '</button>';
     return '<tr class="row-clickable border-b border-gray-700/15" onclick="toggle(\'' + rid + '\')">' +
       '<td class="py-2 pr-2">' + sb + '</td>' +
       '<td class="py-2 pr-2 text-xs text-gray-500">' + kindCell + '</td>' +
@@ -2033,20 +3121,68 @@ async function renderPosts() {
         (p.tweet_id ? '<span>Posted: <a href="https://x.com/i/status/' + p.tweet_id + '" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">' + p.tweet_id + '</a></span>' : '') +
         metricsLine(p) +
       '</div>' +
+      deleteBtn +
     '</div></td></tr>';
   }).join('') + '</tbody></table>';
+
+  el.innerHTML = html;
+}
+
+async function postDraft(id) {
+  if (!confirm('Post this draft to X?')) return;
+  toast('Posting draft...', 'info');
+  try {
+    var r = await fetch('/api/post-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id }),
+    });
+    var data = await r.json().catch(function() { return {}; });
+    if (!r.ok || !data.success) {
+      if (data.safetyRejected) {
+        toast('Safety rejected: ' + (data.safetyReason || 'Content flagged'), 'error');
+      } else {
+        toast(data.error || 'Failed to post draft', 'error');
+      }
+      return;
+    }
+    toast(data.tweetUrl ? 'Posted!' : 'Draft posted', 'success');
+    if (currentTab === 'posts') await renderPosts();
+  } catch (err) {
+    toast('Post failed: ' + (err?.message || 'network'), 'error');
+  }
+}
+
+async function deletePost(id) {
+  if (!confirm('Delete this post?')) return;
+  try {
+    var r = await fetch('/api/post-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id }),
+    });
+    var data = await r.json().catch(function() { return {}; });
+    if (!r.ok || !data.success) {
+      toast(data.error || 'Failed to delete', 'error');
+      return;
+    }
+    toast('Deleted', 'success');
+    if (currentTab === 'posts') await renderPosts();
+  } catch (err) {
+    toast('Delete failed: ' + (err?.message || 'network'), 'error');
+  }
 }
 
 async function refreshPostMetrics() {
   if (!capabilities.canRefreshMetrics) { toast('Metrics refresh disabled', 'warning'); return; }
   toast('Refreshing post metrics...', 'info');
   try {
-    const r = await fetch('/api/posts-refresh-metrics', {
+    var r = await fetch('/api/posts-refresh-metrics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limit: 60 }),
     });
-    const data = await r.json().catch(() => ({}));
+    var data = await r.json().catch(function() { return {}; });
     if (!r.ok || !data.success) {
       toast(data.error || 'Metrics refresh failed', 'error');
       return;
@@ -2240,6 +3376,7 @@ function lucide(name, cls) {
     'search': '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
     'copy': '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
     'refresh-cw': '<path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>',
+    'bell': '<path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .738-1.674A5.5 5.5 0 0 1 18 10.5V8a6 6 0 0 0-12 0v2.5a5.5 5.5 0 0 1-2.738 4.826Z"/>',
     'bookmark': '<path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
     'ban': '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
     'bar-chart-3': '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
@@ -2255,6 +3392,13 @@ function lucide(name, cls) {
     'minus': '<path d="M5 12h14"/>',
     'message-square': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
     'reply': '<polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/>',
+    'info': '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    'chevron-down': '<path d="m6 9 6 6 6-6"/>',
+    'chevron-up': '<path d="m18 15-6-6-6 6"/>',
+    'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    'dollar-sign': '<line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+    'shield': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+    'git-branch': '<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
   };
   return '<svg class="' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (p[name] || '') + '</svg>';
 }
@@ -2312,6 +3456,18 @@ function ago(iso) {
 
 function timeShort(d) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function agoWithTime(iso) {
+  if (!iso) return '';
+  try {
+    const raw = String(iso);
+    const norm = raw.includes('T') ? raw : raw.replace(' ', 'T');
+    const withZone = (norm.includes('Z') || norm.includes('+')) ? norm : (norm + 'Z');
+    const d = new Date(withZone);
+    if (!isFinite(d.getTime())) return raw;
+    return ago(iso) + ' (' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + ')';
+  } catch { return iso; }
 }
 
 function formatCost(cents) {
@@ -2375,10 +3531,8 @@ function cycleStatusPill(status) {
       '<span>Unfinished</span>' +
     '</span>';
   }
-  return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide border bg-emerald-500/10 text-emerald-200 border-emerald-500/25">' +
-    '<span class="-ml-0.5">' + lucide('check', 'w-3 h-3') + '</span>' +
-    '<span>Completed</span>' +
-  '</span>';
+  // No badge for completed — absence of badge signals normalcy
+  return '';
 }
 
 function parseIsoish(iso) {
@@ -2519,6 +3673,9 @@ function emptyState(title, desc) {
 
 // ── Boot ──
 (() => {
+  const bell = document.getElementById('notif-bell');
+  if (bell) bell.innerHTML = lucide('bell', 'w-4 h-4');
+
   let saved = null;
   try { saved = localStorage.getItem('ai-dashboard-tab'); } catch {}
   const initial = (saved && TAB_META[saved]) ? saved : 'cycles';

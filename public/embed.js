@@ -10,18 +10,22 @@
   var container = document.createElement('div');
   container.className = 'absurdity-index-embed';
 
-  function escapeHtml(value) {
-    return String(value == null ? '' : value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+  function setMessage(text, opts) {
+    container.replaceChildren();
+    var p = document.createElement('p');
+    p.textContent = text;
+    p.style.color = (opts && opts.color) || '#334155';
+    p.style.fontFamily = 'sans-serif';
+    p.style.fontSize = '14px';
+    container.appendChild(p);
   }
 
   function safeUrl(value) {
     try {
-      var parsed = new URL(String(value));
+      var url = String(value == null ? '' : value).trim();
+      if (!url) return '#';
+
+      var parsed = new URL(url, 'https://absurdityindex.org');
       if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
         return parsed.href;
       }
@@ -62,17 +66,13 @@
   var colors = themes[theme] || themes.light;
 
   if (!billId) {
-    container.innerHTML =
-      '<p style="color: #DC2626; font-family: sans-serif; font-size: 14px;">Error: data-bill attribute is required</p>';
+    setMessage('Error: data-bill attribute is required', { color: '#DC2626' });
     script.parentNode.insertBefore(container, script);
     return;
   }
 
   // Show loading state
-  container.innerHTML =
-    '<p style="color: ' +
-    colors.textSecondary +
-    '; font-family: sans-serif; font-size: 14px;">Loading bill...</p>';
+  setMessage('Loading bill...', { color: colors.textSecondary });
   script.parentNode.insertBefore(container, script);
 
   // Fetch bill data from API
@@ -87,96 +87,106 @@
       });
 
       if (!bill) {
-        container.innerHTML =
-          '<p style="color: #DC2626; font-family: sans-serif; font-size: 14px;">Bill not found: ' +
-          escapeHtml(billId) +
-          '</p>';
+        setMessage('Bill not found: ' + billId, { color: '#DC2626' });
         return;
       }
 
-      var safeBillNumber = escapeHtml(bill.billNumber);
-      var safeTitle = escapeHtml(bill.title);
-      var safeSummary = escapeHtml(bill.summary);
       var safeBillUrl = safeUrl(bill.url);
-      var absurdityBadge = '';
       var absurdityValue = Number(bill.absurdityIndex);
+      container.replaceChildren();
+
+      var wrap = document.createElement('div');
+      wrap.style.fontFamily = baseStyles.fontFamily;
+      wrap.style.border = '2px solid ' + colors.border;
+      wrap.style.borderRadius = baseStyles.borderRadius;
+      wrap.style.padding = baseStyles.padding;
+      wrap.style.background = colors.background;
+      wrap.style.maxWidth = baseStyles.maxWidth;
+      wrap.style.boxSizing = 'border-box';
+
+      var topRow = document.createElement('div');
+      topRow.style.display = 'flex';
+      topRow.style.alignItems = 'center';
+      topRow.style.gap = '8px';
+      topRow.style.marginBottom = '8px';
+      topRow.style.flexWrap = 'wrap';
+
+      var billNo = document.createElement('span');
+      billNo.textContent = String(bill.billNumber || '');
+      billNo.style.fontFamily = 'monospace';
+      billNo.style.fontWeight = 'bold';
+      billNo.style.color = colors.text;
+      topRow.appendChild(billNo);
+
       if (Number.isFinite(absurdityValue) && absurdityValue > 0) {
-        absurdityBadge =
-          '<span style="background: ' +
-          colors.accent +
-          '; color: ' +
-          colors.text +
-          '; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: sans-serif;">Absurdity: ' +
-          absurdityValue +
-          '/10</span>';
+        var absurdityBadge = document.createElement('span');
+        absurdityBadge.textContent = 'Absurdity: ' + absurdityValue + '/10';
+        absurdityBadge.style.background = colors.accent;
+        absurdityBadge.style.color = colors.text;
+        absurdityBadge.style.padding = '2px 8px';
+        absurdityBadge.style.borderRadius = '4px';
+        absurdityBadge.style.fontSize = '12px';
+        absurdityBadge.style.fontFamily = 'sans-serif';
+        topRow.appendChild(absurdityBadge);
       }
 
-      var billTypeBadge = '';
       if (bill.billType !== 'real') {
-        var typeLabel = bill.billType === 'sensible' ? 'Sensible' : 'Satirical';
-        billTypeBadge =
-          '<span style="background: ' +
-          (bill.billType === 'sensible' ? '#228B4A' : '#A52020') +
-          '; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: sans-serif; margin-left: 4px;">' +
-          typeLabel +
-          '</span>';
+        var typeBadge = document.createElement('span');
+        var typeLabel = bill.billType === 'sensible' ? 'Sensible' : bill.billType === 'absurd' ? 'Absurd' : 'Satirical';
+        typeBadge.textContent = typeLabel;
+        typeBadge.style.background = bill.billType === 'sensible' ? '#228B4A' : '#A52020';
+        typeBadge.style.color = 'white';
+        typeBadge.style.padding = '2px 8px';
+        typeBadge.style.borderRadius = '4px';
+        typeBadge.style.fontSize = '12px';
+        typeBadge.style.fontFamily = 'sans-serif';
+        typeBadge.style.marginLeft = '4px';
+        topRow.appendChild(typeBadge);
       }
 
-      container.innerHTML =
-        '<div style="' +
-        'font-family: ' +
-        baseStyles.fontFamily +
-        '; ' +
-        'border: 2px solid ' +
-        colors.border +
-        '; ' +
-        'border-radius: ' +
-        baseStyles.borderRadius +
-        '; ' +
-        'padding: ' +
-        baseStyles.padding +
-        '; ' +
-        'background: ' +
-        colors.background +
-        '; ' +
-        'max-width: ' +
-        baseStyles.maxWidth +
-        '; ' +
-        'box-sizing: border-box;' +
-        '">' +
-        '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">' +
-        '<span style="font-family: monospace; font-weight: bold; color: ' +
-        colors.text +
-        ';">' +
-        safeBillNumber +
-        '</span>' +
-        absurdityBadge +
-        billTypeBadge +
-        '</div>' +
-        '<h3 style="margin: 0 0 8px 0; font-size: 18px; color: ' +
-        colors.text +
-        '; font-weight: bold;">' +
-        safeTitle +
-        '</h3>' +
-        '<p style="margin: 0 0 12px 0; font-size: 14px; color: ' +
-        colors.textSecondary +
-        '; line-height: 1.5;">' +
-        safeSummary +
-        '</p>' +
-        '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">' +
-        '<a href="' +
-        safeBillUrl +
-        '" target="_blank" rel="noopener" style="color: ' +
-        colors.accent +
-        '; font-size: 12px; text-decoration: none; font-family: sans-serif;">View on Absurdity Index &rarr;</a>' +
-        '<span style="font-size: 10px; color: ' +
-        colors.textSecondary +
-        '; font-family: sans-serif;">absurdityindex.org</span>' +
-        '</div>' +
-        '</div>';
+      var title = document.createElement('h3');
+      title.textContent = String(bill.title || '');
+      title.style.margin = '0 0 8px 0';
+      title.style.fontSize = '18px';
+      title.style.color = colors.text;
+      title.style.fontWeight = 'bold';
+
+      var summary = document.createElement('p');
+      summary.textContent = String(bill.summary || '');
+      summary.style.margin = '0 0 12px 0';
+      summary.style.fontSize = '14px';
+      summary.style.color = colors.textSecondary;
+      summary.style.lineHeight = '1.5';
+
+      var bottom = document.createElement('div');
+      bottom.style.display = 'flex';
+      bottom.style.justifyContent = 'space-between';
+      bottom.style.alignItems = 'center';
+      bottom.style.flexWrap = 'wrap';
+      bottom.style.gap = '8px';
+
+      var link = document.createElement('a');
+      link.href = safeBillUrl;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = 'View on Absurdity Index ->';
+      link.style.color = colors.accent;
+      link.style.fontSize = '12px';
+      link.style.textDecoration = 'none';
+      link.style.fontFamily = 'sans-serif';
+
+      var site = document.createElement('span');
+      site.textContent = 'absurdityindex.org';
+      site.style.fontSize = '10px';
+      site.style.color = colors.textSecondary;
+      site.style.fontFamily = 'sans-serif';
+
+      bottom.append(link, site);
+
+      wrap.append(topRow, title, summary, bottom);
+      container.appendChild(wrap);
     })
     .catch(function () {
-      container.innerHTML =
-        '<p style="color: #DC2626; font-family: sans-serif; font-size: 14px;">Error loading bill data</p>';
+      setMessage('Error loading bill data', { color: '#DC2626' });
     });
 })();

@@ -259,12 +259,12 @@ server.tool(
       return {
         content: [{
           type: 'text',
-          text: `✓ Reply posted to @${tweet.username}\n\nOriginal: "${tweet.text.slice(0, 150)}..."\n\nReply: "${reply}"\n\nURL: ${replyUrl}`,
+          text: `OK  Reply posted to @${tweet.username}\n\nOriginal: "${tweet.text.slice(0, 150)}..."\n\nReply: "${reply}"\n\nURL: ${replyUrl}`,
         }],
       };
     } catch (err) {
       return {
-        content: [{ type: 'text', text: `✗ Failed: ${err.message}` }],
+        content: [{ type: 'text', text: `ERR Failed: ${err.message}` }],
         isError: true,
       };
     }
@@ -292,12 +292,12 @@ server.tool(
       return {
         content: [{
           type: 'text',
-          text: `✓ Reply posted to @${tweet.username}\n\nOriginal: "${tweet.text.slice(0, 150)}..."\n\nReply: "${reply}"\n\nURL: ${replyUrl}`,
+          text: `OK  Reply posted to @${tweet.username}\n\nOriginal: "${tweet.text.slice(0, 150)}..."\n\nReply: "${reply}"\n\nURL: ${replyUrl}`,
         }],
       };
     } catch (err) {
       return {
-        content: [{ type: 'text', text: `✗ Failed: ${err.message}` }],
+        content: [{ type: 'text', text: `ERR Failed: ${err.message}` }],
         isError: true,
       };
     }
@@ -320,12 +320,12 @@ server.tool(
       return {
         content: [{
           type: 'text',
-          text: `✓ Reply posted to @${tweet.username} (substantive mode — no VoteChain)\n\nOriginal: "${tweet.text.slice(0, 150)}..."\n\nReply: "${reply}"\n\nURL: ${replyUrl}`,
+          text: `OK  Reply posted to @${tweet.username} (substantive mode — no VoteChain)\n\nOriginal: "${tweet.text.slice(0, 150)}..."\n\nReply: "${reply}"\n\nURL: ${replyUrl}`,
         }],
       };
     } catch (err) {
       return {
-        content: [{ type: 'text', text: `✗ Failed: ${err.message}` }],
+        content: [{ type: 'text', text: `ERR Failed: ${err.message}` }],
         isError: true,
       };
     }
@@ -345,12 +345,12 @@ server.tool(
 
       if (tweet.referencedContext?.length) {
         const refLines = tweet.referencedContext.map(ref =>
-          `↳ ${ref.label} @${ref.username} (${ref.author}): "${ref.text}"`
+          `-> ${ref.label} @${ref.username} (${ref.author}): "${ref.text}"`
         ).join('\n');
         display += `\n\n${refLines}`;
       }
 
-      display += `\n\n${tweet.metrics?.like_count ?? 0}♥ ${tweet.metrics?.retweet_count ?? 0}🔁 ${tweet.metrics?.reply_count ?? 0}💬 ${tweet.metrics?.impression_count ?? 0} impressions`;
+      display += `\n\nLikes: ${tweet.metrics?.like_count ?? 0}  Reposts: ${tweet.metrics?.retweet_count ?? 0}  Replies: ${tweet.metrics?.reply_count ?? 0}  Impressions: ${tweet.metrics?.impression_count ?? 0}`;
 
       return {
         content: [{
@@ -360,7 +360,7 @@ server.tool(
       };
     } catch (err) {
       return {
-        content: [{ type: 'text', text: `✗ Failed: ${err.message}` }],
+        content: [{ type: 'text', text: `ERR Failed: ${err.message}` }],
         isError: true,
       };
     }

@@ -18,7 +18,11 @@ export function matchTrendToBills(trend: AggregatedTrend, bills: LoadedBill[]): 
   const matches: BillMatch[] = [];
   const trendWords = trend.topic.toLowerCase().split(/\s+/).filter(w => w.length > 3);
 
-  for (const bill of bills) {
+  // Only match real congressional bills — sensible/absurd bills are satirical fiction
+  // and must never be presented as real legislation in generated content.
+  const realBills = bills.filter(b => b.billType === 'real');
+
+  for (const bill of realBills) {
     let score = 0;
     const matchedTerms: string[] = [];
 

@@ -146,6 +146,7 @@ export function startDashboardServer(options: DashboardServerOptions): { server:
         canGenerate: !!options.claude,
         canWrite: !!options.writeDb,
         canRefreshMetrics: !!options.xReader && !!options.writeDb,
+        canRefreshFeed: !!options.xReader && !!options.writeDb && !!options.config?.xUsername,
         canStartDaemon: !!options.writeDb && !!options.xReader && !!options.claude && ((options.dryRun ?? false) ? true : !!options.xWriter),
         canPost: (options.dryRun ?? false) ? !!options.writeDb : (!!options.xWriter && !!options.writeDb),
         dryRun: options.dryRun ?? false,
@@ -180,6 +181,12 @@ export function startDashboardServer(options: DashboardServerOptions): { server:
         const fullPath = path.resolve(uiDir, normalized);
         const ok = fullPath === uiDir || fullPath.startsWith(uiDir + path.sep);
         if (ok && serveFile(res, fullPath)) return;
+
+        // Try .html extension fallback for clean URLs (e.g. /cycle-map -> cycle-map.html)
+        if (ok && !path.extname(normalized)) {
+          const htmlPath = fullPath + '.html';
+          if (serveFile(res, htmlPath)) return;
+        }
       }
     }
 
@@ -189,9 +196,19 @@ export function startDashboardServer(options: DashboardServerOptions): { server:
 
   server.listen(port, '127.0.0.1');
 
+  // Auto-start the daemon so notifications and scanning always run
+  const canStart = !!options.writeDb && !!options.xReader && !!options.claude;
+  if (canStart) {
+    const startResult = daemon.start({ dryRun: options.dryRun ?? true });
+    if (startResult.ok) {
+      console.log(`  Daemon:   auto-started (${options.dryRun ? 'dry-run' : 'live'})`);
+    }
+  }
+
   return {
     server,
     stop: () => {
+      daemon.stop();
       server.close();
     },
   };

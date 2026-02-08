@@ -111,6 +111,7 @@ status: "Received in the Senate."
 dateIntroduced: 2025-01-03
 dateUpdated: 2025-04-10
 
+actionCount: 18
 actions:
   - date: 2025-04-10
     text: "Received in the Senate."
@@ -166,15 +167,6 @@ actions:
   - date: 2025-01-03
     text: "Introduced in House"
     chamber: both
-  - date: 2025-01-03
-    text: "Introduced in House"
-    chamber: both
-  - date: 2025-01-03
-    text: "Introduced in House"
-    chamber: both
-  - date: 2025-01-03
-    text: "Introduced in House"
-    chamber: both
 
 votes:
   yeas: 220
@@ -185,6 +177,63 @@ votes:
 
 totalPork: 0
 porkPerCapita: 0
+
+billEvolution:
+  - stage: introduced
+    chamber: house
+    date: 2025-01-03
+    paraphrasedText: "H.R. 22 is introduced with a simple pitch: stop non-citizens from voting by making every eligible voter prove citizenship up front."
+    cumulativePork: 0
+    porkAddedThisStage: 0
+    keyChanges:
+      - "Introduced in the House"
+      - "Requires documentary proof of U.S. citizenship to register to vote in federal elections"
+
+  - stage: origin-committee
+    chamber: house
+    date: 2025-01-03
+    paraphrasedText: "The bill heads to the House Administration Committee, where election policy goes to wait for its eventual moment in the spotlight."
+    cumulativePork: 0
+    porkAddedThisStage: 0
+    keyChanges:
+      - "Referred to the House Committee on House Administration"
+
+  - stage: origin-floor
+    chamber: house
+    date: 2025-04-10
+    paraphrasedText: "After weeks of procedural setup, H.R. 22 reaches the House floor under a closed rule: one hour of debate and one last chance to send it back."
+    cumulativePork: 0
+    porkAddedThisStage: 0
+    keyChanges:
+      - "Considered under the provisions of H. Res. 294"
+      - "One hour of debate and a motion to recommit"
+
+  - stage: origin-passed
+    chamber: house
+    date: 2025-04-10
+    paraphrasedText: "The House passes H.R. 22 and forwards it to the Senate, officially graduating the bill from 'idea' to 'someone else's problem.'"
+    cumulativePork: 0
+    porkAddedThisStage: 0
+    keyChanges:
+      - "Passed House 220-208 (Roll Call 102)"
+      - "Sent to the Senate"
+    vote:
+      yeas: 220
+      nays: 208
+      notVoting: 5
+      passed: true
+      chamber: house
+      rollCallNumber: 102
+      rollCallUrl: "https://clerk.house.gov/Votes/2025102"
+
+  - stage: receiving-received
+    chamber: senate
+    date: 2025-04-10
+    paraphrasedText: "The Senate receives H.R. 22, beginning the traditional phase of modern lawmaking: waiting."
+    cumulativePork: 0
+    porkAddedThisStage: 0
+    keyChanges:
+      - "Received in the Senate"
 
 keyMilestones:
   - type: "introduced"
@@ -232,9 +281,9 @@ relatedBills:
 
 textVersions:
   - type: "Engrossed in House"
-    date: 2025-04-10T04:00:00Z
+    date: 2025-04-10
   - type: "Introduced in House"
-    date: 2025-01-03T05:00:00Z
+    date: 2025-01-03
 
 absurdityIndex: 7
 congressDotGovUrl: "https://www.congress.gov/bill/119th-congress/house-bill/22"

@@ -63,6 +63,7 @@ export function createPostModel(db: Database.Database) {
   const updateStatus = db.prepare('UPDATE posts SET status = ?, error = ? WHERE id = ?');
   const updateTweetId = db.prepare('UPDATE posts SET tweet_id = ?, posted_at = datetime(\'now\'), status = \'posted\' WHERE id = ?');
   const updateReply = db.prepare('UPDATE posts SET reply_tweet_id = ? WHERE id = ?');
+  const deleteById = db.prepare('DELETE FROM posts WHERE id = ?');
 
   return {
     create(input: CreatePostInput): Post {
@@ -139,6 +140,11 @@ export function createPostModel(db: Database.Database) {
         fields.meme_template ?? null,
         id,
       );
+    },
+
+    delete(id: number): boolean {
+      const info = deleteById.run(id);
+      return info.changes > 0;
     },
   };
 }

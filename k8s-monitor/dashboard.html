@@ -37,9 +37,20 @@
 
   <!-- Header -->
   <header class="border-b border-slate-700/50 px-6 py-4">
-    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div class="max-w-5xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <span class="text-2xl">&#9096;</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-slate-200">
+          <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+          <rect x="9" y="9" width="6" height="6"></rect>
+          <path d="M15 2v2"></path>
+          <path d="M15 20v2"></path>
+          <path d="M2 15h2"></path>
+          <path d="M2 9h2"></path>
+          <path d="M20 15h2"></path>
+          <path d="M20 9h2"></path>
+          <path d="M9 2v2"></path>
+          <path d="M9 20v2"></path>
+        </svg>
         <h1 class="text-lg font-bold tracking-tight">K8s Monitor</h1>
       </div>
       <div id="last-check" class="text-xs text-slate-500">—</div>
@@ -88,7 +99,12 @@
 
     <!-- Empty state -->
     <div id="empty-state" class="hidden text-center py-16">
-      <div class="text-4xl mb-3">&#10003;</div>
+      <div class="text-4xl mb-3 flex justify-center text-green-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
       <div class="text-slate-400">No active alerts</div>
       <div class="text-xs text-slate-600 mt-1">Monitoring is running. Alerts will appear here.</div>
     </div>
@@ -150,18 +166,18 @@
     const isExpanded = expandedIds.has(a.id);
     const isResolved = a.resolved === 1;
 
-    return `
-      <div id="alert-${a.id}" class="group rounded-lg border ${isResolved ? 'border-slate-700/30 opacity-60' : c.border} bg-surface-light hover:bg-surface-lighter/50 transition-colors">
-        <div class="flex items-center gap-3 px-4 py-3 cursor-pointer select-none" onclick="toggleExpand(${a.id})">
-          <span id="chevron-${a.id}" class="chevron text-slate-500 text-xs ${isExpanded ? 'open' : ''}">&#9654;</span>
-          <span class="w-2 h-2 rounded-full ${c.dot} flex-shrink-0"></span>
-          <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.bg} ${c.text}">${a.severity}</span>
-          <span class="text-sm flex-1 truncate">${esc(a.title)}</span>
-          ${a.occurrence_count > 1 ? `<span class="text-xs text-slate-500">&times;${a.occurrence_count}</span>` : ''}
-          <span class="text-xs text-slate-500 flex-shrink-0">${timeAgo(a.last_seen)}</span>
-          ${isResolved ? '<span class="text-[10px] text-green-600 font-medium">RESOLVED</span>' : ''}
-        </div>
-        <div id="detail-${a.id}" class="alert-expand ${isExpanded ? 'open' : ''}">
+	    return `
+	      <div id="alert-${a.id}" class="group rounded-lg border ${isResolved ? 'border-slate-700/30 opacity-60' : c.border} bg-surface-light hover:bg-surface-lighter/50 transition-colors">
+	        <div class="flex items-center gap-3 px-4 py-3 cursor-pointer select-none" onclick="toggleExpand(${a.id})">
+	          <span id="chevron-${a.id}" class="chevron text-slate-500 text-xs ${isExpanded ? 'open' : ''}">&gt;</span>
+	          <span class="w-2 h-2 rounded-full ${c.dot} flex-shrink-0"></span>
+	          <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.bg} ${c.text}">${a.severity}</span>
+	          <span class="text-sm flex-1 truncate">${esc(a.title)}</span>
+	          ${a.occurrence_count > 1 ? `<span class="text-xs text-slate-500">x${a.occurrence_count}</span>` : ''}
+	          <span class="text-xs text-slate-500 flex-shrink-0">${timeAgo(a.last_seen)}</span>
+	          ${isResolved ? '<span class="text-[10px] text-green-600 font-medium">RESOLVED</span>' : ''}
+	        </div>
+	        <div id="detail-${a.id}" class="alert-expand ${isExpanded ? 'open' : ''}">
           <div class="px-4 pb-4 pl-14 space-y-2 text-xs">
             <div class="text-slate-300 whitespace-pre-wrap leading-relaxed">${esc(a.message)}</div>
             <div class="flex flex-wrap gap-x-6 gap-y-1 text-slate-500 pt-1">

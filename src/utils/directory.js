@@ -4,6 +4,7 @@ export const SITE_URL = 'https://absurdityindex.org';
 const monthYearFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   year: 'numeric',
+  timeZone: 'UTC',
 });
 
 export function toCategorySlug(value) {

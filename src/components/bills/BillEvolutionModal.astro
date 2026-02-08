@@ -151,7 +151,7 @@ function getStageLabel(stage: string): string {
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
 // Pork Meter helper functions
@@ -1335,9 +1335,9 @@ const modalId = `evolution-modal-${billNumber.replace(/[^a-zA-Z0-9]/g, '-').toLo
     const tierIconContainer = document.getElementById(`${modalId}-tier-icon`);
     if (tierIconContainer) tierIconContainer.setAttribute('data-tier', tierIdx);
 
-    // Update tier label
-    const labelEl = porkMeter.querySelector('.tier-modal-label');
-    if (labelEl) labelEl.innerHTML = `&ldquo;${tier.label}&rdquo;`;
+	    // Update tier label
+	    const labelEl = porkMeter.querySelector('.tier-modal-label');
+	    if (labelEl) labelEl.textContent = `"${tier.label}"`;
 
     // Update bacon strips
     const baconStrips = porkMeter.querySelectorAll('.bacon-modal-strip');

@@ -356,7 +356,7 @@ Broader than the TikTok ban, would grant Commerce Secretary authority to review 
 
 | Field | Value |
 |-------|-------|
-| **Bill Number** | ⚠️ Unverified (H.Res. 559 in API is different bill) |
+| **Bill Number** | [WARN] Unverified (H.Res. 559 in API is different bill) |
 | **Title** | Congressional Gym Access During Shutdowns |
 | **Subtitle** | Essential Workers: Furloughed. Congressional Treadmills: Open. |
 | **Year Introduced** | 2013 |
@@ -375,7 +375,7 @@ Broader than the TikTok ban, would grant Commerce Secretary authority to review 
 During the 2013 government shutdown, 800,000 federal workers were furloughed — but Congress kept its exclusive gym (with pool, sauna, paddleball court) open. This resolution would have closed it. Referred to the committee that controls gym access. They did not act.
 
 ### Note
-⚠️ **API Verification Failed**: H.Res. 559 in the 113th Congress is "Día de los Niños" by Rep. Hinojosa. The gym resolution may have a different bill number or may be a composite of the shutdown controversy.
+[WARN] **API Verification Failed**: H.Res. 559 in the 113th Congress is "Día de los Niños" by Rep. Hinojosa. The gym resolution may have a different bill number or may be a composite of the shutdown controversy.
 
 ### Links
 - Research needed for correct bill number
@@ -413,7 +413,7 @@ Recognizes the 2,560th birthday of Confucius (born 551 BC) and his contributions
 
 | Field | Value |
 |-------|-------|
-| **Bill Number** | ⚠️ Unverified (H.R. 5717 in API is different bill) |
+| **Bill Number** | [WARN] Unverified (H.R. 5717 in API is different bill) |
 | **Title** | NSF Transparency and Accountability Act |
 | **Subtitle** | Peer-Reviewed Science, Unprintable Headlines |
 | **Year Introduced** | 2012 |
@@ -431,7 +431,7 @@ Recognizes the 2,560th birthday of Confucius (born 551 BC) and his contributions
 Sought NSF reform after $384,949 went to studying duck reproductive anatomy. The research was peer-reviewed and scientifically valid (examining evolutionary "arms race" in waterfowl reproduction). The researcher defended her work; the bill did not advance.
 
 ### Note
-⚠️ **API Verification Failed**: H.R. 5717 in the 112th Congress is "Army Corps of Engineers Communications Accountability Act" by Rep. Kristi Noem. The NSF-related bill may have a different number or be a composite of Jeff Flake's "Wastebook" campaign against NSF spending.
+[WARN] **API Verification Failed**: H.R. 5717 in the 112th Congress is "Army Corps of Engineers Communications Accountability Act" by Rep. Kristi Noem. The NSF-related bill may have a different number or be a composite of Jeff Flake's "Wastebook" campaign against NSF spending.
 
 ### Links
 - Research needed for correct bill number
@@ -745,7 +745,7 @@ Officially designated March 14 (3/14) as National Pi Day. Passed 391-10 just in 
 
 | Field | Value |
 |-------|-------|
-| **Bill Number** | ⚠️ Unverified (H.R. 8752 in API is different bill) |
+| **Bill Number** | [WARN] Unverified (H.R. 8752 in API is different bill) |
 | **Title** | Methamphetamine Response Through Investigating Drug Sources Act |
 | **Subtitle** | Tracking Supply Chains While Fish Track Withdrawal |
 | **Year Introduced** | 2024 |
@@ -763,7 +763,7 @@ Officially designated March 14 (3/14) as National Pi Day. Passed 391-10 just in 
 Directs DEA and ONDCP to investigate meth supply chains. The "fish on meth" association comes from a separate 2021 study finding fish exposed to meth-contaminated water exhibited addictive behaviors. The bill itself is straightforward law enforcement policy.
 
 ### Note
-⚠️ **API Verification Failed**: H.R. 8752 in the 118th Congress is "Department of Homeland Security Appropriations Act, 2025" by Rep. Mark Amodei. The meth investigation bill may have a different bill number or may be a composite.
+[WARN] **API Verification Failed**: H.R. 8752 in the 118th Congress is "Department of Homeland Security Appropriations Act, 2025" by Rep. Mark Amodei. The meth investigation bill may have a different bill number or may be a composite.
 
 ### Links
 - Research needed for correct bill number
@@ -774,11 +774,11 @@ Directs DEA and ONDCP to investigate meth supply chains. The "fish on meth" asso
 
 | Field | Value |
 |-------|-------|
-| **Bill Number** | ❌ ERROR: H.R. 6174 is "DHS Biodetection Improvement Act" |
+| **Bill Number** | [ERROR] ERROR: H.R. 6174 is "DHS Biodetection Improvement Act" |
 | **Status** | **ENTRY DEPRECATED** - See Bill #3 (H.R. 7521) for actual TikTok legislation |
 
 ### Note
-❌ **This entry contains incorrect data**. H.R. 6174 in the 118th Congress is actually the "DHS Biodetection Improvement Act" sponsored by Rep. Dale W. Strong (R-AL), not a TikTok-related bill.
+[ERROR] **This entry contains incorrect data**. H.R. 6174 in the 118th Congress is actually the "DHS Biodetection Improvement Act" sponsored by Rep. Dale W. Strong (R-AL), not a TikTok-related bill.
 
 The TikTok legislation is covered in **Bill #3 (H.R. 7521)** above. This entry appears to be a duplicate with an incorrect bill number and should be removed or consolidated with the H.R. 7521 entry.
 
@@ -882,7 +882,7 @@ A "minibus" combining Agriculture, Transportation-HUD, and Commerce-Justice-Scie
 
 ---
 
-# 📊 Congress.gov API Audit Report
+# AUDIT Congress.gov API Audit Report
 
 **Audit Date:** 2026-02-05
 **API Used:** Congress.gov API v3
@@ -898,14 +898,14 @@ This audit verified the 27 real bills in the reference document against the offi
 
 | Category | Count |
 |----------|-------|
-| ✅ Verified Correct | 10 |
-| ⚠️ Minor Discrepancies | 7 |
-| ❌ Major Discrepancies | 2 |
-| 🚨 CRITICAL: Wrong Bill Numbers | 8 |
+| [OK] Verified Correct | 10 |
+| [WARN] Minor Discrepancies | 7 |
+| [ERROR] Major Discrepancies | 2 |
+| [CRITICAL] CRITICAL: Wrong Bill Numbers | 8 |
 
 ---
 
-## 🚨 CRITICAL ERRORS: Wrong Bill Numbers
+## [CRITICAL] CRITICAL ERRORS: Wrong Bill Numbers
 
 These bills have **completely incorrect bill numbers** - they reference entirely different legislation:
 
@@ -913,9 +913,9 @@ These bills have **completely incorrect bill numbers** - they reference entirely
 | Field | Reference | API (Correct) |
 |-------|-----------|---------------|
 | **Bill Number** | S. 1 | **S. 5** |
-| Congress | 119th | 119th ✓ |
-| Sponsor | Sen. Katie Britt (R-AL) | Sen. Katie Britt (R-AL) ✓ |
-| Status | Public Law 119-1 | Public Law 119-1 ✓ |
+| Congress | 119th | 119th OK |
+| Sponsor | Sen. Katie Britt (R-AL) | Sen. Katie Britt (R-AL) OK |
+| Status | Public Law 119-1 | Public Law 119-1 OK |
 | **Action Required** | Update bill number from S. 1 to S. 5 |
 
 ### 2. Congressional Gym Access During Shutdowns
@@ -973,7 +973,7 @@ These bills have **completely incorrect bill numbers** - they reference entirely
 
 ---
 
-## ❌ MAJOR DISCREPANCIES
+## [ERROR] MAJOR DISCREPANCIES
 
 ### 1. Consolidated Appropriations Act, 2023 (H.R. 2617)
 | Field | Reference | API (Correct) |
@@ -981,7 +981,7 @@ These bills have **completely incorrect bill numbers** - they reference entirely
 | **Sponsor** | Rep. Rosa DeLauro (D-CT) | **Rep. Gerald E. Connolly (D-VA)** |
 | Introduced | 2022-04-20 | 2021-04-16 (as Performance Enhancement Reform Act) |
 | **Note** | DeLauro moved to agree to Senate amendment but was NOT the original sponsor |
-| Law Number | Public Law 117-328 ✓ | Public Law 117-328 ✓ |
+| Law Number | Public Law 117-328 OK | Public Law 117-328 OK |
 
 ### 2. TikTok Ban (H.R. 7521)
 | Field | Reference | API (Correct) |
@@ -993,7 +993,7 @@ These bills have **completely incorrect bill numbers** - they reference entirely
 
 ---
 
-## ⚠️ MINOR DISCREPANCIES
+## [WARN] MINOR DISCREPANCIES
 
 ### Sponsor/Committee Errors
 
@@ -1022,26 +1022,26 @@ These bills have **completely incorrect bill numbers** - they reference entirely
 
 ---
 
-## ✅ VERIFIED CORRECT
+## [OK] VERIFIED CORRECT
 
 The following bills were verified accurate:
 
 | Bill | Number | Sponsor | Key Data |
 |------|--------|---------|----------|
-| Bridge to Nowhere (SAFETEA-LU) | H.R. 3, 109th | Rep. Don Young (R-AK) ✓ | P.L. 109-59 ✓ |
-| Pizza as a Vegetable | H.R. 2112, 112th | Rep. Jack Kingston (R-GA) ✓ | P.L. 112-55 ✓ |
-| COVFEFE Act | H.R. 2884, 115th | Rep. Mike Quigley (D-IL) ✓ | Cosponsors: 26 |
-| Apollo Lunar Landing Legacy Act | H.R. 2617, 113th | Rep. Donna Edwards (D-MD) ✓ | Died in Committee |
-| American Sovereignty Restoration Act | H.R. 75, 113th | Rep. Paul Broun (R-GA) ✓ | Cosponsors: 10 |
-| 119th House Rules Package | H.Res. 5, 119th | Rep. Michelle Fischbach (R-MN) ✓ | Vote: 215-209 ✓ |
-| National Bourbon Heritage Month | S.Res. 294, 110th | Sen. Jim Bunning (R-KY) ✓ | Unanimous consent ✓ |
-| National Catfish Month | S.Res. 353, 117th | Sen. Roger Wicker (R-MS) ✓ | Passed same day ✓ |
-| National Pi Day | H.Res. 224, 111th | Rep. Bart Gordon (D-TN) ✓ | Passed ✓ |
-| Abolish the ATF Act | H.R. 374, 118th | Rep. Matt Gaetz (R-FL) ✓ | Died in Committee |
+| Bridge to Nowhere (SAFETEA-LU) | H.R. 3, 109th | Rep. Don Young (R-AK) OK | P.L. 109-59 OK |
+| Pizza as a Vegetable | H.R. 2112, 112th | Rep. Jack Kingston (R-GA) OK | P.L. 112-55 OK |
+| COVFEFE Act | H.R. 2884, 115th | Rep. Mike Quigley (D-IL) OK | Cosponsors: 26 |
+| Apollo Lunar Landing Legacy Act | H.R. 2617, 113th | Rep. Donna Edwards (D-MD) OK | Died in Committee |
+| American Sovereignty Restoration Act | H.R. 75, 113th | Rep. Paul Broun (R-GA) OK | Cosponsors: 10 |
+| 119th House Rules Package | H.Res. 5, 119th | Rep. Michelle Fischbach (R-MN) OK | Vote: 215-209 OK |
+| National Bourbon Heritage Month | S.Res. 294, 110th | Sen. Jim Bunning (R-KY) OK | Unanimous consent OK |
+| National Catfish Month | S.Res. 353, 117th | Sen. Roger Wicker (R-MS) OK | Passed same day OK |
+| National Pi Day | H.Res. 224, 111th | Rep. Bart Gordon (D-TN) OK | Passed OK |
+| Abolish the ATF Act | H.R. 374, 118th | Rep. Matt Gaetz (R-FL) OK | Died in Committee |
 
 ---
 
-## 🔍 Missing Data Elements
+## CHECK Missing Data Elements
 
 The following data in the reference is NOT available via the Congress.gov API:
 
@@ -1053,7 +1053,7 @@ The following data in the reference is NOT available via the Congress.gov API:
 
 ---
 
-## 📋 Recommended Corrections
+## FIX Recommended Corrections
 
 ### Priority 1: Fix Wrong Bill Numbers
 1. Laken Riley Act: Change S. 1 → **S. 5**
@@ -1089,7 +1089,7 @@ All verification performed against:
 
 ---
 
-# ✅ Post-Correction Verification Report
+# [OK] Post-Correction Verification Report
 
 **Verification Date:** 2026-02-05
 **API Used:** Congress.gov API v3
@@ -1102,62 +1102,62 @@ All corrections from the initial audit have been applied. Below is the verificat
 
 ---
 
-## ✅ Bill Number Corrections - VERIFIED
+## [OK] Bill Number Corrections - VERIFIED
 
 | Bill | Before | After | API Verification |
 |------|--------|-------|------------------|
-| **Laken Riley Act** | S. 1 | S. 5 | ✅ `S.5, Sen. Britt (R-AL), P.L. 119-1` |
-| **One Subject at a Time Act** | H.R. 5103 | H.R. 2113 | ✅ `H.R. 2113, Rep. Marino (R-PA), 2 cosponsors` |
-| **Sunshine Protection Act** | H.R. 3684 | H.R. 1279 | ✅ `H.R. 1279, Rep. Buchanan (R-FL), 38 cosponsors` |
-| **FIRST Act** | H.R. 3899 | H.R. 4186 | ✅ `H.R. 4186, Rep. Bucshon (R-IN), 3 cosponsors` |
+| **Laken Riley Act** | S. 1 | S. 5 | [OK] `S.5, Sen. Britt (R-AL), P.L. 119-1` |
+| **One Subject at a Time Act** | H.R. 5103 | H.R. 2113 | [OK] `H.R. 2113, Rep. Marino (R-PA), 2 cosponsors` |
+| **Sunshine Protection Act** | H.R. 3684 | H.R. 1279 | [OK] `H.R. 1279, Rep. Buchanan (R-FL), 38 cosponsors` |
+| **FIRST Act** | H.R. 3899 | H.R. 4186 | [OK] `H.R. 4186, Rep. Bucshon (R-IN), 3 cosponsors` |
 
 ---
 
-## ✅ Sponsor Corrections - VERIFIED
+## [OK] Sponsor Corrections - VERIFIED
 
 | Bill | Before | After | API Verification |
 |------|--------|-------|------------------|
-| **Consolidated Appropriations Act 2023** | Rosa DeLauro (D-CT) | Gerald E. Connolly (D-VA) | ✅ Matches |
-| **Zombie Programs Survival Guide Act** | James Lankford (R-OK) | Joni Ernst (R-IA) | ✅ Matches |
-| **FIRST Act** | Lamar Smith (R-TX) | Larry Bucshon (R-IN) | ✅ Matches |
+| **Consolidated Appropriations Act 2023** | Rosa DeLauro (D-CT) | Gerald E. Connolly (D-VA) | [OK] Matches |
+| **Zombie Programs Survival Guide Act** | James Lankford (R-OK) | Joni Ernst (R-IA) | [OK] Matches |
+| **FIRST Act** | Lamar Smith (R-TX) | Larry Bucshon (R-IN) | [OK] Matches |
 
 ---
 
-## ✅ Committee Corrections - VERIFIED
+## [OK] Committee Corrections - VERIFIED
 
 | Bill | Before | After | API Verification |
 |------|--------|-------|------------------|
-| **STABLE GENIUS Act** | Energy and Commerce | House Administration | ✅ Matches |
-| **PELOSI Act** | Homeland Security | Finance | ✅ Matches |
+| **STABLE GENIUS Act** | Energy and Commerce | House Administration | [OK] Matches |
+| **PELOSI Act** | Homeland Security | Finance | [OK] Matches |
 
 ---
 
-## ✅ Cosponsor Count Corrections - VERIFIED
+## [OK] Cosponsor Count Corrections - VERIFIED
 
 | Bill | Before | After | API Verification |
 |------|--------|-------|------------------|
-| **TikTok Ban (H.R. 7521)** | 27 | 54 | ✅ Matches |
-| **STABLE GENIUS Act** | 0 | 1 | ✅ Matches |
-| **RESTRICT Act** | 22 | 26 | ✅ Matches |
-| **FairTax Act** | 30 | 14 | ✅ Matches |
-| **Abolish ATF Act** | 22 | 10 | ✅ Matches |
-| **National Catfish Month** | 3 | 10 | ✅ Matches |
-| **National Pi Day** | 9 | 15 | ✅ Matches |
-| **COVFEFE Act** | (not listed) | 26 | ✅ Matches |
-| **Apollo Lunar Legacy Act** | 2 | 1 | ✅ Matches |
+| **TikTok Ban (H.R. 7521)** | 27 | 54 | [OK] Matches |
+| **STABLE GENIUS Act** | 0 | 1 | [OK] Matches |
+| **RESTRICT Act** | 22 | 26 | [OK] Matches |
+| **FairTax Act** | 30 | 14 | [OK] Matches |
+| **Abolish ATF Act** | 22 | 10 | [OK] Matches |
+| **National Catfish Month** | 3 | 10 | [OK] Matches |
+| **National Pi Day** | 9 | 15 | [OK] Matches |
+| **COVFEFE Act** | (not listed) | 26 | [OK] Matches |
+| **Apollo Lunar Legacy Act** | 2 | 1 | [OK] Matches |
 
 ---
 
-## ✅ Status Corrections - VERIFIED
+## [OK] Status Corrections - VERIFIED
 
 | Bill | Before | After | API Verification |
 |------|--------|-------|------------------|
-| **Confucius Birthday Resolution** | Died in Committee | Agreed to (Passed House) | ✅ 11 actions, passed |
-| **TikTok Ban (H.R. 7521)** | Signed into Law (P.L. 118-50) | Passed House, provisions enacted via H.R. 815 | ✅ Referred to Senate |
+| **Confucius Birthday Resolution** | Died in Committee | Agreed to (Passed House) | [OK] 11 actions, passed |
+| **TikTok Ban (H.R. 7521)** | Signed into Law (P.L. 118-50) | Passed House, provisions enacted via H.R. 815 | [OK] Referred to Senate |
 
 ---
 
-## ⚠️ Bills Marked as Unverifiable
+## [WARN] Bills Marked as Unverifiable
 
 The following bills could not be matched in the Congress.gov API and have been marked with notes:
 
@@ -1168,21 +1168,21 @@ The following bills could not be matched in the Congress.gov API and have been m
 | **Meth Investigation Act (H.R. 8752)** | H.R. 8752 in 118th is DHS Appropriations - different bill |
 | **H.R. 6174 TikTok Entry** | H.R. 6174 is DHS Biodetection Act - marked as deprecated duplicate |
 
-These entries have been flagged with ⚠️ warnings in the document. They may be:
+These entries have been flagged with [WARN] warnings in the document. They may be:
 - Composite entries based on multiple sources
 - Editorial/satirical content for the website
 - Bills with incorrect identifiers that need further research
 
 ---
 
-## 📊 Post-Correction Summary
+## AUDIT Post-Correction Summary
 
 | Category | Count |
 |----------|-------|
-| ✅ Fully Verified & Corrected | 19 |
-| ⚠️ Unverifiable (flagged) | 4 |
-| ❌ Deprecated (H.R. 6174) | 1 |
-| ✅ Originally Correct | 3 |
+| [OK] Fully Verified & Corrected | 19 |
+| [WARN] Unverifiable (flagged) | 4 |
+| [ERROR] Deprecated (H.R. 6174) | 1 |
+| [OK] Originally Correct | 3 |
 | **Total Bills** | 27 |
 
 ---
@@ -1192,39 +1192,39 @@ These entries have been flagged with ⚠️ warnings in the document. They may b
 ```bash
 # Laken Riley Act
 curl "https://api.congress.gov/v3/bill/119/s/5?api_key=..."
-# Result: S.5, Sen. Britt (R-AL), P.L. 119-1 ✅
+# Result: S.5, Sen. Britt (R-AL), P.L. 119-1 [OK]
 
 # Consolidated Appropriations Act 2023
 curl "https://api.congress.gov/v3/bill/117/hr/2617?api_key=..."
-# Result: H.R. 2617, Rep. Connolly (D-VA), P.L. 117-328 ✅
+# Result: H.R. 2617, Rep. Connolly (D-VA), P.L. 117-328 [OK]
 
 # One Subject at a Time Act
 curl "https://api.congress.gov/v3/bill/113/hr/2113?api_key=..."
-# Result: H.R. 2113, Rep. Marino (R-PA), 2 cosponsors ✅
+# Result: H.R. 2113, Rep. Marino (R-PA), 2 cosponsors [OK]
 
 # Sunshine Protection Act
 curl "https://api.congress.gov/v3/bill/118/hr/1279?api_key=..."
-# Result: H.R. 1279, Rep. Buchanan (R-FL), 38 cosponsors ✅
+# Result: H.R. 1279, Rep. Buchanan (R-FL), 38 cosponsors [OK]
 
 # FIRST Act
 curl "https://api.congress.gov/v3/bill/113/hr/4186?api_key=..."
-# Result: H.R. 4186, Rep. Bucshon (R-IN), 3 cosponsors ✅
+# Result: H.R. 4186, Rep. Bucshon (R-IN), 3 cosponsors [OK]
 
 # Zombie Programs Act
 curl "https://api.congress.gov/v3/bill/117/s/3110?api_key=..."
-# Result: S. 3110, Sen. Ernst (R-IA), 1 cosponsor ✅
+# Result: S. 3110, Sen. Ernst (R-IA), 1 cosponsor [OK]
 
 # FairTax Act
 curl "https://api.congress.gov/v3/bill/119/hr/25?api_key=..."
-# Result: H.R. 25, Rep. Carter (R-GA), 14 cosponsors ✅
+# Result: H.R. 25, Rep. Carter (R-GA), 14 cosponsors [OK]
 
 # Abolish ATF Act
 curl "https://api.congress.gov/v3/bill/118/hr/374?api_key=..."
-# Result: H.R. 374, Rep. Gaetz (R-FL), 10 cosponsors ✅
+# Result: H.R. 374, Rep. Gaetz (R-FL), 10 cosponsors [OK]
 
 # COVFEFE Act
 curl "https://api.congress.gov/v3/bill/115/hr/2884?api_key=..."
-# Result: H.R. 2884, Rep. Quigley (D-IL), 26 cosponsors ✅
+# Result: H.R. 2884, Rep. Quigley (D-IL), 26 cosponsors [OK]
 ```
 
 ---

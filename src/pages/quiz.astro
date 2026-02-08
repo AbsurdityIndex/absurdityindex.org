@@ -309,18 +309,33 @@ const scoreMessages = {
     </div>
   </div>
 
-  <script is:inline define:vars={{ quizQuestions, scoreMessages }}>
-    const questions = quizQuestions;
-    const messages = scoreMessages;
+	  <script is:inline define:vars={{ quizQuestions, scoreMessages }}>
+	    const questions = quizQuestions;
+	    const messages = scoreMessages;
 
-    let currentQuestionIndex = 0;
-    let score = 0;
-    let answered = false;
+	    let currentQuestionIndex = 0;
+	    let score = 0;
+	    let answered = false;
 
-    // DOM Elements
-    const startScreen = document.getElementById('start-screen');
-    const questionScreen = document.getElementById('question-screen');
-    const resultsScreen = document.getElementById('results-screen');
+	    // Inline Lucide SVG strings for dynamic UI (no Unicode icons)
+	    const ICON_CHECK = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+	    const ICON_X = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+	    const svgParser = new DOMParser();
+	    const iconTemplates = {
+	      check: svgParser.parseFromString(ICON_CHECK, 'image/svg+xml').documentElement,
+	      x: svgParser.parseFromString(ICON_X, 'image/svg+xml').documentElement,
+	    };
+
+	    function setFeedbackIcon(name) {
+	      const template = iconTemplates[name];
+	      if (!template) return;
+	      feedbackIcon.replaceChildren(document.importNode(template, true));
+	    }
+
+	    // DOM Elements
+	    const startScreen = document.getElementById('start-screen');
+	    const questionScreen = document.getElementById('question-screen');
+	    const resultsScreen = document.getElementById('results-screen');
     const startBtn = document.getElementById('start-btn');
     const nextBtn = document.getElementById('next-btn');
     const retakeBtn = document.getElementById('retake-btn');
@@ -353,32 +368,32 @@ const scoreMessages = {
       return shuffled;
     }
 
-    function showQuestion() {
-      const question = questions[currentQuestionIndex];
+	    function showQuestion() {
+	      const question = questions[currentQuestionIndex];
 
-      // Update progress
-      currentQuestionEl.textContent = currentQuestionIndex + 1;
-      currentScoreEl.textContent = score;
-      progressBar.style.width = ((currentQuestionIndex + 1) / questions.length * 100) + '%';
+	      // Update progress
+	      currentQuestionEl.textContent = currentQuestionIndex + 1;
+	      currentScoreEl.textContent = score;
+	      progressBar.style.width = ((currentQuestionIndex + 1) / questions.length * 100) + '%';
 
-      // Set question text
-      questionText.textContent = question.question;
+	      // Set question text
+	      questionText.textContent = question.question;
 
-      // Shuffle and display options
-      const shuffledOptions = shuffleArray(question.options);
-      optionsContainer.innerHTML = '';
+	      // Shuffle and display options
+	      const shuffledOptions = shuffleArray(question.options);
+	      optionsContainer.replaceChildren();
 
-      shuffledOptions.forEach((option, index) => {
-        const button = document.createElement('button');
-        button.className = 'option-btn w-full text-left p-4 rounded-lg border-2 border-gold-300 bg-cream-100 hover:border-gold-500 hover:bg-gold-100/50 transition-all font-sans text-navy-800';
-        button.innerHTML = `
-          <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-navy-800 text-gold-400 font-mono text-sm mr-3">${String.fromCharCode(65 + index)}</span>
-          ${option.text}
-        `;
-        button.dataset.correct = option.correct;
-        button.addEventListener('click', () => selectAnswer(button, option.correct));
-        optionsContainer.appendChild(button);
-      });
+	      shuffledOptions.forEach((option, index) => {
+	        const button = document.createElement('button');
+	        button.className = 'option-btn w-full text-left p-4 rounded-lg border-2 border-gold-300 bg-cream-100 hover:border-gold-500 hover:bg-gold-100/50 transition-all font-sans text-navy-800';
+	        const label = document.createElement('span');
+	        label.className = 'inline-flex items-center justify-center w-8 h-8 rounded-full bg-navy-800 text-gold-400 font-mono text-sm mr-3';
+	        label.textContent = String.fromCharCode(65 + index);
+	        button.append(label, document.createTextNode(option.text));
+	        button.dataset.correct = option.correct;
+	        button.addEventListener('click', () => selectAnswer(button, option.correct));
+	        optionsContainer.appendChild(button);
+	      });
 
       // Hide feedback and next button
       feedbackContainer.classList.add('hidden');
@@ -413,21 +428,21 @@ const scoreMessages = {
       const question = questions[currentQuestionIndex];
       feedbackContainer.classList.remove('hidden');
 
-      if (isCorrect) {
-        feedbackContainer.classList.remove('border-red-500', 'bg-red-100/50');
-        feedbackContainer.classList.add('border-green-500', 'bg-green-100/50');
-        feedbackIcon.textContent = '✓';
-        feedbackIcon.className = 'text-3xl shrink-0 text-green-600';
-        feedbackResult.textContent = 'Correct!';
-        feedbackResult.className = 'font-serif text-lg font-bold mb-2 text-green-700';
-      } else {
-        feedbackContainer.classList.remove('border-green-500', 'bg-green-100/50');
-        feedbackContainer.classList.add('border-red-500', 'bg-red-100/50');
-        feedbackIcon.textContent = '✗';
-        feedbackIcon.className = 'text-3xl shrink-0 text-red-600';
-        feedbackResult.textContent = 'Not quite!';
-        feedbackResult.className = 'font-serif text-lg font-bold mb-2 text-red-700';
-      }
+	      if (isCorrect) {
+	        feedbackContainer.classList.remove('border-red-500', 'bg-red-100/50');
+	        feedbackContainer.classList.add('border-green-500', 'bg-green-100/50');
+	        setFeedbackIcon('check');
+	        feedbackIcon.className = 'text-3xl shrink-0 text-green-600';
+	        feedbackResult.textContent = 'Correct!';
+	        feedbackResult.className = 'font-serif text-lg font-bold mb-2 text-green-700';
+	      } else {
+	        feedbackContainer.classList.remove('border-green-500', 'bg-green-100/50');
+	        feedbackContainer.classList.add('border-red-500', 'bg-red-100/50');
+	        setFeedbackIcon('x');
+	        feedbackIcon.className = 'text-3xl shrink-0 text-red-600';
+	        feedbackResult.textContent = 'Not quite!';
+	        feedbackResult.className = 'font-serif text-lg font-bold mb-2 text-red-700';
+	      }
 
       feedbackExplanation.textContent = question.explanation;
 

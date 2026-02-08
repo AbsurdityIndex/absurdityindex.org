@@ -42,7 +42,7 @@ export function registerAutoCommand(program: Command): void {
       const xClient = new XReadClient(config);
       const poster = new BrowserPoster(config);
 
-      console.log(chalk.bold.yellow('\n🚀 YOLO MODE ACTIVATED'));
+      console.log(chalk.bold.yellow('\nYOLO MODE ACTIVATED'));
       console.log(chalk.dim(`Max ${maxPerDay} posts/day | Check every ${opts.interval}min | ${config.dryRun ? 'DRY RUN' : 'LIVE'}`));
       console.log(chalk.dim(`Loaded ${bills.length} bills from site\n`));
 

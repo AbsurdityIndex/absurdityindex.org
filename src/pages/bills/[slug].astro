@@ -37,11 +37,12 @@ const isBicameral = billType?.needsBothChambers ?? false;
 
 // Format dates
 const formatDate = (date: Date) => {
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  // All bill/action dates are date-only; force UTC for consistent output across build machines/timezones.
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 };
 
 // Check for detailed data
-const hasActions = (d.actions?.length || 0) > 0;
+const hasActions = ((d.actionCount ?? d.actions?.length) || 0) > 0;
 const hasAmendments = (d.amendments?.length || 0) > 0 || (d.amendmentCount || 0) > 0;
 const hasRelated = (d.relatedBills?.length || 0) > 0;
 const hasTextVersions = (d.textVersions?.length || 0) > 0;
@@ -206,17 +207,17 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
       </div>
     )}
 
-    {/* Key Milestones */}
-    {(hasActions || d.keyMilestones) && (
-      <div class="mb-8 p-5 bg-cream-100 rounded-lg border border-gold-300">
-        <KeyMilestones
-          actions={d.actions || []}
-          status={d.status}
-          totalActions={d.actions?.length || 0}
-          keyMilestones={d.keyMilestones}
-        />
-      </div>
-    )}
+      {/* Key Milestones */}
+      {(hasActions || d.keyMilestones) && (
+        <div class="mb-8 p-5 bg-cream-100 rounded-lg border border-gold-300">
+          <KeyMilestones
+            actions={d.actions || []}
+            status={d.status}
+            totalActions={d.actionCount ?? d.actions?.length ?? 0}
+            keyMilestones={d.keyMilestones}
+          />
+        </div>
+      )}
 
     {/* Cost Estimate */}
     <div class="mb-8">
@@ -297,7 +298,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
 
       {/* All Actions */}
       {hasActions && (
-        <CollapsibleSection title="All Legislative Actions" count={d.actions?.length} icon="list">
+        <CollapsibleSection title="All Legislative Actions" count={d.actionCount ?? d.actions?.length} icon="list">
           <div class="max-h-96 overflow-y-auto space-y-2">
             {d.actions?.slice(0, 50).map((action) => (
               <div class="flex gap-3 text-sm py-2 border-b border-cream-200 last:border-0">
@@ -307,9 +308,9 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
                 <span class="text-navy-700">{action.text}</span>
               </div>
             ))}
-            {(d.actions?.length || 0) > 50 && (
+            {((d.actionCount ?? d.actions?.length ?? 0) > 50) && (
               <p class="text-xs text-navy-500 italic pt-2">
-                Showing 50 of {d.actions?.length} actions.
+                Showing 50 of {d.actionCount ?? d.actions?.length} actions.
                 <a href={d.congressDotGovUrl} target="_blank" rel="noopener noreferrer" class="text-gold-700 hover:underline ml-1">
                   See all on Congress.gov
                 </a>

@@ -343,90 +343,177 @@ const formatPerCapita = (num: number) => `$${num.toFixed(2)}`;
 
     const formatPerCapita = (num) => `$${num.toFixed(2)}`;
 
-    // Lucide icon SVGs for ranking medals
-    const icons = {
-      trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
-      medal: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="m13 12 5.88-9.8"/><path d="M8 7h8"/><circle cx="12" cy="17" r="5"/><path d="M12 18v-2h-.5"/></svg>`,
-      award: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-700"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
-    };
+	    const iconSvgs = {
+	      trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
+	      medal: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="m13 12 5.88-9.8"/><path d="M8 7h8"/><circle cx="12" cy="17" r="5"/><path d="M12 18v-2h-.5"/></svg>`,
+	      award: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-700"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
+	    };
 
-    const sortFunctions = {
-      total: (a, b) => b.pork - a.pork,
-      percapita: (a, b) => b.perCapita - a.perCapita,
-      earmarks: (a, b) => b.earmarks - a.earmarks,
+	    const svgParser = new DOMParser();
+	    const iconTemplates = Object.fromEntries(
+	      Object.entries(iconSvgs).map(([key, svg]) => {
+	        const parsed = svgParser.parseFromString(svg, 'image/svg+xml');
+	        return [key, parsed.documentElement];
+	      })
+	    );
+
+	    function cloneIcon(name) {
+	      const template = iconTemplates[name];
+	      if (!template || template.nodeName.toLowerCase() !== 'svg') return null;
+	      return template.cloneNode(true);
+	    }
+
+	    const sortFunctions = {
+	      total: (a, b) => b.pork - a.pork,
+	      percapita: (a, b) => b.perCapita - a.perCapita,
+	      earmarks: (a, b) => b.earmarks - a.earmarks,
       alpha: (a, b) => a.state.localeCompare(b.state),
     };
 
-    function renderTable(data) {
-      const tbody = document.getElementById('table-body');
-      const cards = document.getElementById('mobile-cards');
+	    function renderTable(data) {
+	      const tbody = document.getElementById('table-body');
+	      const cards = document.getElementById('mobile-cards');
+	      if (!tbody || !cards) return;
 
-      // Assign ranks based on current sort
-      const rankedData = data.map((s, i) => ({ ...s, rank: i + 1 }));
+	      // Assign ranks based on current sort
+	      const rankedData = data.map((s, i) => ({ ...s, rank: i + 1 }));
 
-      // Update table
-      tbody.innerHTML = rankedData.map(state => `
-        <tr
-          class="border-b border-gold-200 hover:bg-gold-100 transition-colors ${state.rank <= 3 ? 'bg-gold-100' : state.rank <= 10 ? 'bg-cream-200' : 'bg-cream-100'}"
-          data-state="${state.state.toLowerCase()}"
-        >
-          <td class="px-4 py-4 font-mono text-navy-800">
-            ${state.rank === 1 ? `<span class="inline-flex items-center mr-1" title="Gold Medal">${icons.trophy}</span>` : ''}
-            ${state.rank === 2 ? `<span class="inline-flex items-center mr-1" title="Silver Medal">${icons.medal}</span>` : ''}
-            ${state.rank === 3 ? `<span class="inline-flex items-center mr-1" title="Bronze Medal">${icons.award}</span>` : ''}
-            ${state.rank > 3 ? `<span class="text-lg font-bold">${state.rank}</span>` : ''}
-          </td>
-          <td class="px-4 py-4">
-            <span class="font-serif font-bold text-navy-900">${state.state}</span>
-            <span class="text-navy-500 ml-2 text-sm">(${state.abbr})</span>
-          </td>
-          <td class="px-4 py-4 text-right font-mono text-navy-800 font-bold">
-            ${formatCurrency(state.pork)}
-          </td>
-          <td class="px-4 py-4 text-right font-mono text-navy-700">
-            ${formatPerCapita(state.perCapita)}
-          </td>
-          <td class="px-4 py-4 text-right font-mono text-navy-700">
-            ${state.earmarks}
-          </td>
-          <td class="px-4 py-4 text-sm text-navy-600 italic max-w-xs truncate" title="${state.project}">
-            ${state.project}
-          </td>
-        </tr>
-      `).join('');
+	      tbody.replaceChildren();
+	      cards.replaceChildren();
 
-      // Update mobile cards
-      cards.innerHTML = rankedData.map(state => `
-        <div
-          class="rounded-lg p-4 border ${state.rank <= 3 ? 'border-gold-500 bg-gold-100' : state.rank <= 10 ? 'border-gold-300 bg-cream-200' : 'border-gold-200 bg-cream-100'}"
-          data-state="${state.state.toLowerCase()}"
-        >
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              ${state.rank === 1 ? icons.trophy : ''}
-              ${state.rank === 2 ? icons.medal : ''}
-              ${state.rank === 3 ? icons.award : ''}
-              ${state.rank > 3 ? `<span class="font-mono text-lg font-bold text-navy-600">#${state.rank}</span>` : ''}
-              <span class="font-serif text-lg font-bold text-navy-900">${state.state}</span>
-            </div>
-            <span class="font-mono text-lg font-bold text-navy-800">${formatCurrency(state.pork)}</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-sm mb-3">
-            <div>
-              <span class="text-navy-500">Per Capita:</span>
-              <span class="font-mono text-navy-700 ml-1">${formatPerCapita(state.perCapita)}</span>
-            </div>
-            <div>
-              <span class="text-navy-500">Earmarks:</span>
-              <span class="font-mono text-navy-700 ml-1">${state.earmarks}</span>
-            </div>
-          </div>
-          <div class="text-sm text-navy-600 italic border-t border-gold-200 pt-2">
-            <span class="text-navy-500 not-italic">Signature Project:</span> ${state.project}
-          </div>
-        </div>
-      `).join('');
-    }
+	      rankedData.forEach((state) => {
+	        const rowBg = state.rank <= 3 ? 'bg-gold-100' : state.rank <= 10 ? 'bg-cream-200' : 'bg-cream-100';
+
+	        const tr = document.createElement('tr');
+	        tr.className = `border-b border-gold-200 hover:bg-gold-100 transition-colors ${rowBg}`;
+	        tr.dataset.state = state.state.toLowerCase();
+
+	        const tdRank = document.createElement('td');
+	        tdRank.className = 'px-4 py-4 font-mono text-navy-800';
+
+	        const addMedal = (iconName, title) => {
+	          const icon = cloneIcon(iconName);
+	          if (!icon) return;
+	          const wrap = document.createElement('span');
+	          wrap.className = 'inline-flex items-center mr-1';
+	          wrap.title = title;
+	          wrap.appendChild(icon);
+	          tdRank.appendChild(wrap);
+	        };
+
+	        if (state.rank === 1) addMedal('trophy', 'Gold Medal');
+	        if (state.rank === 2) addMedal('medal', 'Silver Medal');
+	        if (state.rank === 3) addMedal('award', 'Bronze Medal');
+	        if (state.rank > 3) {
+	          const span = document.createElement('span');
+	          span.className = 'text-lg font-bold';
+	          span.textContent = String(state.rank);
+	          tdRank.appendChild(span);
+	        }
+
+	        const tdState = document.createElement('td');
+	        tdState.className = 'px-4 py-4';
+	        const stateName = document.createElement('span');
+	        stateName.className = 'font-serif font-bold text-navy-900';
+	        stateName.textContent = state.state;
+	        const stateAbbr = document.createElement('span');
+	        stateAbbr.className = 'text-navy-500 ml-2 text-sm';
+	        stateAbbr.textContent = `(${state.abbr})`;
+	        tdState.append(stateName, stateAbbr);
+
+	        const tdPork = document.createElement('td');
+	        tdPork.className = 'px-4 py-4 text-right font-mono text-navy-800 font-bold';
+	        tdPork.textContent = formatCurrency(state.pork);
+
+	        const tdPerCapita = document.createElement('td');
+	        tdPerCapita.className = 'px-4 py-4 text-right font-mono text-navy-700';
+	        tdPerCapita.textContent = formatPerCapita(state.perCapita);
+
+	        const tdEarmarks = document.createElement('td');
+	        tdEarmarks.className = 'px-4 py-4 text-right font-mono text-navy-700';
+	        tdEarmarks.textContent = String(state.earmarks);
+
+	        const tdProject = document.createElement('td');
+	        tdProject.className = 'px-4 py-4 text-sm text-navy-600 italic max-w-xs truncate';
+	        tdProject.title = state.project;
+	        tdProject.textContent = state.project;
+
+	        tr.append(tdRank, tdState, tdPork, tdPerCapita, tdEarmarks, tdProject);
+	        tbody.appendChild(tr);
+
+	        const cardBorder = state.rank <= 3 ? 'border-gold-500 bg-gold-100' : state.rank <= 10 ? 'border-gold-300 bg-cream-200' : 'border-gold-200 bg-cream-100';
+
+	        const card = document.createElement('div');
+	        card.className = `rounded-lg p-4 border ${cardBorder}`;
+	        card.dataset.state = state.state.toLowerCase();
+
+	        const header = document.createElement('div');
+	        header.className = 'flex items-center justify-between mb-3';
+
+	        const left = document.createElement('div');
+	        left.className = 'flex items-center gap-2';
+
+	        if (state.rank === 1) {
+	          const icon = cloneIcon('trophy');
+	          if (icon) left.appendChild(icon);
+	        } else if (state.rank === 2) {
+	          const icon = cloneIcon('medal');
+	          if (icon) left.appendChild(icon);
+	        } else if (state.rank === 3) {
+	          const icon = cloneIcon('award');
+	          if (icon) left.appendChild(icon);
+	        } else {
+	          const rank = document.createElement('span');
+	          rank.className = 'font-mono text-lg font-bold text-navy-600';
+	          rank.textContent = `#${state.rank}`;
+	          left.appendChild(rank);
+	        }
+
+	        const stateLabel = document.createElement('span');
+	        stateLabel.className = 'font-serif text-lg font-bold text-navy-900';
+	        stateLabel.textContent = state.state;
+	        left.appendChild(stateLabel);
+
+	        const amount = document.createElement('span');
+	        amount.className = 'font-mono text-lg font-bold text-navy-800';
+	        amount.textContent = formatCurrency(state.pork);
+
+	        header.append(left, amount);
+
+	        const grid2 = document.createElement('div');
+	        grid2.className = 'grid grid-cols-2 gap-2 text-sm mb-3';
+
+	        const perCap = document.createElement('div');
+	        const perCapLabel = document.createElement('span');
+	        perCapLabel.className = 'text-navy-500';
+	        perCapLabel.textContent = 'Per Capita:';
+	        const perCapValue = document.createElement('span');
+	        perCapValue.className = 'font-mono text-navy-700 ml-1';
+	        perCapValue.textContent = formatPerCapita(state.perCapita);
+	        perCap.append(perCapLabel, perCapValue);
+
+	        const ear = document.createElement('div');
+	        const earLabel = document.createElement('span');
+	        earLabel.className = 'text-navy-500';
+	        earLabel.textContent = 'Earmarks:';
+	        const earValue = document.createElement('span');
+	        earValue.className = 'font-mono text-navy-700 ml-1';
+	        earValue.textContent = String(state.earmarks);
+	        ear.append(earLabel, earValue);
+
+	        grid2.append(perCap, ear);
+
+	        const sig = document.createElement('div');
+	        sig.className = 'text-sm text-navy-600 italic border-t border-gold-200 pt-2';
+	        const sigLabel = document.createElement('span');
+	        sigLabel.className = 'text-navy-500 not-italic';
+	        sigLabel.textContent = 'Signature Project:';
+	        sig.append(sigLabel, document.createTextNode(` ${state.project}`));
+
+	        card.append(header, grid2, sig);
+	        cards.appendChild(card);
+	      });
+	    }
 
     function filterAndSort() {
       const sortBy = document.getElementById('sort-select').value;

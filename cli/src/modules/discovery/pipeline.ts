@@ -243,7 +243,7 @@ export async function runScan(
 
       result.aiScored++;
 
-      const icon = scoreResult.score >= opts.aiThreshold ? chalk.green('✓') : chalk.dim('·');
+      const icon = scoreResult.score >= opts.aiThreshold ? chalk.green('+') : chalk.dim('.');
       console.log(`  ${icon} ${chalk.cyan(String(scoreResult.score).padStart(2))} [${scoreResult.category}] ${bill.title.slice(0, 60)}`);
 
       if (scoreResult.score >= opts.aiThreshold) {

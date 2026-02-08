@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Divider from '../components/ui/Divider.astro';
+import Icon from '../components/ui/Icon.astro';
 
 // Bingo squares (excluding free space - we'll always put that in the center)
 const bingoSquares = [
@@ -95,10 +96,10 @@ const bingoSquares = [
           </svg>
           Generate New Card
         </button>
-        <button
-          onclick="window.print()"
-          class="px-6 py-3 bg-navy-700 text-cream-100 font-serif text-lg rounded hover:bg-navy-600 transition-colors font-bold flex items-center justify-center gap-2"
-        >
+	        <button
+	          id="print-btn"
+	          class="px-6 py-3 bg-navy-700 text-cream-100 font-serif text-lg rounded hover:bg-navy-600 transition-colors font-bold flex items-center justify-center gap-2"
+	        >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"/>
           </svg>
@@ -157,25 +158,25 @@ const bingoSquares = [
       <!-- Fun Rules (hidden in print) -->
       <section class="mt-6 bg-navy-800 rounded-lg p-6 sm:p-8 border border-navy-700 print:hidden">
         <h2 class="font-serif text-2xl text-gold-400 font-bold mb-4">House Rules</h2>
-        <ul class="space-y-3 text-gold-300/90 font-sans text-sm">
-          <li class="flex gap-3">
-            <span class="text-gold-500 shrink-0">&#9733;</span>
+          <ul class="space-y-3 text-gold-300/90 font-sans text-sm">
+            <li class="flex gap-3">
+            <Icon name="star" size={16} class="text-gold-500 shrink-0 mt-0.5" />
             <span><strong class="text-gold-400">Speed Round:</strong> Try to fill your card during a single committee hearing. Warning: may induce existential dread.</span>
-          </li>
-          <li class="flex gap-3">
-            <span class="text-gold-500 shrink-0">&#9733;</span>
+            </li>
+            <li class="flex gap-3">
+            <Icon name="star" size={16} class="text-gold-500 shrink-0 mt-0.5" />
             <span><strong class="text-gold-400">Multiplayer Mode:</strong> Generate multiple cards and race your friends. Loser has to read the full text of the next omnibus bill.</span>
-          </li>
-          <li class="flex gap-3">
-            <span class="text-gold-500 shrink-0">&#9733;</span>
+            </li>
+            <li class="flex gap-3">
+            <Icon name="star" size={16} class="text-gold-500 shrink-0 mt-0.5" />
             <span><strong class="text-gold-400">Blackout Round:</strong> Fill every square. Estimated completion time: one filibuster.</span>
-          </li>
-          <li class="flex gap-3">
-            <span class="text-gold-500 shrink-0">&#9733;</span>
+            </li>
+            <li class="flex gap-3">
+            <Icon name="star" size={16} class="text-gold-500 shrink-0 mt-0.5" />
             <span><strong class="text-gold-400">Drinking Game Variant:</strong> We legally cannot recommend this, but we also can't stop you.</span>
-          </li>
-        </ul>
-      </section>
+            </li>
+          </ul>
+        </section>
 
       <!-- Disclaimer -->
       <div class="mt-6 bg-cream-200 border border-gold-300 rounded p-4 text-xs text-navy-600 leading-relaxed text-center print:hidden">
@@ -207,41 +208,61 @@ const bingoSquares = [
       return shuffled;
     }
 
-    function renderCard(squares) {
-      const grid = document.getElementById('bingo-grid');
-      if (!grid) return;
+	    function renderCard(squares) {
+	      const grid = document.getElementById('bingo-grid');
+	      if (!grid) return;
 
-      grid.innerHTML = squares.map((text, i) => {
-        const isFree = text === 'FREE';
-        const baseClasses = 'aspect-square flex items-center justify-center p-2 text-center cursor-pointer transition-all duration-200 select-none';
-        const freeClasses = isFree
-          ? 'bg-gold-500 text-navy-900'
-          : 'bg-cream-100 text-navy-800 hover:bg-gold-100';
+	      grid.replaceChildren();
 
-        return `
-          <div
-            class="${baseClasses} ${freeClasses}"
-            data-index="${i}"
-            data-marked="${isFree ? 'true' : 'false'}"
-            onclick="toggleSquare(this)"
-          >
-            <span class="text-xs sm:text-sm font-sans leading-tight print:text-[10px]">
-              ${isFree ? '<span class="font-bold text-sm sm:text-base print:text-xs">FREE</span><br><span class="text-[10px] sm:text-xs print:text-[8px]">Congress Does Nothing</span>' : text}
-            </span>
-          </div>
-        `;
-      }).join('');
-    }
+	      squares.forEach((text, i) => {
+	        const isFree = text === 'FREE';
+	        const baseClasses = 'aspect-square flex items-center justify-center p-2 text-center cursor-pointer transition-all duration-200 select-none';
+	        const freeClasses = isFree
+	          ? 'bg-gold-500 text-navy-900'
+	          : 'bg-cream-100 text-navy-800 hover:bg-gold-100';
 
-    // Toggle square marking
-    window.toggleSquare = function(el) {
-      const isMarked = el.dataset.marked === 'true';
-      const isFree = el.querySelector('span').textContent.includes('FREE');
+	        const square = document.createElement('div');
+	        square.className = `${baseClasses} ${freeClasses}`;
+	        square.dataset.index = String(i);
+	        square.dataset.marked = isFree ? 'true' : 'false';
+	        square.dataset.free = isFree ? 'true' : 'false';
 
-      if (isFree) return; // Free space is always marked
+	        const textWrap = document.createElement('span');
+	        textWrap.className = 'text-xs sm:text-sm font-sans leading-tight print:text-[10px]';
 
-      if (isMarked) {
-        el.dataset.marked = 'false';
+	        if (isFree) {
+	          const freeTitle = document.createElement('span');
+	          freeTitle.className = 'font-bold text-sm sm:text-base print:text-xs';
+	          freeTitle.textContent = 'FREE';
+
+	          const br = document.createElement('br');
+
+	          const freeSub = document.createElement('span');
+	          freeSub.className = 'text-[10px] sm:text-xs print:text-[8px]';
+	          freeSub.textContent = 'Congress Does Nothing';
+
+	          textWrap.append(freeTitle, br, freeSub);
+	        } else {
+	          textWrap.textContent = text;
+	          square.addEventListener('click', () => {
+	            toggleSquare(square);
+	          });
+	        }
+
+	        square.appendChild(textWrap);
+	        grid.appendChild(square);
+	      });
+	    }
+
+	    // Toggle square marking
+	    function toggleSquare(el) {
+	      const isMarked = el.dataset.marked === 'true';
+	      const isFree = el.dataset.free === 'true';
+
+	      if (isFree) return; // Free space is always marked
+
+	      if (isMarked) {
+	        el.dataset.marked = 'false';
         el.classList.remove('bg-gold-400', 'text-navy-900', 'ring-2', 'ring-gold-600');
         el.classList.add('bg-cream-100', 'text-navy-800', 'hover:bg-gold-100');
       } else {
@@ -250,8 +271,8 @@ const bingoSquares = [
         el.classList.add('bg-gold-400', 'text-navy-900', 'ring-2', 'ring-gold-600');
       }
 
-      checkBingo();
-    };
+	      checkBingo();
+	    }
 
     // Check for bingo
     function checkBingo() {
@@ -290,19 +311,26 @@ const bingoSquares = [
     }
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      renderCard(generateCard());
+	    document.addEventListener('DOMContentLoaded', () => {
+	      renderCard(generateCard());
 
-      const btn = document.getElementById('generate-btn');
-      if (btn) {
+	      const btn = document.getElementById('generate-btn');
+	      if (btn) {
         btn.addEventListener('click', () => {
           const grid = document.getElementById('bingo-grid');
           if (grid) grid.classList.remove('bingo-winner');
-          renderCard(generateCard());
-        });
-      }
-    });
-  </script>
+	          renderCard(generateCard());
+	        });
+	      }
+
+	      const printBtn = document.getElementById('print-btn');
+	      if (printBtn) {
+	        printBtn.addEventListener('click', () => {
+	          window.print();
+	        });
+	      }
+	    });
+	  </script>
 
   <style>
     /* Print-specific styles for bingo card */

@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dedupeCongressApiActions, normalizeActionText, toDateOnlyString } from '../src/utils/billTransforms.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BILLS_DIR = path.resolve(__dirname, '../src/data/bills');
@@ -81,6 +82,17 @@ const CONGRESS_GOV_PATH_BY_TYPE = {
   sjres: 'senate-joint-resolution',
   hconres: 'house-concurrent-resolution',
   sconres: 'senate-concurrent-resolution',
+};
+
+const BILL_NUMBER_PREFIX_BY_TYPE = {
+  hr: 'H.R.',
+  s: 'S.',
+  hres: 'H.Res.',
+  sres: 'S.Res.',
+  hjres: 'H.J.Res.',
+  sjres: 'S.J.Res.',
+  hconres: 'H.Con.Res.',
+  sconres: 'S.Con.Res.',
 };
 
 function parseBillSelectorArg(args) {
@@ -164,7 +176,7 @@ function slugify(congress, type, number) {
 }
 
 function formatBillNumber(type, number) {
-  const prefix = type === 'hr' ? 'H.R.' : type === 's' ? 'S.' : type.toUpperCase() + '.';
+  const prefix = BILL_NUMBER_PREFIX_BY_TYPE[type] || `${type.toUpperCase()}.`;
   return `${prefix} ${number}`;
 }
 
@@ -181,6 +193,8 @@ function stripHtml(html) {
   if (!html) return '';
   return html.replace(/<[^>]+>/g, '').trim();
 }
+
+// normalizeActionText is imported (shared with content config + tests).
 
 // ============================================================================
 // FETCH ALL BILL DATA
@@ -220,7 +234,7 @@ async function fetchBillData(congress, type, number) {
   console.log(`    Fetching actions...`);
   try {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/actions`, { limit: 500 });
-    data.actions = res?.actions || [];
+    data.actions = dedupeCongressApiActions(res?.actions || []);
     await sleep(DELAY_MS);
   } catch (e) {
     console.log(`    (actions not available)`);
@@ -592,8 +606,8 @@ function generateMdx(data, meta, aiSummary, aiMilestones) {
   // Status
   const latestAction = b.latestAction;
   const status = latestAction?.text || 'Introduced';
-  const dateIntroduced = b.introducedDate || '2025-01-01';
-  const dateUpdated = latestAction?.actionDate || null;
+  const dateIntroduced = toDateOnlyString(b.introducedDate) || '2025-01-01';
+  const dateUpdated = latestAction?.actionDate ? toDateOnlyString(latestAction.actionDate) : null;
 
   // Congress.gov URL
   const congressTypePath = congressGovPathSegment(meta.type);
@@ -617,18 +631,11 @@ function generateMdx(data, meta, aiSummary, aiMilestones) {
   const theGist = aiSummary?.theGist || '';
   const whyItMatters = aiSummary?.whyItMatters || '';
 
-  // Actions - deduplicate by date+text, then format for YAML array
-  const seenActions = new Set();
-  const uniqueActions = data.actions.filter(a => {
-    const key = `${a.actionDate}|${a.text}`;
-    if (seenActions.has(key)) return false;
-    seenActions.add(key);
-    return true;
-  });
+  const uniqueActions = Array.isArray(data.actions) ? data.actions : [];
 
   const actionsYaml = uniqueActions.slice(0, 50).map(a => {
-    const actionText = (a.text || '').replace(/"/g, '\\"').replace(/\n/g, ' ');
-    return `  - date: ${a.actionDate || '2000-01-01'}
+    const actionText = normalizeActionText(a.text).replace(/"/g, '\\"');
+    return `  - date: ${toDateOnlyString(a.actionDate) || '2000-01-01'}
     text: "${actionText}"
     chamber: ${a.actionCode?.startsWith('H') ? 'house' : a.actionCode?.startsWith('S') ? 'senate' : 'both'}`;
   }).join('\n');
@@ -673,8 +680,9 @@ function generateMdx(data, meta, aiSummary, aiMilestones) {
 
   // Text versions
   const textVersionsYaml = data.textVersions.map(t => {
+    const date = toDateOnlyString(t.date) || '2000-01-01';
     return `  - type: "${t.type || 'Unknown'}"
-    date: ${t.date || '2000-01-01'}`;
+    date: ${date}`;
   }).join('\n');
 
   // Policy area / subjects
@@ -687,7 +695,7 @@ function generateMdx(data, meta, aiSummary, aiMilestones) {
     ? aiMilestones.map(m => {
         const milestoneText = (m.text || '').replace(/"/g, '\\"').replace(/\n/g, ' ');
         return `  - type: "${m.type}"
-    date: ${m.date}T12:00:00
+    date: ${m.date}
     text: "${milestoneText}"
     icon: "${m.icon}"`;
       }).join('\n')
@@ -714,6 +722,7 @@ status: "${status.replace(/"/g, '\\"')}"
 dateIntroduced: ${dateIntroduced}
 ${dateUpdated ? `dateUpdated: ${dateUpdated}` : ''}
 
+actionCount: ${uniqueActions.length}
 ${actionsYaml ? `actions:\n${actionsYaml}` : ''}
 
 ${keyMilestonesYaml ? `keyMilestones:\n${keyMilestonesYaml}` : ''}
@@ -752,7 +761,7 @@ featured: ${meta.featured || false}
 // ============================================================================
 
 async function main() {
-  console.log(`\n📜 AbsurdityIndex Bill Fetcher`);
+  console.log(`\nAbsurdityIndex Bill Fetcher`);
   console.log(`   Fetching ${BILL_LIST.length} bill(s) from Congress.gov API\n`);
 
   if (USE_AI) {
@@ -775,17 +784,17 @@ async function main() {
 
     const exists = fs.existsSync(filepath);
     if (exists && !UPDATE_MODE) {
-      console.log(`⏭️  SKIP  ${slug} (exists, use --update to overwrite)`);
+      console.log(`SKIP  ${slug} (exists, use --update to overwrite)`);
       skipped++;
       continue;
     }
 
     try {
-      console.log(`📥 FETCH ${slug}`);
+      console.log(`FETCH ${slug}`);
       const data = await fetchBillData(meta.congress, meta.type, meta.number);
 
       // Stats
-      console.log(`    📊 Actions: ${data.actions.length}, Amendments: ${data.amendments.length}, Cosponsors: ${data.cosponsors.length}`);
+      console.log(`    Stats: Actions: ${data.actions.length}, Amendments: ${data.amendments.length}, Cosponsors: ${data.cosponsors.length}`);
 
       // AI summarization and milestone extraction
       let aiResult = null;
@@ -794,13 +803,13 @@ async function main() {
         const crsSummary = data.summaries.length > 0
           ? stripHtml(data.summaries[data.summaries.length - 1].text)
           : '';
-        console.log(`    🤖 AI summarizing...`);
+        console.log(`    AI summarizing...`);
         aiResult = await aiSummarize(crsSummary, data.bill.title, formatBillNumber(meta.type, meta.number), data.actions, meta.absurdityIndex, data.committees, data.textVersions);
 
-        console.log(`    🎯 AI extracting milestones...`);
+        console.log(`    AI extracting milestones...`);
         aiMilestones = await aiExtractMilestones(data.actions, formatBillNumber(meta.type, meta.number), meta.type);
         if (aiMilestones) {
-          console.log(`    📍 Extracted ${aiMilestones.length} milestones`);
+          console.log(`    Extracted ${aiMilestones.length} milestones`);
         }
       }
 
@@ -809,21 +818,21 @@ async function main() {
       fs.writeFileSync(filepath, mdx, 'utf-8');
 
       if (exists) {
-        console.log(`✅ UPDATE ${slug}`);
+        console.log(`UPDATE ${slug}`);
         updated++;
       } else {
-        console.log(`✅ CREATE ${slug}`);
+        console.log(`CREATE ${slug}`);
         created++;
       }
     } catch (err) {
-      console.error(`❌ ERROR ${slug}: ${err.message}`);
+      console.error(`ERROR ${slug}: ${err.message}`);
       errors++;
     }
 
     console.log();
   }
 
-  console.log(`\n📊 Summary: Created ${created}, Updated ${updated}, Skipped ${skipped}, Errors ${errors}`);
+  console.log(`\nSummary: Created ${created}, Updated ${updated}, Skipped ${skipped}, Errors ${errors}`);
 }
 
 main();

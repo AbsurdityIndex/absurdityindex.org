@@ -217,6 +217,9 @@ Context: ${context.additionalContext ?? 'N/A'}`,
     const type = textBlock?.text?.trim() as PromptType;
 
     const validTypes: PromptType[] = ['bill-roast', 'trend-jack', 'quote-dunk', 'cspan-after-dark', 'pork-barrel-report', 'floor-speech'];
-    return validTypes.includes(type) ? type : 'bill-roast';
+    if (validTypes.includes(type)) return type;
+
+    // Default to trend-jack if no bill, since bill-roast requires one
+    return context.bill ? 'bill-roast' : 'trend-jack';
   }
 }

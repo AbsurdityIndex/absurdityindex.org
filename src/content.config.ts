@@ -1,5 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { dedupeActionEntries } from './utils/billTransforms.js';
 
 // Shared schemas for bill-related data
 const actionSchema = z.object({
@@ -258,89 +259,6 @@ const baseBillSchema = z.object({
   porkPerCapita: z.number().default(0),
 });
 
-// Additional fields for "real" bills (from Congress.gov)
-const realBillExtensions = z.object({
-  // Sponsor details (real bills have separate fields)
-  sponsorParty: z.string(),
-  sponsorState: z.string(),
-  sponsorUrl: z.string().url().optional(),
-  cosponsorCount: z.number().optional(),
-
-  // Committee details
-  committees: z.array(committeeSchema).default([]),
-
-  // Timeline
-  dateUpdated: z.coerce.date().optional(),
-  actions: z.array(actionSchema).default([]),
-
-  // Key milestones
-  keyMilestones: z.array(z.object({
-    type: z.string(),
-    date: z.coerce.date(),
-    text: z.string(),
-    icon: z.string(),
-  })).optional(),
-
-  // Titles
-  officialTitle: z.string(),
-  shortTitles: z.array(titleSchema).default([]),
-  popularTitle: z.string().optional(),
-
-  // Summaries
-  plainLanguageSummary: z.string().optional(),
-  crsSummary: z.string().optional(),
-
-  // Editorial content
-  theGist: z.string().optional(),
-  whyItMatters: z.string().optional(),
-
-  // Amendments
-  amendments: z.array(amendmentSchema).default([]),
-  amendmentCount: z.number().default(0),
-
-  // Related legislation
-  relatedBills: z.array(relatedBillSchema).default([]),
-
-  // Text versions
-  textVersions: z.array(textVersionSchema).default([]),
-  latestTextUrl: z.string().url().optional(),
-
-  // Real bill metadata
-  absurdityIndex: z.number().min(1).max(10),
-  congressDotGovUrl: z.string().url(),
-  congressNumber: z.number(),
-  excerpt: z.string().optional(),
-  pairedBillId: z.string().optional(),
-
-  // Omnibus bill fields
-  isOmnibus: z.boolean().default(false),
-  omnibusData: z.object({
-    totalSpending: z.number(),
-    pageCount: z.number(),
-    divisions: z.array(z.object({
-      title: z.string(),
-      shortTitle: z.string().optional(),
-      spending: z.number(),
-      description: z.string().optional(),
-    })),
-    riders: z.array(z.object({
-      title: z.string(),
-      description: z.string(),
-      category: z.enum(['policy', 'spending', 'tax', 'controversial', 'sneaky']).optional(),
-    })).optional(),
-    timeline: z.array(z.object({
-      date: z.coerce.date(),
-      event: z.string(),
-    })).optional(),
-  }).optional(),
-});
-
-// Additional fields for "absurd" bills (real historical laws)
-const absurdBillExtensions = z.object({
-  realSource: z.string().url().optional(),
-  realJurisdiction: z.string().optional(),
-});
-
 // Sensible bills use only the base schema (no extensions required)
 
 const bills = defineCollection({
@@ -353,9 +271,12 @@ const bills = defineCollection({
       sponsorState: z.string().optional(),
       sponsorUrl: z.string().url().optional(),
       cosponsorCount: z.number().optional(),
-      committees: z.array(committeeSchema).optional(),
-      dateUpdated: z.coerce.date().optional(),
-      actions: z.array(actionSchema).optional(),
+	      committees: z.array(committeeSchema).optional(),
+	      dateUpdated: z.coerce.date().optional(),
+	      actionCount: z.number().optional(),
+	      actions: z.array(actionSchema).optional().transform((actions) =>
+	        actions ? dedupeActionEntries(actions) : actions
+	      ),
       keyMilestones: z.array(z.object({
         type: z.string(),
         date: z.coerce.date(),

@@ -102,7 +102,8 @@ const milestones = keyMilestones && keyMilestones.length > 0
   : getMilestonesFromActions(actions);
 
 const formatDate = (date: Date) => {
-  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  // Dates in bill content are date-only; format in UTC to avoid off-by-one issues across timezones.
+  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 };
 ---
 

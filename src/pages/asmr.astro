@@ -2,13 +2,14 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Divider from '../components/ui/Divider.astro';
+import Icon from '../components/ui/Icon.astro';
 
 // Fake playlist tracks
 const playlist = [
   { title: "Appropriations Bill Section 4, Subsection B (Whispered)", duration: "3:42:00", durationSeconds: 13320 },
   { title: "The Entire Tax Code, But Relaxing", duration: "892:00:00", durationSeconds: 3211200 },
   { title: "Committee Roll Call - 10 Hour Loop", duration: "10:00:00", durationSeconds: 36000 },
-  { title: "Filibuster White Noise", duration: "\u221e", durationSeconds: Infinity },
+  { title: "Filibuster White Noise", duration: "INF", durationSeconds: Infinity },
   { title: "Congressional Record - ASMR Edition", duration: "24:00:00", durationSeconds: 86400 },
   { title: "Gentle Gavel Sounds for Sleep", duration: "1:00:00", durationSeconds: 3600 },
   { title: "Soft-Spoken Amendments", duration: "5:30:00", durationSeconds: 19800 },
@@ -244,7 +245,7 @@ const comingSoon = [
       <!-- Reviews Section -->
       <section class="mt-8">
         <h2 class="font-serif text-2xl text-gold-400 font-bold mb-6 flex items-center gap-3">
-          <span class="text-2xl">&#9733;</span>
+          <Icon name="star" size={20} class="text-gold-500" />
           Listener Reviews
         </h2>
 

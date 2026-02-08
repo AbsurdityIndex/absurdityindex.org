@@ -276,43 +276,102 @@ For purposes of this Act:
       return union > 0 ? intersection / union : 0;
     }
 
-    // Escape HTML
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+	    // Render diff output
+	    function renderDiff(diffResults) {
+	      const output = document.getElementById('diff-output');
+	      let lineNum = 1;
 
-    // Render diff output
-    function renderDiff(diffResults) {
-      const output = document.getElementById('diff-output');
-      let html = '';
-      let lineNum = 1;
+	      output.replaceChildren();
+	      const frag = document.createDocumentFragment();
 
-      diffResults.results.forEach(item => {
-        const lineNumStr = String(lineNum).padStart(3, ' ');
+	      diffResults.results.forEach(item => {
+	        const lineNumStr = String(lineNum).padStart(3, ' ');
+	        const row = document.createElement('div');
+	        row.className = 'flex';
 
-        switch (item.type) {
-          case 'unchanged':
-            html += `<div class="flex"><span class="text-navy-400 select-none mr-4">${lineNumStr}</span><span class="text-navy-900">${escapeHtml(item.content) || '&nbsp;'}</span></div>`;
-            lineNum++;
-            break;
-          case 'added':
-            html += `<div class="flex bg-green-200 -mx-4 px-4"><span class="text-green-800 select-none mr-4">${lineNumStr}+</span><span class="text-green-800 font-medium">${escapeHtml(item.content) || '&nbsp;'}</span></div>`;
-            lineNum++;
-            break;
-          case 'removed':
-            html += `<div class="flex bg-red-200 -mx-4 px-4"><span class="text-red-800 select-none mr-4">   -</span><span class="text-red-800 line-through">${escapeHtml(item.content) || '&nbsp;'}</span></div>`;
-            break;
-          case 'changed':
-            html += `<div class="flex bg-yellow-200 -mx-4 px-4"><span class="text-yellow-800 select-none mr-4">${lineNumStr}~</span><span class="text-yellow-800"><del class="bg-red-300/50">${escapeHtml(item.oldContent)}</del> <ins class="bg-green-300/50 no-underline">${escapeHtml(item.newContent)}</ins></span></div>`;
-            lineNum++;
-            break;
-        }
-      });
+	        switch (item.type) {
+	          case 'unchanged': {
+	            const ln = document.createElement('span');
+	            ln.className = 'text-navy-400 select-none mr-4';
+	            ln.textContent = lineNumStr;
 
-      output.innerHTML = html || '<p class="text-navy-400 italic">No differences found. The bills are identical.</p>';
-    }
+	            const text = document.createElement('span');
+	            text.className = 'text-navy-900';
+	            text.textContent = item.content || ' ';
+
+	            row.append(ln, text);
+	            frag.appendChild(row);
+	            lineNum++;
+	            break;
+	          }
+	          case 'added': {
+	            row.className = 'flex bg-green-200 -mx-4 px-4';
+
+	            const ln = document.createElement('span');
+	            ln.className = 'text-green-800 select-none mr-4';
+	            ln.textContent = `${lineNumStr}+`;
+
+	            const text = document.createElement('span');
+	            text.className = 'text-green-800 font-medium';
+	            text.textContent = item.content || ' ';
+
+	            row.append(ln, text);
+	            frag.appendChild(row);
+	            lineNum++;
+	            break;
+	          }
+	          case 'removed': {
+	            row.className = 'flex bg-red-200 -mx-4 px-4';
+
+	            const ln = document.createElement('span');
+	            ln.className = 'text-red-800 select-none mr-4';
+	            ln.textContent = '   -';
+
+	            const text = document.createElement('span');
+	            text.className = 'text-red-800 line-through';
+	            text.textContent = item.content || ' ';
+
+	            row.append(ln, text);
+	            frag.appendChild(row);
+	            break;
+	          }
+	          case 'changed': {
+	            row.className = 'flex bg-yellow-200 -mx-4 px-4';
+
+	            const ln = document.createElement('span');
+	            ln.className = 'text-yellow-800 select-none mr-4';
+	            ln.textContent = `${lineNumStr}~`;
+
+	            const text = document.createElement('span');
+	            text.className = 'text-yellow-800';
+
+	            const del = document.createElement('del');
+	            del.className = 'bg-red-300/50';
+	            del.textContent = item.oldContent || '';
+
+	            const ins = document.createElement('ins');
+	            ins.className = 'bg-green-300/50 no-underline';
+	            ins.textContent = item.newContent || '';
+
+	            text.append(del, document.createTextNode(' '), ins);
+	            row.append(ln, text);
+	            frag.appendChild(row);
+	            lineNum++;
+	            break;
+	          }
+	        }
+	      });
+
+	      if (frag.childNodes.length === 0) {
+	        const empty = document.createElement('p');
+	        empty.className = 'text-navy-400 italic';
+	        empty.textContent = 'No differences found. The bills are identical.';
+	        output.appendChild(empty);
+	        return;
+	      }
+
+	      output.appendChild(frag);
+	    }
 
     // Event handlers
     document.getElementById('compare-btn').addEventListener('click', () => {

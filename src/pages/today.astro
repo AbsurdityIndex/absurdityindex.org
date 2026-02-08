@@ -140,22 +140,22 @@ const recentBills = allBills
     return 'text-navy-900';
   }
 
-  function listItems(target, values) {
-    target.innerHTML = '';
-    values.forEach((value) => {
-      const li = document.createElement('li');
-      li.textContent = value;
-      target.appendChild(li);
-    });
-  }
+	  function listItems(target, values) {
+	    target.replaceChildren();
+	    values.forEach((value) => {
+	      const li = document.createElement('li');
+	      li.textContent = value;
+	      target.appendChild(li);
+	    });
+	  }
 
-  function renderMeetings(meetings) {
-    committeesEl.innerHTML = '';
+	  function renderMeetings(meetings) {
+	    committeesEl.replaceChildren();
 
-    if (!Array.isArray(meetings) || meetings.length === 0) {
-      const empty = document.createElement('li');
-      empty.className = 'rounded-lg border border-gold-200 bg-cream-100 p-3 font-sans text-sm text-navy-700';
-      empty.textContent = 'No House or Senate committee meetings are listed for today.';
+	    if (!Array.isArray(meetings) || meetings.length === 0) {
+	      const empty = document.createElement('li');
+	      empty.className = 'rounded-lg border border-gold-200 bg-cream-100 p-3 font-sans text-sm text-navy-700';
+	      empty.textContent = 'No House or Senate committee meetings are listed for today.';
       committeesEl.appendChild(empty);
       return;
     }
@@ -198,15 +198,15 @@ const recentBills = allBills
       item.appendChild(detail);
       committeesEl.appendChild(item);
     });
-  }
+	  }
 
-  function renderWeekAgenda(agenda) {
-    weekSectionsEl.innerHTML = '';
+	  function renderWeekAgenda(agenda) {
+	    weekSectionsEl.replaceChildren();
 
-    if (!agenda || !Array.isArray(agenda.sections) || agenda.sections.length === 0) {
-      weekOfEl.textContent = 'No House floor agenda sections were parsed.';
-      return;
-    }
+	    if (!agenda || !Array.isArray(agenda.sections) || agenda.sections.length === 0) {
+	      weekOfEl.textContent = 'No House floor agenda sections were parsed.';
+	      return;
+	    }
 
     weekOfEl.textContent = agenda.weekOf
       ? `Week of ${agenda.weekOf}`

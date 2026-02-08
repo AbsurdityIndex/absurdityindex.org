@@ -15,6 +15,7 @@ export interface DaemonCycle {
   started_at: string;
   completed_at: string | null;
   duration_ms: number | null;
+  trace_json: string | null;
 }
 
 export function createDaemonCycleModel(db: Database.Database) {
@@ -93,6 +94,13 @@ export function createDaemonCycleModel(db: Database.Database) {
         phase: stats.phase ?? (stats.error ? 'error' : 'complete'),
         duration_ms: durationMs,
       });
+    },
+
+    updateTrace(id: number, trace: Record<string, unknown>): void {
+      const row = db.prepare('SELECT trace_json FROM daemon_cycles WHERE id = ?').get(id) as { trace_json: string | null } | undefined;
+      const existing = row?.trace_json ? JSON.parse(row.trace_json) : {};
+      const merged = { ...existing, ...trace };
+      db.prepare('UPDATE daemon_cycles SET trace_json = ? WHERE id = ?').run(JSON.stringify(merged), id);
     },
 
     getRecent(limit = 50): DaemonCycle[] {

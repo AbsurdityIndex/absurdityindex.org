@@ -85,14 +85,14 @@
     return 'text-navy-900';
   }
 
-  function appendListItems(target, items) {
-    target.innerHTML = '';
-    items.forEach((item) => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      target.appendChild(li);
-    });
-  }
+	  function appendListItems(target, items) {
+	    target.replaceChildren();
+	    items.forEach((item) => {
+	      const li = document.createElement('li');
+	      li.textContent = item;
+	      target.appendChild(li);
+	    });
+	  }
 
   async function requestTodayData() {
     const endpoints = ['/api/today.json', '/api/today-fallback.json'];

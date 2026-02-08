@@ -2,6 +2,7 @@ import { TwitterApi, type TweetV2, type TweetV2SingleResult } from 'twitter-api-
 import { getLogger } from '../../utils/logger.js';
 import { readLimiter } from './rate-limiter.js';
 import type { Config } from '../../config.js';
+import { buildAuthor, type TweetAuthor } from './tweet-context.js';
 
 export interface TrendingTopic {
   name: string;
@@ -49,34 +50,46 @@ export class XReadClient {
   }
 
   /**
-   * Search tweets with expanded author info and conversation context.
-   * Returns tweets plus a lookup map of author_id → username.
+   * Search tweets with expanded author info, referenced tweets, and conversation context.
+   * Returns tweets plus lookup maps for authors (id → TweetAuthor) and referenced tweets (id → TweetV2).
    */
-  async searchTweetsExpanded(query: string, maxResults = 10): Promise<{
+  async searchTweetsExpanded(
+    query: string,
+    maxResults = 10,
+    opts: { sinceId?: string } = {},
+  ): Promise<{
     tweets: TweetV2[];
-    authors: Map<string, string>;
+    authors: Map<string, TweetAuthor>;
+    refTweets: Map<string, TweetV2>;
   }> {
     await readLimiter.acquire();
     try {
       const result = await this.client.v2.search(query, {
         max_results: maxResults,
-        'tweet.fields': ['public_metrics', 'created_at', 'author_id', 'conversation_id'],
-        expansions: ['author_id'],
-        'user.fields': ['username'],
+        since_id: opts.sinceId,
+        'tweet.fields': ['public_metrics', 'created_at', 'author_id', 'conversation_id', 'referenced_tweets'],
+        expansions: ['author_id', 'referenced_tweets.id', 'referenced_tweets.id.author_id'],
+        'user.fields': ['username', 'name', 'public_metrics', 'verified', 'verified_type'],
       });
 
-      const authors = new Map<string, string>();
+      const authors = new Map<string, TweetAuthor>();
       for (const user of result.includes?.users ?? []) {
-        authors.set(user.id, user.username);
+        authors.set(user.id, buildAuthor(user));
+      }
+
+      const refTweets = new Map<string, TweetV2>();
+      for (const tweet of result.includes?.tweets ?? []) {
+        refTweets.set(tweet.id, tweet);
       }
 
       return {
         tweets: result.data?.data ?? [],
         authors,
+        refTweets,
       };
     } catch (err) {
       this.log.warn({ err }, 'Failed to search tweets (expanded)');
-      return { tweets: [], authors: new Map() };
+      return { tweets: [], authors: new Map(), refTweets: new Map() };
     }
   }
 

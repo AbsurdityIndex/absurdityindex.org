@@ -175,18 +175,31 @@ import Divider from '../components/ui/Divider.astro';
       fuel: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v17"/><path d="M3 22h10"/><path d="M13 6h1a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V5"/><path d="M18 2v3"/><circle cx="18" cy="16" r="3"/></svg>`,
       home: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
     };
-    const exampleBills = [
-      { name: 'Infrastructure Investment and Jobs Act (2021)', cost: 1200000000000, icon: 'road' },
-      { name: 'CHIPS and Science Act (2022)', cost: 280000000000, icon: 'cpu' },
-      { name: 'American Rescue Plan (2021)', cost: 1900000000000, icon: 'banknote' },
-      { name: 'Build Back Better (proposed)', cost: 3500000000000, icon: 'hardhat' }
-    ];
+	    const exampleBills = [
+	      { name: 'Infrastructure Investment and Jobs Act (2021)', cost: 1200000000000, icon: 'road' },
+	      { name: 'CHIPS and Science Act (2022)', cost: 280000000000, icon: 'cpu' },
+	      { name: 'American Rescue Plan (2021)', cost: 1900000000000, icon: 'banknote' },
+	      { name: 'Build Back Better (proposed)', cost: 3500000000000, icon: 'hardhat' }
+	    ];
 
-    // Populate state dropdown
-    const stateSelect = document.getElementById('state-select');
-    Object.keys(stateData).sort().forEach(state => {
-      const option = document.createElement('option');
-      option.value = state;
+	    const svgParser = new DOMParser();
+	    const iconTemplates = Object.fromEntries(
+	      Object.entries(iconSvgs).map(([name, svg]) => [
+	        name,
+	        svgParser.parseFromString(svg, 'image/svg+xml').documentElement,
+	      ])
+	    );
+
+	    function cloneIcon(name) {
+	      const template = iconTemplates[name];
+	      return template ? document.importNode(template, true) : null;
+	    }
+
+	    // Populate state dropdown
+	    const stateSelect = document.getElementById('state-select');
+	    Object.keys(stateData).sort().forEach(state => {
+	      const option = document.createElement('option');
+	      option.value = state;
       option.textContent = state;
       stateSelect.appendChild(option);
     });
@@ -203,14 +216,103 @@ import Divider from '../components/ui/Divider.astro';
     }
 
     // Format large numbers with commas
-    function formatNumber(num) {
-      return num.toLocaleString();
-    }
+	    function formatNumber(num) {
+	      return num.toLocaleString();
+	    }
 
-    // Calculate and display results
-    function calculateShare() {
-      const state = stateSelect.value;
-      if (!state) return;
+	    function renderComparisons(container, shareTrillion) {
+	      container.replaceChildren();
+
+	      const rows = [
+	        {
+	          icon: 'coffee',
+	          prefix: 'cups of overpriced coffee',
+	          value: Math.round(shareTrillion / 5.5).toLocaleString(),
+	        },
+	        {
+	          icon: 'tv',
+	          prefix: 'months of Netflix',
+	          value: Math.round(shareTrillion / 15.99).toLocaleString(),
+	        },
+	        {
+	          icon: 'salad',
+	          prefix: "avocado toasts (the reason millennials can't buy houses, apparently)",
+	          value: Math.round(shareTrillion / 12).toLocaleString(),
+	        },
+	        {
+	          icon: 'fuel',
+	          prefix: 'gallons of gas',
+	          value: Math.round(shareTrillion / 3.5).toLocaleString(),
+	        },
+	      ];
+
+	      rows.forEach((row) => {
+	        const p = document.createElement('p');
+	        p.className = 'flex items-center gap-2';
+
+	        const icon = cloneIcon(row.icon);
+	        if (icon) p.appendChild(icon);
+
+	        const strong = document.createElement('strong');
+	        strong.textContent = row.value;
+
+	        p.append(strong, document.createTextNode(` ${row.prefix}`));
+	        container.appendChild(p);
+	      });
+
+	      const homeP = document.createElement('p');
+	      homeP.className = 'flex items-center gap-2';
+	      const homeIcon = cloneIcon('home');
+	      if (homeIcon) homeP.appendChild(homeIcon);
+	      homeP.append(
+	        document.createTextNode('About '),
+	        Object.assign(document.createElement('strong'), {
+	          textContent: `${(shareTrillion / 350000 * 100).toFixed(3)}%`,
+	        }),
+	        document.createTextNode(' of a median U.S. home'),
+	      );
+	      container.appendChild(homeP);
+	    }
+
+	    function renderBillExamples(container) {
+	      container.replaceChildren();
+
+	      const frag = document.createDocumentFragment();
+
+	      exampleBills.forEach((bill) => {
+	        const perCapita = bill.cost / usPopulation;
+
+	        const card = document.createElement('div');
+	        card.className = 'bg-parchment rounded-lg p-6 shadow';
+
+	        const iconWrap = document.createElement('div');
+	        iconWrap.className = 'text-navy-700 mb-2';
+	        const icon = cloneIcon(bill.icon);
+	        if (icon) iconWrap.appendChild(icon);
+
+	        const h3 = document.createElement('h3');
+	        h3.className = 'font-serif font-bold text-navy-900 mb-2';
+	        h3.textContent = bill.name;
+
+	        const total = document.createElement('p');
+	        total.className = 'text-navy-600 text-sm mb-3';
+	        total.textContent = `Total Cost: ${formatCurrency(bill.cost)}`;
+
+	        const share = document.createElement('p');
+	        share.className = 'text-lg font-bold text-gold-600';
+	        share.textContent = `Your Share: ${formatCurrency(perCapita)}`;
+
+	        card.append(iconWrap, h3, total, share);
+	        frag.appendChild(card);
+	      });
+
+	      container.appendChild(frag);
+	    }
+
+	    // Calculate and display results
+	    function calculateShare() {
+	      const state = stateSelect.value;
+	      if (!state) return;
 
       const data = stateData[state];
       const statePop = data.pop;
@@ -225,38 +327,16 @@ import Divider from '../components/ui/Divider.astro';
       document.getElementById('share-billion').textContent = formatCurrency(shareBillion);
       document.getElementById('share-trillion').textContent = formatCurrency(shareTrillion);
 
-      // Fun comparisons
-      const coffeePrice = 5.50;
-      const netflixPrice = 15.99;
-      const avocadoToastPrice = 12;
-      const gasPrice = 3.50;
+	      const comparisons = document.getElementById('comparisons');
+	      if (comparisons) renderComparisons(comparisons, shareTrillion);
 
-      const comparisons = document.getElementById('comparisons');
-      comparisons.innerHTML = `
-        <p class="flex items-center gap-2">${iconSvgs.coffee} <strong>${Math.round(shareTrillion / coffeePrice).toLocaleString()}</strong> cups of overpriced coffee</p>
-        <p class="flex items-center gap-2">${iconSvgs.tv} <strong>${Math.round(shareTrillion / netflixPrice).toLocaleString()}</strong> months of Netflix</p>
-        <p class="flex items-center gap-2">${iconSvgs.salad} <strong>${Math.round(shareTrillion / avocadoToastPrice).toLocaleString()}</strong> avocado toasts (the reason millennials can't buy houses, apparently)</p>
-        <p class="flex items-center gap-2">${iconSvgs.fuel} <strong>${Math.round(shareTrillion / gasPrice).toLocaleString()}</strong> gallons of gas</p>
-        <p class="flex items-center gap-2">${iconSvgs.home} About <strong>${(shareTrillion / 350000 * 100).toFixed(3)}%</strong> of a median U.S. home</p>
-      `;
+	      // Show results
+	      document.getElementById('results').classList.remove('hidden');
 
-      // Show results
-      document.getElementById('results').classList.remove('hidden');
-
-      // Update bill examples with per-capita cost
-      const examplesContainer = document.getElementById('bill-examples');
-      examplesContainer.innerHTML = exampleBills.map(bill => {
-        const perCapita = bill.cost / usPopulation;
-        return `
-          <div class="bg-parchment rounded-lg p-6 shadow">
-            <div class="text-navy-700 mb-2">${iconSvgs[bill.icon]}</div>
-            <h3 class="font-serif font-bold text-navy-900 mb-2">${bill.name}</h3>
-            <p class="text-navy-600 text-sm mb-3">Total Cost: ${formatCurrency(bill.cost)}</p>
-            <p class="text-lg font-bold text-gold-600">Your Share: ${formatCurrency(perCapita)}</p>
-          </div>
-        `;
-      }).join('');
-    }
+	      // Update bill examples with per-capita cost
+	      const examplesContainer = document.getElementById('bill-examples');
+	      if (examplesContainer) renderBillExamples(examplesContainer);
+	    }
 
     // Form submission
     document.getElementById('cost-form').addEventListener('submit', (e) => {
@@ -271,18 +351,8 @@ import Divider from '../components/ui/Divider.astro';
       }
     });
 
-    // Initialize bill examples on load
-    const examplesContainer = document.getElementById('bill-examples');
-    examplesContainer.innerHTML = exampleBills.map(bill => {
-      const perCapita = bill.cost / usPopulation;
-      return `
-        <div class="bg-parchment rounded-lg p-6 shadow">
-          <div class="text-navy-700 mb-2">${iconSvgs[bill.icon]}</div>
-          <h3 class="font-serif font-bold text-navy-900 mb-2">${bill.name}</h3>
-          <p class="text-navy-600 text-sm mb-3">Total Cost: ${formatCurrency(bill.cost)}</p>
-          <p class="text-lg font-bold text-gold-600">Your Share: ${formatCurrency(perCapita)}</p>
-        </div>
-      `;
-    }).join('');
-  </script>
+	    // Initialize bill examples on load
+	    const examplesContainer = document.getElementById('bill-examples');
+	    if (examplesContainer) renderBillExamples(examplesContainer);
+	  </script>
 </BaseLayout>

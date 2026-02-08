@@ -9,22 +9,26 @@ const log = getLogger();
  * Queries are rotated across cycles to stay within rate limits.
  */
 const SCAN_QUERIES = [
-  // Official floor accounts
-  'from:HouseFloor OR from:SenateFloor',
-  // Bill passage / vote language
-  '"passed the House" OR "passed the Senate" OR "floor vote"',
-  // Legislative action
-  '"introduced a bill" OR "cosponsored" OR "committee hearing"',
-  // Spending / pork keywords
-  '"taxpayer dollars" OR "government spending" OR "earmark" OR "pork barrel"',
-  // Congressional theater
-  '"bipartisan" OR "across the aisle" OR "the American people"',
-  // Committee and procedural
-  '"markup session" OR "filibuster" OR "cloture vote" OR "unanimous consent"',
-  // Budget / appropriations
-  '"appropriations bill" OR "continuing resolution" OR "omnibus"',
-  // Congressional leadership
+  // Capitol Hill journalists — high-quality legislative coverage
+  'from:ChadPergram OR from:mkraju OR from:JakeSherman OR from:PunchbowlNews',
+  // Public reaction to Congress — natural language, high engagement
+  '"Congress just" OR "Congress voted" OR "Congress passed" OR "Congress approved"',
+  // Government spending / waste — the absurdity sweet spot
+  '"government waste" OR "tax dollars" OR "government spending" OR "your tax money"',
+  // Bill reactions — when real people talk about legislation
+  '"this bill" OR "new bill" OR "the bill would" OR "signed into law"',
+  // Congressional accountability — core Absurdity Index theme
+  '"congressional pay" OR "congressional recess" OR "insider trading" OR "term limits"',
+  // Budget drama and shutdowns
+  '"government shutdown" OR "debt ceiling" OR "continuing resolution" OR "omnibus bill"',
+  // Public frustration — where absurdity commentary resonates
+  '"why does Congress" OR "Congress should" OR "do nothing Congress"',
+  // Floor votes and official actions
+  '"floor vote" OR "passed the House" OR "passed the Senate" OR "vote count"',
+  // Congressional leadership accounts
   'from:SpeakerJohnson OR from:SenSchumer OR from:LeaderMcConnell',
+  // Committee / oversight — where legislation actually happens
+  '"committee hearing" OR "subpoena" OR "oversight hearing" OR "confirmation hearing"',
 ];
 
 /**
@@ -60,27 +64,54 @@ export function buildScanQueries(cycleIndex: number): string[] {
   return selected;
 }
 
+export interface ScanTrace {
+  queries: Array<{ query: string; resultCount: number; error?: string }>;
+  rawTotal: number;
+  dedupRemoved: number;
+  retweetsFiltered: number;
+  finalCount: number;
+}
+
+export interface ScanResult {
+  tweets: ScannedTweet[];
+  trace: ScanTrace;
+}
+
 /**
  * Execute a scan cycle: run queries, dedupe, normalize results.
+ * Returns tweets alongside a structured trace for evidence rendering.
  */
 export async function scanForTweets(
   xClient: XReadClient,
   cycleIndex: number,
-): Promise<ScannedTweet[]> {
+): Promise<ScanResult> {
   const queries = buildScanQueries(cycleIndex);
   const seen = new Set<string>();
   const results: ScannedTweet[] = [];
+  const queryTraces: ScanTrace['queries'] = [];
+  let rawTotal = 0;
+  let dedupRemoved = 0;
+  let retweetsFiltered = 0;
 
   log.info({ queries: queries.length, cycleIndex }, 'Running scan queries');
 
   for (const query of queries) {
     try {
       const { tweets, authors } = await xClient.searchTweetsExpanded(query, 10);
+      queryTraces.push({ query, resultCount: tweets.length });
+      rawTotal += tweets.length;
 
       for (const tweet of tweets) {
-        if (seen.has(tweet.id)) continue;
+        if (seen.has(tweet.id)) {
+          dedupRemoved++;
+          continue;
+        }
         // Skip retweets — engaging with them is confusing and off-target
-        if (tweet.text.startsWith('RT @')) continue;
+        if (tweet.text.startsWith('RT @')) {
+          seen.add(tweet.id);
+          retweetsFiltered++;
+          continue;
+        }
         seen.add(tweet.id);
 
         const metrics = tweet.public_metrics;
@@ -88,7 +119,7 @@ export async function scanForTweets(
           id: tweet.id,
           text: tweet.text,
           authorId: tweet.author_id ?? 'unknown',
-          authorUsername: authors.get(tweet.author_id ?? '') ?? 'unknown',
+          authorUsername: authors.get(tweet.author_id ?? '')?.username ?? 'unknown',
           conversationId: (tweet as any).conversation_id ?? null,
           likes: metrics?.like_count ?? 0,
           retweets: metrics?.retweet_count ?? 0,
@@ -99,10 +130,20 @@ export async function scanForTweets(
         });
       }
     } catch (err) {
+      queryTraces.push({ query, resultCount: 0, error: err instanceof Error ? err.message : String(err) });
       log.warn({ err, query }, 'Query failed, continuing with next');
     }
   }
 
   log.info({ total: results.length }, 'Scan complete');
-  return results;
+
+  const trace: ScanTrace = {
+    queries: queryTraces,
+    rawTotal,
+    dedupRemoved,
+    retweetsFiltered,
+    finalCount: results.length,
+  };
+
+  return { tweets: results, trace };
 }

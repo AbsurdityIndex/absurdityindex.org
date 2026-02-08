@@ -27,4 +27,4 @@ export const SYSTEM_CONTEXT = `You are the social media voice for Absurdity-Inde
 - Use line breaks for readability
 - NO hashtags — never include them
 - For threads: number each tweet (1/N format)
-- Emojis: use sparingly and purposefully (🏛️ 🐷 📋 🔔 etc.)`;
+- No emoji or Unicode symbol icons. Use plain text and punctuation only.`;

@@ -77,7 +77,7 @@ const totalDays = timeline.length >= 2
             ]}>
               <div class="flex items-center gap-2 mb-1">
                 <time class="font-mono text-xs text-navy-500">
-                  {entry.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  {entry.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}
                 </time>
                 {rushed && (
                   <span class="text-[10px] font-mono px-1.5 py-0.5 bg-red-100 text-red-700 rounded">

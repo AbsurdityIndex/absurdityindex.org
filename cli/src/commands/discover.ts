@@ -182,7 +182,7 @@ export function registerDiscoverCommand(program: Command): void {
       if (results.length > 0) {
         console.log(chalk.bold('\n  Ingest Complete'));
         for (const r of results) {
-          console.log(`  ${chalk.green('✓')} ${r.slug} (absurdity: ${r.absurdityIndex})`);
+          console.log(`  ${chalk.green('OK')} ${r.slug} (absurdity: ${r.absurdityIndex})`);
         }
       }
       console.log('');

@@ -6,6 +6,7 @@ export interface TweetAuthor {
   username: string;
   name: string;
   verified?: boolean;
+  verifiedType?: string;
   followerCount?: number;
 }
 
@@ -37,12 +38,13 @@ export function extractTweetId(urlOrId: string): string {
   return match?.[1] ?? urlOrId;
 }
 
-function buildAuthor(user: UserV2): TweetAuthor {
+export function buildAuthor(user: UserV2): TweetAuthor {
   return {
     id: user.id,
     username: user.username,
     name: user.name,
     verified: user.verified ?? ('verified_type' in user && user.verified_type !== 'none'),
+    verifiedType: (user as any).verified_type ?? undefined,
     followerCount: user.public_metrics?.followers_count,
   };
 }

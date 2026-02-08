@@ -357,15 +357,22 @@ const beatlesTimes = Math.round(totalMinutes / beatlesSongsMinutes);
           progress += 0.0000001;
           const displayProgress = progress.toFixed(9);
           progressBar.style.width = `${Math.min(progress * 100000000, 0.1)}%`;
-          progressText.textContent = `${displayProgress}% complete`;
+	          progressText.textContent = `${displayProgress}% complete`;
 
-          if (progress > 0.000001) {
-            clearInterval(interval);
-            progressText.innerHTML = `${displayProgress}% complete<br><span class="text-gold-400">You've been at this for a while. Maybe take a break?</span>`;
-          }
-        }, 1000);
-      }
-    });
+	          if (progress > 0.000001) {
+	            clearInterval(interval);
+	            const warning = document.createElement('span');
+	            warning.className = 'text-gold-400';
+	            warning.textContent = "You've been at this for a while. Maybe take a break?";
+	            progressText.replaceChildren(
+	              document.createTextNode(`${displayProgress}% complete`),
+	              document.createElement('br'),
+	              warning,
+	            );
+	          }
+	        }, 1000);
+	      }
+	    });
   </script>
 
   <style>

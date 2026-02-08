@@ -18,6 +18,12 @@ export interface XInboxItem {
   retweets: number;
   replies: number;
   quotes: number;
+  author_name: string | null;
+  author_verified: number;
+  author_verified_type: string | null;
+  author_followers: number;
+  in_reply_to_username: string | null;
+  quoted_tweet_username: string | null;
   status: XInboxStatus;
   starred: number;
   discarded: number;
@@ -39,6 +45,12 @@ export interface UpsertXInboxItemInput {
   retweets?: number;
   replies?: number;
   quotes?: number;
+  author_name?: string;
+  author_verified?: boolean;
+  author_verified_type?: string;
+  author_followers?: number;
+  in_reply_to_username?: string;
+  quoted_tweet_username?: string;
 }
 
 export function createXInboxModel(db: Database.Database) {
@@ -46,11 +58,15 @@ export function createXInboxModel(db: Database.Database) {
     INSERT INTO x_inbox_items (
       kind, tweet_id, author_id, author_username, text,
       conversation_id, created_at, in_reply_to_tweet_id, quoted_tweet_id,
-      likes, retweets, replies, quotes
+      likes, retweets, replies, quotes,
+      author_name, author_verified, author_verified_type, author_followers,
+      in_reply_to_username, quoted_tweet_username
     ) VALUES (
       @kind, @tweet_id, @author_id, @author_username, @text,
       @conversation_id, @created_at, @in_reply_to_tweet_id, @quoted_tweet_id,
-      @likes, @retweets, @replies, @quotes
+      @likes, @retweets, @replies, @quotes,
+      @author_name, @author_verified, @author_verified_type, @author_followers,
+      @in_reply_to_username, @quoted_tweet_username
     )
     ON CONFLICT(tweet_id) DO UPDATE SET
       kind = @kind,
@@ -65,6 +81,12 @@ export function createXInboxModel(db: Database.Database) {
       retweets = @retweets,
       replies = @replies,
       quotes = @quotes,
+      author_name = COALESCE(@author_name, author_name),
+      author_verified = CASE WHEN @author_verified > 0 THEN @author_verified ELSE author_verified END,
+      author_verified_type = COALESCE(@author_verified_type, author_verified_type),
+      author_followers = CASE WHEN @author_followers > 0 THEN @author_followers ELSE author_followers END,
+      in_reply_to_username = COALESCE(@in_reply_to_username, in_reply_to_username),
+      quoted_tweet_username = COALESCE(@quoted_tweet_username, quoted_tweet_username),
       last_seen = datetime('now')
   `);
 
@@ -84,6 +106,12 @@ export function createXInboxModel(db: Database.Database) {
         retweets: input.retweets ?? 0,
         replies: input.replies ?? 0,
         quotes: input.quotes ?? 0,
+        author_name: input.author_name ?? null,
+        author_verified: input.author_verified ? 1 : 0,
+        author_verified_type: input.author_verified_type ?? null,
+        author_followers: input.author_followers ?? 0,
+        in_reply_to_username: input.in_reply_to_username ?? null,
+        quoted_tweet_username: input.quoted_tweet_username ?? null,
       });
       return db.prepare('SELECT * FROM x_inbox_items WHERE tweet_id = ?').get(input.tweet_id) as XInboxItem;
     },

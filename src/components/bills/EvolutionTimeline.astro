@@ -88,7 +88,7 @@ function getStageConfig(stage: string): { label: string; icon: string } {
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit', timeZone: 'UTC' });
 }
 
 function formatPorkDelta(amount: number): string {

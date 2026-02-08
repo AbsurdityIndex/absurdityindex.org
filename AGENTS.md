@@ -187,7 +187,7 @@ Run `npm run validate` to check all bills for required UI component fields:
 ## UI Conventions
 
 ### Icons
-- **Never use Unicode emoji characters** (e.g., 🐷, 🥇, ✨) in the codebase
+- **Never use Unicode emoji characters or Unicode symbol icons** (for example: pig/medal/sparkles emoji, warning triangles, checkmarks, stars) in the codebase
 - Always use Lucide icons via the `Icon.astro` component for consistent styling
 - For client-side JavaScript that renders icons dynamically, use inline SVG strings matching Lucide icon paths
 - Add new icons to `src/components/ui/Icon.astro` when needed

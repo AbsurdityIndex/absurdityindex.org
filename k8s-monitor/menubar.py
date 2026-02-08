@@ -30,7 +30,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-SEVERITY_EMOJI = {"critical": "\U0001f534", "warning": "\U0001f7e1", "info": "\U0001f535"}
+SEVERITY_PREFIX = {"critical": "CRIT", "warning": "WARN", "info": "INFO"}
 DEFAULT_PORT = 9876
 POLL_INTERVAL = 5
 
@@ -132,18 +132,18 @@ class K8sMenuBar(rumps.App):
             # Status summary line
             parts = []
             if c:
-                parts.append(f"\U0001f534 {c} critical")
+                parts.append(f"CRIT {c}")
             if w:
-                parts.append(f"\U0001f7e1 {w} warning")
+                parts.append(f"WARN {w}")
             if i:
-                parts.append(f"\U0001f535 {i} info")
-            self._status.title = "  ".join(parts) if parts else "\u2705 All clear"
+                parts.append(f"INFO {i}")
+            self._status.title = "  ".join(parts) if parts else "OK All clear"
 
             self._refresh_alerts()
 
         except (URLError, OSError, ValueError):
             self.title = "?"
-            self._status.title = "\u26a0 Monitor unreachable"
+            self._status.title = "WARN Monitor unreachable"
             self._clear_alerts()
 
     def _refresh_alerts(self):
@@ -157,8 +157,8 @@ class K8sMenuBar(rumps.App):
                 return
 
             for alert in alerts:
-                emoji = SEVERITY_EMOJI.get(alert["severity"], "")
-                title = f'{emoji} {alert["title"]}'
+                prefix = SEVERITY_PREFIX.get(alert["severity"], "INFO")
+                title = f'[{prefix}] {alert["title"]}'
                 if len(title) > 55:
                     title = title[:52] + "..."
                 aid = alert["id"]

@@ -1,0 +1,42 @@
+---
+import '../styles/global.css';
+import '../styles/dashboard.css';
+---
+
+<!doctype html>
+<html lang="en" class="bg-navy-900">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Cycle Map — Absurdity Index</title>
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'><circle cx='32' cy='32' r='30' stroke='%23C5A572' stroke-width='3' fill='%230A1628'/><circle cx='32' cy='32' r='22' stroke='%23C5A572' stroke-width='1.5'/><text x='32' y='28' text-anchor='middle' font-size='12' font-weight='700' fill='%23C5A572' font-family='serif'>NOT</text><text x='32' y='42' text-anchor='middle' font-size='8' fill='%23C5A572' font-family='serif'>CONGRESS</text><circle cx='32' cy='5' r='2' fill='%23C5A572'/><circle cx='32' cy='59' r='2' fill='%23C5A572'/><circle cx='5' cy='32' r='2' fill='%23C5A572'/><circle cx='59' cy='32' r='2' fill='%23C5A572'/></svg>"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Caslon+Text:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-navy-950 text-slate-200 min-h-screen font-sans antialiased">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-6">
+      <!-- Back link -->
+      <a href="/" class="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-gold-400 transition-colors mb-5 font-mono">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        Back to dashboard
+      </a>
+
+      <!-- Cycle header -->
+      <div id="cycle-header" class="surface rounded-xl px-5 py-4 mb-6"></div>
+
+      <!-- Map container -->
+      <div id="cycle-map" class="space-y-0"></div>
+    </div>
+
+    <script is:inline src="/cycle-map.js"></script>
+  </body>
+</html>

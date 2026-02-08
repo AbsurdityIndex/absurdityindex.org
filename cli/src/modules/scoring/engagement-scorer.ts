@@ -18,7 +18,7 @@ export function scoreEngagement(content: string): number {
   if (/\d+%/.test(content)) score += 5;
 
   // "BREAKING" or alert-style openers
-  if (/^(BREAKING|🔔|🐷|C-SPAN)/i.test(content)) score += 10;
+  if (/^(BREAKING|CONGRESSIONAL ALERT|PORK REPORT|C-SPAN)/i.test(content)) score += 10;
 
   // Penalize hashtags — we don't use them
   const hashtagCount = (content.match(/#\w+/g) ?? []).length;

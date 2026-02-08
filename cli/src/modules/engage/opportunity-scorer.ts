@@ -55,6 +55,14 @@ const CONGRESSIONAL_ACCOUNTS = new Set([
   'haborepublicans',
 ]);
 
+export interface ScoreReasons {
+  viral: string[];
+  relevance: string[];
+  timing: string[];
+  engageability: string[];
+  action: string;
+}
+
 export interface OpportunityScore {
   total: number;
   viral: number;
@@ -65,6 +73,7 @@ export interface OpportunityScore {
   matchedBillSlug: string | null;
   matchedKeywords: string[];
   skipReason: string | null;
+  reasons: ScoreReasons;
 }
 
 /**
@@ -90,25 +99,38 @@ export function scoreOpportunity(
         matchedBillSlug: null,
         matchedKeywords: [],
         skipReason: `Tragedy keyword detected: "${keyword}"`,
+        reasons: {
+          viral: [], relevance: [], timing: [], engageability: [],
+          action: `tragedy keyword: "${keyword}"`,
+        },
       };
     }
   }
 
-  const viral = scoreViral(tweet);
-  const { score: relevance, matchedBillSlug, matchedKeywords } = scoreRelevance(tweet, bills);
-  const timing = scoreTiming(tweet, config);
-  const engageability = scoreEngageability(tweet);
+  const viralResult = scoreViral(tweet);
+  const relevanceResult = scoreRelevance(tweet, bills);
+  const timingResult = scoreTiming(tweet, config);
+  const engageabilityResult = scoreEngageability(tweet);
+
+  const viral = viralResult.score;
+  const relevance = relevanceResult.score;
+  const timing = timingResult.score;
+  const engageability = engageabilityResult.score;
+  const { matchedBillSlug, matchedKeywords } = relevanceResult;
 
   const total = viral + relevance + timing + engageability;
 
   let recommendedAction: RecommendedAction;
+  let actionReason: string;
   if (total >= config.engageMinScore) {
-    // High score: engage. Quote if we have a bill match, reply otherwise.
     recommendedAction = matchedBillSlug ? 'quote' : 'reply';
+    actionReason = `${total} >= ${config.engageMinScore} engage threshold` + (matchedBillSlug ? ` (bill match: ${recommendedAction})` : '');
   } else if (total >= config.engageTrackThreshold) {
     recommendedAction = 'track';
+    actionReason = `${total} >= ${config.engageTrackThreshold} track threshold, < ${config.engageMinScore} engage`;
   } else {
     recommendedAction = 'skip';
+    actionReason = `${total} < ${config.engageTrackThreshold} track threshold`;
   }
 
   log.debug(
@@ -126,31 +148,41 @@ export function scoreOpportunity(
     matchedBillSlug,
     matchedKeywords,
     skipReason: null,
+    reasons: {
+      viral: viralResult.reasons,
+      relevance: relevanceResult.reasons,
+      timing: timingResult.reasons,
+      engageability: engageabilityResult.reasons,
+      action: actionReason,
+    },
   };
 }
 
 /**
  * Viral Potential (0-30): How much traction does this tweet have?
  */
-function scoreViral(tweet: ScannedTweet): number {
+function scoreViral(tweet: ScannedTweet): { score: number; reasons: string[] } {
   let score = 0;
+  const reasons: string[] = [];
 
   // Likes thresholds
-  if (tweet.likes >= 1000) score += 10;
-  else if (tweet.likes >= 100) score += 6;
-  else if (tweet.likes >= 20) score += 3;
+  if (tweet.likes >= 1000) { score += 10; reasons.push(`${tweet.likes} likes (1k+)`); }
+  else if (tweet.likes >= 100) { score += 6; reasons.push(`${tweet.likes} likes (100+)`); }
+  else if (tweet.likes >= 20) { score += 3; reasons.push(`${tweet.likes} likes (20+)`); }
 
   // Retweets thresholds
-  if (tweet.retweets >= 500) score += 10;
-  else if (tweet.retweets >= 50) score += 6;
-  else if (tweet.retweets >= 10) score += 3;
+  if (tweet.retweets >= 500) { score += 10; reasons.push(`${tweet.retweets} RTs (500+)`); }
+  else if (tweet.retweets >= 50) { score += 6; reasons.push(`${tweet.retweets} RTs (50+)`); }
+  else if (tweet.retweets >= 10) { score += 3; reasons.push(`${tweet.retweets} RTs (10+)`); }
 
   // Replies (high reply count = controversial = engagement magnet)
-  if (tweet.replies >= 200) score += 10;
-  else if (tweet.replies >= 50) score += 6;
-  else if (tweet.replies >= 10) score += 3;
+  if (tweet.replies >= 200) { score += 10; reasons.push(`${tweet.replies} replies (200+)`); }
+  else if (tweet.replies >= 50) { score += 6; reasons.push(`${tweet.replies} replies (50+)`); }
+  else if (tweet.replies >= 10) { score += 3; reasons.push(`${tweet.replies} replies (10+)`); }
 
-  return Math.min(score, 30);
+  if (reasons.length === 0) reasons.push('low traction');
+
+  return { score: Math.min(score, 30), reasons };
 }
 
 /**
@@ -159,29 +191,35 @@ function scoreViral(tweet: ScannedTweet): number {
 function scoreRelevance(
   tweet: ScannedTweet,
   bills: LoadedBill[],
-): { score: number; matchedBillSlug: string | null; matchedKeywords: string[] } {
+): { score: number; matchedBillSlug: string | null; matchedKeywords: string[]; reasons: string[] } {
   const textLower = tweet.text.toLowerCase();
   let score = 0;
   const matchedKeywords: string[] = [];
+  const reasons: string[] = [];
   let matchedBillSlug: string | null = null;
 
   // Congressional account boost
   if (CONGRESSIONAL_ACCOUNTS.has(tweet.authorUsername.toLowerCase())) {
     score += 10;
     matchedKeywords.push('congressional_account');
+    reasons.push('congressional account');
   }
 
   // Keyword matching
+  const kwMatched: string[] = [];
   for (const keyword of RELEVANCE_KEYWORDS) {
     if (textLower.includes(keyword.toLowerCase())) {
       score += 3;
       matchedKeywords.push(keyword);
+      kwMatched.push(keyword);
       if (matchedKeywords.length >= 5) break; // Cap keyword contribution
     }
   }
+  if (kwMatched.length > 0) reasons.push('keywords: ' + kwMatched.join(', '));
 
-  // Bill matching — check if tweet mentions a bill we cover
-  for (const bill of bills) {
+  // Bill matching — only match real bills (sensible/absurd are satirical fiction)
+  const realBills = bills.filter(b => b.billType === 'real');
+  for (const bill of realBills) {
     const billLower = bill.title.toLowerCase();
     const titleWords = billLower.split(/\s+/).filter(w => w.length > 4);
 
@@ -190,6 +228,7 @@ function scoreRelevance(
       score += 10;
       matchedBillSlug = bill.slug;
       matchedKeywords.push(`bill:${bill.billNumber}`);
+      reasons.push('mentions ' + bill.billNumber);
       break;
     }
 
@@ -202,50 +241,60 @@ function scoreRelevance(
       score += 8;
       matchedBillSlug = bill.slug;
       matchedKeywords.push(`bill_title:${bill.slug}`);
+      reasons.push('matches bill: ' + bill.slug);
       break;
     }
   }
 
-  return { score: Math.min(score, 30), matchedBillSlug, matchedKeywords };
+  if (reasons.length === 0) reasons.push('no strong signals');
+
+  return { score: Math.min(score, 30), matchedBillSlug, matchedKeywords, reasons };
 }
 
 /**
  * Timing Window (0-20): Is this tweet fresh and in peak hours?
  */
-function scoreTiming(tweet: ScannedTweet, config: Config): number {
+function scoreTiming(tweet: ScannedTweet, config: Config): { score: number; reasons: string[] } {
   let score = 0;
+  const reasons: string[] = [];
 
   // Tweet age
   if (tweet.createdAt) {
     const ageMs = Date.now() - new Date(tweet.createdAt).getTime();
     const ageHours = ageMs / (1000 * 60 * 60);
 
-    if (ageHours < 1) score += 12;
-    else if (ageHours < 3) score += 8;
-    else if (ageHours < 6) score += 4;
-    else if (ageHours < 12) score += 2;
-    // Older than 12h gets 0
+    if (ageHours < 1) { score += 12; reasons.push('<1h old'); }
+    else if (ageHours < 3) { score += 8; reasons.push('<3h old'); }
+    else if (ageHours < 6) { score += 4; reasons.push('<6h old'); }
+    else if (ageHours < 12) { score += 2; reasons.push('<12h old'); }
+    else { reasons.push('>12h old'); }
   } else {
-    score += 4; // Unknown age, assume moderate freshness
+    score += 4;
+    reasons.push('age unknown');
   }
 
   // Current hour (peak engagement hours)
   const hour = new Date().getHours();
   if (hour >= config.peakHoursStart && hour <= config.peakHoursEnd) {
     score += 8;
+    reasons.push('peak hours');
   } else if (hour >= config.peakHoursStart - 1 || hour <= config.peakHoursEnd + 1) {
-    score += 4; // Near-peak
+    score += 4;
+    reasons.push('near-peak hours');
+  } else {
+    reasons.push('off-peak');
   }
 
-  return Math.min(score, 20);
+  return { score: Math.min(score, 20), reasons };
 }
 
 /**
  * Engageability (0-20): Can we actually make something funny out of this?
  */
-function scoreEngageability(tweet: ScannedTweet): number {
+function scoreEngageability(tweet: ScannedTweet): { score: number; reasons: string[] } {
   const textLower = tweet.text.toLowerCase();
   let score = 10; // Base score — most tweets have some potential
+  const reasons: string[] = ['base 10'];
 
   // Boost: contains quotable rhetoric
   const rhetoricPhrases = [
@@ -255,6 +304,7 @@ function scoreEngageability(tweet: ScannedTweet): number {
   for (const phrase of rhetoricPhrases) {
     if (textLower.includes(phrase)) {
       score += 3;
+      reasons.push('rhetoric: "' + phrase + '"');
       break; // Only count once
     }
   }
@@ -262,21 +312,23 @@ function scoreEngageability(tweet: ScannedTweet): number {
   // Boost: self-congratulatory
   if (textLower.includes('proud') || textLower.includes('honored') || textLower.includes('pleased to announce')) {
     score += 3;
+    reasons.push('self-congratulatory');
   }
 
   // Boost: contains numbers (spending, votes, days)
   if (/\$[\d,.]+/.test(tweet.text) || /\d+ (billion|million|trillion)/.test(textLower)) {
-    score += 4; // Dollar amounts are comedy gold
+    score += 4;
+    reasons.push('$ amounts');
   }
 
   // Penalty: too short (not enough material)
-  if (tweet.text.length < 40) score -= 5;
+  if (tweet.text.length < 40) { score -= 5; reasons.push('too short (<40 chars)'); }
 
   // Penalty: media-only (image/video with little text)
-  if (tweet.text.length < 20) score -= 5;
+  if (tweet.text.length < 20) { score -= 5; reasons.push('media-only (<20 chars)'); }
 
   // Penalty: retweet / share (not original content)
-  if (textLower.startsWith('rt @')) score -= 10;
+  if (textLower.startsWith('rt @')) { score -= 10; reasons.push('retweet'); }
 
-  return Math.max(0, Math.min(score, 20));
+  return { score: Math.max(0, Math.min(score, 20)), reasons };
 }

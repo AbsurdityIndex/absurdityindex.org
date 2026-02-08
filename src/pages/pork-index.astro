@@ -312,7 +312,7 @@ const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates)) : new Date
                               <span>{p.billNumber}</span>
                               {billInfo && <BillStageBadge status={billInfo.status} size="xs" />}
                             </div>
-                            <span>{p.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>
+                            <span>{p.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', timeZone: 'UTC' })}</span>
                           </div>
                         </div>
                       );

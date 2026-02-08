@@ -29,7 +29,7 @@ const timelineStages = stages.map(stage => ({
 
 // Format the introduction date
 const formattedDate = dateIntroduced instanceof Date
-  ? dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  ? dateIntroduced.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
   : String(dateIntroduced);
 ---
 
