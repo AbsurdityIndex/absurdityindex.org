@@ -292,8 +292,8 @@ import Icon from '../../../components/ui/Icon.astro';
   </main>
 
   <script>
-    import { lookupBallotByHash, getDashboardSnapshot } from '../../../votechain-poc/poc';
-    import type { BallotLookupResult } from '../../../votechain-poc/poc';
+    import { lookupBallotByHash, getDashboardSnapshot } from '../../../votechain-poc';
+    import type { BallotLookupResult } from '../../../votechain-poc';
 
     const input = document.getElementById('ballot-hash-input') as HTMLInputElement;
     const lookupBtn = document.getElementById('lookup-btn') as HTMLButtonElement;

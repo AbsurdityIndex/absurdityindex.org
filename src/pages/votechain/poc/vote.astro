@@ -549,8 +549,8 @@ import Icon from '../../../components/ui/Icon.astro';
       issueChallenge,
       spoilBallot,
       verifySpoiledBallot,
-    } from '../../../votechain-poc/poc';
-    import type { PocContest, PocEncryptedBallot, PocBallotPlaintext } from '../../../votechain-poc/poc';
+    } from '../../../votechain-poc';
+    import type { PocContest, PocEncryptedBallot, PocBallotPlaintext } from '../../../votechain-poc';
 
     function formatJson(value: unknown) {
       return JSON.stringify(value, null, 2);
