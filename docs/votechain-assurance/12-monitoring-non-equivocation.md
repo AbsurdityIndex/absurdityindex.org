@@ -84,4 +84,3 @@ Expected:
 - Evidence from controlled equivocation simulations
 - Conformance vectors for STH/inclusion/consistency proofs
 - Uptime/coverage reports during simulated voting windows
-

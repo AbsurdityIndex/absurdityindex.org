@@ -212,6 +212,7 @@ about the person.
 **Question:** Is this person a United States citizen?
 
 **Enrollment-time check** (performed once):
+
 - Cross-reference against **SSA** (Social Security Administration) records
 - Cross-reference against **USCIS** (U.S. Citizenship and Immigration Services) for
   naturalized citizens
@@ -219,6 +220,7 @@ about the person.
 - Cross-reference against **U.S. passport records** (State Department)
 
 **How it works:**
+
 - At enrollment, the system queries these databases through secure government APIs
 - A positive match from any *two* of the four sources constitutes verification
 - The result is stored as a **cryptographic attestation** on-chain: a signed statement that
@@ -228,6 +230,7 @@ about the person.
   cryptographic key pair that the voter controls
 
 **Blockchain record:**
+
 ```json
 {
   "type": "citizenship_attestation",
@@ -252,6 +255,7 @@ about the person.
 jurisdiction?
 
 **Election-time check** (performed each election):
+
 - **Age:** Must be 18+ on election day (derived from enrollment attestation)
 - **Residency:** Registered in the jurisdiction where they're voting
 - **Judicial eligibility:** No active court/legal disqualifier under governing law, including:
@@ -262,6 +266,7 @@ jurisdiction?
 - **Registration status:** Actively registered, not purged or inactive
 
 **How it works:**
+
 - At verification time, the system checks the voter's DID against the **state voter
   registration ledger** (a state-operated sidechain or state-linked smart contract)
 - Each state maintains its own eligibility rules as **smart contract logic**
@@ -272,6 +277,7 @@ jurisdiction?
   **provisional ballot + expedited adjudication** flow (never silent denial)
 
 **Why this matters for fraud detection:**
+
 - If someone tries to vote using a DID that's registered in a different state, this pillar
   catches it immediately
 - If someone's registration was validly purged (moved, deceased, etc.), it triggers a flag
@@ -286,6 +292,7 @@ This pillar prevents the most viscerally offensive fraud: dead people "voting."
 **How it works:**
 
 *Option A — Biometric (primary):*
+
 - At enrollment, voter registers a **biometric template** (fingerprint, palm vein, or iris)
 - The template is stored **on the voter's personal device or secure card** — NOT in a
   central database
@@ -293,6 +300,7 @@ This pillar prevents the most viscerally offensive fraud: dead people "voting."
 - The biometric never leaves the device/card; only a "match: yes/no" result is produced
 
 *Option B — Non-biometric path (first-class):*
+
 - For voters who cannot or do not want to use biometrics (disability, injury, religious
   objection, privacy preference):
   - **Knowledge factor:** PIN or passphrase set at enrollment
@@ -302,6 +310,7 @@ This pillar prevents the most viscerally offensive fraud: dead people "voting."
   same legal standing).
 
 **Deceased voter detection (continuous):**
+
 - The system subscribes to **continuous death record feeds** (cadence varies by source):
   - SSA Death Master File (as released)
   - State vital records offices
@@ -314,6 +323,7 @@ This pillar prevents the most viscerally offensive fraud: dead people "voting."
   4. The flag is immutable — it can't be cleared without oversight review
 
 **Blockchain record for a deceased flag:**
+
 ```json
 {
   "type": "fraud_flag",
@@ -345,8 +355,10 @@ This pillar prevents the most viscerally offensive fraud: dead people "voting."
 This is where the blockchain architecture pays for itself.
 
 **How it works:**
+
 - When a voter completes verification and receives a ballot, a **vote commitment** is
   written to the blockchain:
+
   ```json
   {
     "type": "ballot_issued",
@@ -357,6 +369,7 @@ This is where the blockchain architecture pays for itself.
     "nullifier": "0xf4a8..."
   }
   ```
+
 - The `nullifier` is a one-time cryptographic token derived from the voter's DID + the
   election ID. Under correct implementation and uncompromised keys, generating a second
   valid nullifier for the same DID + election combination is cryptographically infeasible.
@@ -368,6 +381,7 @@ This is where the blockchain architecture pays for itself.
   the second attempt is caught instantly.
 
 **Why blockchain matters here:**
+
 - A centralized database could be tampered with (delete the first record, allow a second
   vote). On a blockchain with multi-party consensus, altering a record requires corrupting
   a majority of nodes across federal, state, and independent auditor operators. This is
@@ -382,6 +396,7 @@ This is where the blockchain architecture pays for itself.
 This pillar verifies the *verifiers*.
 
 **How it works:**
+
 - Every verification device (poll pad, biometric scanner, etc.) has its own **device DID**
   and signing key, stored in a hardware security module (HSM)
 - Every verification event is **co-signed** by both the voter's credential and the device
@@ -391,6 +406,7 @@ This pillar verifies the *verifiers*.
   performed are flagged for review
 
 **Fraud this catches:**
+
 - A compromised poll worker device rubber-stamping fake verifications
 - A device that's been physically tampered with or replaced
 - Software modifications to the verification client
@@ -402,6 +418,7 @@ This pillar verifies the *verifiers*.
 ### 6.1 Blockchain Layer: Permissioned Consortium Chain
 
 **Why not a public blockchain (Bitcoin, Ethereum)?**
+
 - Public chains are too slow (Bitcoin: ~7 TPS, Ethereum: ~30 TPS). Election day needs
   thousands of TPS.
 - Public chains are permissionless — anyone can run a node and read all data. Voter
@@ -451,11 +468,12 @@ categories.
 
 Voters are identified by **W3C Decentralized Identifiers**, not by name, SSN, or address.
 
-```
+```text
 did:votechain:zQ3shN7KpBxnGfEtAJc5MvZxPLsRuQW9KBZHS...
 ```
 
 **Properties:**
+
 - The voter holds the private key (on their device or secure card)
 - The DID is created at enrollment and is **not linked to any PII on-chain**
 - The link between a DID and a real person exists **only** in encrypted form at the state
@@ -472,13 +490,15 @@ Knowledge) to enable verification without disclosure.
 [election_id] in jurisdiction [jurisdiction_id]."
 
 **What the proof does NOT reveal:**
+
 - Who the voter is
 - Their address, age, SSN, or any PII
 - Which specific data sources verified their citizenship
 - How they voted (the proof system is completely separate from ballot casting)
 
 **Circuit design (simplified):**
-```
+
+```text
 INPUTS (private — known only to voter):
   - DID private key
   - Citizenship attestation
@@ -684,13 +704,15 @@ detection engine is the intelligence that watches for anomalies across two windo
 #### Category A: Deceased Voter Detection
 
 **Data sources:**
+
 - SSA Death Master File (ingested continuously on source release cadence)
 - State vital records (death certificates)
 - Hospital/coroner reports (where available)
 - Obituary cross-reference (supplementary, lower confidence)
 
 **Process:**
-```
+
+```text
 CONTINUOUS (not just election day):
   1. Death record arrives via feed
   2. System matches against enrollment records using encrypted PII lookup
@@ -717,7 +739,8 @@ current: months to years for voter roll purging).
 #### Category B: Duplicate Vote Detection
 
 **Process:**
-```
+
+```text
 REAL-TIME (during voting):
   1. Voter presents credential at polls
   2. System computes nullifier (hash of DID + election ID)
@@ -758,7 +781,7 @@ for implementation or integration errors.
 
 #### Category C: Geographic Impossibility Detection
 
-```
+```text
 REAL-TIME:
   1. Voter verified at Polling Place A at time T1
   2. Same DID (or linked DID cluster) attempts verification at Polling Place B at time T2
@@ -925,7 +948,7 @@ timed, and auditable.
 
 #### Appeals Workflow
 
-```
+```text
 FLAGGED / CRYPTO-CONFLICT EVENT
   -> Provisional ballot issued
   -> Case opened (immutable ID)
@@ -1037,6 +1060,7 @@ core mission.
 ### 12.2 Enrollment Equity Metrics
 
 The system must track and report:
+
 - Enrollment rates by demographic group (race, age, income, disability status)
 - Enrollment center accessibility scores
 - Wait times by location and time
@@ -1351,41 +1375,41 @@ implementation:
 
 ### 18.1 Citizen FAQ
 
-**Q1: Do I need a smartphone to use VoteChain?**  
+**Q1: Do I need a smartphone to use VoteChain?**
 No. Free secure cards are provided, and in-person assisted verification is always available.
 
-**Q2: Is biometric enrollment mandatory?**  
+**Q2: Is biometric enrollment mandatory?**
 No. A non-biometric path (PIN/passphrase + device/card + attestation) is always available
 with equal legal standing.
 
-**Q3: Can the government see how I voted?**  
+**Q3: Can the government see how I voted?**
 No. VoteChain verifies eligibility and ballot issuance only. Ballot selection remains in a
 separate system by design.
 
-**Q4: What happens if I get flagged at the polls?**  
+**Q4: What happens if I get flagged at the polls?**
 You can still cast a provisional ballot. Your case enters a tracked adjudication workflow
 with notice, status updates, and appeal pathways.
 
-**Q5: What if the system is wrong about my eligibility?**  
+**Q5: What if the system is wrong about my eligibility?**
 The system defaults to provisional handling when data is uncertain. Final determinations
 require signed evidence and documented legal basis.
 
-**Q6: I live overseas or serve in the military. Can I still vote?**  
+**Q6: I live overseas or serve in the military. Can I still vote?**
 Yes. UOCAVA paths are supported through embassies/consulates, military installations, and
 global help channels, integrated with absentee workflows.
 
-**Q7: What if I lose my device or card before the election?**  
+**Q7: What if I lose my device or card before the election?**
 Recovery is available through designated offices and support channels. If not resolved in
 time, provisional ballot rights remain.
 
-**Q8: Can one agency or party control the system?**  
+**Q8: Can one agency or party control the system?**
 No. The consortium chain requires multi-party consensus across federal, state, auditor, and
 oversight nodes.
 
-**Q9: Does VoteChain create a national voter database?**  
+**Q9: Does VoteChain create a national voter database?**
 No. On-chain records hold cryptographic attestations, not raw voter PII.
 
-**Q10: Is there a fee to enroll or verify?**  
+**Q10: Is there a fee to enroll or verify?**
 No. Enrollment, secure cards, and required replacement support are free to voters.
 
 ### 18.2 Myth-Vs-Fact Rebuttals

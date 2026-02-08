@@ -127,6 +127,36 @@ function extractTweetId(input) {
   throw new Error(`Could not extract tweet ID from: ${input}`);
 }
 
+// ── Helper: map ref.type to human label ──────────────────────────────
+function refTypeLabel(type) {
+  const labels = {
+    quoted: 'Quote-tweeting',
+    retweeted: 'Retweeting',
+    replied_to: 'Replying to',
+  };
+  return labels[type] ?? 'Referencing';
+}
+
+// ── Helper: resolve referenced tweets context ────────────────────────
+function resolveReferencedTweets(refs, includes) {
+  if (!refs?.length || !includes?.tweets?.length) return null;
+
+  const parts = [];
+  for (const ref of refs) {
+    const refTweet = includes.tweets.find(t => t.id === ref.id);
+    if (!refTweet) continue;
+    const refUser = includes.users?.find(u => u.id === refTweet.author_id);
+    parts.push({
+      type: ref.type,
+      label: refTypeLabel(ref.type),
+      text: refTweet.text,
+      author: refUser?.name ?? 'Unknown',
+      username: refUser?.username ?? 'unknown',
+    });
+  }
+  return parts.length ? parts : null;
+}
+
 // ── Helper: fetch tweet ──────────────────────────────────────────────
 async function fetchTweet(tweetId) {
   const res = await readClient.v2.singleTweet(tweetId, {
@@ -135,30 +165,7 @@ async function fetchTweet(tweetId) {
     'user.fields': ['username', 'name', 'public_metrics'],
   });
   const user = res.includes?.users?.[0];
-
-  // ── Resolve referenced tweets (quote tweets, retweets) ────────────
-  let referencedContext = null;
-  const refs = res.data.referenced_tweets;
-  if (refs?.length && res.includes?.tweets?.length) {
-    const parts = [];
-    for (const ref of refs) {
-      const refTweet = res.includes.tweets.find(t => t.id === ref.id);
-      if (!refTweet) continue;
-      const refUser = res.includes.users?.find(u => u.id === refTweet.author_id);
-      const label = ref.type === 'quoted' ? 'Quote-tweeting'
-        : ref.type === 'retweeted' ? 'Retweeting'
-        : ref.type === 'replied_to' ? 'Replying to'
-        : 'Referencing';
-      parts.push({
-        type: ref.type,
-        label,
-        text: refTweet.text,
-        author: refUser?.name ?? 'Unknown',
-        username: refUser?.username ?? 'unknown',
-      });
-    }
-    if (parts.length) referencedContext = parts;
-  }
+  const referencedContext = resolveReferencedTweets(res.data.referenced_tweets, res.includes);
 
   return {
     id: tweetId,

@@ -121,4 +121,3 @@ Focus on building deterministic defenses and clear error behavior.
 - Triage runbooks and SLAs
 - A sanitized "recent findings" report (classes of issues, not sensitive details)
 - Evidence that you can fix and retest quickly
-

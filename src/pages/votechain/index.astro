@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/ui/Icon.astro';
+import AISummarizer from '../../components/votechain/AISummarizer.astro';
 ---
 
 <BaseLayout
@@ -25,6 +26,118 @@ import Icon from '../../components/ui/Icon.astro';
         replacing trust assumptions with mathematical proofs
       </p>
     </div>
+
+    <AISummarizer
+      triggerSub="Two protocols, one mission &rarr; 60 seconds"
+      scanLines={[
+        'Reading verification layer (VoteChain PRD)...',
+        'Reading ballot integrity layer (EWP)...',
+        'Cross-referencing architecture & assurance...',
+        'Mapping the proof-of-concept demo...',
+        'Compiling summary...',
+      ]}
+    >
+      <Fragment slot="eli5">
+        <p class="font-bold text-lg text-navy-900 mb-3">The school election version:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What is VoteChain?</p>
+        <p class="mb-3">Imagine your school is holding an election for class president. Right now, someone collects the ballots, goes into a back room, and comes out saying "here are the results." You have to <em>trust</em> that person. VoteChain is a plan to replace trust with proof &mdash; so everyone can check for themselves that the election was fair.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Two big jobs:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Job 1: Are you allowed to vote?</strong> Before you get a ballot, the system checks that you're a real student at this school (not someone who graduated last year, not someone from the school across town, and not someone pretending to be you). It does this using special math that proves you're allowed <em>without telling anyone your name</em>.</li>
+          <li><strong>Job 2: Was your vote counted correctly?</strong> After you vote, your ballot goes into a locked glass box that everyone can see but nobody can open alone. At the end, a group of teachers (not just one) open the box together and count the votes in front of everyone. They show their math so anyone can double-check the answer.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What's on this site?</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>The VoteChain PRD</strong> &mdash; the blueprint for Job 1 (checking who's allowed to vote)</li>
+          <li><strong>The Election Web Protocol (EWP)</strong> &mdash; the blueprint for Job 2 (making sure ballots are counted right)</li>
+          <li><strong>The Architecture page</strong> &mdash; a map showing where all the servers live and who runs them</li>
+          <li><strong>The Proof of Concept (POC)</strong> &mdash; a working demo you can try right in your browser</li>
+          <li><strong>The Assurance Playbooks</strong> &mdash; 14 checklists for testing the system before anyone uses it for real</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Why publish all this?</p>
+        <p class="mb-3">Because "trust me, it works" isn't good enough for elections. Everything is public so that security researchers, election officials, journalists, and regular citizens can read it, poke holes in it, and help make it better. If something is wrong, it's better to find out now than on election day.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">Want more detail? Slide the bar to the right. Or close this and explore the pages below.</p>
+      </Fragment>
+
+      <Fragment slot="plain">
+        <p class="font-bold text-lg text-navy-900 mb-3">Here's what VoteChain is and what's on this site:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What is VoteChain?</p>
+        <p class="mb-3">VoteChain is a two-layer protocol for U.S. election integrity. It replaces "trust the institution" with "verify the math." The first layer handles voter verification (are you eligible?), and the second handles ballot integrity (was your vote counted correctly?). Together, they create an end-to-end chain of cryptographic proof from registration to final tally &mdash; without revealing who you are or how you voted.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">The two layers:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Layer 1 &mdash; Verification (VoteChain PRD):</strong> A permissioned blockchain with 74 nodes operated by federal, state, auditor, and oversight entities. It answers four questions about each voter: citizen, eligible, alive, and not already voted. It uses zero-knowledge proofs so the system can verify eligibility without learning the voter's identity. No PII is stored on-chain.</li>
+          <li><strong>Layer 2 &mdash; Ballot Integrity (EWP):</strong> An Election Web Protocol that provides end-to-end verifiability. Ballots are encrypted so only a group of independent trustees (not any single person) can decrypt them. A public append-only bulletin board records every encrypted ballot, and VoteChain anchors ensure the log can't be tampered with. At tally time, trustees cooperate to decrypt the aggregate results and publish mathematical proofs that anyone can independently verify.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What you'll find on this site:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>VoteChain PRD</strong> &mdash; The 1,525-line blueprint for voter verification: enrollment, credentials, fraud detection, and the five verification pillars (citizenship, eligibility, liveness, uniqueness, chain-of-custody).</li>
+          <li><strong>Election Web Protocol (EWP)</strong> &mdash; The ballot integrity specification: encrypted casting, Benaloh challenge (cast-as-intended), bulletin board transparency, threshold decryption, and verifiable tally proofs.</li>
+          <li><strong>Architecture</strong> &mdash; The server map showing where each component runs, who operates it, trust zone boundaries, and three deployment modes (polling place, supervised kiosk, remote).</li>
+          <li><strong>Proof of Concept</strong> &mdash; A browser-based demo implementing simplified versions of the protocols: generate credentials, cast encrypted ballots, verify receipts, and inspect the oversight dashboard. Everything runs locally in your browser.</li>
+          <li><strong>Assurance Playbooks</strong> &mdash; 14 internal testing guides covering threat modeling, crypto review, red team exercises, privacy audits, equity testing, and more. Published for transparency so anyone can evaluate whether the testing is rigorous enough.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Design principles:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>No single point of failure.</strong> The 74-node ledger requires 3 of 4 operator categories to agree before anything is recorded.</li>
+          <li><strong>Ballot secrecy by design.</strong> Threshold encryption means no single trustee can see individual votes. Only the aggregate is decrypted.</li>
+          <li><strong>Verification, not trust.</strong> Every claim the system makes comes with a mathematical proof that anyone can check independently.</li>
+          <li><strong>Free for voters.</strong> Enrollment, credentials, and verification are provided at no cost to the voter.</li>
+        </ul>
+
+        <p class="text-navy-500 text-sm italic mt-4">Close this and explore the protocol documents, architecture, POC demo, and assurance playbooks below.</p>
+      </Fragment>
+
+      <Fragment slot="technical">
+        <p class="font-bold text-lg text-navy-900 mb-3">Technical overview:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">System scope:</p>
+        <p class="mb-3">Two complementary protocols for U.S. election integrity: VoteChain (voter verification on a permissioned ledger) and EWP (end-to-end ballot integrity with verifiable tally). This site publishes the complete specifications, a production architecture map, a browser-based proof of concept, and 14 internal assurance playbooks.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Layer 1 &mdash; VoteChain (Verification):</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Ledger:</strong> 74-node permissioned BFT network (Hyperledger Fabric-class). Node distribution: 6 federal, 50 state, 12 auditor, 6 oversight. Category-quorum consensus: 3-of-4 categories, &ge;2/3 intra-category.</li>
+          <li><strong>Identity:</strong> W3C DIDs with voter-held private keys. Enrollment via multi-source identity checks (SSA, USCIS, state vital records). DID-to-PII linkage only in state-operated encrypted vaults.</li>
+          <li><strong>Verification:</strong> Five pillars &mdash; citizenship (2-of-4 attestation), eligibility (per-election smart contract), liveness (biometric or non-biometric first-class path), duplicate prevention (nullifier = H(DID, election_id)), chain-of-custody (device HSM attestation). All verified via zk-SNARKs without disclosing identity.</li>
+          <li><strong>Fraud detection:</strong> Synchronous (nullifier collision, invalid ZKP, geographic impossibility) + asynchronous (death matching, judicial drift, enrollment anomaly clustering). Flag lifecycle: Detected &rarr; Triaged &rarr; Investigated &rarr; Resolved (immutable on-chain).</li>
+          <li><strong>Cost model:</strong> ~$870M capex, ~$375M/yr opex (~$5.60/vote). 5-year phased rollout.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Layer 2 &mdash; EWP (Ballot Integrity):</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>E2E verifiability:</strong> Cast-as-intended (Benaloh challenge), recorded-as-cast (BB inclusion proof + VoteChain anchor), counted-as-recorded (tally proof against BB closing STH).</li>
+          <li><strong>Crypto suite:</strong> Exponential ElGamal (<code>ewp_suite_eg_elgamal_v1</code>). Ballot validity via disjunctive Chaum-Pedersen proofs. Homomorphic tally. Threshold decryption (Pedersen DKG / Shamir) with published partial-decryption proofs. Compatible with ElectionGuard.</li>
+          <li><strong>Bulletin board:</strong> Append-only Merkle log with HSM-signed STH checkpoints. Non-equivocation via monitor gossip + VoteChain anchor linkage.</li>
+          <li><strong>Deployment modes:</strong> Mode 1 (polling place, primary), Mode 2 (supervised kiosk), Mode 3 (unsupervised remote, gated behind 7 hard criteria including coercion mitigation red-team validation).</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Architecture:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li>Strict two-plane separation: eligibility plane (VoteChain) and ballot content plane (EWP). Sole coupling point: audit anchors (hash commitments).</li>
+          <li>13 server roles across 5 operator categories: election authority, consortium, trustees, monitors, external data sources.</li>
+          <li>Trust zones: no single operator can alter outcomes. Multi-category quorum for writes, public read path, air-gapped trustee key material, independent monitor infrastructure.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Proof of Concept:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li>Browser-only implementation (localStorage state, no server). Simplified Schnorr-style ZK eligibility proofs + ECIES ballot encryption + t-of-n threshold decryption model.</li>
+          <li>Four views: Voting Client (credential &rarr; challenge &rarr; cast &rarr; receipt), Receipt Verification (signature + Merkle + anchor checks), Oversight Dashboard (VCL events, BB leaves, fraud flags, tally), Trust Portal (independent key/proof verification).</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Assurance:</p>
+        <p class="mb-3">14 internal playbooks: threat modeling, attack case library, penetration testing, crypto/protocol review, EWP conformance testing, red team exercises, VDP/bug bounty readiness, secure code review, operational audit, monitoring/non-equivocation, privacy audit, usability/phishing defense, equity/access testing, load/failover drills. Published pre-3P audit to raise the baseline.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">Explore the full specifications, architecture diagrams, POC demo, and assurance playbooks below.</p>
+      </Fragment>
+    </AISummarizer>
 
     <!-- What is VoteChain -->
     <div class="rounded-lg border border-gold-300 bg-cream-50 p-5 mb-8">

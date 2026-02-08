@@ -223,7 +223,7 @@ npm run test:watch
 
 ## Architecture
 
-```
+```text
 cli/
   src/
     commands/          # CLI command handlers

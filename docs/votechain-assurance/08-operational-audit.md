@@ -106,61 +106,73 @@ Each one should produce an artifact (screenshot, log excerpt, signed report, or 
 ### Key Management and HSM Controls (OA01-OA12)
 
 OA01. **Key inventory completeness**
+
 - Steps: enumerate all signing/decryption keys used by the system; confirm owners and storage locations.
 - Expect: nothing "unknown" or "temporary" remains in the pilot path.
 - Evidence: `keys.md` with owner + purpose + storage + rotation policy.
 
 OA02. **Non-exportable key enforcement (HSM)**
+
 - Steps: attempt to export receipt/STH signing keys from the HSM (administratively, in staging).
 - Expect: export denied; audit log records the attempt.
 - Evidence: HSM audit log entry; denial result.
 
 OA03. **Key access requires least privilege**
+
 - Steps: review IAM/RBAC for key operations (sign, rotate, revoke).
 - Expect: only required roles can invoke operations; no broad admin access.
 - Evidence: RBAC policy diff; role-to-action mapping.
 
 OA04. **Dual control for critical operations**
+
 - Steps: require two-person approval for key rotation/revocation and emergency changes.
 - Expect: cannot execute with a single operator.
 - Evidence: approval records; enforced workflow proof.
 
 OA05. **Key rotation rehearsal**
+
 - Steps: rotate a gateway receipt signing key in staging and publish the new `kid`.
 - Expect: new receipts verify; old receipts remain verifiable; clients learn the new `kid` safely.
 - Evidence: before/after receipts; verifier outputs; rotation log + anchor.
 
 OA06. **Key revocation rehearsal**
+
 - Steps: revoke a compromised key in staging.
 - Expect: clients/verifiers treat it as revoked for new artifacts; old artifacts remain auditable with clear status.
 - Evidence: revocation event + distribution proof; verifier behavior.
 
 OA07. **Clock/time source consistency**
+
 - Steps: validate all components use a consistent time source or defined skew tolerance.
 - Expect: no component treats valid artifacts as expired (or vice versa) due to drift.
 - Evidence: time sync config; drift report.
 
 OA08. **Secrets management audit**
+
 - Steps: verify secrets are stored in a secrets manager, not environment variables/files in plain text.
 - Expect: short-lived credentials and audited access.
 - Evidence: secret store policy; access logs.
 
 OA09. **Receipt verification offline**
+
 - Steps: verify receipts on an offline machine using only published keys/anchors.
 - Expect: verification succeeds without privileged network access.
 - Evidence: offline verification transcript.
 
 OA10. **STH signing key separation**
+
 - Steps: ensure BB STH signing key and gateway receipt signing key are distinct and independently controlled.
 - Expect: compromise of one does not enable forging the other.
 - Evidence: key inventory; HSM partitions; policy proof.
 
 OA11. **Trustee key custody separation**
+
 - Steps: confirm trustees are in distinct organizational categories and have separate custody controls.
 - Expect: no single org controls threshold decryption.
 - Evidence: trustee roster; custody attestation docs.
 
 OA12. **Key ceremony transcript anchoring**
+
 - Steps: run a staging key ceremony and produce a transcript; hash and anchor it.
 - Expect: anyone can verify transcript integrity via anchor.
 - Evidence: transcript hash; anchor tx; published ceremony report.
@@ -168,31 +180,37 @@ OA12. **Key ceremony transcript anchoring**
 ### Change Control and Freeze (OA13-OA18)
 
 OA13. **Voting-window change freeze enforcement**
+
 - Steps: attempt to deploy a non-emergency change during a simulated voting window.
 - Expect: blocked by policy and tooling.
 - Evidence: CI/CD denial log; policy doc.
 
 OA14. **Emergency break-glass flow**
+
 - Steps: execute a staged emergency change using break-glass process.
 - Expect: dual approval; public/auditable evidence trail; post-change validation required.
 - Evidence: approval artifacts; change record; audit anchor.
 
 OA15. **Chaincode update governance rehearsal**
+
 - Steps: simulate a chaincode/policy update with multi-party approval as required.
 - Expect: update cannot be applied without the required quorum.
 - Evidence: approval record; update transaction; version registry.
 
 OA16. **Configuration drift detection**
+
 - Steps: intentionally drift a config (safe in staging) and ensure drift is detected and alerted.
 - Expect: alert within SLA; rollback path defined.
 - Evidence: drift alert; remediation action.
 
 OA17. **Software supply-chain integrity**
+
 - Steps: confirm build artifacts are signed and provenance is recorded.
 - Expect: operators cannot deploy unsigned artifacts.
 - Evidence: signature verification logs; provenance record.
 
 OA18. **Dependency update governance**
+
 - Steps: ensure security updates have an expedited process with documented risk acceptance when deferred.
 - Expect: clear owners and deadlines; no indefinite deferrals.
 - Evidence: policy; recent example ticket.
@@ -200,41 +218,49 @@ OA18. **Dependency update governance**
 ### Incident Response and Continuity (OA19-OA26)
 
 OA19. **Key compromise drill**
+
 - Steps: run a tabletop and a live staging drill for compromised signing key.
 - Expect: rotate, revoke, publish, and verify within target times.
 - Evidence: incident timeline; artifacts; retest results.
 
 OA20. **Gateway operator outage failover**
+
 - Steps: take one gateway operator offline in staging.
 - Expect: voters/clients can fail over; no silent dead ends.
 - Evidence: failover logs; UX screenshots; uptime metrics.
 
 OA21. **BB outage degraded mode**
+
 - Steps: make BB unavailable; observe behavior.
 - Expect: defined degraded behavior with safe continuity and auditable reconciliation.
 - Evidence: incident record; reconciliation plan; post-restore validation.
 
 OA22. **VoteChain anchoring outage degraded mode**
+
 - Steps: delay or disable anchoring writes.
 - Expect: system does not silently accept unverifiable states; explicit pending/reconcile state is used.
 - Evidence: logs; audit anchors when restored; reconciliation report.
 
 OA23. **Monitor downtime handling**
+
 - Steps: take monitors down beyond allowed thresholds (staging).
 - Expect: alert; documented response (add monitors, extend window, halt if required).
 - Evidence: downtime alert; operator actions.
 
 OA24. **DDoS / traffic surge drill**
+
 - Steps: simulate a safe traffic surge in staging.
 - Expect: load shedding + backoff guidance; no catastrophic cascade; continuity objectives met.
 - Evidence: latency graphs; error codes; fallbacks used.
 
 OA25. **Backup and restore rehearsal**
+
 - Steps: restore BB/ledger state from backups in staging.
 - Expect: restored state verifiable; anchors and proofs still validate.
 - Evidence: restore runbook; verification transcript; RTO/RPO metrics.
 
 OA26. **Audit evidence bundle export**
+
 - Steps: export a contested-case evidence bundle from staging.
 - Expect: signed manifest; integrity verifiable; access controlled.
 - Evidence: exported bundle; verifier output; access logs.
@@ -242,21 +268,25 @@ OA26. **Audit evidence bundle export**
 ### Logging, Privacy, and Oversight Ops (OA27-OA30)
 
 OA27. **Log retention and tamper evidence**
+
 - Steps: verify logs are append-only or hash-chained; retention meets policy.
 - Expect: tampering attempts are detectable.
 - Evidence: logging design doc; integrity checks; retention policy proof.
 
 OA28. **PII access dual control**
+
 - Steps: attempt to access sensitive PII views for a case; ensure dual control and audit logging.
 - Expect: no unilateral access; all access logged.
 - Evidence: access logs; RBAC policy.
 
 OA29. **Public transparency artifacts**
+
 - Steps: generate and publish the election transparency artifacts required (aggregates, roots, anonymized outcomes).
 - Expect: artifacts are complete and verifiable; publication process is auditable.
 - Evidence: published artifact list; hashes; anchors.
 
 OA30. **Oversight workflow SLA rehearsal**
+
 - Steps: simulate a flagged case; run through notice + case ID + tiered escalation; measure timings.
 - Expect: SLA targets met (or gaps documented with remediation).
 - Evidence: case timeline; status updates; final disposition record.

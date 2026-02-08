@@ -101,71 +101,85 @@ Notes:
 ### Protocol / Invariants (PT01-PT14)
 
 PT01. **Challenge replay (single-use)**
+
 - Steps: issue one challenge; perform a successful cast; attempt a second cast using the same `challenge_id` + `challenge`.
 - Expect: second cast rejected deterministically; no state corruption; no second receipt.
 - Evidence: request/response logs; challenge state (consumed); error code.
 
 PT02. **Challenge expiry**
+
 - Steps: issue a short-lived challenge; wait past `expires_at`; attempt cast.
 - Expect: rejected as expired; retryable guidance to request a new challenge.
 - Evidence: gateway time source; error code; client guidance text.
 
 PT03. **Challenge mismatch**
+
 - Steps: use a valid `challenge_id` but an incorrect `challenge` value in the cast request.
 - Expect: rejected as invalid proof / invalid challenge; no state change.
 - Evidence: error code; audit log entry with safe details (no secret disclosure).
 
 PT04. **Manifest mismatch (wrong `manifest_id`)**
+
 - Steps: keep `election_id` and `jurisdiction_id` the same; alter `manifest_id` in the cast request.
 - Expect: rejected; no BB append; no anchor write.
 - Evidence: error code; absence of BB leaf and VoteChain anchor.
 
 PT05. **Cross-election binding failure**
+
 - Steps: attempt to cast with `election_id` that does not match the active manifest.
 - Expect: rejected; no state change.
 - Evidence: error code; logs show binding mismatch without leaking sensitive internals.
 
 PT06. **Cross-jurisdiction binding failure**
+
 - Steps: attempt to cast with `jurisdiction_id` that does not match the active manifest.
 - Expect: rejected; no state change.
 - Evidence: error code; logs show binding mismatch.
 
 PT07. **Idempotency replay (same body)**
+
 - Steps: submit a valid cast request with an idempotency key; then resend the identical request with the same idempotency key.
 - Expect: deterministic same outcome; no double-write to BB/VoteChain; no second receipt.
 - Evidence: idempotency store entry; event counts unchanged.
 
 PT08. **Idempotency key body mismatch**
+
 - Steps: reuse the same idempotency key with a request body that differs by one field.
 - Expect: deterministic mismatch error; must not accept under ambiguity.
 - Evidence: stored request hash; mismatch response; no BB/VoteChain writes.
 
 PT09. **Nullifier reuse (strict mode)**
+
 - Steps: cast once successfully; attempt a second cast with the same nullifier under strict rules.
 - Expect: rejected or routed to flagged/provisional handling per policy; must not become counted twice.
 - Evidence: uniqueness oracle results; fraud flag records; tally input set.
 
 PT10. **Nullifier derivation mismatch**
+
 - Steps: provide a nullifier that does not match the required derivation for the credential/election.
 - Expect: rejected as invalid proof/integrity mismatch.
 - Evidence: error code; verifier logs.
 
 PT11. **Eligibility proof invalid**
+
 - Steps: submit a cast with an invalid eligibility proof (proof fails verification).
 - Expect: rejected; must not consume nullifier; must not append to BB.
 - Evidence: error code; no BB leaf; no anchor write.
 
 PT12. **Ballot validity proof invalid (suite-specific)**
+
 - Steps: submit a ballot that fails validity proof (or encodes an invalid ballot structure).
 - Expect: rejected; no BB append; no anchor write.
 - Evidence: error code; safe validation logs.
 
 PT13. **Receipt tamper (offline verification)**
+
 - Steps: take a valid receipt; alter one field; verify offline.
 - Expect: signature and/or linkage checks fail deterministically.
 - Evidence: verifier output; failed check name; reason.
 
 PT14. **Receipt cross-election swap**
+
 - Steps: try verifying a receipt under a different election/manifest context.
 - Expect: fails binding/linkage checks.
 - Evidence: verifier output and mismatch explanation.
@@ -173,36 +187,43 @@ PT14. **Receipt cross-election swap**
 ### Bulletin Board / Non-Equivocation (PT15-PT21)
 
 PT15. **STH signature verification**
+
 - Steps: tamper with an STH signature or key id (`kid`) in a controlled dataset; verify.
 - Expect: verification fails; monitors treat as critical.
 - Evidence: monitor logs; alert event; preserved artifacts.
 
 PT16. **Inclusion proof mismatch**
+
 - Steps: modify one inclusion proof path hash; verify.
 - Expect: inclusion verification fails.
 - Evidence: verifier output; failing proof step.
 
 PT17. **Anchor mismatch**
+
 - Steps: construct a receipt with a `bb_leaf_hash` that has no corresponding VoteChain anchor.
 - Expect: anchor check fails; receipt overall fails.
 - Evidence: verifier output; missing anchor evidence.
 
 PT18. **Split-view STH simulation**
+
 - Steps: simulate two observers receiving different STHs for the same tree size (controlled staging).
 - Expect: monitors detect inconsistency; alert; preserve evidence.
 - Evidence: both STHs; signatures; proof transcripts; alert record.
 
 PT19. **Missing consistency proof**
+
 - Steps: force a condition where a consistency proof cannot be fetched or is omitted.
 - Expect: monitors treat as high severity; evidence preserved.
 - Evidence: monitor logs; error classification; alert.
 
 PT20. **Invalid consistency proof**
+
 - Steps: provide a malformed/invalid consistency proof (controlled).
 - Expect: verification fails; alert.
 - Evidence: proof bytes/hash; verifier output.
 
 PT21. **BB append-only enforcement**
+
 - Steps: attempt to delete/modify an existing BB entry in staging (administrative simulation).
 - Expect: detection through anchor mismatch or monitor checks; evidence preserved.
 - Evidence: anchors before/after; monitor divergence report.
@@ -210,31 +231,37 @@ PT21. **BB append-only enforcement**
 ### API Hardening / Parsing / Canonicalization (PT22-PT27)
 
 PT22. **Unknown field rejection**
+
 - Steps: add unknown top-level fields to cast requests and manifests.
 - Expect: strict rejection (or strict ignore, if the spec says so); behavior must be consistent across nodes.
 - Evidence: response; logs; conformance result.
 
 PT23. **Type confusion**
+
 - Steps: send wrong JSON types for critical fields (numbers where strings are required, arrays vs objects).
 - Expect: deterministic schema failure; no partial processing.
 - Evidence: error code; no state changes.
 
 PT24. **Malformed base64url inputs**
+
 - Steps: provide malformed base64url strings in fields like signatures/hashes.
 - Expect: deterministic rejection; no crashes; no high CPU loops.
 - Evidence: response; error classification; metrics.
 
 PT25. **Canonicalization drift**
+
 - Steps: submit logically-equivalent JSON with different key orders/whitespace; verify hashing/signing behavior stays stable.
 - Expect: canonicalization produces identical bytes; signatures verify identically.
 - Evidence: computed hashes; signature verification outputs.
 
 PT26. **Duplicate JSON keys**
+
 - Steps: test parser behavior with duplicated keys (language-dependent).
 - Expect: explicit rejection or deterministic handling with conformance-defined rules.
 - Evidence: parser logs; conformance result; documented behavior.
 
 PT27. **Payload size limits**
+
 - Steps: send oversized requests (cast, proof fetch, discovery endpoints).
 - Expect: clean rejection with bounded resource usage.
 - Evidence: response; server CPU/mem; rate limit telemetry.
@@ -242,16 +269,19 @@ PT27. **Payload size limits**
 ### Availability / Overload / Safe Failure (PT28-PT30)
 
 PT28. **Overload behavior (retry + alternate gateways)**
+
 - Steps: induce overload in staging; observe client/server behavior.
 - Expect: explicit retry guidance (backoff/jitter), optional alternate gateway list, and no silent failure loops.
 - Evidence: error codes; client UX; metrics.
 
 PT29. **Degraded dependency handling**
+
 - Steps: take BB or VoteChain anchoring offline in staging during voting window simulation.
 - Expect: defined degraded mode behavior; continuity goals met; auditable reconciliation plan.
 - Evidence: incident timeline; audit anchors; reconciliation report.
 
 PT30. **Slow-client resource exhaustion protection**
+
 - Steps: simulate slow or stalled clients to ensure server timeouts and per-connection limits prevent resource exhaustion.
 - Expect: bounded impact; other clients remain served; alerts fire.
 - Evidence: server metrics; connection counts; timeout logs.

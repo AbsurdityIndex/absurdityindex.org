@@ -26,6 +26,7 @@ An MCP server exposing tweet engagement tools:
 | `fetch_tweet` | Fetch tweet content without replying (read-only) |
 
 **How it works:**
+
 1. Reads `.env` from the project root (manual line-by-line parse, no dotenv)
 2. Initializes Twitter read client (bearer token) and write client (OAuth 1.0a)
 3. Initializes Anthropic client for reply generation
@@ -34,6 +35,7 @@ An MCP server exposing tweet engagement tools:
 ## Configuration
 
 Registered in root `.mcp.json`:
+
 ```json
 {
   "mcpServers": {
@@ -56,6 +58,7 @@ Registered in root `.mcp.json`:
 ## Adding New Tools
 
 To add a new MCP tool:
+
 1. Create a new `.mjs` file in this directory
 2. Import and configure `McpServer` + `StdioServerTransport` from `@modelcontextprotocol/sdk`
 3. Define tools with `server.tool(name, schema, handler)`

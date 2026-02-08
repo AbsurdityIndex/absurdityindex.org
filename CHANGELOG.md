@@ -9,6 +9,7 @@ for tagged releases.
 ## [Unreleased]
 
 ### Added
+
 - Open-source governance baseline: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
   `SECURITY.md`, issue/PR templates, Dependabot, CODEOWNERS, `.editorconfig`,
   and `.nvmrc`.
@@ -20,6 +21,7 @@ for tagged releases.
 - Dedicated GitHub issue template for questions/support.
 
 ### Changed
+
 - CI now treats bill validation warnings as failures (`validate:ci` is strict).
 - Security hardening in CLI launch path, embed script rendering, and extension
   DOM rendering.

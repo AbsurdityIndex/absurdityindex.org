@@ -37,7 +37,7 @@ python3 monitor.py --menubar          # Include menu bar icon
 
 ## Key Options
 
-```
+```text
 --host USER@HOST   SSH target (default: $K8S_HOST env var)
 --interval N       Seconds between checks (default: 60)
 --port N           Dashboard port (default: 9876)

@@ -38,7 +38,7 @@ npm run dashboard-ui:build # Build static files to dist/dashboard-ui/
 
 ## Architecture
 
-```
+```text
 src/
   commands/           # CLI command handlers (Commander subcommands)
   modules/
@@ -66,10 +66,13 @@ dashboard-ui/         # Astro sub-app for engagement dashboard
 ## Key Patterns
 
 ### Posting Flow
+
 Generate content (URL-free) → Generate branded image card (or meme) → Post tweet with image → Reply to own tweet with CTA + source links.
 
 ### Safety Pipeline (Hot Pot Detector)
+
 Every post passes through five checks before publishing:
+
 1. **Blocklist** — Banned terms and phrases
 2. **Tragedy radar** — Active tragedies, mass shootings, disasters
 3. **Partisan lean** — Detects one-sided political framing
@@ -79,9 +82,11 @@ Every post passes through five checks before publishing:
 Verdicts: `SAFE` (auto-post), `REVIEW` (human queue), `REJECT` (blocked).
 
 ### Engagement Pipeline
+
 Fetch tweet context → Research (Sonnet verifies facts) → Generate reply (Opus) → Fact-check (Sonnet validates against research) → Safety check → Post → CTA reply with links.
 
 ### Evidence Standard
+
 Every factual claim must include a proof link. Prompt templates enforce this via `PromptContext.sourceLinks`. If a source cannot be found, the claim must not be made.
 
 ## Environment Variables

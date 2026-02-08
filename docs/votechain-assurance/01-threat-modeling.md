@@ -140,4 +140,3 @@ Third-party auditors/red teams should receive:
 - Claims matrix (what properties you think you have)
 - Risk register (where you think you are weak)
 - Clear "pilot mode" target (Mode 1/2/3) and what is in-scope
-

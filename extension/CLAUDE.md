@@ -35,6 +35,7 @@ Chrome/Firefox extension that displays Absurdity Index scores on Congress.gov bi
 ## Development
 
 Load unpacked in Chrome:
+
 1. Go to `chrome://extensions`
 2. Enable Developer mode
 3. Click "Load unpacked" and select this `extension/` folder

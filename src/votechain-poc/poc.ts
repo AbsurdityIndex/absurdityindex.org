@@ -1195,6 +1195,14 @@ export async function getPocState() {
   return ensureInitialized();
 }
 
+/** Check if the current credential has already cast a ballot in this election. */
+export async function hasAlreadyVoted(): Promise<boolean> {
+  const state = await ensureInitialized();
+  if (!state.credential) return false;
+  const nullifier = await computeNullifier(state.credential.pk, state.election.election_id);
+  return hasUsedNullifier(state, nullifier);
+}
+
 export async function getManifest(): Promise<PocElectionManifest> {
   const state = await ensureInitialized();
   return state.manifest;
@@ -2372,7 +2380,10 @@ export async function lookupBallotByHash(ballotHash: string): Promise<BallotLook
 
   // Find the leaf containing this ballot hash
   const leafIndex = state.bb.leaves.findIndex(
-    (l) => (l.payload as any)?.encrypted_ballot?.ballot_hash === ballotHash,
+    (l) =>
+      (l.payload as Record<string, unknown> | undefined)?.encrypted_ballot
+        ? ((l.payload as Record<string, Record<string, unknown>>).encrypted_ballot?.ballot_hash === ballotHash)
+        : false,
   );
 
   if (leafIndex === -1) {
@@ -2385,7 +2396,7 @@ export async function lookupBallotByHash(ballotHash: string): Promise<BallotLook
   }
 
   const leaf = state.bb.leaves[leafIndex];
-  const receivedAt = (leaf.payload as any)?.received_at as string | undefined;
+  const receivedAt = (leaf.payload as Record<string, unknown> | undefined)?.received_at as string | undefined;
 
   checks.push({
     name: 'ballot_on_bulletin_board',

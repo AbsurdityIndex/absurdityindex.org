@@ -171,7 +171,7 @@ This section defines the cryptographic objects EWP transports over HTTPS. Implem
 
 Per VoteChain PRD, each voter has a deterministic per-election nullifier:
 
-```
+```text
 nullifier = H("votechain:nullifier:v1" || did_pubkey || election_id)
 ```
 
@@ -292,7 +292,7 @@ for example:
 
 The suite MUST define a deterministic transcript hash input to Fiat-Shamir:
 
-```
+```text
 FS = H("ewp:fs:v1" || election_id || manifest_id || contest_id || ciphertexts || context)
 ```
 
@@ -397,6 +397,7 @@ sequenceDiagram
 `GET /.well-known/votechain-ewp`
 
 Response:
+
 ```json
 {
   "ewp_version": "0.1-preview",
@@ -458,6 +459,7 @@ Minimum fields:
 `POST /v1/elections/{election_id}/challenge`
 
 Request:
+
 ```json
 {
   "client_session": "b64u(32_random_bytes)"
@@ -465,6 +467,7 @@ Request:
 ```
 
 Response:
+
 ```json
 {
   "challenge_id": "b64u(16_random_bytes)",
@@ -494,6 +497,7 @@ Idempotency rules:
 - If the request body differs for a reused `Idempotency-Key`, the gateway MUST return `409 Conflict` with `EWP_IDEMPOTENCY_MISMATCH`.
 
 Request:
+
 ```json
 {
   "ewp_version": "0.1-preview",
@@ -527,6 +531,7 @@ Request:
 ```
 
 Response (success):
+
 ```json
 {
   "status": "cast_recorded",
@@ -553,6 +558,7 @@ Response (success):
 ```
 
 Response (accepted, async):
+
 ```json
 {
   "status": "cast_pending",
@@ -605,6 +611,7 @@ This endpoint enables **cast-as-intended verification** (P0) — the first link 
 `POST /v1/elections/{election_id}/spoil`
 
 Request:
+
 ```json
 {
   "ewp_version": "0.1-preview",
@@ -624,6 +631,7 @@ Request:
 Note: The spoil request does NOT include the nullifier or eligibility proof. No nullifier is consumed by a spoil — the voter is not casting, only auditing the device. This prevents spoil requests from counting toward the one-ballot-per-election limit.
 
 Response:
+
 ```json
 {
   "status": "ballot_spoiled",
@@ -898,6 +906,7 @@ EWP deployment follows the deployment modes defined in Section 3.3, in order of 
 ### 10.4 Client Hardening (By Deployment Mode)
 
 **Mode 1 (polling place):**
+
 - Institution-controlled device with HSM-backed device DID
 - Code signing and boot-time attestation (VoteChain Pillar 5)
 - Tamper-evident physical housing
@@ -905,11 +914,13 @@ EWP deployment follows the deployment modes defined in Section 3.3, in order of 
 - Strong update controls: no software changes during voting window
 
 **Mode 2 (supervised):**
+
 - Supervised device with controlled software load
 - Attestation required before session start
 - Facility operator responsible for physical device security
 
 **Mode 3 (unsupervised remote — future, gated):**
+
 - Prefer native app with secure enclave/TPM where available
 - Code signing and remote attestation where platform supports it
 - Browser-only is possible for prototypes but is not a serious security baseline for high-stakes elections

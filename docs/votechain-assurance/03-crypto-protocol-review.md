@@ -126,4 +126,3 @@ External crypto reviewers should get:
 - Conformance vectors
 - Key ceremony and rotation procedures
 - A list of open questions with proposed resolutions
-

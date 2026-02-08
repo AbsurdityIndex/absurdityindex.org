@@ -19,7 +19,8 @@ stage: z.enum([
 ## Real Legislative Flows
 
 ### Standard Bicameral Path (Happy Path)
-```
+
+```text
 Origin Chamber → Receiving Chamber → President
     ↓                   ↓               ↓
  Introduce          Receive          Sign/Veto
@@ -29,7 +30,8 @@ Origin Chamber → Receiving Chamber → President
 ```
 
 ### Amendment Ping-Pong
-```
+
+```text
 House passes H.R. 123
     ↓
 Senate amends & passes
@@ -48,7 +50,8 @@ House considers Senate amendments
 ```
 
 ### Presidential Actions
-```
+
+```text
 Enrolled Bill → President
                     ├─→ Signs → Public Law
                     ├─→ Vetoes → Back to Congress
@@ -155,7 +158,8 @@ const billEvolutionStageSchema = z.object({
 ### Migration Path
 
 Old stage → New stage mapping:
-```
+
+```text
 'introduced'       → 'introduced'
 'committee-markup' → 'origin-committee' or 'origin-reported'
 'house-passed'     → 'origin-passed' (for H.R.) or 'receiving-passed' (for S.)

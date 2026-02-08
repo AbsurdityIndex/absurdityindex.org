@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import MermaidClient from '../../components/votechain/MermaidClient.astro';
+import AISummarizer from '../../components/votechain/AISummarizer.astro';
 import { Content as DocContent } from '../../../docs/votechain-architecture.md';
 ---
 
@@ -25,6 +26,164 @@ import { Content as DocContent } from '../../../docs/votechain-architecture.md';
         Where the servers live, who operates them, and why the boundaries matter
       </p>
     </div>
+
+    <AISummarizer
+      triggerSub="Server map &amp; trust boundaries &rarr; 60 seconds"
+      scanLines={[
+        'Reading architecture specification...',
+        'Mapping server boundaries...',
+        'Analyzing trust zones and ownership...',
+        'Evaluating deployment modes...',
+        'Compiling summary...',
+      ]}
+    >
+      <!-- Level 0: ELI5 -->
+      <Fragment slot="eli5">
+        <p class="font-bold text-lg text-navy-900 mb-3">The government building version:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What is this page about?</p>
+        <p class="mb-3">The main VoteChain blueprint tells you <em>what</em> the system does. This page tells you <em>where</em> each piece lives, who owns it, and why it's kept separate from the other pieces. Think of it like a map of a big government building &mdash; which rooms exist, who has the keys, and why certain doors are locked.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">The two hallways:</p>
+        <p class="mb-3">Imagine the building has two long hallways that never connect except through a tiny mail slot in the wall.</p>
+
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Hallway 1 &mdash; "Who are you?"</strong> This side checks whether someone is allowed to vote. It has rooms for signing people up, catching fraud, and keeping records. It never sees what anyone voted for.</li>
+          <li><strong>Hallway 2 &mdash; "What did you vote?"</strong> This side handles the actual ballots &mdash; encrypted, locked in a box that nobody can open alone. It never knows <em>who</em> cast any particular ballot.</li>
+          <li><strong>The mail slot</strong> between them only passes a tiny receipt number &mdash; not a name, not a ballot. Just proof that "something happened on both sides." That's it.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Five important rooms:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>The sign-up desk.</strong> Where you prove who you are. It's in a real, physical office &mdash; not online &mdash; because the most important step should happen face-to-face.</li>
+          <li><strong>The big shared notebook room.</strong> 74 people from different groups (states, federal agencies, auditors, and oversight boards) all sit around a table. Nothing gets written down unless most of them agree. No one person can change the book.</li>
+          <li><strong>The ballot drop box.</strong> A public, see-through box where encrypted ballots go. Anyone can walk by and count the envelopes, but nobody can open them.</li>
+          <li><strong>The key-holders' vault.</strong> A group of trusted people each hold one piece of a combination lock. You need enough of them together to open the box and count the ballots &mdash; and they do it in the open, with proof they did it right.</li>
+          <li><strong>The watchtower.</strong> Independent guards (journalists, universities, watchdog groups) who stand outside and make sure the drop box isn't being tampered with. They compare notes with each other constantly.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Three ways to visit:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Mode 1 &mdash; Walk in.</strong> You go to the polling place and use their device. Simplest and safest.</li>
+          <li><strong>Mode 2 &mdash; Supervised kiosk.</strong> Like using a library computer with a librarian nearby.</li>
+          <li><strong>Mode 3 &mdash; From home.</strong> Possible but locked behind extra safety gates. Not the default.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Why keep the rooms separate?</p>
+        <p class="mb-3">Because if everything were in one room with one key, whoever holds that key could do whatever they want. Splitting things up means no single person, agency, or company can secretly change what happened. Every room has different guards, different locks, and different people watching.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">Want more detail? Slide the bar to the right. Or close this and explore the full architecture with diagrams.</p>
+      </Fragment>
+
+      <!-- Level 1: Plain Language (default) -->
+      <Fragment slot="plain">
+        <p class="font-bold text-lg text-navy-900 mb-3">Here's what the architecture document covers:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What is this?</p>
+        <p class="mb-3">This is the server map for VoteChain + EWP &mdash; a companion document to the main blueprint. Instead of explaining <em>what</em> the system does, it explains <em>where</em> each component runs, who operates it, and why those boundaries exist. If the PRD is the architect's blueprint, this is the site plan showing which buildings go on which lots and who holds the keys to each one.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Two separate planes:</p>
+        <p class="mb-3">The architecture splits everything into two independent planes that share almost nothing:</p>
+
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Eligibility / verification plane (VoteChain):</strong> Handles the "are you allowed to vote?" question. This includes enrollment, zero-knowledge proofs of eligibility, nullifier uniqueness checks, fraud detection, and audit anchors. It never touches ballot content.</li>
+          <li><strong>Ballot content plane (EWP):</strong> Handles the "what did you vote for?" question. This includes encrypted ballots, the public bulletin board, non-equivocation monitoring, threshold decryption, and tally proofs. It never knows who cast a given ballot.</li>
+          <li><strong>The only link between them</strong> is audit anchors &mdash; cryptographic hashes that prove both sides agree something happened, without revealing voter identity or ballot content to either side.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Five operator categories (who runs what):</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Election authority (state/local):</strong> Runs enrollment offices, issues attestations, handles fraud detection and case review, publishes final tallies. These are existing government entities.</li>
+          <li><strong>VoteChain consortium:</strong> Operates the 74-node permissioned ledger &mdash; 6 federal, 50 state, 12 auditor, 6 oversight nodes. Category-quorum consensus means 3 of 4 groups must agree before anything is recorded.</li>
+          <li><strong>Independent trustees/guardians:</strong> Hold threshold key shares for ballot decryption. They participate in air-gapped key ceremonies and publish cryptographic proofs at tally time. No single trustee can decrypt anything alone.</li>
+          <li><strong>Independent monitors:</strong> Academic institutions, NGOs, media organizations, and government watchdogs that continuously fetch bulletin board checkpoints and VoteChain anchors. They detect equivocation (showing different data to different people) and suppression attempts.</li>
+          <li><strong>External data sources:</strong> Government feeds (SSA death records, USCIS, passport records) used at enrollment and for ongoing revocation signals. These are inputs, not operators of the system itself.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Three deployment modes:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Mode 1 &mdash; In-person (polling place device):</strong> The voter uses a device provided at the polling place. The device is controlled by election officials. This is the primary target for early pilots.</li>
+          <li><strong>Mode 2 &mdash; Supervised kiosk:</strong> A dedicated kiosk in a controlled environment (early voting center, government office) with a poll worker present. Also targeted for early pilots.</li>
+          <li><strong>Mode 3 &mdash; Unsupervised remote (personal device):</strong> Voting from home on your own device. Explicitly gated behind additional security requirements and <strong>not</strong> treated as a default. This mode is acknowledged but intentionally deferred.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Why these boundaries matter:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>No single point can silently alter outcomes.</strong> Multiple gateways, independent monitors, an append-only bulletin board, and VoteChain anchors all cross-check each other.</li>
+          <li><strong>No single operator can decrypt individual ballots.</strong> Threshold trustees hold shares; decryption only happens at tally with published proofs.</li>
+          <li><strong>Clients don't have to trust any single gateway.</strong> Manifests and anchors are independently verifiable via VoteChain read APIs operated by multiple parties.</li>
+          <li><strong>Equivocation is externally detectable.</strong> Bulletin board checkpoints are signed and anchored; if anyone tries to show different data to different people, monitors catch it.</li>
+          <li><strong>Everything stays within existing election law.</strong> Identity proofing remains in-person. Flagged cases route to provisional handling with auditable workflows.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What's public vs. what's private:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Public:</strong> Election manifests, encrypted ballot leaves, signed checkpoints, cast receipts (which don't reveal selections), tally artifacts, proof bundles, and all VoteChain anchors.</li>
+          <li><strong>Private:</strong> Enrollment PII, fraud investigation case files, and trustee private key shares. These are role-gated and never placed on-chain.</li>
+        </ul>
+
+        <p class="text-navy-500 text-sm italic mt-4">Close this and explore the full architecture document with four Mermaid diagrams showing ownership maps, consortium structure, cast-to-tally sequences, and the full alignment map.</p>
+      </Fragment>
+
+      <!-- Level 2: Technical -->
+      <Fragment slot="technical">
+        <p class="font-bold text-lg text-navy-900 mb-3">Technical summary:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Scope:</p>
+        <p class="mb-3">A production architecture specification for the combined VoteChain (verification + fraud-review evidence layer) and EWP (cast-to-tally ballot integrity layer). This document maps server roles, operator boundaries, trust zones, data flows, and deployment modes. It is the "where and why" companion to the main PRD's "what and how."</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Two-plane separation (core architectural invariant):</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Eligibility plane (VoteChain):</strong> ZK eligibility proofs, nullifier uniqueness enforcement, revocation processing, fraud_flag events, and audit anchor publication. Operates on cryptographic attestations only &mdash; no PII, no ballot content.</li>
+          <li><strong>Ballot content plane (EWP):</strong> ElGamal-encrypted ballots, append-only public bulletin board (BB), STH-signed checkpoints, non-equivocation monitoring, threshold decryption (Pedersen DKG / Shamir), and tally proof publication.</li>
+          <li><strong>Sole coupling point:</strong> Audit anchors &mdash; hash commitments anchored to VoteChain by BB STH signers and EWP gateways. Anchors bind the two planes for auditability without leaking voter&ndash;ballot correlation.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Server roles (13 components, minimal pilot set):</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Registration Authority cluster:</strong> <code>enrollment-service</code> (in-person, state offices), <code>attestation-issuer</code> (HSM-backed, produces signed pillar attestations without on-chain PII), <code>recovery-service</code> (in-person Shamir recovery governance).</li>
+          <li><strong>Election Authority services:</strong> <code>fraud-detection-engine</code> (ingests SSA/vital/judicial feeds, emits fraud_flag events), <code>oversight-portal</code> (role-gated case management + evidence bundles + audit exports), <code>tally-publisher</code> (publishes final tally artifact + proof bundle, anchors tally hash to VoteChain).</li>
+          <li><strong>VoteChain Ledger:</strong> <code>votechain-ledger</code> &mdash; 74-node permissioned BFT network (Federal 6, State 50, Auditor 12, Oversight 6). Category-quorum consensus: 3-of-4 categories, each &ge;2/3 intra-category. <code>votechain-read-api</code> &mdash; multi-operator, cached, replicated read path for client/monitor anchor verification.</li>
+          <li><strong>Bulletin Board:</strong> <code>bb-log</code> (append-only transparency log for encrypted ballots + election artifacts), <code>bb-sth-signer</code> (HSM-backed, signs checkpoints so equivocation is detectable when monitors compare STH histories and demand consistency proofs).</li>
+          <li><strong>Threshold Trustees:</strong> <code>trustee-service</code> &mdash; dedicated HSM environments for air-gapped key ceremony (DKG), partial decryptions at tally, and publication of decryption/shuffle proofs. No single trustee holds a complete decryption key.</li>
+          <li><strong>EWP Gateways:</strong> <code>ewp-gateway</code> &times; N (&ge;2 operator categories, geo-redundant). Handles manifest distribution, cast receipt anchoring (nullifier + leaf_hash + sth_hash &rarr; VoteChain), and failover for anti-disenfranchisement.</li>
+          <li><strong>Independent Monitors:</strong> <code>monitor</code> instances run by academic, NGO, media, and government parties. Continuously fetch BB STH + inclusion/consistency proofs, cross-check against VoteChain anchors via read API. Detect equivocation (split views), anchor gaps (suppression), and checkpoint staleness.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Trust zone boundaries:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Election Authority zone:</strong> Enrollment, attestation issuance, fraud detection, oversight, tally publication. Trusted for operational processes but not for unilateral ledger writes &mdash; all writes go through consortium consensus.</li>
+          <li><strong>Consortium zone:</strong> Ledger nodes + write gateway. No single category can finalize a transaction. Write access requires multi-category quorum; read access is public and replicated.</li>
+          <li><strong>Trustee zone:</strong> Air-gapped key material. Trustees interact only at key ceremony (pre-election) and tally decryption (post-election). HSM attestation binds trustee identity to key shares.</li>
+          <li><strong>Public zone:</strong> BB log, VoteChain read API, published artifacts. Designed to be fully auditable by any party without special access.</li>
+          <li><strong>Monitor zone:</strong> No write access to any system. Read-only cross-verification against both BB and VoteChain. Independence is structural &mdash; monitors operate their own infrastructure with no dependency on election authority or consortium services.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Air-gapped key ceremonies:</p>
+        <p class="mb-3">Threshold key generation uses Pedersen DKG (or equivalent verifiable secret sharing) conducted in an air-gapped environment. Key shares are distributed to trustees on HSM-backed devices. The public encryption key is published and anchored to VoteChain. Compromise of fewer than the threshold number of trustees does not compromise ballot secrecy. Key ceremony transcripts are published for independent verification.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Non-equivocation monitoring:</p>
+        <p class="mb-3">BB checkpoints (STHs) are signed by HSM-backed keys and anchored to VoteChain. Monitors fetch STHs from multiple vantage points and compare. Any divergence (split view) constitutes detectable equivocation. Monitors can demand consistency proofs between any two STHs. Anchor gaps (missing or delayed anchors) trigger public alerts. The design follows the Certificate Transparency model: trust is established through gossip and cross-verification, not through trusting the log operator.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Degraded-mode behavior:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Gateway failure:</strong> Voters failover to alternate EWP gateways (&ge;2 operator categories ensure no single-operator SPOF). Provisional ballots issued if all gateways are unreachable.</li>
+          <li><strong>Ledger partition:</strong> If category-quorum is lost, writes queue and the system operates in read-only mode against the last consistent state. Verification events are logged locally and reconciled post-partition.</li>
+          <li><strong>BB unavailability:</strong> Gateways buffer encrypted ballots locally (signed, timestamped). Upon BB recovery, buffered ballots are appended and anchored. Monitors flag the gap in STH continuity.</li>
+          <li><strong>Trustee unavailability at tally:</strong> Threshold scheme tolerates up to t-1 absent trustees. If threshold is not met, tally is delayed (not abandoned) until sufficient trustees participate.</li>
+          <li><strong>Monitor divergence:</strong> If monitors report conflicting STHs, all anchored STH history is published for independent analysis. The system halts tally until consistency is restored or the equivocation is explained.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Deployment modes and security posture:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Mode 1 (in-person):</strong> Election-authority-controlled device, physical presence attestation, air-gapped or hardened network. Highest assurance. Primary pilot target.</li>
+          <li><strong>Mode 2 (supervised kiosk):</strong> Dedicated kiosk with poll-worker presence attestation. Controlled environment, reduced attack surface vs. personal devices. Co-primary pilot target.</li>
+          <li><strong>Mode 3 (unsupervised remote):</strong> Personal device, no physical presence guarantee. Explicitly gated: requires additional client-side attestation (device integrity, liveness), elevated monitoring thresholds, and governance approval before activation per jurisdiction. Not a default.</li>
+        </ul>
+
+        <p class="text-navy-500 text-sm italic mt-4">The full document below includes four Mermaid diagrams: high-level ownership map, 74-node consortium topology, EWP cast-to-tally sequence, and a dense full-alignment map with all 13 server components and their data flows.</p>
+      </Fragment>
+    </AISummarizer>
 
     <div class="bg-parchment rounded-lg shadow-lg p-8 md:p-12">
       <div class="bill-content prd-content">

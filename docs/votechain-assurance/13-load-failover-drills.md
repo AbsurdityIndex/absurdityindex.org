@@ -88,4 +88,3 @@ Patch patterns:
 - Failure-injection scenarios and outcomes
 - Degraded-mode rules and evidence they work
 - Observability dashboards and alert runbooks
-

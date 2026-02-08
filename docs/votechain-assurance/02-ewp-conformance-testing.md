@@ -119,7 +119,7 @@ Use a stable set of negative tests so regressions are obvious.
 These names are suggestions; align expected codes to the PRD as it evolves:
 
 | Test ID | Negative test (must fail) | Expected outcome |
-|--------:|----------------------------|------------------|
+| --------: | ---------------------------- | ------------------ |
 | N01 | Manifest signature invalid | `EWP_BAD_MANIFEST` |
 | N02 | Cast request does not match active manifest (`election_id`, `jurisdiction_id`, `manifest_id`) | `EWP_BAD_MANIFEST` |
 | N03 | Challenge not found | `EWP_PROOF_INVALID` |

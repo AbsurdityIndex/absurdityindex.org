@@ -36,6 +36,7 @@
     "test": "node --test tests/*.test.js",
     "typecheck": "astro check --minimumFailingSeverity hint",
     "lint": "eslint --max-warnings=0 .",
+    "lint:md": "npx markdownlint-cli2",
     "format": "prettier --write \"{src,scripts,public,tests}/**/*.{js,ts,mjs,cjs,astro,css,json}\" \"*.{js,mjs,cjs,ts,json}\"",
     "format:check": "prettier --check \"{src,scripts,public,tests}/**/*.{js,ts,mjs,cjs,astro,css,json}\" \"*.{js,mjs,cjs,ts,json}\"",
     "verify": "npm run check:icons && npm run check:innerhtml && npm run validate:ci && npm test && npm run lint && npm run typecheck && npm run format:check && npm run security:ci && npm run build && npm run build --prefix cli && npm test --prefix cli",

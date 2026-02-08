@@ -117,9 +117,11 @@
 
       var btnFind = makeBtn('Find', 'find');
       var btnBack = makeBtn('Back', 'back');
+      var btnDecompose = makeBtn('Decompose', 'decompose');
       var btnClearFocus = makeBtn('Clear focus', 'clearFocus');
       btnFind.disabled = true;
       btnBack.disabled = true;
+      btnDecompose.disabled = true;
       btnClearFocus.disabled = true;
 
       var btnFit = makeBtn('Fit', 'fit');
@@ -133,6 +135,7 @@
       searchWrap.appendChild(btnFind);
 
       controls.appendChild(btnBack);
+      controls.appendChild(btnDecompose);
       controls.appendChild(searchWrap);
       controls.appendChild(btnClearFocus);
       controls.appendChild(btnFit);
@@ -161,6 +164,7 @@
         searchInput: searchInput,
         btnFind: btnFind,
         btnBack: btnBack,
+        btnDecompose: btnDecompose,
         btnClearFocus: btnClearFocus,
         btnClose: btnClose,
       };
@@ -203,6 +207,48 @@
       pinchStart: null,
       ignoreClick: false,
     };
+
+    // When a diagram is moved into the fullscreen inspector we need the SVG to have a stable
+    // intrinsic size; Mermaid's responsive sizing can otherwise cause "Fit" to mis-measure and
+    // appear clipped/cut off. We temporarily size the SVG to its viewBox (px) and restore on close.
+    var svgInspectorStyleCache = new WeakMap();
+
+    function prepareSvgForInspector(svg) {
+      if (!svg) return;
+      if (!(svg instanceof SVGSVGElement)) return;
+      if (svgInspectorStyleCache.has(svg)) return;
+
+      svgInspectorStyleCache.set(svg, {
+        width: svg.style.width,
+        height: svg.style.height,
+        maxWidth: svg.style.maxWidth,
+        maxHeight: svg.style.maxHeight,
+        display: svg.style.display,
+      });
+
+      var vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : null;
+      if (vb && vb.width > 0 && vb.height > 0) {
+        svg.style.width = vb.width + 'px';
+        svg.style.height = vb.height + 'px';
+      }
+
+      svg.style.maxWidth = 'none';
+      svg.style.maxHeight = 'none';
+      svg.style.display = 'block';
+    }
+
+    function restoreSvgAfterInspector(svg) {
+      if (!svg) return;
+      if (!(svg instanceof SVGSVGElement)) return;
+      var prev = svgInspectorStyleCache.get(svg);
+      if (!prev) return;
+      svg.style.width = prev.width || '';
+      svg.style.height = prev.height || '';
+      svg.style.maxWidth = prev.maxWidth || '';
+      svg.style.maxHeight = prev.maxHeight || '';
+      svg.style.display = prev.display || '';
+      svgInspectorStyleCache.delete(svg);
+    }
 
     function applyTransform() {
       if (!panZoom.svg) return;
@@ -369,6 +415,7 @@
         modal.searchInput.disabled = true;
         modal.btnFind.disabled = true;
         modal.btnClearFocus.disabled = true;
+        modal.btnDecompose.disabled = true;
         return;
       }
 
@@ -377,6 +424,9 @@
 
       var hasFocus = !!(active.focusIndex.focusNode || active.focusIndex.focusEdge);
       modal.btnClearFocus.disabled = !hasFocus;
+
+      var canDecompose = !!active.focusIndex.focusNode && canDecomposeNodeKey(active.focusIndex.focusNode);
+      modal.btnDecompose.disabled = !canDecompose;
 
       var base = active.titleBase || 'Diagram inspector';
       if (active.focusIndex.focusNode) modal.title.textContent = base + ': ' + active.focusIndex.focusNode;
@@ -401,6 +451,7 @@
 
       // Restore current diagram (but keep overlay open).
       if (active.focusIndex) clearDiagramFocus(active.focusIndex);
+      if (panZoom.svg) restoreSvgAfterInspector(panZoom.svg);
 
       if (active.nextSibling) active.parent.insertBefore(active.diagram, active.nextSibling);
       else active.parent.appendChild(active.diagram);
@@ -447,6 +498,7 @@
 
       // Wire up pan/zoom to the SVG.
       panZoom.svg = diagramEl.querySelector('svg');
+      if (panZoom.svg) prepareSvgForInspector(panZoom.svg);
       panZoom.scale = 1;
       panZoom.tx = 0;
       panZoom.ty = 0;
@@ -471,6 +523,13 @@
         modal.btnClearFocus.disabled = true;
       }
       updateFocusUi();
+    }
+
+    function canDecomposeNodeKey(nodeKey) {
+      if (!nodeKey) return false;
+      var diagramId = DECOMPOSE_TO_DIAGRAM_ID[nodeKey];
+      if (!diagramId) return false;
+      return !!document.querySelector('.mermaid-diagram[data-diagram-id="' + diagramId + '"]');
     }
 
     function decomposeNodeKey(nodeKey) {
@@ -601,6 +660,16 @@
       else flashSearchError();
     }
 
+    function findInEventPath(e, predicate) {
+      if (!e || typeof predicate !== 'function') return null;
+      var path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+      for (var i = 0; i < path.length; i++) {
+        var el = path[i];
+        if (el instanceof Element && predicate(el)) return el;
+      }
+      return null;
+    }
+
     function wireFocusHandlersForSvg(index) {
       if (!index || index._wired) return;
       index._wired = true;
@@ -609,11 +678,10 @@
         if (!active || panZoom.svg !== index.svg) return;
         if (panZoom.ignoreClick) return;
 
-        var target = e.target;
-        if (!(target instanceof Element)) return;
-
         // Node click focuses adjacency.
-        var nodeEl = target.closest('g.node');
+        var nodeEl = findInEventPath(e, function (el) {
+          return el.tagName.toLowerCase() === 'g' && el.classList.contains('node');
+        });
         if (nodeEl) {
           var key = parseFlowchartNodeKey(nodeEl.getAttribute('id'));
           if (key) {
@@ -623,7 +691,12 @@
         }
 
         // Edge click focuses endpoints.
-        var edgePath = target.closest('path.flowchart-link[id^=\"L_\"]');
+        var edgePath = findInEventPath(e, function (el) {
+          if (!(el instanceof SVGPathElement)) return false;
+          if (!el.classList.contains('flowchart-link')) return false;
+          var id = el.getAttribute('id') || '';
+          return id.indexOf('L_') === 0;
+        });
         if (edgePath) {
           var edgeId = edgePath.getAttribute('id');
           if (edgeId) {
@@ -632,7 +705,11 @@
           }
         }
 
-        var edgeLabel = target.closest('g.label[data-id]');
+        var edgeLabel = findInEventPath(e, function (el) {
+          if (el.tagName.toLowerCase() !== 'g') return false;
+          if (!el.classList.contains('label')) return false;
+          return !!el.getAttribute('data-id');
+        });
         if (edgeLabel) {
           var edgeId2 = edgeLabel.getAttribute('data-id');
           if (edgeId2) {
@@ -649,16 +726,17 @@
       // Right-click: decompose a node into a deeper/alternate diagram (when configured).
       index.svg.addEventListener('contextmenu', function (e) {
         if (!active || panZoom.svg !== index.svg) return;
-        var target = e.target;
-        if (!(target instanceof Element)) return;
 
-        var nodeEl = target.closest('g.node');
+        var nodeEl = findInEventPath(e, function (el) {
+          return el.tagName.toLowerCase() === 'g' && el.classList.contains('node');
+        });
         if (!nodeEl) return;
 
         var key = parseFlowchartNodeKey(nodeEl.getAttribute('id'));
         if (!key) return;
 
         e.preventDefault();
+        e.stopPropagation();
         if (!decomposeNodeKey(key)) focusNode(index, key);
       });
     }
@@ -672,26 +750,33 @@
       panZoom.ty = 0;
       applyTransform();
 
+      // Use a double-rAF so the SVG has a settled layout after being moved into the modal.
       requestAnimationFrame(function () {
-        if (!modal || !active || !panZoom.svg) return;
-        var viewportRect = modal.viewport.getBoundingClientRect();
-        var svgRect = panZoom.svg.getBoundingClientRect();
-        if (svgRect.width === 0 || svgRect.height === 0) return;
+        requestAnimationFrame(function () {
+          if (!modal || !active || !panZoom.svg) return;
+          var viewportRect = modal.viewport.getBoundingClientRect();
+          if (viewportRect.width === 0 || viewportRect.height === 0) return;
 
-        var padding = 16;
-        var maxW = Math.max(1, viewportRect.width - padding * 2);
-        var maxH = Math.max(1, viewportRect.height - padding * 2);
+          var vb = panZoom.svg.viewBox && panZoom.svg.viewBox.baseVal ? panZoom.svg.viewBox.baseVal : null;
+          var svgW = vb && vb.width > 0 ? vb.width : panZoom.svg.getBoundingClientRect().width;
+          var svgH = vb && vb.height > 0 ? vb.height : panZoom.svg.getBoundingClientRect().height;
+          if (!svgW || !svgH) return;
 
-        var scale = Math.min(maxW / svgRect.width, maxH / svgRect.height);
-        scale = clamp(scale, 0.2, 6);
+          var padding = 16;
+          var maxW = Math.max(1, viewportRect.width - padding * 2);
+          var maxH = Math.max(1, viewportRect.height - padding * 2);
 
-        var tx = (viewportRect.width - svgRect.width * scale) / 2;
-        var ty = (viewportRect.height - svgRect.height * scale) / 2;
+          var scale = Math.min(maxW / svgW, maxH / svgH);
+          scale = clamp(scale, 0.2, 6);
 
-        panZoom.scale = scale;
-        panZoom.tx = tx;
-        panZoom.ty = ty;
-        applyTransform();
+          var tx = (viewportRect.width - svgW * scale) / 2;
+          var ty = (viewportRect.height - svgH * scale) / 2;
+
+          panZoom.scale = scale;
+          panZoom.tx = tx;
+          panZoom.ty = ty;
+          applyTransform();
+        });
       });
     }
 
@@ -717,6 +802,8 @@
       if (active.focusIndex) {
         clearDiagramFocus(active.focusIndex);
       }
+
+      if (panZoom.svg) restoreSvgAfterInspector(panZoom.svg);
 
       // Restore diagram to original location.
       if (active.nextSibling) active.parent.insertBefore(active.diagram, active.nextSibling);
@@ -744,6 +831,7 @@
         modal.searchInput.disabled = true;
         modal.btnFind.disabled = true;
         modal.btnClearFocus.disabled = true;
+        modal.btnDecompose.disabled = true;
       }
 
       diagramNavStack.length = 0;
@@ -800,6 +888,7 @@
 
       // Wire up pan/zoom to the SVG.
       panZoom.svg = diagramEl.querySelector('svg');
+      if (panZoom.svg) prepareSvgForInspector(panZoom.svg);
       panZoom.scale = 1;
       panZoom.tx = 0;
       panZoom.ty = 0;
@@ -865,6 +954,11 @@
           switchModalToDiagram(prev);
           updateNavUi();
         }
+        else if (action === 'decompose') {
+          if (active && active.focusIndex && active.focusIndex.focusNode) {
+            decomposeNodeKey(active.focusIndex.focusNode);
+          }
+        }
         else if (action === 'clearFocus') {
           if (active && active.focusIndex) {
             clearDiagramFocus(active.focusIndex);
@@ -907,6 +1001,8 @@
       // Pointer-based pan/zoom (drag + pinch)
       modal.viewport.addEventListener('pointerdown', function (e) {
         if (!active) return;
+        // Ignore non-primary mouse buttons so right-click can be used for decomposition.
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
         modal.viewport.setPointerCapture(e.pointerId);
         panZoom.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
         panZoom.ignoreClick = false;
@@ -1055,6 +1151,24 @@
           ensureControlsWired();
         });
 
+        // Right-click on a node opens fullscreen and decomposes when available.
+        diagram.addEventListener('contextmenu', function (e) {
+          var nodeEl = findInEventPath(e, function (el) {
+            return el.tagName.toLowerCase() === 'g' && el.classList.contains('node');
+          });
+          if (!nodeEl) return;
+
+          var key = parseFlowchartNodeKey(nodeEl.getAttribute('id'));
+          if (!key) return;
+
+          e.preventDefault();
+          openModalForDiagram(diagram);
+          ensureControlsWired();
+          if (active && active.focusIndex) {
+            if (!decomposeNodeKey(key)) focusNode(active.focusIndex, key);
+          }
+        });
+
         diagram.appendChild(btn);
       });
     }
@@ -1074,7 +1188,7 @@
       preBlocks.forEach(function (pre, index) {
         var sourceText = pre.textContent || '';
         var container = document.createElement('div');
-        container.className = 'mermaid-diagram my-6 overflow-x-auto';
+        container.className = 'mermaid-diagram my-6';
         container.id = 'mermaid-diagram-' + index;
         container.setAttribute('data-mermaid-source', sourceText);
         var diagramId = extractDiagramIdFromSource(sourceText);

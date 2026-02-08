@@ -84,4 +84,3 @@ Patch patterns:
 - Anonymized metrics by cohort
 - Identified disparities + remediation plan
 - Evidence that alternate paths are operationally supported, not theoretical
-

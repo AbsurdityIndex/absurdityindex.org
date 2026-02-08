@@ -29,7 +29,7 @@ npx tsx src/index.ts engage dashboard --port 3847
 
 ## Architecture
 
-```
+```text
 src/
   commands/           # CLI command handlers (Commander)
   modules/
@@ -62,6 +62,7 @@ dashboard-ui/         # Astro app for engagement dashboard (separate build)
 ## Environment
 
 Requires `.env` in `cli/` or project root. See `cli/.env.example` for all variables. Key ones:
+
 - `ANTHROPIC_API_KEY` — required for all content generation
 - `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET` — X API posting
 - `X_BEARER_TOKEN` — X API reading (tweets/trends)

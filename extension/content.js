@@ -1,8 +1,13 @@
 // Extract bill info from the page URL
 // URL format: https://www.congress.gov/bill/119th-congress/house-bill/25
-const urlMatch = window.location.pathname.match(/\/bill\/(\d+)th-congress\/(house-bill|senate-bill)\/(\d+)/);
-const runtimeApi =
-  typeof browser !== 'undefined' ? browser : (typeof chrome !== 'undefined' ? chrome : null);
+const urlMatch = globalThis.location.pathname.match(/\/bill\/(\d+)th-congress\/(house-bill|senate-bill)\/(\d+)/);
+
+function detectRuntimeApi() {
+  if (typeof browser !== 'undefined') return browser;
+  if (typeof chrome !== 'undefined') return chrome;
+  return null;
+}
+const runtimeApi = detectRuntimeApi();
 
 if (urlMatch) {
   const [, congress, type, number] = urlMatch;
@@ -13,25 +18,28 @@ if (urlMatch) {
   ];
   const legacyEndpoint = 'https://absurdityindex.org/api/bills.json';
 
-  fetchBillFromCandidateEndpoints(candidateBillIds)
-    .then((bill) => {
+  async function loadBill() {
+    try {
+      const bill = await fetchBillFromCandidateEndpoints(candidateBillIds);
       if (bill && hasAbsurdityScore(bill.absurdityIndex)) {
         injectBadge(bill);
       }
-    })
-    .catch(() => {
+    } catch {
       // Fallback for older deployments without per-bill endpoint
-      fetch(legacyEndpoint)
-        .then((response) => response.json())
-        .then((data) => {
-          const bills = Array.isArray(data?.bills) ? data.bills : [];
-          const bill = bills.find((entry) => candidateBillIds.includes(entry.id));
-          if (bill && hasAbsurdityScore(bill.absurdityIndex)) {
-            injectBadge(bill);
-          }
-        })
-        .catch(console.error);
-    });
+      try {
+        const response = await fetch(legacyEndpoint);
+        const data = await response.json();
+        const bills = Array.isArray(data?.bills) ? data.bills : [];
+        const bill = bills.find((entry) => candidateBillIds.includes(entry.id));
+        if (bill && hasAbsurdityScore(bill.absurdityIndex)) {
+          injectBadge(bill);
+        }
+      } catch (error_) {
+        console.error(error_);
+      }
+    }
+  }
+  loadBill().catch(console.error); // NOSONAR — content scripts can't use top-level await (not ES modules)
 }
 
 async function fetchBillFromCandidateEndpoints(candidateBillIds) {
@@ -48,8 +56,8 @@ async function fetchBillFromCandidateEndpoints(candidateBillIds) {
       if (bill) {
         return bill;
       }
-    } catch (_error) {
-      // Try next candidate ID.
+    } catch {
+      // Expected when endpoint doesn't exist for this bill ID — try next candidate.
     }
   }
 
@@ -85,7 +93,7 @@ function injectBadge(bill) {
   const scoreNumber = document.createElement('span');
   scoreNumber.className = 'ai-badge-number';
   const scoreValue = toSafeScore(bill.absurdityIndex);
-  scoreNumber.textContent = scoreValue !== null ? String(scoreValue) : '?';
+  scoreNumber.textContent = scoreValue === null ? '?' : String(scoreValue);
   scoreWrap.appendChild(scoreNumber);
 
   const scoreMax = document.createElement('span');
@@ -118,8 +126,10 @@ function injectBadge(bill) {
 
 function toSafeScore(score) {
   const parsed = Number(score);
-  if (!Number.isFinite(parsed)) return null;
-  return Math.max(0, Math.min(10, parsed));
+  if (Number.isFinite(parsed)) {
+    return Math.max(0, Math.min(10, parsed));
+  }
+  return null;
 }
 
 function safeUrl(value) {
@@ -128,8 +138,8 @@ function safeUrl(value) {
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
       return parsed.href;
     }
-  } catch (_error) {
-    // Fall through to inert URL.
+  } catch {
+    // Invalid URL — fall through to inert '#' value.
   }
 
   return '#';

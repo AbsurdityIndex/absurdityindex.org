@@ -30,6 +30,7 @@ npm run verify           # Full CI: validate + security + build + CLI build + te
 Bills live in `src/data/bills/*.mdx`. Three types: `real`, `sensible`, `absurd`.
 
 **Critical rules:**
+
 - Use `votes:` (plural), NEVER `vote:`
 - Use plain dates (`2025-01-01`), NEVER ISO timestamps
 - Always copy from templates in `src/data/bills/_templates/`

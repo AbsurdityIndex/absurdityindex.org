@@ -5,15 +5,20 @@ Thanks for contributing.
 ## Development Setup
 
 1. Install dependencies:
+
 ```bash
 npm install
 npm ci --prefix cli
 ```
-2. Start the site:
+
+1. Start the site:
+
 ```bash
 npm run dev
 ```
-3. Optional CLI development:
+
+1. Optional CLI development:
+
 ```bash
 npm run cli:dev -- status --json
 ```
@@ -21,6 +26,7 @@ npm run cli:dev -- status --json
 ## Before Opening A PR
 
 Run the same checks CI runs:
+
 ```bash
 npm run verify
 npm run validate:ci

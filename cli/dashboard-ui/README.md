@@ -12,7 +12,7 @@ It is intentionally separate from the public site and is built into `cli/dist/da
 npm run dev --prefix cli -- engage dashboard --port 3847 --dry-run
 ```
 
-2. Start the Astro UI dev server (proxies `/api/*` to the backend by default):
+1. Start the Astro UI dev server (proxies `/api/*` to the backend by default):
 
 ```bash
 npm run dashboard-ui:dev --prefix cli
@@ -39,5 +39,6 @@ npm run dashboard:app --prefix cli
 ```
 
 Notes:
+
 - Defaults to `--dry-run` and always-on-top (toggle with `Cmd/Ctrl+Shift+T`).
 - Size can be overridden: `npm run dashboard:app --prefix cli -- --width 1200 --height 780`

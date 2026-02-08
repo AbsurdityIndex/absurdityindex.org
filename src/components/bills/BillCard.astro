@@ -73,7 +73,7 @@ function getAbsurdityScoreClasses(score: number): string {
     class:list={[
       'h-1',
       data.featured
-        ? 'bg-gradient-to-r from-gold-400 via-gold-500 to-gold-400'
+        ? 'bg-linear-to-r from-gold-400 via-gold-500 to-gold-400'
         : isReal
           ? 'bg-navy-600'
           : 'bg-green-600',
@@ -157,7 +157,7 @@ function getAbsurdityScoreClasses(score: number): string {
       {/* Sponsor row */}
       <div class="flex items-center gap-2 text-[13px] min-[375px]:text-sm">
         <div
-          class="w-5 h-5 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0"
+          class="w-5 h-5 rounded-full bg-navy-100 flex items-center justify-center shrink-0"
         >
           <Icon name="user" size={12} class="text-navy-600" />
         </div>
@@ -166,7 +166,7 @@ function getAbsurdityScoreClasses(score: number): string {
         </span>
         {
           sponsorParty && (
-            <span class="text-[11px] text-navy-500 font-mono flex-shrink-0 min-[375px]:text-xs">
+            <span class="text-[11px] text-navy-500 font-mono shrink-0 min-[375px]:text-xs">
               ({sponsorParty})
             </span>
           )

@@ -91,8 +91,8 @@ Names are descriptive; implementations can vary as long as the interfaces and in
 ## 4. Diagrams (Readable + Complete)
 
 Tip: click the `Fullscreen` button on any diagram to pan and zoom. In fullscreen, click a box or line label to
-isolate its connections; right-click a box to "decompose" it into a deeper diagram (when available); click the
-background (or `Clear focus`) to reset.
+isolate its connections; right-click a box (or focus it and use `Decompose`) to jump to a deeper diagram (when
+available); click the background (or `Clear focus`) to reset.
 
 ### 4A Ownership Map (High-Level)
 

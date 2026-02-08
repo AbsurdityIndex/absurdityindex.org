@@ -9,9 +9,9 @@
  * Or add to package.json: "validate": "node scripts/validate-bills.mjs"
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -112,7 +112,7 @@ const RECOMMENDED_SATIRICAL = {
 /**
  * Valid bill evolution stage names
  */
-const VALID_STAGES = [
+const VALID_STAGES = new Set([
   // Core lifecycle
   'introduced',
   'origin-committee',
@@ -161,7 +161,7 @@ const VALID_STAGES = [
   'died-in-conference',
   'expired',
   'stalled',
-];
+]);
 
 /**
  * Validation for billEvolution stages
@@ -196,7 +196,7 @@ function validateBillEvolution(evolution, _filename) {
 
   evolution.forEach((stage, idx) => {
     // Validate stage name
-    if (stage.stage && !VALID_STAGES.includes(stage.stage)) {
+    if (stage.stage && !VALID_STAGES.has(stage.stage)) {
       warnings.push(`billEvolution[${idx}] stage '${stage.stage}' is not a recognized stage name`);
     }
 
@@ -256,7 +256,7 @@ function validatePorkItems(porkItems, context) {
     return { errors, warnings };
   }
 
-  const validCategories = [
+  const validCategories = new Set([
     'earmark',
     'tax-break',
     'tax-expenditure', // Broader category for tax-related costs
@@ -269,7 +269,7 @@ function validatePorkItems(porkItems, context) {
     'new-program', // Creating new programs
     'regulatory-burden', // New regulatory requirements
     'subsidy', // Direct subsidies
-  ];
+  ]);
 
   porkItems.forEach((item, idx) => {
     const itemContext = `${context}.porkItems[${idx}]`;
@@ -286,7 +286,7 @@ function validatePorkItems(porkItems, context) {
     }
     if (!item.category) {
       warnings.push(`${itemContext} missing 'category'`);
-    } else if (!validCategories.includes(item.category)) {
+    } else if (!validCategories.has(item.category)) {
       warnings.push(`${itemContext} category '${item.category}' is not a recognized category`);
     }
 
@@ -364,7 +364,7 @@ function validateVotes(votes, _filename) {
 /**
  * Valid US state codes
  */
-const VALID_STATES = [
+const VALID_STATES = new Set([
   'AL',
   'AK',
   'AZ',
@@ -421,7 +421,7 @@ const VALID_STATES = [
   'VI',
   'AS',
   'MP', // Include territories
-];
+]);
 
 /**
  * Validate sponsor/cosponsor data
@@ -436,7 +436,7 @@ function validateSponsorData(data, _filename) {
       errors.push(`sponsorParty must be 'D', 'R', or 'I', got '${data.sponsorParty}'`);
     }
 
-    if (data.sponsorState && !VALID_STATES.includes(data.sponsorState)) {
+    if (data.sponsorState && !VALID_STATES.has(data.sponsorState)) {
       errors.push(`sponsorState '${data.sponsorState}' is not a valid US state code`);
     }
   }
@@ -462,7 +462,7 @@ function validateSponsorData(data, _filename) {
             `cosponsors[${idx}] party must be 'D', 'R', or 'I', got '${cosponsor.party}'`,
           );
         }
-        if (cosponsor.state && !VALID_STATES.includes(cosponsor.state)) {
+        if (cosponsor.state && !VALID_STATES.has(cosponsor.state)) {
           warnings.push(`cosponsors[${idx}] state '${cosponsor.state}' may not be valid`);
         }
         if (cosponsor.bioguideId && !/^[A-Z]\d{6}$/.test(cosponsor.bioguideId)) {
@@ -552,7 +552,7 @@ function checkCommonMistakes(data, _filename) {
 
   // Check for empty required arrays that should have content
   if (data.billType === 'real') {
-    if (data.actions && data.actions.length === 0) {
+    if (data.actions?.length === 0) {
       warnings.push('actions array is empty - consider adding legislative actions');
     }
   }
@@ -624,12 +624,13 @@ function validateMdxContent(content, data, _filename) {
  * Parse frontmatter from MDX file
  */
 function parseFrontmatter(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  const match = /^---\n([\s\S]*?)\n---/.exec(content);
   if (!match) return null;
 
   try {
     return yaml.load(match[1]);
-  } catch (_err) {
+  } catch (error) {
+    console.warn(`Warning: failed to parse YAML frontmatter: ${error.message}`);
     return null;
   }
 }
@@ -640,7 +641,7 @@ function parseFrontmatter(content) {
 function validateBill(filepath) {
   const filename = path.basename(filepath);
   const content = fs.readFileSync(filepath, 'utf-8');
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  const frontmatterMatch = /^---\n([\s\S]*?)\n---/.exec(content);
   const frontmatterRaw = frontmatterMatch?.[1] || '';
   const data = parseFrontmatter(content);
 

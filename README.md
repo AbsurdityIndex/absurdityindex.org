@@ -21,7 +21,7 @@ A static site built with Astro that catalogs real congressional legislation alon
 
 An autonomous social media management system for X/Twitter. Generates satirical content about congressional bills, runs it through a 5-layer safety system, and posts it — all driven by Claude.
 
-```
+```text
 cli/
 ├── commands/     # post, draft, engage, monitor, review, schedule, analytics, status
 ├── modules/
@@ -39,6 +39,7 @@ cli/
 The CLI is designed to run as a [Ralph Loop](https://ghuntley.com/ralph/) — an iterative AI development pattern where Claude Code receives the same prompt repeatedly and sees its own prior work. See [`RALPH-PROMPT.md`](./RALPH-PROMPT.md) for the full autonomous prompt.
 
 Each iteration, Claude:
+
 1. Checks account status (posts today, queue, trends, engagement opportunities)
 2. Decides what to do based on a priority framework
 3. Generates content, runs safety checks, posts or drafts
@@ -89,11 +90,13 @@ cp .env.example .env  # Fill in your API keys
 ```
 
 Required environment variables (see `cli/.env.example`):
+
 - `X_BEARER_TOKEN` — X API bearer token (read-only operations)
 - `ANTHROPIC_API_KEY` — Claude API key (content generation + safety)
 - Browser auth — Run `npx tsx src/index.ts login` to authenticate for posting
 
 Optional:
+
 - `CONGRESS_API_KEY` — Congress.gov API (for fetching new bills)
 
 ### CLI Usage
@@ -155,7 +158,7 @@ Verdicts: **SAFE** (0-20) posts automatically, **REVIEW** (20-40) goes to human 
 
 ## Project Structure
 
-```
+```text
 ├── src/
 │   ├── components/   # Astro components (bills, layout, UI)
 │   ├── data/bills/   # MDX bill content

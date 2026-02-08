@@ -208,7 +208,26 @@ function congressGovPathSegment(type) {
 
 function stripHtml(html) {
   if (!html) return '';
-  return html.replace(/<[^>]+>/g, '').trim();
+  return html.replaceAll(/<[^>]+>/g, '').trim();
+}
+
+/** Escape double quotes for YAML string embedding. */
+function escapeQuotes(str) {
+  return (str || '').replaceAll('"', String.raw`\"`);
+}
+
+/** Determine chamber from action code prefix. */
+function chamberFromActionCode(actionCode) {
+  if (actionCode?.startsWith('H')) return 'house';
+  if (actionCode?.startsWith('S')) return 'senate';
+  return 'both';
+}
+
+/** Determine title type label. */
+function titleTypeLabel(titleType) {
+  if (titleType?.includes('Short')) return 'short';
+  if (titleType?.includes('Official')) return 'official';
+  return 'display';
 }
 
 // normalizeActionText is imported (shared with content config + tests).
@@ -243,8 +262,8 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/summaries`);
     data.summaries = res?.summaries || [];
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (summaries not available)`);
+  } catch (error_) {
+    console.log(`    (summaries not available: ${error_.message})`);
   }
 
   // Fetch actions (may be paginated for large bills)
@@ -253,8 +272,8 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/actions`, { limit: 500 });
     data.actions = dedupeCongressApiActions(res?.actions || []);
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (actions not available)`);
+  } catch (error_) {
+    console.log(`    (actions not available: ${error_.message})`);
   }
 
   // Fetch amendments
@@ -263,8 +282,8 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/amendments`, { limit: 500 });
     data.amendments = res?.amendments || [];
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (amendments not available)`);
+  } catch (error_) {
+    console.log(`    (amendments not available: ${error_.message})`);
   }
 
   // Fetch committees
@@ -273,8 +292,8 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/committees`);
     data.committees = res?.committees || [];
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (committees not available)`);
+  } catch (error_) {
+    console.log(`    (committees not available: ${error_.message})`);
   }
 
   // Fetch cosponsors
@@ -283,8 +302,8 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/cosponsors`, { limit: 500 });
     data.cosponsors = res?.cosponsors || [];
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (cosponsors not available)`);
+  } catch (error_) {
+    console.log(`    (cosponsors not available: ${error_.message})`);
   }
 
   // Fetch related bills
@@ -293,8 +312,8 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/relatedbills`);
     data.relatedBills = res?.relatedBills || [];
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (related bills not available)`);
+  } catch (error_) {
+    console.log(`    (related bills not available: ${error_.message})`);
   }
 
   // Fetch subjects
@@ -306,8 +325,8 @@ async function fetchBillData(congress, type, number) {
     data.subjects = subjectsData?.legislativeSubjects || [];
     data.policyArea = subjectsData?.policyArea || null;
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (subjects not available)`);
+  } catch (error_) {
+    console.log(`    (subjects not available: ${error_.message})`);
   }
 
   // Fetch titles
@@ -316,8 +335,8 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/titles`);
     data.titles = res?.titles || [];
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (titles not available)`);
+  } catch (error_) {
+    console.log(`    (titles not available: ${error_.message})`);
   }
 
   // Fetch text versions
@@ -326,11 +345,68 @@ async function fetchBillData(congress, type, number) {
     const res = await apiFetch(`/bill/${congress}/${type}/${number}/text`);
     data.textVersions = res?.textVersions || [];
     await sleep(DELAY_MS);
-  } catch (_err) {
-    console.log(`    (text versions not available)`);
+  } catch (error_) {
+    console.log(`    (text versions not available: ${error_.message})`);
   }
 
   return data;
+}
+
+// ============================================================================
+// AI HELPERS
+// ============================================================================
+
+/** Call the configured AI provider and return the response text. */
+async function callAiApi(promptText) {
+  if (OPENROUTER_API_KEY) {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://absurdityindex.org',
+        'X-Title': 'AbsurdityIndex Bill Fetcher',
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-haiku',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: promptText }],
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`OpenRouter API ${response.status}: ${errBody}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+
+  if (ANTHROPIC_API_KEY) {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: promptText }],
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Anthropic API ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text || '';
+  }
+
+  return null;
 }
 
 // ============================================================================
@@ -354,12 +430,14 @@ async function aiSummarize(
     .map((a) => `${a.actionDate}: ${a.text}`)
     .join('\n');
 
-  const absurdityContext =
-    absurdityIndex >= 7
-      ? 'This bill has a HIGH absurdity score. Focus on what makes it ridiculous, wasteful, or head-scratching.'
-      : absurdityIndex >= 4
-        ? 'This bill has a MODERATE absurdity score. There may be some questionable provisions or bureaucratic oddities.'
-        : 'This bill has a LOW absurdity score. It may be fairly straightforward, but find any interesting angles.';
+  let absurdityContext;
+  if (absurdityIndex >= 7) {
+    absurdityContext = 'This bill has a HIGH absurdity score. Focus on what makes it ridiculous, wasteful, or head-scratching.';
+  } else if (absurdityIndex >= 4) {
+    absurdityContext = 'This bill has a MODERATE absurdity score. There may be some questionable provisions or bureaucratic oddities.';
+  } else {
+    absurdityContext = 'This bill has a LOW absurdity score. It may be fairly straightforward, but find any interesting angles.';
+  }
 
   const promptText = `You are a writer for AbsurdityIndex.org — a satirical editorial site that covers real congressional legislation with wit and accessibility.
 
@@ -405,58 +483,8 @@ CARD_SUMMARY: [your card summary]
 WHY_IT_MATTERS: [your impact summary]`;
 
   try {
-    let response;
-    let text;
-
-    if (OPENROUTER_API_KEY) {
-      // Use OpenRouter API (OpenAI-compatible format)
-      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://absurdityindex.org',
-          'X-Title': 'AbsurdityIndex Bill Fetcher',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3.5-haiku',
-          max_tokens: 1024,
-          messages: [{ role: 'user', content: promptText }],
-        }),
-      });
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(`OpenRouter API ${response.status}: ${errBody}`);
-      }
-
-      const data = await response.json();
-      text = data.choices?.[0]?.message?.content || '';
-    } else if (ANTHROPIC_API_KEY) {
-      // Use Anthropic API directly
-      response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-3-5-haiku-20241022',
-          max_tokens: 1024,
-          messages: [{ role: 'user', content: promptText }],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Anthropic API ${response.status}`);
-      }
-
-      const data = await response.json();
-      text = data.content?.[0]?.text || '';
-    } else {
-      return null;
-    }
+    const text = await callAiApi(promptText);
+    if (text === null) return null;
 
     const gistMatch = text.match(/THE_GIST:\s*([\s\S]*?)(?=\nCARD_SUMMARY:)/);
     const cardMatch = text.match(/CARD_SUMMARY:\s*([\s\S]*?)(?=\nWHY_IT_MATTERS:)/);
@@ -529,56 +557,8 @@ Respond in this exact JSON format (no markdown, just JSON):
 }`;
 
   try {
-    let response;
-    let text;
-
-    if (OPENROUTER_API_KEY) {
-      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://absurdityindex.org',
-          'X-Title': 'Absurdity Index Bill Fetcher',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3.5-haiku',
-          max_tokens: 1024,
-          messages: [{ role: 'user', content: promptText }],
-        }),
-      });
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        throw new Error(`OpenRouter API ${response.status}: ${errBody}`);
-      }
-
-      const data = await response.json();
-      text = data.choices?.[0]?.message?.content || '';
-    } else if (ANTHROPIC_API_KEY) {
-      response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-3-5-haiku-20241022',
-          max_tokens: 1024,
-          messages: [{ role: 'user', content: promptText }],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Anthropic API ${response.status}`);
-      }
-
-      const data = await response.json();
-      text = data.content?.[0]?.text || '';
-    } else {
-      return null;
-    }
+    const text = await callAiApi(promptText);
+    if (text === null) return null;
 
     // Parse JSON response (handle potential markdown code blocks)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -605,7 +585,7 @@ Respond in this exact JSON format (no markdown, just JSON):
  * Falls back to first committee from API if no referral pattern found.
  */
 function parsePrimaryCommittee(statusText, committees) {
-  const match = statusText?.match(/Referred to the Committee on ([^,]+?)(?:,|\.)/i);
+  const match = statusText?.match(/Referred to the Committee on ([^,]+?)[,.]/i);
   if (match) {
     const parsed = match[1].trim();
     // Find matching committee from API data, or use parsed name directly
@@ -619,143 +599,187 @@ function parsePrimaryCommittee(statusText, committees) {
 // GENERATE MDX
 // ============================================================================
 
-function generateMdx(data, meta, aiSummary, aiMilestones) {
-  const b = data.bill;
-
-  // Basic info
-  const title = (b.title || '').replace(/"/g, '\\"');
-  const billNumber = formatBillNumber(meta.type, meta.number);
-
-  // Sponsor
-  const sponsorObj = b.sponsors?.[0];
-  const sponsor = sponsorObj
-    ? `${sponsorObj.fullName || sponsorObj.firstName + ' ' + sponsorObj.lastName}`
-    : 'Unknown';
-  const sponsorParty = sponsorObj?.party || '';
-  const sponsorState = sponsorObj?.state || '';
-
-  // Status
-  const latestAction = b.latestAction;
-  const status = latestAction?.text || 'Introduced';
-  const dateIntroduced = toDateOnlyString(b.introducedDate) || '2025-01-01';
-  const dateUpdated = latestAction?.actionDate ? toDateOnlyString(latestAction.actionDate) : null;
-
-  // Congress.gov URL
-  const congressTypePath = congressGovPathSegment(meta.type);
-  if (!congressTypePath) {
-    throw new Error(`Unsupported bill type for Congress.gov URL mapping: ${meta.type}`);
-  }
-  const congressUrl = `https://www.congress.gov/bill/${meta.congress}th-congress/${congressTypePath}/${meta.number}`;
-
-  // CRS Summary
-  const crsSummary =
-    data.summaries.length > 0 ? stripHtml(data.summaries[data.summaries.length - 1].text) : '';
-
-  // Short summary for card - prefer AI-generated card summary
-  let shortSummary = aiSummary?.cardSummary || crsSummary;
-  if (shortSummary.length > 200) {
-    shortSummary = shortSummary.slice(0, 197) + '...';
-  }
-
-  // Editorial content
-  const theGist = aiSummary?.theGist || '';
-  const whyItMatters = aiSummary?.whyItMatters || '';
-
-  const uniqueActions = Array.isArray(data.actions) ? data.actions : [];
-
-  const actionsYaml = uniqueActions
+/** Build individual YAML sections for MDX frontmatter. */
+function buildActionsYaml(actions) {
+  return actions
     .slice(0, 50)
     .map((a) => {
-      const actionText = normalizeActionText(a.text).replace(/"/g, '\\"');
+      const actionText = escapeQuotes(normalizeActionText(a.text));
       return `  - date: ${toDateOnlyString(a.actionDate) || '2000-01-01'}
     text: "${actionText}"
-    chamber: ${a.actionCode?.startsWith('H') ? 'house' : a.actionCode?.startsWith('S') ? 'senate' : 'both'}`;
+    chamber: ${chamberFromActionCode(a.actionCode)}`;
     })
     .join('\n');
+}
 
-  // Titles
-  const titlesYaml = data.titles
+function buildTitlesYaml(titles) {
+  return titles
     .slice(0, 10)
     .map((t) => {
-      const titleText = (t.title || '').replace(/"/g, '\\"');
+      const titleText = escapeQuotes(t.title);
       return `  - title: "${titleText}"
-    type: ${t.titleType?.includes('Short') ? 'short' : t.titleType?.includes('Official') ? 'official' : 'display'}`;
+    type: ${titleTypeLabel(t.titleType)}`;
     })
     .join('\n');
+}
 
-  // Amendments
-  const amendmentsYaml = data.amendments
+function buildAmendmentsYaml(amendments) {
+  return amendments
     .slice(0, 20)
     .map((a) => {
-      const desc = (a.description || a.purpose || '').replace(/"/g, '\\"').slice(0, 200);
+      const desc = escapeQuotes(a.description || a.purpose).slice(0, 200);
       return `  - number: "${a.number || 'Unknown'}"
     description: "${desc}"`;
     })
     .join('\n');
+}
 
-  // Cosponsors
-  const cosponsorsYaml = data.cosponsors
+function buildCosponsorsYaml(cosponsors) {
+  return cosponsors
     .slice(0, 30)
     .map((c) => {
-      const name = (c.fullName || `${c.firstName} ${c.lastName}`).replace(/"/g, '\\"');
+      const name = escapeQuotes(c.fullName || `${c.firstName} ${c.lastName}`);
       return `  - name: "${name}"
     party: "${c.party || ''}"
     state: "${c.state || ''}"`;
     })
     .join('\n');
+}
 
-  // Committees
-  const committeesYaml = data.committees
+function buildCommitteesYaml(committees) {
+  return committees
     .map((c) => {
-      const name = (c.name || '').replace(/"/g, '\\"');
+      const name = escapeQuotes(c.name);
       return `  - name: "${name}"
     chamber: ${c.chamber?.toLowerCase() || 'house'}`;
     })
     .join('\n');
+}
 
-  // Related bills
-  const relatedBillsYaml = data.relatedBills
+function buildRelatedBillsYaml(relatedBills) {
+  return relatedBills
     .slice(0, 10)
     .map((r) => {
       const num = (r.number || '').toString();
-      const relTitle = (r.title || '').replace(/"/g, '\\"').slice(0, 100);
+      const relTitle = escapeQuotes(r.title).slice(0, 100);
       return `  - billNumber: "${r.type?.toUpperCase() || ''} ${num}"
     title: "${relTitle}"
     relationship: "${r.relationshipDetails?.[0]?.type || 'Related'}"`;
     })
     .join('\n');
+}
 
-  // Text versions
-  const textVersionsYaml = data.textVersions
+function buildMilestonesYaml(milestones) {
+  if (!milestones || milestones.length === 0) return '';
+  return milestones
+    .map((m) => {
+      const milestoneText = escapeQuotes(m.text).replaceAll('\n', ' ');
+      return `  - type: "${m.type}"
+    date: ${m.date}
+    text: "${milestoneText}"
+    icon: "${m.icon}"`;
+    })
+    .join('\n');
+}
+
+/** Conditionally include a YAML frontmatter line. */
+function optionalLine(content) {
+  return content || '';
+}
+
+/** Extract sponsor info from bill data. */
+function extractSponsor(bill) {
+  const sponsorObj = bill.sponsors?.[0];
+  if (!sponsorObj) return { name: 'Unknown', party: '', state: '' };
+  const name = sponsorObj.fullName || sponsorObj.firstName + ' ' + sponsorObj.lastName;
+  return { name, party: sponsorObj.party || '', state: sponsorObj.state || '' };
+}
+
+/** Build the Congress.gov URL for a bill. */
+function buildCongressUrl(meta) {
+  const congressTypePath = congressGovPathSegment(meta.type);
+  if (!congressTypePath) {
+    throw new Error(`Unsupported bill type for Congress.gov URL mapping: ${meta.type}`);
+  }
+  return `https://www.congress.gov/bill/${meta.congress}th-congress/${congressTypePath}/${meta.number}`;
+}
+
+/** Escape and flatten a string for inline YAML. */
+function yamlInline(str) {
+  if (!str) return '';
+  return escapeQuotes(str).replaceAll('\n', ' ');
+}
+
+function buildTextVersionsYaml(textVersions) {
+  return textVersions
     .map((t) => {
       const date = toDateOnlyString(t.date) || '2000-01-01';
       return `  - type: "${t.type || 'Unknown'}"
     date: ${date}`;
     })
     .join('\n');
+}
 
-  // Policy area / subjects
-  const subjects = Array.isArray(data.subjects) ? data.subjects : [];
-  const policyArea =
-    data.policyArea?.name || b.policyArea?.name || subjects?.[0]?.name || meta.category;
-  const tags = subjects
+function buildTagsString(subjects) {
+  return subjects
     .slice(0, 10)
-    .map((s) => `"${(s.name || '').replace(/"/g, '\\"')}"`)
+    .map((s) => `"${escapeQuotes(s.name)}"`)
     .join(', ');
+}
 
-  // Key milestones (AI-extracted)
-  const keyMilestonesYaml =
-    aiMilestones && aiMilestones.length > 0
-      ? aiMilestones
-          .map((m) => {
-            const milestoneText = (m.text || '').replace(/"/g, '\\"').replace(/\n/g, ' ');
-            return `  - type: "${m.type}"
-    date: ${m.date}
-    text: "${milestoneText}"
-    icon: "${m.icon}"`;
-          })
-          .join('\n')
-      : '';
+/** Get the latest CRS summary text, stripped of HTML. */
+function getLatestCrsSummary(summaries) {
+  if (summaries.length === 0) return '';
+  return stripHtml(summaries.at(-1).text);
+}
+
+/** Truncate summary to 200 chars for card display. */
+function truncateSummary(text, maxLen = 200) {
+  if (text.length <= maxLen) return text;
+  return text.slice(0, maxLen - 3) + '...';
+}
+
+/** Resolve the policy area name from available data sources. */
+function resolvePolicyArea(data, bill, meta) {
+  const subjects = Array.isArray(data.subjects) ? data.subjects : [];
+  return data.policyArea?.name || bill.policyArea?.name || subjects[0]?.name || meta.category;
+}
+
+/** Get subjects array safely. */
+function getSubjects(data) {
+  return Array.isArray(data.subjects) ? data.subjects : [];
+}
+
+function generateMdx(data, meta, aiSummary, aiMilestones) {
+  const b = data.bill;
+  const title = escapeQuotes(b.title);
+  const billNumber = formatBillNumber(meta.type, meta.number);
+  const sponsor = extractSponsor(b);
+  const congressUrl = buildCongressUrl(meta);
+
+  const latestAction = b.latestAction;
+  const status = latestAction?.text || 'Introduced';
+  const dateIntroduced = toDateOnlyString(b.introducedDate) || '2025-01-01';
+  const dateUpdated = latestAction?.actionDate ? toDateOnlyString(latestAction.actionDate) : null;
+  const crsSummary = getLatestCrsSummary(data.summaries);
+  const shortSummary = truncateSummary(aiSummary?.cardSummary || crsSummary);
+  const theGist = aiSummary?.theGist || '';
+  const whyItMatters = aiSummary?.whyItMatters || '';
+  const uniqueActions = Array.isArray(data.actions) ? data.actions : [];
+
+  // Build YAML sections
+  const actionsYaml = buildActionsYaml(uniqueActions);
+  const titlesYaml = buildTitlesYaml(data.titles);
+  const amendmentsYaml = buildAmendmentsYaml(data.amendments);
+  const cosponsorsYaml = buildCosponsorsYaml(data.cosponsors);
+  const committeesYaml = buildCommitteesYaml(data.committees);
+  const relatedBillsYaml = buildRelatedBillsYaml(data.relatedBills);
+  const keyMilestonesYaml = buildMilestonesYaml(aiMilestones);
+  const textVersionsYaml = buildTextVersionsYaml(data.textVersions);
+
+  const subjects = getSubjects(data);
+  const policyArea = resolvePolicyArea(data, b, meta);
+  const tags = buildTagsString(subjects);
 
   // Build frontmatter
   const frontmatter = `---
@@ -765,38 +789,38 @@ billType: "real"
 category: "${policyArea}"
 tags: [${tags}]
 
-sponsor: "${sponsor}"
-sponsorParty: "${sponsorParty}"
-sponsorState: "${sponsorState}"
+sponsor: "${sponsor.name}"
+sponsorParty: "${sponsor.party}"
+sponsorState: "${sponsor.state}"
 cosponsorCount: ${data.cosponsors.length}
 ${cosponsorsYaml ? `cosponsors:\n${cosponsorsYaml}` : 'cosponsors: []'}
 
 committee: "${parsePrimaryCommittee(status, data.committees)}"
-${committeesYaml ? `committees:\n${committeesYaml}` : ''}
+${optionalLine(committeesYaml && `committees:\n${committeesYaml}`)}
 
-status: "${status.replace(/"/g, '\\"')}"
+status: "${escapeQuotes(status)}"
 dateIntroduced: ${dateIntroduced}
-${dateUpdated ? `dateUpdated: ${dateUpdated}` : ''}
+${optionalLine(dateUpdated && `dateUpdated: ${dateUpdated}`)}
 
 actionCount: ${uniqueActions.length}
-${actionsYaml ? `actions:\n${actionsYaml}` : ''}
+${optionalLine(actionsYaml && `actions:\n${actionsYaml}`)}
 
-${keyMilestonesYaml ? `keyMilestones:\n${keyMilestonesYaml}` : ''}
+${optionalLine(keyMilestonesYaml && `keyMilestones:\n${keyMilestonesYaml}`)}
 
 officialTitle: "${title}"
-${titlesYaml ? `shortTitles:\n${titlesYaml}` : ''}
+${optionalLine(titlesYaml && `shortTitles:\n${titlesYaml}`)}
 
-summary: "${shortSummary.replace(/"/g, '\\"')}"
-${theGist ? `theGist: "${theGist.replace(/"/g, '\\"').replace(/\n/g, ' ')}"` : ''}
-${whyItMatters ? `whyItMatters: "${whyItMatters.replace(/"/g, '\\"').replace(/\n/g, ' ')}"` : ''}
-${crsSummary ? `crsSummary: "${crsSummary.replace(/"/g, '\\"').replace(/\n/g, ' ').slice(0, 2000)}"` : ''}
+summary: "${yamlInline(shortSummary)}"
+${optionalLine(theGist && `theGist: "${yamlInline(theGist)}"`)}
+${optionalLine(whyItMatters && `whyItMatters: "${yamlInline(whyItMatters)}"`)}
+${optionalLine(crsSummary && `crsSummary: "${yamlInline(crsSummary).slice(0, 2000)}"`)}
 
 amendmentCount: ${data.amendments.length}
-${amendmentsYaml ? `amendments:\n${amendmentsYaml}` : ''}
+${optionalLine(amendmentsYaml && `amendments:\n${amendmentsYaml}`)}
 
-${relatedBillsYaml ? `relatedBills:\n${relatedBillsYaml}` : ''}
+${optionalLine(relatedBillsYaml && `relatedBills:\n${relatedBillsYaml}`)}
 
-${textVersionsYaml ? `textVersions:\n${textVersionsYaml}` : ''}
+${optionalLine(textVersionsYaml && `textVersions:\n${textVersionsYaml}`)}
 
 absurdityIndex: ${meta.absurdityIndex}
 congressDotGovUrl: "${congressUrl}"
@@ -804,7 +828,6 @@ congressNumber: ${meta.congress}
 featured: ${meta.featured || false}
 ---`;
 
-  // Build body content (minimal - most content is in frontmatter for component rendering)
   const body = `
 > **Source:** Real bill from the ${meta.congress}th Congress. Data from [Congress.gov](${congressUrl}).
 `;
@@ -816,96 +839,94 @@ featured: ${meta.featured || false}
 // MAIN
 // ============================================================================
 
-async function main() {
-  console.log(`\nAbsurdityIndex Bill Fetcher`);
-  console.log(`   Fetching ${BILL_LIST.length} bill(s) from Congress.gov API\n`);
-
-  if (USE_AI) {
-    const provider = OPENROUTER_API_KEY ? 'OpenRouter' : 'Anthropic';
-    console.log(`   AI summarization: ENABLED (${provider})`);
-  } else {
-    console.log('   AI summarization: DISABLED');
-  }
-  if (UPDATE_MODE) console.log('   Update mode: ENABLED (will overwrite existing files)');
-  console.log();
-
-  let created = 0;
-  let updated = 0;
-  let skipped = 0;
-  let errors = 0;
-
-  for (const meta of BILL_LIST) {
-    const slug = slugify(meta.congress, meta.type, meta.number);
-    const filepath = path.join(BILLS_DIR, `${slug}.mdx`);
-
-    const exists = fs.existsSync(filepath);
-    if (exists && !UPDATE_MODE) {
-      console.log(`SKIP  ${slug} (exists, use --update to overwrite)`);
-      skipped++;
-      continue;
-    }
-
-    try {
-      console.log(`FETCH ${slug}`);
-      const data = await fetchBillData(meta.congress, meta.type, meta.number);
-
-      // Stats
-      console.log(
-        `    Stats: Actions: ${data.actions.length}, Amendments: ${data.amendments.length}, Cosponsors: ${data.cosponsors.length}`,
-      );
-
-      // AI summarization and milestone extraction
-      let aiResult = null;
-      let aiMilestones = null;
-      if (USE_AI) {
-        const crsSummary =
-          data.summaries.length > 0
-            ? stripHtml(data.summaries[data.summaries.length - 1].text)
-            : '';
-        console.log(`    AI summarizing...`);
-        aiResult = await aiSummarize(
-          crsSummary,
-          data.bill.title,
-          formatBillNumber(meta.type, meta.number),
-          data.actions,
-          meta.absurdityIndex,
-          data.committees,
-          data.textVersions,
-        );
-
-        console.log(`    AI extracting milestones...`);
-        aiMilestones = await aiExtractMilestones(
-          data.actions,
-          formatBillNumber(meta.type, meta.number),
-          meta.type,
-        );
-        if (aiMilestones) {
-          console.log(`    Extracted ${aiMilestones.length} milestones`);
-        }
-      }
-
-      // Generate and write MDX
-      const mdx = generateMdx(data, meta, aiResult, aiMilestones);
-      fs.writeFileSync(filepath, mdx, 'utf-8');
-
-      if (exists) {
-        console.log(`UPDATE ${slug}`);
-        updated++;
-      } else {
-        console.log(`CREATE ${slug}`);
-        created++;
-      }
-    } catch (err) {
-      console.error(`ERROR ${slug}: ${err.message}`);
-      errors++;
-    }
-
-    console.log();
-  }
+/** Process a single bill entry: fetch, summarize, generate, write. Returns 'created' | 'updated'. */
+async function processBill(meta, filepath) {
+  const data = await fetchBillData(meta.congress, meta.type, meta.number);
 
   console.log(
-    `\nSummary: Created ${created}, Updated ${updated}, Skipped ${skipped}, Errors ${errors}`,
+    `    Stats: Actions: ${data.actions.length}, Amendments: ${data.amendments.length}, Cosponsors: ${data.cosponsors.length}`,
   );
+
+  let aiResult = null;
+  let aiMilestones = null;
+  if (USE_AI) {
+    const crsSummary =
+      data.summaries.length > 0
+        ? stripHtml(data.summaries.at(-1).text)
+        : '';
+    console.log(`    AI summarizing...`);
+    aiResult = await aiSummarize(
+      crsSummary,
+      data.bill.title,
+      formatBillNumber(meta.type, meta.number),
+      data.actions,
+      meta.absurdityIndex,
+      data.committees,
+      data.textVersions,
+    );
+
+    console.log(`    AI extracting milestones...`);
+    aiMilestones = await aiExtractMilestones(
+      data.actions,
+      formatBillNumber(meta.type, meta.number),
+      meta.type,
+    );
+    if (aiMilestones) {
+      console.log(`    Extracted ${aiMilestones.length} milestones`);
+    }
+  }
+
+  const mdx = generateMdx(data, meta, aiResult, aiMilestones);
+  fs.writeFileSync(filepath, mdx, 'utf-8');
 }
 
-main();
+console.log(`\nAbsurdityIndex Bill Fetcher`);
+console.log(`   Fetching ${BILL_LIST.length} bill(s) from Congress.gov API\n`);
+
+if (USE_AI) {
+  const provider = OPENROUTER_API_KEY ? 'OpenRouter' : 'Anthropic';
+  console.log(`   AI summarization: ENABLED (${provider})`);
+} else {
+  console.log('   AI summarization: DISABLED');
+}
+if (UPDATE_MODE) console.log('   Update mode: ENABLED (will overwrite existing files)');
+console.log();
+
+let created = 0;
+let updated = 0;
+let skipped = 0;
+let errors = 0;
+
+for (const meta of BILL_LIST) {
+  const slug = slugify(meta.congress, meta.type, meta.number);
+  const filepath = path.join(BILLS_DIR, `${slug}.mdx`);
+
+  const exists = fs.existsSync(filepath);
+  if (exists && !UPDATE_MODE) {
+    console.log(`SKIP  ${slug} (exists, use --update to overwrite)`);
+    skipped++;
+    continue;
+  }
+
+  try {
+    console.log(`FETCH ${slug}`);
+    await processBill(meta, filepath);
+
+    if (exists) {
+      console.log(`UPDATE ${slug}`);
+      updated++;
+    } else {
+      console.log(`CREATE ${slug}`);
+      created++;
+    }
+  } catch (err) {
+    console.error(`ERROR ${slug}: ${err.message}`);
+    errors++;
+  }
+
+  console.log();
+}
+
+console.log(
+  `\nSummary: Created ${created}, Updated ${updated}, Skipped ${skipped}, Errors ${errors}`,
+);

@@ -1,0 +1,24 @@
+# Markdownlint configuration for Absurdity Index
+# See: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# MD013 - Line length: disabled, handled by editors/Prettier
+MD013: false
+
+# MD024 - No duplicate headings: allow sibling duplicates (common in changelogs, docs)
+MD024:
+  siblings_only: true
+
+# MD025 - Single title: disabled, some docs have multiple H1s
+MD025: false
+
+# MD033 - No inline HTML: disabled, MDX files legitimately use HTML/JSX
+MD033: false
+
+# MD036 - No emphasis as heading: disabled, stylistic choice
+MD036: false
+
+# MD041 - First line heading: disabled, not all docs start with a heading
+MD041: false
+
+# MD060 - Table column style: disabled, table formatting varies
+MD060: false

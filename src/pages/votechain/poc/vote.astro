@@ -31,7 +31,7 @@ import Icon from '../../../components/ui/Icon.astro';
     <!-- Step indicator (sticky below header + subnav via --sticky-offset) -->
     <div id="step-indicator-bar" class="bg-parchment border-b border-navy-200 py-3 sticky z-20 shadow-sm" style="top: var(--sticky-offset, 0px);">
       <div class="flex items-center justify-between max-w-3xl mx-auto px-4" id="step-indicator">
-        <div class="flex flex-col items-center flex-shrink-0" data-step="1">
+        <div class="flex flex-col items-center shrink-0" data-step="1">
           <div
             class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-sans font-semibold text-sm bg-navy-200 text-navy-500 transition-all"
           >
@@ -42,7 +42,7 @@ import Icon from '../../../components/ui/Icon.astro';
           </p>
         </div>
         <div class="step-connector flex-1 h-0.5 mx-2 bg-navy-200 transition-all"></div>
-        <div class="flex flex-col items-center flex-shrink-0" data-step="2">
+        <div class="flex flex-col items-center shrink-0" data-step="2">
           <div
             class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-sans font-semibold text-sm bg-navy-200 text-navy-500 transition-all"
           >
@@ -53,7 +53,7 @@ import Icon from '../../../components/ui/Icon.astro';
           </p>
         </div>
         <div class="step-connector flex-1 h-0.5 mx-2 bg-navy-200 transition-all"></div>
-        <div class="flex flex-col items-center flex-shrink-0" data-step="3">
+        <div class="flex flex-col items-center shrink-0" data-step="3">
           <div
             class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-sans font-semibold text-sm bg-navy-200 text-navy-500 transition-all"
           >
@@ -69,7 +69,7 @@ import Icon from '../../../components/ui/Icon.astro';
           </p>
         </div>
         <div class="step-connector flex-1 h-0.5 mx-2 bg-navy-200 transition-all"></div>
-        <div class="flex flex-col items-center flex-shrink-0" data-step="4">
+        <div class="flex flex-col items-center shrink-0" data-step="4">
           <div
             class="step-circle w-8 h-8 rounded-full flex items-center justify-center font-sans font-semibold text-sm bg-navy-200 text-navy-500 transition-all"
           >
@@ -117,7 +117,7 @@ import Icon from '../../../components/ui/Icon.astro';
         <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div class="rounded-lg border border-navy-200 bg-cream-50 p-3">
             <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">DID</p>
-            <p id="credential-did" class="font-mono text-xs text-navy-900 break-words">
+            <p id="credential-did" class="font-mono text-xs text-navy-900 wrap-break-word">
               Not generated
             </p>
           </div>
@@ -125,7 +125,7 @@ import Icon from '../../../components/ui/Icon.astro';
             <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
               Nullifier (This Election)
             </p>
-            <p id="credential-nullifier" class="font-mono text-xs text-navy-900 break-words">
+            <p id="credential-nullifier" class="font-mono text-xs text-navy-900 wrap-break-word">
               Not generated
             </p>
           </div>
@@ -133,7 +133,7 @@ import Icon from '../../../components/ui/Icon.astro';
             <p class="text-[11px] font-mono uppercase tracking-widest text-navy-500 mb-1">
               Blind Signature (Issuer)
             </p>
-            <p id="credential-blind-sig" class="font-mono text-xs text-navy-900 break-words">
+            <p id="credential-blind-sig" class="font-mono text-xs text-navy-900 wrap-break-word">
               Not generated
             </p>
           </div>
@@ -255,7 +255,7 @@ import Icon from '../../../components/ui/Icon.astro';
               id="spoil-result-box"
             >
               <div class="flex items-start gap-3">
-                <div id="spoil-result-icon" class="flex-shrink-0 mt-0.5"></div>
+                <div id="spoil-result-icon" class="shrink-0 mt-0.5"></div>
                 <div class="flex-1">
                   <p id="spoil-result-title" class="font-sans font-semibold text-sm"></p>
                   <p id="spoil-result-detail" class="text-xs mt-1"></p>
@@ -401,7 +401,7 @@ import Icon from '../../../components/ui/Icon.astro';
         id="cast-error"
       >
         <div class="flex items-start gap-4">
-          <div class="flex-shrink-0 mt-1">
+          <div class="shrink-0 mt-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -545,6 +545,7 @@ import Icon from '../../../components/ui/Icon.astro';
       ensureCredential,
       getManifest,
       getPocState,
+      hasAlreadyVoted,
       issueChallenge,
       spoilBallot,
       verifySpoiledBallot,
@@ -992,6 +993,51 @@ import Icon from '../../../components/ui/Icon.astro';
       renderBallotOptions(state);
       await refreshManifest();
       await refreshCredential();
+
+      // If a ballot was already cast with this credential, show the receipt
+      if (await hasAlreadyVoted()) {
+        const receiptJson = localStorage.getItem('votechain_poc_last_receipt');
+        if (receiptJson) {
+          try {
+            const receipt = JSON.parse(receiptJson);
+            updateStepIndicator(5);
+            hideWizard();
+            castSuccess.classList.remove('hidden');
+            successDetails.replaceChildren();
+            const items = [
+              { label: 'Receipt ID', value: receipt.receipt_id },
+              { label: 'Ballot Hash', value: receipt.ballot_hash },
+              { label: 'BB Leaf', value: receipt.bb_leaf_hash },
+              { label: 'VCL Anchor', value: receipt.votechain_anchor?.tx_id ?? 'N/A' },
+            ];
+            for (const item of items) {
+              const row = document.createElement('div');
+              row.className = 'flex justify-between gap-2';
+              const label = document.createElement('span');
+              label.className = 'text-xs font-mono text-navy-500 uppercase';
+              label.textContent = item.label;
+              const val = document.createElement('span');
+              val.className = 'text-xs font-mono text-navy-800 truncate max-w-[200px]';
+              val.textContent =
+                item.value.length > 24
+                  ? item.value.slice(0, 12) + '...' + item.value.slice(-8)
+                  : item.value;
+              val.title = item.value;
+              row.appendChild(label);
+              row.appendChild(val);
+              successDetails.appendChild(row);
+            }
+            return;
+          } catch { /* fall through to normal init */ }
+        }
+        // No receipt saved but nullifier used — show error
+        hideWizard();
+        castError.classList.remove('hidden');
+        castErrorMessage.textContent = 'You have already cast a ballot in this election.';
+        castErrorHint.textContent = 'To vote again as a new voter, reset the POC state from the POC Home page.';
+        updateStepIndicator(5);
+        return;
+      }
 
       cachedChallenge = pickChallengeForResume(state);
       challengeEl.textContent = cachedChallenge ? formatJson(cachedChallenge) : 'No challenge yet.';

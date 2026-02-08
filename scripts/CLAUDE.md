@@ -15,16 +15,20 @@ Node.js scripts for bill fetching, content validation, and release management. R
 ## Key Script Details
 
 ### `fetch-bills.mjs`
+
 ```bash
 CONGRESS_GOV_API_KEY=<key> npm run fetch-bills
 npm run fetch-bills -- --bill 119/hr/25        # Specific bill
 npm run fetch-bills -- --update                # Overwrite existing
 npm run fetch-bills -- --no-ai                 # Skip AI summaries
 ```
+
 Requires `CONGRESS_GOV_API_KEY`. Optionally uses `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` for AI summaries.
 
 ### `validate-bills.mjs`
+
 Validates all `src/data/bills/*.mdx` files for:
+
 - Required fields (title, billNumber, status, sponsor, summary, etc.)
 - Bill-type-specific requirements (real bills need `sponsorParty`, `congressNumber`, etc.)
 - No duplicate `billEvolution` stages
@@ -34,6 +38,7 @@ Validates all `src/data/bills/*.mdx` files for:
 Exit codes: `0` = pass, `1` = errors found. Use `--strict-warnings` to fail on warnings too.
 
 ### `scan-secrets.mjs`
+
 Scans the repo for patterns matching API keys, tokens, and other secrets. Used in CI via `npm run security:ci`.
 
 ## Conventions

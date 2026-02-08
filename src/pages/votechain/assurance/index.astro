@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Icon from '../../../components/ui/Icon.astro';
+import AISummarizer from '../../../components/votechain/AISummarizer.astro';
 import { VOTECHAIN_ASSURANCE_DOCS } from '../../../utils/votechain-nav';
 ---
 
@@ -25,6 +26,147 @@ import { VOTECHAIN_ASSURANCE_DOCS } from '../../../utils/votechain-nav';
         Internal pre-flight playbooks, published for transparency
       </p>
     </div>
+
+    <AISummarizer
+      triggerSub="14 playbooks &rarr; 60 seconds"
+      scanLines={[
+        'Reading 14 assurance playbooks...',
+        'Analyzing threat models and attack surfaces...',
+        'Cross-referencing testing methodologies...',
+        'Evaluating coverage across security domains...',
+        'Compiling summary...',
+      ]}
+    >
+      <Fragment slot="eli5">
+        <p class="font-bold text-lg text-navy-900 mb-3">The building-inspection version:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What are these documents?</p>
+        <p class="mb-3">Imagine a brand-new building is about to open. Before anyone walks through the doors, inspectors check <em>everything</em> &mdash; the fire alarms, the plumbing, the locks, the wheelchair ramps, the emergency exits. These 14 playbooks are the inspection checklists for VoteChain. Each one covers a different kind of check.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Why publish them?</p>
+        <p class="mb-3">Because when the checklists are public, anyone can look at them and say "hey, you forgot to check the sprinklers on the third floor." That's the whole point &mdash; invite the sharpest critics to find what was missed <em>before</em> opening day, not after.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What gets inspected?</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Can bad guys break in?</strong> Several playbooks imagine every kind of troublemaker &mdash; hackers, insiders, tricksters &mdash; and plan how to stop them. Think of it like testing whether every door locks, even from the inside.</li>
+          <li><strong>Does the math check out?</strong> The system uses special math (cryptography) to keep things private and tamper-proof. One whole playbook is just about making sure that math is done right &mdash; like double-checking every weld on a bridge.</li>
+          <li><strong>What if something breaks?</strong> Some playbooks test what happens when things go wrong on purpose &mdash; power failures, traffic overloads, servers going down. The building still has to stay safe even if the elevator stops working.</li>
+          <li><strong>Is it fair for everyone?</strong> One playbook specifically checks that the system works equally well for people with disabilities, people without smartphones, people in rural areas, and people who speak different languages. If the wheelchair ramp is steeper than the stairs, you failed.</li>
+          <li><strong>Does it keep secrets?</strong> A privacy inspection makes sure the system never accidentally learns <em>who</em> you are or <em>how</em> you voted &mdash; only <em>that</em> you were allowed to vote.</li>
+          <li><strong>Can anyone cheat and get away with it?</strong> A special team pretends to be the bad guys (a "red team") and tries to break the system on purpose. If they succeed, that's a <em>good</em> thing &mdash; it means the flaw was found before a real bad guy found it.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Some quick numbers:</p>
+        <ul class="list-disc pl-6 space-y-1.5 mb-4">
+          <li><strong>14</strong> separate inspection playbooks</li>
+          <li>Covers <strong>6 domains</strong>: security, cryptography, operations, privacy, usability, and fairness</li>
+          <li>Written for the <strong>internal team first</strong>, then published for everyone to read</li>
+          <li>Designed to run <strong>before</strong> outside auditors arrive &mdash; so the outside check starts from a higher bar</li>
+        </ul>
+
+        <p class="mb-3">The idea is simple: don't wait for someone else to find what's broken. Find it yourself, fix it, prove you fixed it, then let the outside inspectors verify you didn't miss anything.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">Want more detail? Slide the bar to the right. Or close this and browse the 14 individual playbooks below.</p>
+      </Fragment>
+
+      <Fragment slot="plain">
+        <p class="font-bold text-lg text-navy-900 mb-3">Here's what 14 assurance playbooks cover:</p>
+
+        <p class="mb-3">These are internal pre-flight guides &mdash; the testing the engineering team runs on itself <em>before</em> independent auditors, red teams, and certification bodies arrive. They're published so anyone can critique the methodology, spot blind spots, and hold the project accountable to its own standards.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Security &amp; Threat Analysis (3 playbooks)</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Threat Modeling</strong> turns every security claim in the PRD into explicit assumptions, failure modes, and a test plan. It uses structured attacker profiles &mdash; hackers, insiders, coercers, supply-chain attackers &mdash; and maps each one to the defenses that are supposed to stop them. The output is a risk register that tells auditors exactly where to focus.</li>
+          <li><strong>Attack Case Library</strong> catalogs specific adversarial test cases with expected defenses and patch patterns. Think of it as a public library of "ways someone might try to break this" &mdash; without including step-by-step exploit instructions. Each case has a known defense and a documented fix pattern.</li>
+          <li><strong>Penetration Testing</strong> scopes an internal staging pentest focused on system invariants, configuration drift, and safe failure behavior. It defines what's in-scope (the verification chain, the bulletin board, the gateway) and what the testers should look for: broken assumptions, not just open ports.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Cryptography &amp; Protocol Integrity (2 playbooks)</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Crypto + Protocol Review</strong> prepares the entire cryptographic stack for external audit. It checks that every signature and proof is bound to the right context (election ID, jurisdiction, challenge nonce), reviews domain separation for hashes, pressure-tests the privacy model for correlation leaks, and documents every key ceremony and rotation procedure.</li>
+          <li><strong>EWP Conformance Testing</strong> defines a conformance surface for the Election Web Protocol &mdash; the set of behaviors any compliant implementation must exhibit. It includes test vectors (known inputs with expected outputs), invariant tests, and interoperability checks across deployment modes.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Adversarial Exercises (2 playbooks)</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Red Team Exercises</strong> go beyond technical pentesting. These are end-to-end scenario drills that combine technical attacks, social engineering, and operational failures. The red team tries to break the system; the blue team defends it; purple team debriefs extract lessons. Exercises include blind engagements where defenders don't know an attack is coming.</li>
+          <li><strong>VDP / Bug Bounty Readiness</strong> prepares the project for public vulnerability disclosure. It covers intake workflows, triage SLAs, safe-harbor legal language, reward tiers, and internal dry runs to make sure the pipeline works before external researchers start submitting reports.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Code &amp; Operations (3 playbooks)</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Secure Code Review</strong> provides an implementation checklist covering protocol correctness, input parsing, key management, logging hygiene, and privacy-by-default patterns. It's what a reviewer should check line-by-line before any code is merged.</li>
+          <li><strong>Operational Audit</strong> covers everything outside the code: key ceremonies, change control processes, incident response runbooks, evidence handling chain-of-custody, and operator access controls. If the code is perfect but someone leaves an admin password on a sticky note, this playbook catches it.</li>
+          <li><strong>Monitoring + Non-Equivocation</strong> validates that the bulletin board cannot show different histories to different observers without detection. It defines monitor responsibilities, gossip protocols, alerting thresholds, and includes controlled equivocation simulations &mdash; deliberately feeding inconsistent data to see if monitors catch it.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Privacy &amp; Usability (2 playbooks)</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Privacy Audit</strong> validates that the implementation matches the privacy model: no PII on-chain, no correlation channels that could deanonymize voters, bounded metadata precision, access-controlled evidence bundles, and receipt-freeness (receipts prove inclusion but cannot prove how someone voted).</li>
+          <li><strong>Usability: Phishing Defense</strong> tests whether real users can tell a legitimate VoteChain gateway from a fake one. It covers gateway authenticity signals, manifest verification UX, and measures how often users fall for simulated phishing attempts during controlled testing.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Equity &amp; Resilience (2 playbooks)</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Equity and Access Testing</strong> measures whether verification and casting paths create a two-tier system. It compares failure rates, verification times, and support burden across demographic cohorts, device types, network conditions, and enrollment channels. If any group experiences measurably worse outcomes, the system fails this check.</li>
+          <li><strong>Load + Failover Drills</strong> stress-tests degraded mode: what happens when nodes go down, traffic spikes to 2x peak, or network partitions isolate regions. It validates that rate limiting is fair, continuity objectives are met, and no voter is turned away because of an infrastructure failure.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Why publish internal playbooks?</p>
+        <p class="mb-3">Because "trust us, we tested it" is not a trust model. Publishing the methodology means anyone &mdash; cryptographers, election officials, security researchers, journalists &mdash; can evaluate whether the testing was rigorous enough, whether the right questions were asked, and whether anything important was left out. The goal is to make the assurance process itself auditable, not just the system it's testing.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">Close this and browse the 14 individual playbooks for full checklists, expected outputs, and acceptance criteria.</p>
+      </Fragment>
+
+      <Fragment slot="technical">
+        <p class="font-bold text-lg text-navy-900 mb-3">Technical summary of the assurance surface:</p>
+
+        <p class="mb-3">14 internal playbooks covering the full assurance lifecycle for VoteChain (permissioned voter verification chain) and EWP (Election Web Protocol). Designed to be executed pre-3P audit/red-team to raise the baseline before external engagement. Published for public methodology review.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Threat Analysis &amp; Attack Surface</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Threat Modeling:</strong> STRIDE-derived methodology adapted for election systems. Asset inventory (enrollment keys, gateway signing keys, BB STH keys, trustee threshold shares, chaincode governance keys). Trust-boundary decomposition across voter client, poll device, enrollment authority, gateway, bulletin board, chain nodes, monitors, and oversight portal. Attacker profiles: network-only, physical, privileged insider, supply-chain, coercer. Claim-to-mechanism matrix mapping each PRD security property to its enforcement mechanism, assumptions, detection strategy, and recovery path. Output: risk register driving red-team and audit focus.</li>
+          <li><strong>Attack Case Library:</strong> Cataloged adversarial test cases (safe negative tests) with expected defense behavior and patch patterns. Categories: credential forgery, enrollment replay, nullifier collision injection, gateway impersonation, BB fork/equivocation, threshold ceremony disruption, device attestation bypass, cross-jurisdiction replay. Each case includes preconditions, attack steps (without full exploit chain), expected system response, and regression test anchor.</li>
+          <li><strong>Penetration Testing:</strong> Internal staging pentest scoped to verification chain invariants, BB API surface, gateway authentication, node configuration drift, and degraded-mode edge cases. Focus on broken assumptions rather than generic OWASP findings. Scope excludes ballot-casting (separate system). Output: findings mapped to risk register entries with severity, exploitability, and remediation SLA.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Cryptographic &amp; Protocol Assurance</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Crypto + Protocol Review:</strong> Audit-readiness preparation for external cryptographic review. Covers: binding verification (every signature/ZKP binds election_id, jurisdiction_id, manifest_id, challenge nonce, nullifier), domain separation for all hash functions, privacy leakage matrix (time/location metadata correlation, IP-to-voter mapping in Mode 3, receipt-freeness under coercion), non-equivocation proof semantics (BB consistency proofs, monitor gossip, anchor linkage), key ceremony review (generation, distribution, rotation, revocation for HSM-backed and threshold keys), and ZK circuit review (constraint system completeness, soundness assumptions, trusted setup ceremony if Groth16, or transparent setup if PLONK/STARKs).</li>
+          <li><strong>EWP Conformance Testing:</strong> Defines the EWP conformance surface: the set of protocol behaviors any compliant implementation must exhibit across deployment modes (Mode 1/2/3). Test vector format: deterministic inputs with expected outputs for credential issuance, ZKP generation/verification, nullifier derivation, BB inclusion/consistency proofs, receipt generation, and cross-node consensus. Invariant tests: properties that must hold regardless of implementation (e.g., nullifier uniqueness, proof non-malleability, receipt non-coercibility). Interoperability matrix across reference implementations.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Adversarial Exercises</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Red Team Exercises:</strong> Full-scope adversarial engagement framework. Scenario library covering technical (chain-level attacks, ZKP forgery attempts, BB fork injection), human (social engineering of operators, phishing poll workers), and operational (insider key compromise, supply-chain substitution) attack paths. Exercise types: announced purple-team drills (collaborative), blind red-team engagements (defenders unaware), and tabletop exercises for scenarios too dangerous to simulate live. Measurable outcomes: time-to-detect, time-to-contain, coverage gaps, and patch-loop closure verification.</li>
+          <li><strong>VDP / Bug Bounty Readiness:</strong> Pre-launch vulnerability disclosure program preparation. Intake pipeline: submission form, triage SLA (24h acknowledge, 72h severity assessment), severity classification (CVSS + election-context modifiers), safe-harbor legal language, reward structure (up to $500K for critical chain-level findings). Internal dry runs: planted vulnerabilities processed through the full pipeline to validate triage accuracy, communication templates, and payout mechanics before public launch.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Implementation &amp; Operations</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Secure Code Review:</strong> Line-level implementation checklist. Protocol correctness (does the code match the spec?), input parsing (malformed payloads, boundary values, encoding edge cases), key material handling (in-memory exposure, zeroization, HSM offload), logging hygiene (no PII in logs, structured audit events, tamper-evident log chains), dependency audit (supply-chain risk for cryptographic libraries, pinned versions, reproducible builds).</li>
+          <li><strong>Operational Audit:</strong> Non-code assurance surface. Key ceremony procedures (multi-party generation, secure transport, rotation schedules, emergency revocation). Change control (chaincode upgrades require multi-party approval + 30-day public comment). Incident response (runbooks, communication templates, evidence preservation chain-of-custody, post-mortem publication SLA). Operator access controls (principle of least privilege, session recording, break-glass procedures with mandatory post-incident review).</li>
+          <li><strong>Monitoring + Non-Equivocation:</strong> BB transparency validation. Monitor responsibilities: STH polling, anchor verification against VoteChain, consistency proof verification, cross-monitor gossip. Controlled equivocation simulations: deliberately inject inconsistent STH views and verify detection latency, alert propagation, and public disclosure timeline. Alert thresholds: missing consistency proof = high severity, STH divergence = critical, monitor downtime > N minutes = escalation. Evidence capture for all detected anomalies.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Privacy &amp; Usability</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Privacy Audit:</strong> Privacy impact assessment methodology. Data-flow tracing across enrollment, verification, casting, fraud-case evidence, and monitoring paths. Field inventory: every data field across on-chain events, BB leaves/STHs, receipts, logs, metrics, and support systems &mdash; tagged with necessity, retention, access control, and correlation risk rating. Correlation risk testing: time/location linkage precision, network identifier leakage (IP-to-voter in Mode 3 gateways), operational log pseudonymity validation, recovery-flow centralization risks. Receipt-freeness review: can a receipt be used to prove vote content to a coercer?</li>
+          <li><strong>Usability: Phishing Defense:</strong> User testing protocol for gateway authenticity signals and manifest verification UX. Simulated phishing campaigns against test cohorts measuring click-through rates, credential-entry rates, and time-to-recognition. Evaluation of visual trust indicators, certificate pinning UX, and out-of-band verification flows. Acceptance criteria: phishing success rate below defined threshold before public deployment.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Equity &amp; Resilience</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Equity and Access Testing:</strong> Parity measurement across demographic cohorts, device classes (low-end phones, assistive tech, no-smartphone path), network conditions (offline, intermittent, high-latency), and enrollment channels (assisted, mobile unit, in-office). Key metrics: verification time distribution (median, p95), failure/escalation rates, provisional ballot rates, support burden per 1K voters. Threshold rules: if any cohort metric exceeds the baseline by more than a defined percentage, the test fails. Includes end-to-end exercises with representative users covering disability access, low digital literacy, and non-English speakers.</li>
+          <li><strong>Load + Failover Drills:</strong> Stress testing at 2x peak projected load. Scenarios: node failure (single, multi, partition), network degradation (latency injection, packet loss), geographic isolation, and cascading failure chains. Validation targets: rate limiting fairness (no demographic skew under load), continuity objectives (RTO/RPO per component), degraded-mode voter experience (provisional path remains functional), and data integrity under partial-write scenarios. Output: capacity model with headroom recommendations and failover runbook validation.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Cross-cutting methodology:</p>
+        <p class="mb-3">Every playbook follows the same structure: inputs (what you need before starting), steps (what to do), expected outputs (deliverables with pass/fail criteria), and patch loop (how findings feed back into the risk register and re-test cycle). The intent is that internal execution raises the baseline high enough that external audit time is spent on novel findings rather than known gaps.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">Each playbook below contains the full checklist, expected outputs, and acceptance criteria. Browse individually or read sequentially.</p>
+      </Fragment>
+    </AISummarizer>
 
     <div class="rounded-lg border border-gold-300 bg-cream-50 p-5 mb-8">
       <div class="flex items-start gap-3">

@@ -106,4 +106,3 @@ Do not publish step-by-step exploit instructions in repo docs.
 - Prior exercise outcomes and evidence
 - Blue-team runbooks and on-call structure
 - Known weak points you want external teams to pressure-test
-

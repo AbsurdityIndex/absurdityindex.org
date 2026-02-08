@@ -1,13 +1,13 @@
 export function normalizeWhitespace(text) {
   return String(text ?? '')
-    .replace(/\s+/g, ' ')
+    .replaceAll(/\s+/g, ' ')
     .trim();
 }
 
 export function stripHtmlTags(html) {
   if (!html) return '';
   return String(html)
-    .replace(/<[^>]+>/g, '')
+    .replaceAll(/<[^>]+>/g, '')
     .trim();
 }
 
@@ -15,7 +15,7 @@ export function stripHtmlTags(html) {
 export function normalizeActionText(text) {
   const stripped = stripHtmlTags(text);
   // Congress.gov sometimes includes HTML entities in action text.
-  const deEnt = stripped.replace(/&nbsp;|&#160;/gi, ' ');
+  const deEnt = stripped.replaceAll(/&nbsp;|&#160;/gi, ' ');
   return normalizeWhitespace(deEnt);
 }
 
@@ -31,7 +31,7 @@ export function toDateOnlyString(value) {
   const raw = String(value).trim();
   if (!raw) return '';
 
-  const direct = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  const direct = /^(\d{4}-\d{2}-\d{2})/.exec(raw);
   if (direct) return direct[1];
 
   const parsed = new Date(raw);

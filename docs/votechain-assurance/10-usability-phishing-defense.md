@@ -90,4 +90,3 @@ Effective patch patterns:
 - Anonymized results and metrics
 - UX flows and screenshots
 - The exact cryptographic checks the client performs before showing a ballot
-

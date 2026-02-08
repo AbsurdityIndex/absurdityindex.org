@@ -15,8 +15,8 @@ npm run verify
 npm run release:check
 ```
 
-3. Update `CHANGELOG.md` under `[Unreleased]`.
-4. If needed, bump versions in:
+1. Update `CHANGELOG.md` under `[Unreleased]`.
+2. If needed, bump versions in:
    - `package.json`
    - `cli/package.json`
 
@@ -45,8 +45,8 @@ git tag -s v0.2.0 -m "Release v0.2.0"
 git push origin v0.2.0
 ```
 
-2. Create a GitHub Release for the tag.
-3. Copy release notes from `CHANGELOG.md`.
+1. Create a GitHub Release for the tag.
+2. Copy release notes from `CHANGELOG.md`.
 
 ## 4. Post-Release Checks
 

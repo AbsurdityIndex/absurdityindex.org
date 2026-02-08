@@ -18,6 +18,7 @@ npm run validate:build # Run validation, then build (recommended for CI)
 ```
 
 ### Fetch Bills Script Options
+
 ```bash
 CONGRESS_GOV_API_KEY=<key> npm run fetch-bills           # Fetch default bill list
 npm run fetch-bills -- --bill 119/hr/25                   # Fetch specific bill
@@ -26,12 +27,14 @@ npm run fetch-bills -- --no-ai                            # Skip AI summarizatio
 ```
 
 Required env vars (see `.env.example`):
+
 - `CONGRESS_GOV_API_KEY` - Required for fetching bills
 - `ANTHROPIC_API_KEY` or `OPENROUTER_API_KEY` - Optional for AI summaries
 
 ## Architecture
 
 ### Content Collections (Astro)
+
 Bills and rules are managed via Astro's content collections with schemas defined in `src/content.config.ts`:
 
 - **bills** (`src/data/bills/*.mdx`) - Three bill types:
@@ -43,7 +46,8 @@ Bills and rules are managed via Astro's content collections with schemas defined
 The `under-consideration.ts` file contains a curated list of real bills not yet converted to full MDX entries.
 
 ### Component Organization
-```
+
+```text
 src/components/
 ├── bills/       # BillCard, BillHeader, AbsurdityMeter, VoteBreakdown, etc.
 ├── layout/      # Header, Footer, MobileMenu
@@ -53,7 +57,9 @@ src/components/
 ```
 
 ### Page Structure
+
 Dynamic routes use Astro's bracket syntax:
+
 - `/bills/[slug].astro` - Real bills (filtered by `billType === 'real'`)
 - `/not-bills/[slug].astro` - Satirical bills
 - `/sponsors/[slug].astro`, `/category/[category].astro`, etc.
@@ -61,6 +67,7 @@ Dynamic routes use Astro's bracket syntax:
 API endpoints in `src/pages/api/` return JSON for bills, stats, etc.
 
 ### Styling
+
 - **Tailwind CSS v4** with custom theme tokens in `src/styles/global.css`
 - Government-parody palette: navy, gold, cream, parchment
 - Typography: Libre Caslon Text (serif), Inter (sans), JetBrains Mono (mono)
@@ -68,6 +75,7 @@ API endpoints in `src/pages/api/` return JSON for bills, stats, etc.
 - Dark mode support via `html.dark` class
 
 ### Deployment
+
 - Hosted on **Cloudflare Pages** at `absurdityindex.org`
 - `functions/_middleware.js` restricts access to US visitors only
 - Search powered by **Pagefind** (indexed at build time)
@@ -77,12 +85,14 @@ API endpoints in `src/pages/api/` return JSON for bills, stats, etc.
 Pushing to `main` triggers an automatic build and deploy within ~60 seconds. The pipeline runs on a self-hosted Kubernetes cluster using **Argo Workflows**, triggered by a polling CronJob.
 
 **How it works:**
+
 1. `absurdity-index-poller` CronJob (runs every 60s in `argo` namespace) polls the GitHub API for new commits on `main`
 2. On new commit, it submits an Argo Workflow using the `deploy-absurdity-index` WorkflowTemplate
 3. The workflow runs three steps: `clone-repo` → `build` (`npm ci && npm run build`) → `deploy` (`wrangler pages deploy`)
 4. Commit SHA state is tracked in the `absurdity-index-poller-state` ConfigMap to avoid duplicate deploys
 
 **K8s resources (all in `argo` namespace on host defined by `K8S_HOST` in `.env`):**
+
 | Resource | Name | Purpose |
 |----------|------|---------|
 | CronJob | `absurdity-index-poller` | Polls GitHub API every minute for new commits |
@@ -96,6 +106,7 @@ Pushing to `main` triggers an automatic build and deploy within ~60 seconds. The
 **No public DNS or webhooks required** — the poller makes outbound-only calls to GitHub API (polling) and Cloudflare API (deploying). The entire CI infrastructure stays behind the firewall.
 
 #### Manual Deploy to Production
+
 ```bash
 npm run build                                          # Build site + Pagefind index
 npx wrangler pages deploy dist --project-name=absurdity-index   # Deploy to Cloudflare
@@ -104,11 +115,13 @@ npx wrangler pages deploy dist --project-name=absurdity-index   # Deploy to Clou
 The deploy command will output a preview URL (e.g., `https://abc123.absurdity-index.pages.dev`) and automatically promote to production domains (`absurdityindex.org`, `www.absurdityindex.org`).
 
 #### Environment Variables
+
 - **Build-time secrets** (API keys) are only used by `scripts/fetch-bills.mjs` and are NOT bundled into the static site
 - The `.env` file is gitignored and never deployed
 - Safe to verify: `grep -r "API_KEY" dist/` should return no matches
 
 ### Browser Extension
+
 `extension/` contains a Chrome extension that shows Absurdity Index scores on Congress.gov bill pages. Uses Manifest V3.
 
 ## Content Guidelines
@@ -116,11 +129,13 @@ The deploy command will output a preview URL (e.g., `https://abc123.absurdity-in
 ### Creating New Bills
 
 **Always use templates** located at `src/data/bills/_templates/`:
+
 - `sensible-bill.template.md` - for satirical fictional bills
 - `real-bill.template.md` - for real Congress.gov bills
 - `absurd-bill.template.md` - for historical absurd laws
 
 **Steps to create a new bill:**
+
 1. Copy the appropriate template from `src/data/bills/_templates/`
 2. Rename to the bill ID with `.mdx` extension (e.g., `hr-999.mdx` or `real-hr-1234.mdx`)
 3. Fill in all fields (templates have comments explaining each)
@@ -166,6 +181,7 @@ The deploy command will output a preview URL (e.g., `https://abc123.absurdity-in
 Run `npm run validate` to check all bills for required UI component fields:
 
 **Validates:**
+
 - All required fields present (title, billNumber, status, sponsor, summary, etc.)
 - Real bill requirements (congressNumber, sponsorParty, absurdityIndex, etc.)
 - Satirical bill requirements (votes structure)
@@ -174,6 +190,7 @@ Run `npm run validate` to check all bills for required UI component fields:
 - Date format (plain dates, not ISO timestamps)
 
 **Exit codes:**
+
 - `0` = Pass (no errors, warnings OK)
 - `1` = Fail (errors found)
 
@@ -187,6 +204,7 @@ Run `npm run validate` to check all bills for required UI component fields:
 ## UI Conventions
 
 ### Icons
+
 - **Never use Unicode emoji characters or Unicode symbol icons** (for example: pig/medal/sparkles emoji, warning triangles, checkmarks, stars) in the codebase
 - Always use Lucide icons via the `Icon.astro` component for consistent styling
 - For client-side JavaScript that renders icons dynamically, use inline SVG strings matching Lucide icon paths

@@ -170,7 +170,7 @@ const formatDate = (date: Date) => {
       <div class="relative">
         {/* Connecting line - runs the full height behind the icons */}
         <div
-          class="absolute left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-gold-300 via-gold-200 to-gold-100"
+          class="absolute left-4 top-4 bottom-4 w-0.5 bg-linear-to-b from-gold-300 via-gold-200 to-gold-100"
           aria-hidden="true"
         />
 
@@ -180,7 +180,7 @@ const formatDate = (date: Date) => {
               {/* Icon with background to cover the line */}
               <div
                 class:list={[
-                  'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 relative z-10 border-2 shadow-sm',
+                  'w-8 h-8 rounded-full flex items-center justify-center shrink-0 relative z-10 border-2 shadow-sm',
                   milestone.type === 'law' || milestone.type === 'signed'
                     ? 'bg-green-100 text-green-700 border-green-200'
                     : milestone.type === 'vetoed'

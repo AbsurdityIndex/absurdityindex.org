@@ -34,6 +34,7 @@ Chrome/Firefox browser extension that displays Absurdity Index scores while brow
 ## API Endpoints
 
 The extension fetches from the production site:
+
 - `https://absurdityindex.org/api/bills/{bill-id}.json` — single bill (primary)
 - `https://absurdityindex.org/api/bills.json` — full bill list (fallback)
 - `https://absurdityindex.org/api/stats.json` — overall statistics (for popup)
@@ -41,6 +42,7 @@ The extension fetches from the production site:
 ## Development
 
 No build step. Load unpacked in Chrome:
+
 1. Navigate to `chrome://extensions`
 2. Enable Developer mode
 3. Click "Load unpacked" → select this `extension/` folder

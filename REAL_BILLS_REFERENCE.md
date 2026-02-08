@@ -5,6 +5,7 @@ This document catalogs all 27 real congressional bills featured on Absurdity-Ind
 ---
 
 ## Quick Stats
+
 - **Total Real Bills:** 27
 - **Became Law:** 8
 - **Passed (one chamber):** 3
@@ -32,19 +33,23 @@ This document catalogs all 27 real congressional bills featured on Absurdity-Ind
 | **Pork Rating** | $454M total / $1.36 per capita |
 
 ### Votes
+
 - **Senate:** 64-35 (12 Democrats crossed)
 - **House:** 263-156 (48 Democrats crossed)
 
 ### Summary
+
 Requires ICE to detain undocumented immigrants charged with theft or burglary, named after a nursing student killed in Georgia. First major legislation of the 119th Congress, signed into law just 26 days after introduction.
 
 ### Key Milestones
+
 1. 2025-01-06: Introduced as S. 5
 2. 2025-01-20: Passed Senate 64-35
 3. 2025-01-22: Passed House 263-156
 4. 2025-01-29: Signed into law
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/119th-congress/senate-bill/5)
 - [Senate Roll Call](https://www.senate.gov/legislative/LIS/roll_call_votes/vote1191/vote_119_1_00008.htm)
 
@@ -69,12 +74,15 @@ Requires ICE to detain undocumented immigrants charged with theft or burglary, n
 | **Pork Rating** | $15.3B total / $45.95 per capita |
 
 ### Votes
+
 - **House:** 225-201
 
 ### Summary
+
 A 4,155-page omnibus spending bill passed days before Christmas, funding the entire federal government for FY2023 with $1.7 trillion and over 7,500 earmarks. Includes Electoral Count Reform Act, SECURE 2.0, and TikTok ban on government devices.
 
 ### Key Policy Riders
+
 - Electoral Count Reform Act (response to January 6th)
 - SECURE 2.0 retirement reforms
 - TikTok ban on government devices
@@ -83,6 +91,7 @@ A 4,155-page omnibus spending bill passed days before Christmas, funding the ent
 - 7,510 earmarks totaling $15.3 billion
 
 ### Key Milestones
+
 1. 2022-04-20: Shell bill introduced
 2. 2022-12-19: 4,155-page text released at 1:30 AM
 3. 2022-12-22: Senate passes 68-29
@@ -90,6 +99,7 @@ A 4,155-page omnibus spending bill passed days before Christmas, funding the ent
 5. 2022-12-29: Signed into law
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/117th-congress/house-bill/2617)
 
 ---
@@ -114,14 +124,17 @@ A 4,155-page omnibus spending bill passed days before Christmas, funding the ent
 | **Pork Rating** | $42M total / $0.13 per capita |
 
 ### Votes
+
 - **House:** 352-65
 - **Committee:** 50-0 (unanimous)
 - **Senate:** 79-18 (as part of foreign aid package H.R. 815)
 
 ### Summary
+
 Requires ByteDance to divest TikTok within 270 days or face a U.S. ban. Passed House with overwhelming bipartisan support. H.R. 7521 itself was referred to Senate committee; the TikTok provisions were incorporated into the foreign aid package (H.R. 815) which became P.L. 118-50. Affects 170 million American users.
 
 ### Key Milestones
+
 1. 2024-03-05: Introduced
 2. 2024-03-07: Committee passes 50-0
 3. 2024-03-13: House passes 352-65
@@ -130,6 +143,7 @@ Requires ByteDance to divest TikTok within 270 days or face a U.S. ban. Passed H
 6. 2024-04-24: Signed into law as part of P.L. 118-50
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/118th-congress/house-bill/7521)
 - [House Roll Call](https://clerk.house.gov/Votes/2024/86)
 
@@ -154,18 +168,22 @@ Requires ByteDance to divest TikTok within 270 days or face a U.S. ban. Passed H
 | **Pork Rating** | $24B total / $72.07 per capita |
 
 ### Votes
+
 - **House:** 417-9 (initial), 412-8 (conference)
 - **Senate:** 89-11 (initial), 91-4 (conference)
 
 ### Summary
+
 The 2005 transportation bill became infamous for the $223 million "Bridge to Nowhere" connecting Ketchikan, Alaska (pop. 8,900) to Gravina Island (pop. 50). After Hurricane Katrina outrage, Congress rescinded the earmark designation but Alaska kept the money. The bridge was never built. Total: 6,371 earmarks worth $24 billion.
 
 ### Notable Earmarks
+
 - Gravina Island Bridge: $223 million
 - Knik Arm Bridge: $229 million
 - "Don Young Way" (highway named after sponsor): $10 million
 
 ### Key Milestones
+
 1. 2005-02-09: Introduced
 2. 2005-03-10: House passes 417-9
 3. 2005-05-17: Senate passes 89-11
@@ -174,6 +192,7 @@ The 2005 transportation bill became infamous for the $223 million "Bridge to Now
 6. 2007: Project abandoned
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/109th-congress/house-bill/3)
 
 ---
@@ -197,18 +216,22 @@ The 2005 transportation bill became infamous for the $223 million "Bridge to Now
 | **Pork Rating** | $128.3B total / $385.29 per capita |
 
 ### Votes
+
 - **Senate:** 70-30
 
 ### Summary
+
 The spending bill that blocked USDA reforms and kept pizza counted as a vegetable serving in school lunches. Section 743 prevented USDA from requiring more tomato paste to count as a vegetable. The frozen food industry spent $5.6 million lobbying for this provision.
 
 ### Key Milestones
+
 1. 2011-06-02: Introduced
 2. 2011-06-16: House passes 217-203
 3. 2011-11-01: Senate passes with amendments
 4. 2011-11-18: Signed into law
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/112th-congress/house-bill/2112)
 
 ---
@@ -232,9 +255,11 @@ The spending bill that blocked USDA reforms and kept pizza counted as a vegetabl
 | **Pork Rating** | $0 |
 
 ### Summary
+
 Abolishes the IRS entirely and replaces the entire federal tax system with a single 23% national sales tax (30% tax-exclusive). Introduced in 26 consecutive Congresses since 1999. Has never received a floor vote, CBO score, or committee markup. Bill number H.R. 25 is reserved each Congress as a reference to the tax rate.
 
 ### Key Provisions
+
 - Abolishes IRS
 - Repeals all income, payroll, estate, and gift taxes
 - 23% national retail sales tax
@@ -242,6 +267,7 @@ Abolishes the IRS entirely and replaces the entire federal tax system with a sin
 - Requires repeal of 16th Amendment within 7 years
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/119th-congress/house-bill/25)
 
 ---
@@ -266,9 +292,11 @@ Abolishes the IRS entirely and replaces the entire federal tax system with a sin
 | **Pork Rating** | $850K |
 
 ### Summary
+
 Introduced days after President Trump's "very stable genius" tweet. Would require presidential candidates to undergo comprehensive medical and mental health evaluations. The backronym was clearly reverse-engineered from the phrase. One cosponsor despite cable news coverage.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/115th-congress/house-bill/4742)
 
 ---
@@ -293,9 +321,11 @@ Introduced days after President Trump's "very stable genius" tweet. Would requir
 | **Pork Rating** | $2.4M |
 
 ### Summary
+
 Filed 12 days after the infamous "covfefe" tweet (May 31, 2017 → June 12, 2017). Would amend the Presidential Records Act to include social media posts as official records. The underlying policy question is legitimate; the naming was pure political trolling.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/115th-congress/house-bill/2884)
 
 ---
@@ -319,9 +349,11 @@ Filed 12 days after the infamous "covfefe" tweet (May 31, 2017 → June 12, 2017
 | **Pork Rating** | $4.8M |
 
 ### Summary
+
 Would ban members of Congress and their spouses from trading stocks. Named after the former Speaker whose household stock trades attracted significant scrutiny. Despite 70%+ public support for banning congressional stock trading, the bill received zero cosponsors and no hearing.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/118th-congress/senate-bill/58)
 
 ---
@@ -345,9 +377,11 @@ Would ban members of Congress and their spouses from trading stocks. Named after
 | **Pork Rating** | $0 |
 
 ### Summary
+
 Broader than the TikTok ban, would grant Commerce Secretary authority to review and ban technology transactions with foreign adversaries. Failed due to concerns about VPN criminalization, executive overreach, and vague definitions. The backronym spells "ANTI-SOCIAL CCP."
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/118th-congress/senate-bill/686)
 
 ---
@@ -372,12 +406,15 @@ Broader than the TikTok ban, would grant Commerce Secretary authority to review 
 | **Pork Rating** | $1M |
 
 ### Summary
+
 During the 2013 government shutdown, 800,000 federal workers were furloughed — but Congress kept its exclusive gym (with pool, sauna, paddleball court) open. This resolution would have closed it. Referred to the committee that controls gym access. They did not act.
 
 ### Note
+
 [WARN] **API Verification Failed**: H.Res. 559 in the 113th Congress is "Día de los Niños" by Rep. Hinojosa. The gym resolution may have a different bill number or may be a composite of the shutdown controversy.
 
 ### Links
+
 - Research needed for correct bill number
 
 ---
@@ -402,9 +439,11 @@ During the 2013 government shutdown, 800,000 federal workers were furloughed —
 | **Pork Rating** | $0 |
 
 ### Summary
+
 Recognizes the 2,560th birthday of Confucius (born 551 BC) and his contributions to philosophy. 41 cosponsors for honoring a philosopher who died 2,488 years before the House existed. Despite the seeming absurdity, the resolution actually passed the House on October 28, 2009.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/111th-congress/house-resolution/784)
 
 ---
@@ -428,12 +467,15 @@ Recognizes the 2,560th birthday of Confucius (born 551 BC) and his contributions
 | **Pork Rating** | $384,949 |
 
 ### Summary
+
 Sought NSF reform after $384,949 went to studying duck reproductive anatomy. The research was peer-reviewed and scientifically valid (examining evolutionary "arms race" in waterfowl reproduction). The researcher defended her work; the bill did not advance.
 
 ### Note
+
 [WARN] **API Verification Failed**: H.R. 5717 in the 112th Congress is "Army Corps of Engineers Communications Accountability Act" by Rep. Kristi Noem. The NSF-related bill may have a different number or be a composite of Jeff Flake's "Wastebook" campaign against NSF spending.
 
 ### Links
+
 - Research needed for correct bill number
 
 ---
@@ -458,12 +500,15 @@ Sought NSF reform after $384,949 went to studying duck reproductive anatomy. The
 | **Pork Rating** | $682,570 |
 
 ### Summary
+
 Targeted NSF spending after the "shrimp on a treadmill" viral video. The $682,570 grant funded legitimate research on water quality's effect on marine organism health. The treadmill itself cost about $47 and was built from spare parts.
 
 ### Note
+
 **Corrected**: Bill number was H.R. 3899 (which is the Voting Rights Amendment Act). The actual FIRST Act of 2014 is H.R. 4186 sponsored by Rep. Larry Bucshon (R-IN). The "shrimp on treadmill" controversy was also highlighted in other legislative efforts.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/113th-congress/house-bill/4186)
 
 ---
@@ -488,9 +533,11 @@ Targeted NSF spending after the "shrimp on a treadmill" viral video. The $682,57
 | **Pork Rating** | $0 |
 
 ### Summary
+
 Would require each bill to address only one subject. 43 state constitutions have this rule; Congress does not. Has been introduced every Congress for decades with identical results: death in committee. Omnibus bills let leadership control votes.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/113th-congress/house-bill/2113)
 
 ---
@@ -514,9 +561,11 @@ Would require each bill to address only one subject. 43 state constitutions have
 | **Pork Rating** | $3.5M |
 
 ### Summary
+
 Makes daylight saving time permanent. Senate passed identical bill unanimously in 2022; House never acted. 19 states have passed laws to adopt permanent DST pending federal approval. Congress continues debating which time standard to use.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/118th-congress/house-bill/1279)
 
 ---
@@ -541,9 +590,11 @@ Makes daylight saving time permanent. Senate passed identical bill unanimously i
 | **Pork Rating** | $500K |
 
 ### Summary
+
 Would establish the Apollo 11 landing site at Tranquility Base as a National Historical Park on the Moon. Raises Outer Space Treaty questions about territorial claims. NASA has since issued voluntary guidelines asking lunar visitors to stay away from historic sites.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/113th-congress/house-bill/2617)
 
 ---
@@ -567,9 +618,11 @@ Would establish the Apollo 11 landing site at Tranquility Base as a National His
 | **Pork Rating** | -$8B (theoretical savings) |
 
 ### Summary
+
 Complete U.S. withdrawal from the United Nations, repeal of UN Participation Act, end of all contributions (~$8B annually), and eviction of UN headquarters from NYC. Introduced repeatedly since 1990s. Never advanced past committee.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/113th-congress/house-bill/75)
 
 ---
@@ -594,9 +647,11 @@ Complete U.S. withdrawal from the United Nations, repeal of UN Participation Act
 | **Pork Rating** | -$1.7B (theoretical savings) |
 
 ### Summary
+
 Would dissolve ATF entirely and transfer law enforcement functions to FBI. 10 Republican cosponsors, zero Democrats. Critics argue specialized ATF expertise would be lost; supporters view ATF regulatory activities as federal overreach.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/118th-congress/house-bill/374)
 
 ---
@@ -621,9 +676,11 @@ Would dissolve ATF entirely and transfer law enforcement functions to FBI. 10 Re
 | **Pork Rating** | $0 |
 
 ### Summary
+
 Would require GAO to list all federal programs whose authorizations have expired but continue receiving appropriations. CBO found over $400 billion in such "zombie" spending. The bill designed to expose undead programs was itself killed in committee.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/117th-congress/senate-bill/3110)
 
 ---
@@ -647,12 +704,15 @@ Would require GAO to list all federal programs whose authorizations have expired
 | **Pork Rating** | $0 |
 
 ### Votes
+
 - **House:** 215-209
 
 ### Summary
+
 Codifies the "legislative day" vs "calendar day" distinction. A "legislative day" only ends when they formally adjourn. If they recess instead, it's still the same "day." In 1980, a single Senate "Monday" lasted 162 actual days (Jan 3 – June 12).
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/119th-congress/house-resolution/5)
 - [Roll Call](https://clerk.house.gov/evs/2025/roll005.xml)
 
@@ -677,9 +737,11 @@ Codifies the "legislative day" vs "calendar day" distinction. A "legislative day
 | **Pork Rating** | $0 |
 
 ### Summary
+
 Designated September as National Bourbon Heritage Month. Passed by unanimous consent. Kentucky produces 95% of world bourbon supply. If there's one thing both parties agree on, it's drinking.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/110th-congress/senate-resolution/294)
 
 ---
@@ -703,9 +765,11 @@ Designated September as National Bourbon Heritage Month. Passed by unanimous con
 | **Pork Rating** | $0 |
 
 ### Summary
+
 Designated August as National Catfish Month. U.S. produces 300+ million pounds of catfish annually, mostly in Mississippi, Alabama, and Arkansas. Passed same day as introduced.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/117th-congress/senate-resolution/353)
 
 ---
@@ -730,12 +794,15 @@ Designated August as National Catfish Month. U.S. produces 300+ million pounds o
 | **Pork Rating** | $0 |
 
 ### Votes
+
 - **House:** 391-10
 
 ### Summary
+
 Officially designated March 14 (3/14) as National Pi Day. Passed 391-10 just in time for Pi Day. Ten members voted against celebrating a mathematical constant. Their reasoning remains irrational.
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/111th-congress/house-resolution/224)
 - [Roll Call](https://clerk.house.gov/Votes/2009124)
 
@@ -760,12 +827,15 @@ Officially designated March 14 (3/14) as National Pi Day. Passed 391-10 just in 
 | **Pork Rating** | $15M |
 
 ### Summary
+
 Directs DEA and ONDCP to investigate meth supply chains. The "fish on meth" association comes from a separate 2021 study finding fish exposed to meth-contaminated water exhibited addictive behaviors. The bill itself is straightforward law enforcement policy.
 
 ### Note
+
 [WARN] **API Verification Failed**: H.R. 8752 in the 118th Congress is "Department of Homeland Security Appropriations Act, 2025" by Rep. Mark Amodei. The meth investigation bill may have a different bill number or may be a composite.
 
 ### Links
+
 - Research needed for correct bill number
 
 ---
@@ -778,11 +848,13 @@ Directs DEA and ONDCP to investigate meth supply chains. The "fish on meth" asso
 | **Status** | **ENTRY DEPRECATED** - See Bill #3 (H.R. 7521) for actual TikTok legislation |
 
 ### Note
+
 [ERROR] **This entry contains incorrect data**. H.R. 6174 in the 118th Congress is actually the "DHS Biodetection Improvement Act" sponsored by Rep. Dale W. Strong (R-AL), not a TikTok-related bill.
 
 The TikTok legislation is covered in **Bill #3 (H.R. 7521)** above. This entry appears to be a duplicate with an incorrect bill number and should be removed or consolidated with the H.R. 7521 entry.
 
 ### Links
+
 - Actual H.R. 6174: [Congress.gov](https://www.congress.gov/bill/118th-congress/house-bill/6174) (Biodetection Act)
 - TikTok Bill: See Bill #3 (H.R. 7521)
 
@@ -807,19 +879,23 @@ The TikTok legislation is covered in **Bill #3 (H.R. 7521)** above. This entry a
 | **Pork Rating** | $3.2B total / $10.30 per capita |
 
 ### Votes
+
 - **House (conference):** 298-121
 - **Senate (conference):** 70-30
 
 ### Summary
+
 A "minibus" combining Agriculture, Transportation-HUD, and Commerce-Justice-Science appropriations. 243 amendments considered. Notable for James Webb Space Telescope funding preserved despite being over budget. Also contained the "pizza is a vegetable" language in a different form.
 
 ### Notable Items
+
 - Pacific Coastal Salmon Recovery Fund: $65M
 - James Webb Space Telescope: $530M
 - Catfish Inspection Program: $14M
 - COPS Hiring Grants: $166M
 
 ### Links
+
 - [Congress.gov](https://www.congress.gov/bill/112th-congress/house-bill/2112)
 
 ---
@@ -827,6 +903,7 @@ A "minibus" combining Agriculture, Transportation-HUD, and Commerce-Justice-Scie
 ## Summary by Category
 
 ### By Status
+
 | Status | Count |
 |--------|-------|
 | Signed into Law | 8 |
@@ -834,6 +911,7 @@ A "minibus" combining Agriculture, Transportation-HUD, and Commerce-Justice-Scie
 | Died in Committee | 16 |
 
 ### By Category
+
 | Category | Count |
 |----------|-------|
 | Technology | 3 |
@@ -848,12 +926,14 @@ A "minibus" combining Agriculture, Transportation-HUD, and Commerce-Justice-Scie
 | Other | 3 |
 
 ### By Party of Sponsor
+
 | Party | Count |
 |-------|-------|
 | Republican | 17 |
 | Democrat | 10 |
 
 ### Absurdity Index Distribution
+
 | Score | Count | Bills |
 |-------|-------|-------|
 | 9/10 | 3 | Bridge to Nowhere, Pizza as Vegetable, 119th House Rules |
@@ -910,86 +990,96 @@ This audit verified the 27 real bills in the reference document against the offi
 These bills have **completely incorrect bill numbers** - they reference entirely different legislation:
 
 ### 1. Laken Riley Act
+
 | Field | Reference | API (Correct) |
 |-------|-----------|---------------|
 | **Bill Number** | S. 1 | **S. 5** |
 | Congress | 119th | 119th OK |
 | Sponsor | Sen. Katie Britt (R-AL) | Sen. Katie Britt (R-AL) OK |
 | Status | Public Law 119-1 | Public Law 119-1 OK |
-| **Action Required** | Update bill number from S. 1 to S. 5 |
+| **Action Required** | Update bill number from S. 1 to S. 5 | |
 
 ### 2. Congressional Gym Access During Shutdowns
+
 | Field | Reference | API Reality |
 |-------|-----------|-------------|
 | **Bill Number** | H.Res. 559 | H.Res. 559 is "Día de los Niños: Celebrating Young Americans" |
 | **Sponsor** | Rep. Bill Foster (D-IL) | Rep. Ruben Hinojosa (D-TX) |
 | **Year** | 2013 | 2014 |
-| **Action Required** | Find correct bill number for gym access resolution |
+| **Action Required** | Find correct bill number for gym access resolution | |
 
 ### 3. Duck Genitalia Study (NSF Transparency Act)
+
 | Field | Reference | API Reality |
 |-------|-----------|-------------|
 | **Bill Number** | H.R. 5717 | H.R. 5717 is "Army Corps of Engineers Communications Accountability Act of 2012" |
 | **Sponsor** | Rep. Jeff Flake (R-AZ) | Rep. Kristi Noem (R-SD) |
 | **Title** | NSF Transparency and Accountability Act | Unrelated water resources bill |
-| **Action Required** | Find correct bill number for NSF reform bill |
+| **Action Required** | Find correct bill number for NSF reform bill | |
 
 ### 4. Shrimp on a Treadmill (FIRST Act)
+
 | Field | Reference | API Reality |
 |-------|-----------|-------------|
 | **Bill Number** | H.R. 3899 | H.R. 3899 is "Voting Rights Amendment Act of 2014" |
 | **Sponsor** | Rep. Lamar Smith (R-TX) | Rep. F. James Sensenbrenner Jr. (R-WI) |
 | **Cosponsors** | 2 | 177 |
-| **Action Required** | Find correct bill number for FIRST Act |
+| **Action Required** | Find correct bill number for FIRST Act | |
 
 ### 5. One Subject at a Time Act
+
 | Field | Reference | API Reality |
 |-------|-----------|-------------|
 | **Bill Number** | H.R. 5103 | H.R. 5103 is "Chinese Communist Economic Espionage Sanctions Act" |
 | **Sponsor** | Rep. Tom Marino (R-PA) | Rep. Dana Rohrabacher (R-CA) |
-| **Action Required** | Find correct bill number for One Subject at a Time Act |
+| **Action Required** | Find correct bill number for One Subject at a Time Act | |
 
 ### 6. Daylight Protection Act
+
 | Field | Reference | API Reality |
 |-------|-----------|-------------|
 | **Bill Number** | H.R. 3684 | H.R. 3684 is "Douglas Mike Day Psychedelic Therapy to Save Lives Act of 2023" |
 | **Sponsor** | Rep. Vern Buchanan (R-FL) | Rep. Dan Crenshaw (R-TX) |
-| **Action Required** | Find correct bill number for Daylight Protection Act |
+| **Action Required** | Find correct bill number for Daylight Protection Act | |
 
 ### 7. Methamphetamine Response Act (Meth/Fish Bill)
+
 | Field | Reference | API Reality |
 |-------|-----------|-------------|
 | **Bill Number** | H.R. 8752 | H.R. 8752 is "Department of Homeland Security Appropriations Act, 2025" |
 | **Sponsor** | Rep. Jake LaTurner (R-KS) | Rep. Mark E. Amodei (R-NV) |
-| **Action Required** | Find correct bill number or verify if bill exists |
+| **Action Required** | Find correct bill number or verify if bill exists | |
 
 ### 8. TikTok-Related Bill H.R. 6174
+
 | Field | Reference | API Reality |
 |-------|-----------|-------------|
 | **Bill Number** | H.R. 6174 | H.R. 6174 is "DHS Biodetection Improvement Act" |
 | **Sponsor** | Rep. Mike Gallagher (R-WI) | Rep. Dale W. Strong (R-AL) |
 | **Cosponsors** | 352 | 4 |
-| **Action Required** | Find correct bill number or remove entry (may be duplicate of H.R. 7521) |
+| **Action Required** | Find correct bill number or remove entry (may be duplicate of H.R. 7521) | |
 
 ---
 
 ## [ERROR] MAJOR DISCREPANCIES
 
 ### 1. Consolidated Appropriations Act, 2023 (H.R. 2617)
+
 | Field | Reference | API (Correct) |
 |-------|-----------|---------------|
 | **Sponsor** | Rep. Rosa DeLauro (D-CT) | **Rep. Gerald E. Connolly (D-VA)** |
 | Introduced | 2022-04-20 | 2021-04-16 (as Performance Enhancement Reform Act) |
-| **Note** | DeLauro moved to agree to Senate amendment but was NOT the original sponsor |
+| **Note** | DeLauro moved to agree to Senate amendment but was NOT the original sponsor | |
 | Law Number | Public Law 117-328 OK | Public Law 117-328 OK |
 
 ### 2. TikTok Ban (H.R. 7521)
+
 | Field | Reference | API (Correct) |
 |-------|-----------|---------------|
 | **Status** | Signed into Law (P.L. 118-50) | **Referred to Senate Committee (never enacted as this bill)** |
 | Cosponsors | 27 | 54 |
-| **Note** | TikTok provisions were rolled into a foreign aid package, NOT enacted as H.R. 7521 directly |
-| **Action Required** | Clarify that H.R. 7521 itself did not become law; provisions incorporated elsewhere |
+| **Note** | TikTok provisions were rolled into a foreign aid package, NOT enacted as H.R. 7521 directly | |
+| **Action Required** | Clarify that H.R. 7521 itself did not become law; provisions incorporated elsewhere | |
 
 ---
 
@@ -1056,6 +1146,7 @@ The following data in the reference is NOT available via the Congress.gov API:
 ## FIX Recommended Corrections
 
 ### Priority 1: Fix Wrong Bill Numbers
+
 1. Laken Riley Act: Change S. 1 → **S. 5**
 2. Congressional Gym Access: Research correct bill number
 3. Duck Genitalia Study: Research correct bill number
@@ -1066,10 +1157,12 @@ The following data in the reference is NOT available via the Congress.gov API:
 8. TikTok H.R. 6174: Remove (duplicate/incorrect)
 
 ### Priority 2: Fix Major Errors
+
 1. H.R. 2617 Omnibus: Change sponsor to Gerald E. Connolly
 2. H.R. 7521 TikTok: Update status to "Referred to Senate" (not law)
 
 ### Priority 3: Fix Minor Errors
+
 1. Update committee assignments for STABLE GENIUS, PELOSI Act
 2. Update sponsor for Zombie Programs Act
 3. Update status for Confucius Birthday Resolution
@@ -1079,6 +1172,7 @@ The following data in the reference is NOT available via the Congress.gov API:
 ## API Data Sources
 
 All verification performed against:
+
 - **Endpoint:** `https://api.congress.gov/v3/`
 - **Documentation:** [Congress.gov API](https://api.congress.gov/)
 - **Data Currency:** Real-time from Library of Congress
@@ -1169,6 +1263,7 @@ The following bills could not be matched in the Congress.gov API and have been m
 | **H.R. 6174 TikTok Entry** | H.R. 6174 is DHS Biodetection Act - marked as deprecated duplicate |
 
 These entries have been flagged with [WARN] warnings in the document. They may be:
+
 - Composite entries based on multiple sources
 - Editorial/satirical content for the website
 - Bills with incorrect identifiers that need further research

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Icon from '../../../components/ui/Icon.astro';
+import AISummarizer from '../../../components/votechain/AISummarizer.astro';
 ---
 
 <BaseLayout
@@ -25,6 +26,111 @@ import Icon from '../../../components/ui/Icon.astro';
         (EWP). Everything runs in your browser.
       </p>
     </div>
+
+    <AISummarizer
+      triggerSub="4 demo modules &rarr; 60 seconds"
+      scanLines={[
+        'Reading voting client module...',
+        'Reading receipt verification module...',
+        'Analyzing oversight dashboard...',
+        'Reviewing trust portal...',
+        'Compiling summary...',
+      ]}
+    >
+      <Fragment slot="eli5">
+        <p class="font-bold text-lg text-navy-900 mb-3">The science fair version:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What is this?</p>
+        <p class="mb-3">This is a working model &mdash; like a science fair project that shows how VoteChain would work. It runs entirely in your web browser. Nothing leaves your computer. It's not a real voting system, but it lets you walk through the same steps a real voter would take.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What can you do here?</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Vote.</strong> The Voting Client walks you through every step: get your digital ID, prove you're allowed to vote, pick a candidate, seal your ballot in a digital envelope, and get a receipt. You can even "challenge" the machine &mdash; ask it to prove it sealed your real choice before you commit.</li>
+          <li><strong>Check your receipt.</strong> The Receipt Verification page lets you take the receipt you got and independently verify it. It checks three things: the digital signature is valid, your sealed ballot is on the public board, and the board was properly recorded on the ledger.</li>
+          <li><strong>Watch the whole election.</strong> The Oversight Dashboard shows you what an election monitor would see: every event on the ledger, every entry on the public board, any fraud flags, and the ability to trigger a final tally.</li>
+          <li><strong>Inspect the keys.</strong> The Trust Portal shows every public key the system uses &mdash; the election key, the server signing key, the issuer key &mdash; so you can verify for yourself that signatures match.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Is this real?</p>
+        <p class="mb-3">It's real code doing real cryptography &mdash; actual digital signatures, real encryption, real zero-knowledge proofs. But it's all happening inside your browser with fake data. Think of it as a flight simulator: the controls are real, the physics are real, but you're not actually 30,000 feet in the air.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Can I break it?</p>
+        <p class="mb-3">Feel free to try! If something goes wrong, hit the "Reset POC State" button at the bottom and start over. That's what the button is for.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">Want more detail? Slide the bar to the right. Or close this and pick a module to try.</p>
+      </Fragment>
+
+      <Fragment slot="plain">
+        <p class="font-bold text-lg text-navy-900 mb-3">Here's what the POC demonstrates:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What is this?</p>
+        <p class="mb-3">A browser-only proof of concept that makes the VoteChain and EWP protocol documents concrete. Instead of reading about zero-knowledge proofs and encrypted ballots, you can see them generated, verified, and anchored in real time. All state lives in your browser's localStorage &mdash; nothing is sent to any server.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Four modules:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Voting Client:</strong> A step-by-step wizard that walks through the full cast flow. Generate a secp256k1 credential with a blind Schnorr signature from the issuer (simulated in-browser). Request a server challenge. Build a zero-knowledge eligibility proof and encrypt your ballot selection. Optionally challenge the encryption (Benaloh-style) to verify cast-as-intended. Cast the ballot and receive a signed receipt with a Merkle inclusion proof.</li>
+          <li><strong>Receipt Verification:</strong> Take any cast receipt and independently verify it. Checks the gateway's Ed25519 signature, confirms Merkle inclusion in the bulletin board tree, and verifies the VoteChain anchor event on the simulated ledger. Shows you the raw JSON at each step so nothing is hidden.</li>
+          <li><strong>Oversight Dashboard:</strong> An election-monitor view showing all VoteChain Ledger (VCL) events, bulletin board leaves and signed tree heads, any fraud flags (e.g., nullifier collisions), and the ability to trigger a threshold tally. The tally simulates t-of-n trustee decryption, publishes decryption proofs, and anchors the result to the ledger.</li>
+          <li><strong>Trust Portal:</strong> Displays every public key used in the election &mdash; the election encryption key, the gateway signing key, the issuer's blind Schnorr key, and trustee verification keys. Each key can be copied and independently verified against any receipt, proof, or anchor in the system.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">What cryptography does it actually use?</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li><strong>Credentials:</strong> secp256k1 keypair with blind Schnorr signature issuance (registration authority signs the credential without learning which key it certified).</li>
+          <li><strong>Eligibility proofs:</strong> Simplified Schnorr proof-of-knowledge (BIP340-style) bound to an election-specific challenge nonce. The issuer's blind signature is verified against the public issuer key instead of matching the credential directly.</li>
+          <li><strong>Ballot encryption:</strong> ECIES (Elliptic Curve Integrated Encryption Scheme) using the election public key.</li>
+          <li><strong>Threshold decryption:</strong> Simulated t-of-n Shamir secret sharing. Trustees reconstruct the decryption key at tally time and publish proof of correct decryption.</li>
+          <li><strong>Signatures:</strong> Ed25519 for gateway-signed receipts and ledger events.</li>
+          <li><strong>Merkle tree:</strong> SHA-256 binary Merkle tree for the bulletin board, with inclusion proofs for each ballot leaf.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Limitations (by design):</p>
+        <p class="mb-3">This is a <em>proof of concept</em>, not a production system. The "74-node ledger" is an in-memory array. The "bulletin board" is a localStorage object. The "threshold ceremony" runs all trustee roles in one browser tab. The cryptographic primitives are real, but the operational security model (HSMs, air gaps, multi-party key ceremonies) is simulated. The POC exists to make the protocol tangible, not to be deployed.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">Close this and pick a module to explore. Start with the Voting Client for the full flow.</p>
+      </Fragment>
+
+      <Fragment slot="technical">
+        <p class="font-bold text-lg text-navy-900 mb-3">Technical summary of the POC:</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Runtime:</p>
+        <p class="mb-3">Pure client-side TypeScript compiled by Astro. All state in <code>localStorage</code> under <code>votechain_poc_state_v2</code>. No network requests. Crypto operations use <code>@noble/curves</code> (secp256k1, ed25519) and <code>@noble/hashes</code> (SHA-256). Suite identifier: <code>ewp_suite_poc_blind_schnorr_ecies_aesgcm_threshold_v1</code>.</p>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Credential issuance (blind Schnorr):</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li>Issuer keypair: secp256k1, generated at state initialization. Public key published in election manifest (<code>crypto.pk_issuer</code>).</li>
+          <li>Protocol: 4-step blind Schnorr (s = k &minus; c&middot;sk convention). Voter generates blinding factors (&alpha;, &beta;), computes blinded nonce R' = R + &alpha;&middot;G + &beta;&middot;PK_I, sends blinded challenge c = c' &minus; &beta; mod q. Issuer returns s = k &minus; c&middot;sk_I. Voter unblinds: s' = s + &alpha; mod q. Signature: (R', s').</li>
+          <li>Message: voter's x-only public key (32 bytes). Verification: <code>s'&middot;G + c'&middot;PK_I == R'</code> where <code>c' = H("votechain:blind_schnorr:v1:" || R' || PK_I || m)</code>.</li>
+          <li>Privacy property: issuer certifies credential without learning which key it certified (registration-to-vote unlinkability).</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Eligibility proof &amp; verification:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li>Prover: builds BIP340-style Schnorr proof-of-knowledge of <code>sk</code> behind <code>credential_pub</code>, bound to election-specific challenge nonce.</li>
+          <li>Verifier: (1) verifies blind Schnorr signature against <code>manifest.crypto.pk_issuer</code> (NOT direct pk comparison), (2) verifies Schnorr proof-of-knowledge, (3) checks nullifier derivation <code>H(pk, election_id)</code>.</li>
+          <li>Nullifier: SHA-256 of <code>credential_pub || election_id</code>. Collision on VCL &rarr; <code>EWP_NULLIFIER_USED</code> rejection.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Ballot encryption &amp; cast flow:</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li>ECIES: ephemeral secp256k1 keypair, ECDH shared secret, HKDF-SHA256 key derivation, AES-256-GCM encryption of ballot payload.</li>
+          <li>Cast request: nullifier, eligibility proof (with blind sig), encrypted ballot, ballot hash, idempotency nonce.</li>
+          <li>Server-side: verify eligibility proof, check nullifier uniqueness, append to BB (SHA-256 Merkle tree), sign receipt (Ed25519), emit <code>ewp_ballot_cast</code> VCL event, return receipt with <code>bb_leaf_hash</code> + <code>merkle_root</code> + VCL <code>tx_id</code>.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">Threshold decryption (tally):</p>
+        <ul class="list-disc pl-6 space-y-2.5 mb-4">
+          <li>Simulated t-of-n Shamir. Election key split into <code>n</code> trustee shares at init. At tally time, <code>t</code> shares reconstructed to recover decryption key.</li>
+          <li>Each encrypted ballot decrypted individually (POC simplification; production uses homomorphic aggregation).</li>
+          <li>Published artifacts: tally results, decryption proof (trustee participation record), closing BB Merkle root, tally hash anchored on VCL.</li>
+        </ul>
+
+        <p class="font-bold text-navy-900 mt-4 mb-2">State schema (<code>PocStateV2</code>):</p>
+        <p class="mb-3"><code>election</code> (manifest, keys, trustees), <code>issuer</code> (sk/pk), <code>credential</code> (DID, pk, nullifier, blind_sig), <code>vcl</code> (ledger events array), <code>bb</code> (Merkle tree leaves + roots), <code>fraud_flags</code>, <code>tally</code>. Suite version check on load; stale state auto-cleared.</p>
+
+        <p class="text-navy-500 text-sm italic mt-4">The core implementation is in <code>src/votechain-poc/poc.ts</code> (~2,500 lines). Each module page imports and calls the relevant POC functions.</p>
+      </Fragment>
+    </AISummarizer>
 
     <div class="rounded-lg border border-gold-300 bg-cream-50 p-5 mb-8">
       <div class="flex items-start gap-3">

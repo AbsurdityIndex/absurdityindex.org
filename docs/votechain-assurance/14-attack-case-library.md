@@ -155,4 +155,3 @@ If you find a gap:
    - a spec clarification (PRD or conformance rule)
    - a regression test or conformance vector
    - a short note in the case entry about what changed
-

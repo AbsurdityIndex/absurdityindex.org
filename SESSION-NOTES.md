@@ -32,6 +32,7 @@ A flexible timeline visualization component with three variants:
 | `vertical` | Mobile views | Vertical stack with connectors |
 
 **Features:**
+
 - CSS custom properties for easy theming (`--dot-size`, `--color-completed`, etc.)
 - Animated pulse effect on current stage
 - Checkmarks for completed stages
@@ -64,6 +65,7 @@ const progress = getBillProgress(billNumber, status);
 ## The Problem We Solved
 
 **Before:** Two separate timeline implementations with different:
+
 - Progress calculation logic (popover showed static template, main showed real progress)
 - Visual styles (inconsistent dot sizes, colors, animations)
 - Code maintenance burden (changes needed in multiple places)
@@ -87,6 +89,7 @@ The tech stack (Astro + MDX + Tailwind) is well-suited for this content-heavy, s
 ### Architecture Observations
 
 The codebase follows good patterns:
+
 - **Content collections** for bills with Zod schema validation
 - **Component-driven UI** with clear separation of concerns
 - **Utility extraction** (what we just did) keeps logic testable and reusable
@@ -96,6 +99,7 @@ The `billParser.ts` utility that determines bill types (H.R. vs H.Res. vs S.Con.
 ### Design Quality
 
 The visual design is strong:
+
 - Dark theme with gold accents feels appropriately "governmental" but not boring
 - Typography hierarchy is clear
 - The progress timeline we just standardized adds visual interest to what could be a wall of text
@@ -105,17 +109,20 @@ The visual design is strong:
 ## What's Remaining
 
 ### Immediate (if desired)
+
 - [ ] Test all three legislative paths visually (unicameral, bicameral, full)
 - [ ] Verify mobile vertical timeline renders correctly
 - [ ] Commit changes with descriptive message
 
 ### Future Enhancements (suggestions)
+
 - [ ] Add transition animations when progress state changes
 - [ ] Consider adding tooltips to timeline stages with dates/details
 - [ ] The `BicameralTimeline.astro` component exists but may need similar refactoring
 - [ ] Could add unit tests for `billProgress.ts` utility functions
 
 ### Content
+
 - [ ] Continue adding real bills to the collection
 - [ ] The absurd/sensible bill types could use more examples
 
@@ -123,7 +130,7 @@ The visual design is strong:
 
 ## Files Modified This Session
 
-```
+```text
 src/utils/billProgress.ts          # NEW - shared progress utilities
 src/components/ui/ProgressTimeline.astro  # NEW - reusable timeline component
 src/components/bills/BillTimeline.astro   # REFACTORED - now uses shared component

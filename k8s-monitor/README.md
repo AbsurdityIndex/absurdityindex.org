@@ -2,7 +2,7 @@
 
 Monitors a Kubernetes cluster for issues via SSH and sends macOS native notifications.
 
-```
+```text
 Your Mac                             K8s Server
 ┌──────────────────────┐   SSH      ┌──────────────────┐
 │  monitor.py          │──────────► │  kubectl get ...  │
@@ -41,7 +41,7 @@ That's it. It connects to your K8s host via SSH (reads `K8S_HOST` from `.env` or
 
 ### Options
 
-```
+```text
 --host USER@HOST   SSH target (default: $K8S_HOST env var)
 --interval N       Seconds between checks (default: 60)
 --port N           Dashboard port (default: 9876)
@@ -83,6 +83,7 @@ python3 menubar.py
 ```
 
 The icon shows:
+
 - **Helm symbol** — always visible in the menu bar
 - **Alert count** — number appears next to icon when alerts are active
 - **Dropdown menu** — severity breakdown, recent alerts (clickable), "Open Dashboard"

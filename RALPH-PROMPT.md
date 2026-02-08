@@ -11,12 +11,14 @@ Generate and post satirical content about congressional absurdity to X/Twitter. 
 All commands run from the `cli/` directory via `npx tsx src/index.ts`. Every command that touches X supports `--dry-run`.
 
 ### Situational Awareness
+
 ```bash
 # ALWAYS run this first each iteration to see full state
 cd "$PROJECT_ROOT" && npx tsx cli/src/index.ts status --json
 ```
 
 ### Content Creation
+
 ```bash
 # Generate + post about a specific bill
 npx tsx cli/src/index.ts post bill --slug <slug> --type <prompt-type> [--dry-run]
@@ -35,6 +37,7 @@ npx tsx cli/src/index.ts draft batch --count <n> [--type <prompt-type>]
 ```
 
 ### Prompt Types
+
 - `bill-roast` — Satirize a bill's absurd provisions
 - `trend-jack` — Tie a trending topic to congressional dysfunction
 - `quote-dunk` — Witty response to a congressional tweet
@@ -44,6 +47,7 @@ npx tsx cli/src/index.ts draft batch --count <n> [--type <prompt-type>]
 - `reply-dunk` — Response to tweets about congressional action
 
 ### Trend Monitoring
+
 ```bash
 # One-shot trend scan
 npx tsx cli/src/index.ts monitor once
@@ -53,6 +57,7 @@ npx tsx cli/src/index.ts monitor once --dry-run
 ```
 
 ### Engagement
+
 ```bash
 # Scan for congressional tweets to respond to
 npx tsx cli/src/index.ts engage scan
@@ -65,6 +70,7 @@ npx tsx cli/src/index.ts engage status
 ```
 
 ### Queue Management
+
 ```bash
 npx tsx cli/src/index.ts schedule list
 npx tsx cli/src/index.ts schedule add <id>
@@ -75,6 +81,7 @@ npx tsx cli/src/index.ts review reject <id>
 ```
 
 ### Analytics
+
 ```bash
 npx tsx cli/src/index.ts analytics summary
 npx tsx cli/src/index.ts analytics refresh   # fetch latest metrics from X
@@ -85,6 +92,7 @@ npx tsx cli/src/index.ts analytics refresh   # fetch latest metrics from X
 Each iteration, check status and decide what to do. You are not limited to one action per iteration.
 
 ### Priority Order
+
 1. **If daily cap reached** → Refresh analytics, review drafts, clean up queue. Don't post.
 2. **If posts pending review** → Review them. Approve good ones, reject bad ones.
 3. **If high-scoring engagement opportunities exist** → Engage (quote-tweet or reply).
@@ -94,6 +102,7 @@ Each iteration, check status and decide what to do. You are not limited to one a
 7. **If nothing urgent** → Generate drafts for later, refresh analytics, scan trends.
 
 ### Strategy Guidelines
+
 - **Non-partisan is non-negotiable.** Punch at institutions, not parties. If content leans left or right, don't post it.
 - **Diversify prompt types.** Check the prompt type mix in status. If you've been doing too many `bill-roast`s, switch to `cspan-after-dark` or `pork-barrel-report`.
 - **Diversify bills.** Don't post about the same bill twice in a session. Check recently used bills in status.
@@ -103,7 +112,9 @@ Each iteration, check status and decide what to do. You are not limited to one a
 - **Reply bait is good.** Posts that ask questions or invite debate generate reply threads, which is where ad revenue comes from.
 
 ### Content Quality Checks
+
 Before posting, verify:
+
 - Under 280 characters (or structured as a thread)
 - Has a hook in the first line
 - Non-partisan — mocks the system, not a party
@@ -111,6 +122,7 @@ Before posting, verify:
 - Includes a link to absurdityindex.org when referencing a specific bill
 
 ### What NOT to Do
+
 - Don't post rage bait or inflammatory content
 - Don't target individual politicians by name (target the institution)
 - Don't post more than 8 times per day
@@ -130,7 +142,7 @@ If you've hit the daily cap AND there's nothing left to review/draft/analyze:
 
 ## Example Iteration
 
-```
+```text
 1. Run `status --json` to see current state
 2. See: 3/8 posts today, 2 pending review, peak hours
 3. Review the 2 pending posts → approve 1, reject 1

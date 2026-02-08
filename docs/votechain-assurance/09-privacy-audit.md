@@ -111,4 +111,3 @@ Preferred fixes:
 - Field inventory with correlation risk ratings
 - Evidence that privacy claims are testable and tested
 - A list of accepted residual risks (explicitly documented)
-

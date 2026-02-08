@@ -20,6 +20,7 @@ MCP server that provides tweet engagement tools for Claude Code:
 - **`fetch_tweet`** — Fetch tweet content without replying
 
 **How it works:**
+
 1. Reads `.env` from project root for API credentials
 2. Uses `TwitterApi` (bearer token for reading, OAuth 1.0a for writing)
 3. Uses Anthropic Claude for reply generation
@@ -28,6 +29,7 @@ MCP server that provides tweet engagement tools for Claude Code:
 ## Configuration
 
 Registered in root `.mcp.json`:
+
 ```json
 {
   "mcpServers": {

@@ -15,12 +15,14 @@ Edge middleware and API endpoints running on Cloudflare Pages alongside the stat
 ## Important: Runtime Constraints
 
 Cloudflare Workers is a V8 isolate environment. The following are **NOT available**:
+
 - `fs`, `path`, `os`, `process`, or any Node.js built-in modules
 - `__dirname`, `__filename`
 - `require()` (only ES module `import` is supported)
 - Long-running processes or persistent connections
 
 Use the Workers-specific APIs:
+
 - `context.request.cf` for Cloudflare request properties (country, colo, etc.)
 - `context.next()` to pass to the next handler
 - `context.env` for environment variables / secrets
