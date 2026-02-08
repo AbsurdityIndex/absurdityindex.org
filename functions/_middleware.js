@@ -219,6 +219,8 @@ export async function onRequest(context) {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-store',
+        // Avoid indexing the geo-block interstitial if a crawler hits it.
+        'X-Robots-Tag': 'noindex, nofollow',
         ...SECURITY_HEADERS,
       },
     }

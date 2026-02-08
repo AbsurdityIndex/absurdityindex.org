@@ -30,6 +30,7 @@ export async function getStaticPaths() {
 const { bill } = Astro.props;
 const { Content } = await render(bill);
 const d = bill.data;
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
 
 // Parse bill type for intelligent timeline rendering
 const billType = parseBillType(d.billNumber);
@@ -56,6 +57,11 @@ const hasBillEvolution = (d.billEvolution?.length || 0) > 0;
 const hasPork = d.totalPork !== undefined;
 
 // Schema.org structured data
+// Share URLs
+const shareUrl = `${siteOrigin}/bills/${bill.id}/`;
+const encodedUrl = encodeURIComponent(shareUrl);
+const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.summary}`);
+
 const billSchema = {
   '@context': 'https://schema.org',
   '@type': 'Article',
@@ -64,18 +70,31 @@ const billSchema = {
   datePublished:
     d.dateIntroduced instanceof Date ? d.dateIntroduced.toISOString() : d.dateIntroduced,
   author: { '@type': 'Organization', name: 'Absurdity Index' },
+  isBasedOn: d.congressDotGovUrl,
+  inLanguage: 'en-US',
+  isAccessibleForFree: true,
+  image: `${siteOrigin}/og-image.png`,
   publisher: {
     '@type': 'Organization',
     name: 'Absurdity Index',
-    url: 'https://absurdityindex.org',
+    url: siteOrigin,
   },
-  mainEntityOfPage: { '@type': 'WebPage', '@id': `https://absurdityindex.org/bills/${bill.id}` },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': shareUrl },
+  url: shareUrl,
+  identifier: d.billNumber,
+  keywords: d.tags,
+  about: [d.category, ...(d.tags || [])].filter(Boolean),
 };
 
-// Share URLs
-const shareUrl = `https://absurdityindex.org/bills/${bill.id}/`;
-const encodedUrl = encodeURIComponent(shareUrl);
-const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.summary}`);
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Real Bills', item: `${siteOrigin}/bills/` },
+    { '@type': 'ListItem', position: 3, name: d.billNumber, item: shareUrl },
+  ],
+};
 ---
 
 <BaseLayout
@@ -90,6 +109,7 @@ const twitterText = encodeURIComponent(`${d.billNumber} — ${d.title}\n\n${d.su
   }}
 >
   <script is:inline type="application/ld+json" set:html={JSON.stringify(billSchema)} />
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
 
   {/* Site-wide satire banner */}
   <div class="bg-navy-900 border-b-2 border-gold-500">

@@ -74,6 +74,8 @@ const {
   title={sponsor}
   description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}
 >
+  {totalPages > 1 && <link slot="head" rel="next" href={`/sponsors/${sponsorSlug}/page/2/`} />}
+
   <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-2">
       <a

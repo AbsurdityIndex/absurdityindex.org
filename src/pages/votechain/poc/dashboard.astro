@@ -839,6 +839,7 @@ import JourneyStepBar from '../../../components/votechain/JourneyStepBar.astro';
           statusEl.textContent = res.error;
         } else {
           statusEl.textContent = 'Tally published and anchored.';
+          window.dispatchEvent(new CustomEvent('votechain:state-changed'));
         }
       } finally {
         publishBtn.disabled = false;

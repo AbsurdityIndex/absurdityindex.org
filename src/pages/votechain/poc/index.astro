@@ -1078,6 +1078,9 @@ import Icon from '../../../components/ui/Icon.astro';
           card.classList.add('completed-card');
           marker?.classList.add('complete');
           icon?.classList.add('icon-complete');
+          // Fix icon SVG color: gold-on-green is unreadable, switch to white
+          const svg = icon?.querySelector('svg');
+          if (svg) { svg.classList.remove('text-gold-700'); svg.classList.add('text-white'); }
           if (badge) {
             badge.textContent = i === 1 ? 'Done' : i === 2 ? 'Done' : 'Done';
             badge.className = 'journey-badge journey-badge--complete';
@@ -1103,6 +1106,9 @@ import Icon from '../../../components/ui/Icon.astro';
             badge.className = 'journey-badge journey-badge--active';
           }
           icon?.classList.remove('journey-step-icon--muted');
+          // Make icon SVG white on navy bg (matching step 1's default style)
+          const svg = icon?.querySelector('svg');
+          if (svg) { svg.classList.remove('text-gold-700'); svg.classList.add('text-white'); }
           if (i > 1) {
             // Promote secondary CTA to primary for active step
             const link = cta?.querySelector('a');
@@ -1118,24 +1124,31 @@ import Icon from '../../../components/ui/Icon.astro';
       }
 
       // Show tally results if available
+      // totals is { contest_id: { option_id: count } }
       if (m.hasTally && m.tally?.totals) {
         const tallyEl = document.getElementById('tally-results');
         const barsEl = document.getElementById('tally-bars');
         if (tallyEl && barsEl) {
           const totals = m.tally.totals;
-          const max = Math.max(...Object.values(totals), 1);
+          // Flatten all counts to find the global max
+          const allCounts = Object.values(totals).flatMap(opts => Object.values(opts));
+          const max = Math.max(...allCounts, 1);
           barsEl.innerHTML = Object.entries(totals)
-            .sort(([, a], [, b]) => b - a)
-            .map(([name, count]) => {
-              const pct = Math.round((count / max) * 100);
-              return `<div class="flex items-center gap-2 text-xs">
-                <span class="w-24 text-navy-700 font-medium truncate">${name}</span>
-                <div class="flex-1 h-2 bg-navy-100 rounded-full overflow-hidden">
-                  <div class="h-full rounded-full" style="width: ${pct}%; background: ${pct === 100 ? '#16a34a' : 'var(--color-gold-500, #c9a030)'}; transition: width 1s ease-out"></div>
-                </div>
-                <span class="w-6 text-right font-mono text-navy-500">${count}</span>
-              </div>`;
-            })
+            .map(([contestId, options]) =>
+              Object.entries(options)
+                .sort(([, a], [, b]) => b - a)
+                .map(([name, count]) => {
+                  const pct = Math.round((count / max) * 100);
+                  return `<div class="flex items-center gap-2 text-xs">
+                    <span class="w-24 text-navy-700 font-medium truncate" title="${name}">${name}</span>
+                    <div class="flex-1 h-2 bg-navy-100 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full" style="width: ${pct}%; background: ${pct === 100 ? '#16a34a' : 'var(--color-gold-500, #c9a030)'}; transition: width 1s ease-out"></div>
+                    </div>
+                    <span class="w-6 text-right font-mono text-navy-500">${count}</span>
+                  </div>`;
+                })
+                .join('')
+            )
             .join('');
           tallyEl.classList.remove('hidden');
         }

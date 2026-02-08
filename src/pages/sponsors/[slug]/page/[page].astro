@@ -80,12 +80,20 @@ const {
   currentPage,
   avgAbsurdity,
 } = Astro.props;
+
+const prevHref =
+  currentPage === 2 ? `/sponsors/${sponsorSlug}/` : `/sponsors/${sponsorSlug}/page/${currentPage - 1}/`;
+const nextHref =
+  currentPage < totalPages ? `/sponsors/${sponsorSlug}/page/${currentPage + 1}/` : null;
 ---
 
 <BaseLayout
   title={`${sponsor} - Page ${currentPage}`}
   description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}
 >
+  <link slot="head" rel="prev" href={prevHref} />
+  {nextHref && <link slot="head" rel="next" href={nextHref} />}
+
   <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-2">
       <a

@@ -40,6 +40,10 @@ const { category, categorySlug, bills, totalCount, totalPages, currentPage } = A
   title={`${category} Bills`}
   description={`All Absurdity Index bills in the ${category} category.`}
 >
+  {totalPages > 1 && (
+    <link slot="head" rel="next" href={`/category/${categorySlug}/page/2/`} />
+  )}
+
   <div class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-8 text-center min-[430px]:mb-10">
       <p

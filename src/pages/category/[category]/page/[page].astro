@@ -50,12 +50,22 @@ export async function getStaticPaths() {
 }
 
 const { category, categorySlug, bills, totalCount, totalPages, currentPage } = Astro.props;
+
+const prevHref =
+  currentPage === 2
+    ? `/category/${categorySlug}/`
+    : `/category/${categorySlug}/page/${currentPage - 1}/`;
+const nextHref =
+  currentPage < totalPages ? `/category/${categorySlug}/page/${currentPage + 1}/` : null;
 ---
 
 <BaseLayout
   title={`${category} Bills - Page ${currentPage}`}
   description={`All Absurdity Index bills in the ${category} category.`}
 >
+  <link slot="head" rel="prev" href={prevHref} />
+  {nextHref && <link slot="head" rel="next" href={nextHref} />}
+
   <div class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-8 text-center min-[430px]:mb-10">
       <p

@@ -27,6 +27,7 @@ Disallow: /api/
 User-agent: Googlebot-Image
 Allow: /images/
 Allow: /og-image.svg
+Allow: /og-image.png
 Allow: /favicon.svg
 
 User-agent: Google-Extended

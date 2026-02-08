@@ -21,6 +21,8 @@ const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
   title="Real Absurdities"
   description="These aren't jokes - these are real laws and bills that actually exist. We couldn't make this stuff up if we tried."
 >
+  {totalPages > 1 && <link slot="head" rel="next" href="/type/absurd/page/2/" />}
+
   <div class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-8 text-center min-[430px]:mb-10">
       <p

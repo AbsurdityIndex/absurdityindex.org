@@ -41,12 +41,19 @@ export async function getStaticPaths() {
 }
 
 const { bills, categories, currentPage, totalPages, totalCount } = Astro.props;
+
+const prevHref =
+  currentPage === 2 ? '/type/absurd/' : `/type/absurd/page/${currentPage - 1}/`;
+const nextHref = currentPage < totalPages ? `/type/absurd/page/${currentPage + 1}/` : null;
 ---
 
 <BaseLayout
   title={`Real Absurdities - Page ${currentPage}`}
   description="These aren't jokes - these are real laws and bills that actually exist. We couldn't make this stuff up if we tried."
 >
+  <link slot="head" rel="prev" href={prevHref} />
+  {nextHref && <link slot="head" rel="next" href={nextHref} />}
+
   <div class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-8 text-center min-[430px]:mb-10">
       <p

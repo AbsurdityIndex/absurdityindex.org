@@ -87,11 +87,10 @@ const steps = [
 
 <script>
   // Read POC state and update journey bar styling
-  (function updateJourneyBar() {
+  function updateJourneyBar() {
     const STORAGE_KEY = 'votechain_poc_state_v2';
     const RECEIPT_KEY = 'votechain_poc_last_receipt';
 
-    let hasCredential = false;
     let hasVoted = false;
     let hasReceipt = false;
     let hasTally = false;
@@ -100,7 +99,6 @@ const steps = [
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const state = JSON.parse(raw);
-        hasCredential = !!state.credential;
         hasVoted = state.bb?.leaves?.length > 0;
         hasTally = !!state.tally;
       }
@@ -147,5 +145,10 @@ const steps = [
     if (stepComplete.every(Boolean)) {
       document.getElementById('journey-bar-badge')?.classList.remove('hidden');
     }
-  })();
+  }
+
+  // Run on page load
+  updateJourneyBar();
+  // Re-run when state changes (e.g. tally published on dashboard)
+  window.addEventListener('votechain:state-changed', updateJourneyBar);
 </script>

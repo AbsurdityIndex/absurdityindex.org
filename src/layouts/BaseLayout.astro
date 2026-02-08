@@ -31,14 +31,24 @@ const {
   description = 'Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.',
   ogImage,
   ogType = 'website',
-  robots = 'index, follow, max-image-preview:large, max-snippet:-1',
+  robots = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
   article,
 } = Astro.props;
 
 const fullTitle = `${title} | Absurdity Index`;
 const siteUrl = Astro.site?.origin ?? Astro.url.origin;
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
-const resolvedOgImage = ogImage ? new URL(ogImage, siteUrl).href : `${siteUrl}/og-image.svg`;
+const resolvedOgImage = ogImage ? new URL(ogImage, siteUrl).href : `${siteUrl}/og-image.png`;
+
+const ogImageType = (() => {
+  const url = resolvedOgImage.toLowerCase().split('?')[0];
+  if (url.endsWith('.png')) return 'image/png';
+  if (url.endsWith('.jpg') || url.endsWith('.jpeg')) return 'image/jpeg';
+  if (url.endsWith('.webp')) return 'image/webp';
+  if (url.endsWith('.gif')) return 'image/gif';
+  if (url.endsWith('.svg')) return 'image/svg+xml';
+  return undefined;
+})();
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -47,10 +57,16 @@ const jsonLd = {
   url: siteUrl,
   description:
     'Real federal bills scored on an Absurdity Index, paired with satirical legislation that actually makes sense.',
+  inLanguage: 'en-US',
   publisher: {
     '@type': 'Organization',
     name: 'Absurdity Index',
     url: siteUrl,
+  },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${siteUrl}/search/?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
   },
 };
 
@@ -64,6 +80,11 @@ const isVoteChainRoute = pathname === '/votechain' || pathname.startsWith('/vote
     <!-- Basic meta -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F5F0E8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A1628" media="(prefers-color-scheme: dark)" />
+    <meta name="application-name" content="Absurdity Index" />
+    <meta name="apple-mobile-web-app-title" content="Absurdity Index" />
     <script is:inline>
       (function () {
         var h = document.documentElement;
@@ -152,8 +173,10 @@ const isVoteChainRoute = pathname === '/votechain' || pathname.startsWith('/vote
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content="Absurdity Index" />
     <meta property="og:image" content={resolvedOgImage} />
+    <meta property="og:image:secure_url" content={resolvedOgImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    {ogImageType && <meta property="og:image:type" content={ogImageType} />}
     <meta property="og:image:alt" content={fullTitle} />
     <meta property="og:locale" content="en_US" />
     {
