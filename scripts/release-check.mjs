@@ -86,14 +86,9 @@ function ensureCleanTree() {
 
 function ensureVersionsAreValid() {
   const rootPackage = readJson(path.join(repoRoot, 'package.json'));
-  const cliPackage = readJson(path.join(repoRoot, 'cli/package.json'));
 
   if (!isValidSemver(rootPackage.version)) {
     fail(`invalid semver in package.json: ${rootPackage.version}`);
-  }
-
-  if (!isValidSemver(cliPackage.version)) {
-    fail(`invalid semver in cli/package.json: ${cliPackage.version}`);
   }
 }
 

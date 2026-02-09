@@ -70,7 +70,6 @@ async function main() {
     fs.writeFile(ext128Path, png128),
   ]);
 
-  // eslint-disable-next-line no-console
   console.log('Generated icons:', {
     faviconIcoPath,
     ext48Path,

@@ -26,34 +26,8 @@ pnpm-debug.log*
 # playwright MCP logs
 .playwright-mcp/
 
-# browser session state (contains auth cookies)
-cli/data/.browser-state/
-
 # screenshots (root level only)
 /*.png
 
 # research notes
 research/
-
-# CLI database files (local state)
-cli/data/*.db
-cli/data/*.db-shm
-cli/data/*.db-wal
-
-# CLI dashboard runtime artifacts
-cli/data/*.log
-cli/data/*.pid
-cli/data/*.png
-cli/data/dashboard-electron-main.log
-
-# CLI pnpm lockfile (repo uses npm package-lock.json)
-cli/pnpm-lock.yaml
-
-# Python bytecode
-__pycache__/
-*.pyc
-*.pyo
-
-# VoteChain node local secrets
-workers/votechain-nodes/.secrets.local
-workers/votechain-nodes/**/.dev.vars

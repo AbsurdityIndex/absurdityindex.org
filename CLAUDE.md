@@ -1,20 +1,26 @@
-# Absurdity Index — Root CLAUDE.md
+# Absurdity Index — absurdityindex.org
 
-This is a monorepo for **Absurdity Index** (`absurdityindex.org`), a satirical commentary site about real congressional legislation.
+The main website for **Absurdity Index** (`absurdityindex.org`), a satirical commentary site about real congressional legislation. Built with Astro 5, MDX, and Tailwind CSS v4.
 
 ## Repo Structure
 
 | Directory | What | Tech |
 |-----------|------|------|
-| `/` (root) | Astro static site — the main website | Astro 5, MDX, Tailwind CSS v4 |
-| `cli/` | CLI for auto-posting to X, bill discovery, engagement | TypeScript, Commander, Claude API, Playwright |
-| `extension/` | Chrome/Firefox extension for Congress.gov | Vanilla JS, Manifest V3 |
+| `src/` | Astro site source — pages, components, layouts, content | Astro 5, MDX, Tailwind CSS v4 |
 | `functions/` | Cloudflare Pages Functions (middleware + API) | JS (Cloudflare Workers runtime) |
-| `k8s-monitor/` | Kubernetes cluster monitor with macOS notifications | Python 3 (stdlib only) |
-| `tools/` | MCP server tools for Claude Code integration | Node.js, MCP SDK |
 | `scripts/` | Build-time scripts (fetch bills, validate, release check) | Node.js |
+| `tests/` | Site unit tests | Node.js test runner |
 
-## Quick Commands (Site)
+## Related Repos
+
+| Repo | What |
+|------|------|
+| `absurdity-index-cli` | CLI for auto-posting to X, bill discovery, engagement |
+| `votechain` | Cryptographic voter verification protocol + POC |
+| `absurdity-index-extension` | Chrome/Firefox extension for Congress.gov |
+| `k8s-monitor` | Kubernetes cluster monitor with macOS notifications |
+
+## Quick Commands
 
 ```bash
 npm run dev              # Dev server at localhost:4321
@@ -22,7 +28,7 @@ npm run build            # Build site + Pagefind search index
 npm run preview          # Preview production build
 npm run validate         # Validate all bill MDX frontmatter
 npm run validate:build   # Validate then build (CI flow)
-npm run verify           # Full CI: validate + security + build + CLI build + tests
+npm run verify           # Full CI: validate + security + build + tests
 ```
 
 ## Content: Bills

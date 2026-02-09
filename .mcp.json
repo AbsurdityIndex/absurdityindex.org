@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "x-engage": {
-      "command": "node",
-      "args": ["tools/x-engage.mjs"],
-      "cwd": "."
-    }
-  }
-}
