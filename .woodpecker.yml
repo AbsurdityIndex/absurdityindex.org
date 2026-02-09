@@ -4,9 +4,9 @@
 # Runs validation/build/test on push, pull request, and manual runs.
 # Deploys to Cloudflare Pages only for push/manual on main.
 #
-# VoteChain is a separate repo whose pages are merged into the main site's
-# dist/ at build time. Both repos build their own Astro output and the
-# merge script copies VoteChain's /votechain/ pages + _astro/ assets in.
+# VoteChain is a standalone Cloudflare Pages project (votechain-dap.pages.dev).
+# Proxy functions in functions/votechain/ route /votechain/* and /api/votechain/*
+# to the standalone deployment. The parent no longer merges votechain build output.
 # ---------------------------------------------------------------------------
 
 when:
@@ -37,14 +37,6 @@ steps:
     image: node:22-alpine
     commands:
       - npm run build
-
-  - name: build-votechain
-    image: node:22-alpine
-    commands:
-      - git clone --depth 1 https://github.com/AbsurdityIndex/votechain.git /tmp/votechain
-      - cd /tmp/votechain && npm ci && npm run build
-      - cp -R /tmp/votechain/dist/votechain/ dist/votechain/
-      - cp -R /tmp/votechain/dist/_astro/* dist/_astro/
 
   - name: deploy
     image: node:22-alpine
