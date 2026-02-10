@@ -210,6 +210,16 @@ const jsonLd = {
 
     <!-- JSON-LD Structured Data -->
     <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+    <!-- Microsoft Clarity -->
+    <script is:inline>
+      (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "vfap3d6sbl");
+    </script>
+
     <slot name="head" />
   </head>
   <body class="bg-cream-100 text-navy-900 font-sans min-h-screen flex flex-col pb-10 sm:pb-9">
