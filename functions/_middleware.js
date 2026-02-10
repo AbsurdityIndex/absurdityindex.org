@@ -15,7 +15,7 @@ const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'X-Permitted-Cross-Domain-Policies': 'none',
   'Content-Security-Policy':
-    "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: https://*.clarity.ms https://c.bing.com; connect-src 'self' https://cloudflareinsights.com https://challenges.cloudflare.com https://*.corey-steinwand.workers.dev https://*.clarity.ms https://c.bing.com; frame-src https://challenges.cloudflare.com; upgrade-insecure-requests",
+    "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: https://*.clarity.ms https://c.bing.com; connect-src 'self' https://cloudflareinsights.com https://challenges.cloudflare.com https://*.corey-steinwand.workers.dev https://*.clarity.ms https://c.bing.com; frame-src https://challenges.cloudflare.com; upgrade-insecure-requests",
 };
 
 function applySecurityHeaders(response) {
