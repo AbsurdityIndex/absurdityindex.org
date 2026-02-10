@@ -7,7 +7,7 @@ import type { ComponentProps } from 'astro/types';
 
 type IconName = ComponentProps<typeof Icon>['name'];
 
-const lastUpdated = 'February 6, 2026';
+const lastUpdated = 'February 10, 2026';
 
 const collectionItems: Array<{ icon: IconName; title: string; detail: string }> = [
   {
@@ -18,7 +18,7 @@ const collectionItems: Array<{ icon: IconName; title: string; detail: string }> 
   {
     icon: 'shield',
     title: 'No ad trackers',
-    detail: 'We do not run ad-tech or behavioral tracking scripts.',
+    detail: 'We do not run ad-tech scripts. We use Microsoft Clarity for behavioral analytics (see below).',
   },
   {
     icon: 'building',
@@ -164,9 +164,10 @@ const storageKeys = [
           Cookies
         </h2>
         <p class="mt-4 text-navy-800 leading-relaxed">
-          As of {lastUpdated}, Absurdity Index does not set first-party analytics or advertising
-          cookies in site code. Infrastructure providers may still use strictly necessary mechanisms
-          for security and platform operations.
+          Absurdity Index does not set first-party advertising cookies. Microsoft Clarity and
+          Microsoft Advertising may set first-party and third-party cookies and other tracking
+          technologies for behavioral analytics purposes. Infrastructure providers may also use
+          strictly necessary mechanisms for security and platform operations.
         </p>
       </section>
 
@@ -175,7 +176,17 @@ const storageKeys = [
           <Icon name="external-link" size={18} class="text-gold-700" />
           Third-Party Services
         </h2>
-        <ul class="mt-4 space-y-2 text-navy-800">
+        <ul class="mt-4 space-y-3 text-navy-800">
+          <li>
+            <strong>Microsoft Clarity:</strong> We partner with Microsoft Clarity and Microsoft
+            Advertising to capture how you use and interact with our website through behavioral
+            metrics, heatmaps, and session replay to improve our products and services. Website usage
+            data is captured using first-party and third-party cookies and other tracking technologies
+            to determine the popularity of content and online activity. Additionally, we use this
+            information for site optimization and fraud/security purposes. For more information about
+            how Microsoft collects and uses your data, visit the
+            <a href="https://www.microsoft.com/privacy/privacystatement" target="_blank" rel="noopener noreferrer" class="underline text-gold-700 hover:text-gold-600">Microsoft Privacy Statement</a>.
+          </li>
           <li><strong>Google Fonts:</strong> We load fonts from Google-hosted endpoints.</li>
           <li>
             <strong>Cloudflare Pages:</strong> Hosts and serves the site and may process request metadata
