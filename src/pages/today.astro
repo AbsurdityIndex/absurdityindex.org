@@ -15,16 +15,26 @@ const recentBills = allBills
   description="Live congressional floor and committee activity for today, sourced from official public feeds."
 >
   <div class="mx-auto max-w-6xl px-4 py-10">
-    <header class="mb-8 text-center">
-      <p class="mb-2 font-mono text-xs uppercase tracking-[0.2em] text-gold-600">
-        Live Daily Dispatch
-      </p>
-      <h1 class="font-serif text-3xl font-bold text-navy-900 md:text-4xl">
-        What Did Congress Do Today?
-      </h1>
-      <p class="mt-3 font-sans text-sm text-navy-600">
-        Official public sources, updated throughout the legislative day.
-      </p>
+    <header class="mb-8">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="mb-2 font-mono text-xs uppercase tracking-[0.2em] text-gold-600">
+            Live Public Sources
+          </p>
+          <h1 class="font-serif text-3xl font-bold text-navy-900 md:text-4xl">
+            What Did Congress Do Today?
+          </h1>
+          <p class="mt-3 font-sans text-sm text-navy-600">
+            Official public sources, updated throughout the legislative day.
+          </p>
+        </div>
+        <a
+          href="/dispatch"
+          class="hidden shrink-0 rounded-lg bg-navy-900 px-5 py-2.5 font-sans text-sm font-medium text-cream-100 transition-colors hover:bg-navy-800 md:inline-block"
+        >
+          Full Daily Dispatch
+        </a>
+      </div>
     </header>
 
     <section class="rounded-xl border-2 border-gold-300 bg-cream-100/90 p-5 shadow-sm md:p-7">
@@ -55,7 +65,7 @@ const recentBills = allBills
             class="mt-2 rounded-lg border border-gold-200 bg-cream-100 px-3 py-2 font-serif text-base italic text-navy-800"
           >
           </p>
-          <ul id="today-live-bullets" class="mt-3 space-y-2 font-sans text-sm text-navy-700"></ul>
+          <div id="today-live-bullets" class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2"></div>
         </section>
 
         <section>
@@ -90,7 +100,7 @@ const recentBills = allBills
         <section>
           <h2 class="font-serif text-2xl font-bold text-navy-900">Committee Meetings</h2>
           <p id="today-live-committee-count" class="mt-1 font-sans text-sm text-navy-600"></p>
-          <ul id="today-live-committees" class="mt-3 space-y-3"></ul>
+          <ul id="today-live-committees" class="mt-3 grid list-none grid-cols-1 gap-3 p-0 md:grid-cols-2"></ul>
         </section>
 
         <section>
@@ -100,8 +110,12 @@ const recentBills = allBills
         </section>
 
         <section>
-          <h2 class="font-serif text-2xl font-bold text-navy-900">Source Health</h2>
-          <ul id="today-live-sources" class="mt-2 space-y-1 font-sans text-sm text-navy-700"></ul>
+          <details>
+            <summary class="cursor-pointer font-serif text-lg text-navy-600 hover:text-navy-900">
+              Source Health
+            </summary>
+            <ul id="today-live-sources" class="mt-2 space-y-1 font-sans text-sm text-navy-700"></ul>
+          </details>
         </section>
       </div>
     </section>
@@ -201,7 +215,7 @@ const recentBills = allBills
       !(contentEl instanceof HTMLElement) ||
       !(headlineEl instanceof HTMLElement) ||
       !(deckEl instanceof HTMLElement) ||
-      !(bulletsEl instanceof HTMLUListElement) ||
+      !(bulletsEl instanceof HTMLElement) ||
       !(houseStatusEl instanceof HTMLElement) ||
       !(houseLine1El instanceof HTMLElement) ||
       !(houseLine2El instanceof HTMLElement) ||
@@ -225,7 +239,7 @@ const recentBills = allBills
     const safeContentEl: HTMLElement = contentEl;
     const safeHeadlineEl: HTMLElement = headlineEl;
     const safeDeckEl: HTMLElement = deckEl;
-    const safeBulletsEl: HTMLUListElement = bulletsEl;
+    const safeBulletsEl: HTMLElement = bulletsEl;
     const safeHouseStatusEl: HTMLElement = houseStatusEl;
     const safeHouseLine1El: HTMLElement = houseLine1El;
     const safeHouseLine2El: HTMLElement = houseLine2El;
@@ -258,13 +272,54 @@ const recentBills = allBills
       });
     }
 
+    function renderBullets(values: string[]) {
+      safeBulletsEl.replaceChildren();
+
+      const categories: [RegExp, string][] = [
+        [/^Power center/i, 'Activity'],
+        [/^Top agenda/i, 'Agenda'],
+        [/^Policy load/i, 'Policy Load'],
+        [/^Transparency/i, 'Transparency'],
+        [/^Paper trail/i, 'Records'],
+      ];
+
+      values.forEach((value) => {
+        const card = document.createElement('div');
+        card.className = 'rounded-lg border border-gold-200 bg-cream-50 p-3';
+
+        let label = 'Update';
+        let body = value;
+
+        for (const [pattern, catLabel] of categories) {
+          if (pattern.test(value)) {
+            label = catLabel;
+            const colonIdx = value.indexOf(':');
+            if (colonIdx > 0) body = value.slice(colonIdx + 1).trim();
+            break;
+          }
+        }
+
+        const labelEl = document.createElement('p');
+        labelEl.className = 'font-mono text-[10px] uppercase tracking-[0.16em] text-gold-600';
+        labelEl.textContent = label;
+
+        const textEl = document.createElement('p');
+        textEl.className = 'mt-1 font-sans text-sm leading-relaxed text-navy-700';
+        textEl.textContent = body;
+
+        card.appendChild(labelEl);
+        card.appendChild(textEl);
+        safeBulletsEl.appendChild(card);
+      });
+    }
+
     function renderMeetings(meetings: TodayMeeting[] | null | undefined) {
       safeCommitteesEl.replaceChildren();
 
       if (!Array.isArray(meetings) || meetings.length === 0) {
         const empty = document.createElement('li');
         empty.className =
-          'rounded-lg border border-gold-200 bg-cream-100 p-3 font-sans text-sm text-navy-700';
+          'col-span-full rounded-lg border border-gold-200 bg-cream-100 p-3 font-sans text-sm text-navy-700';
         empty.textContent = 'No House or Senate committee meetings are listed for today.';
         safeCommitteesEl.appendChild(empty);
         return;
@@ -272,47 +327,67 @@ const recentBills = allBills
 
       meetings.slice(0, 12).forEach((meeting) => {
         const item = document.createElement('li');
-        item.className = 'rounded-lg border border-gold-200 bg-cream-100 p-3';
+        item.className = 'rounded-lg border border-gold-200 bg-cream-50 p-4';
 
-        const heading = document.createElement('p');
-        heading.className = 'font-sans text-xs uppercase tracking-[0.14em] text-gold-700';
-        const time = meeting.time ? `${meeting.time} - ` : '';
-        heading.textContent = `${time}${meeting.chamber || 'Committee'}`;
+        const topRow = document.createElement('div');
+        topRow.className = 'flex flex-wrap items-center gap-2';
+
+        const chamberBadge = document.createElement('span');
+        const isHouse = (meeting.chamber || '').toLowerCase() === 'house';
+        chamberBadge.className = isHouse
+          ? 'rounded-full bg-navy-800 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-cream-100'
+          : 'rounded-full bg-gold-700 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-cream-100';
+        chamberBadge.textContent = meeting.chamber || 'Committee';
+        topRow.appendChild(chamberBadge);
+
+        if (meeting.time) {
+          const timeEl = document.createElement('span');
+          timeEl.className = 'font-mono text-xs text-navy-500';
+          timeEl.textContent = meeting.time;
+          topRow.appendChild(timeEl);
+        }
+
+        if (meeting.isClosed) {
+          const closedBadge = document.createElement('span');
+          closedBadge.className =
+            'rounded bg-red-100 px-1.5 py-0.5 font-mono text-[10px] uppercase text-red-700';
+          closedBadge.textContent = 'Closed';
+          topRow.appendChild(closedBadge);
+        }
 
         const committee = document.createElement('p');
-        committee.className = 'mt-1 font-serif text-base font-bold text-navy-900';
+        committee.className = 'mt-2 font-serif text-base font-bold text-navy-900';
         committee.textContent = meeting.committee || meeting.title || 'Committee meeting';
 
-        const detail = document.createElement('p');
-        detail.className = 'mt-1 font-sans text-sm text-navy-700';
-        const detailParts: string[] = [];
-        if (meeting.focus) detailParts.push(`Focus: ${meeting.focus}.`);
-        const relatedBillCount =
-          typeof meeting.relatedBillCount === 'number' ? meeting.relatedBillCount : 0;
-        if (relatedBillCount > 0) {
-          detailParts.push(`${relatedBillCount} related bill${relatedBillCount === 1 ? '' : 's'}.`);
-        }
-        const relatedNominationCount =
-          typeof meeting.relatedNominationCount === 'number' ? meeting.relatedNominationCount : 0;
-        if (relatedNominationCount > 0) {
-          detailParts.push(
-            `${relatedNominationCount} nomination item${relatedNominationCount === 1 ? '' : 's'}.`,
-          );
-        }
-        if (meeting.isClosed) {
-          detailParts.push('Closed session.');
-        }
-        const location = meeting.location ? `Location: ${meeting.location}.` : '';
-        const fallback = meeting.title || meeting.type || 'Meeting';
-        const detailText =
-          detailParts.length > 0
-            ? `${detailParts.join(' ')} ${location}`.trim()
-            : `${fallback}${location ? ` (${meeting.location})` : ''}`;
-        detail.textContent = truncate(detailText, 200);
-
-        item.appendChild(heading);
+        const focusText = meeting.focus || meeting.type || '';
+        item.appendChild(topRow);
         item.appendChild(committee);
-        item.appendChild(detail);
+
+        if (focusText) {
+          const focusEl = document.createElement('p');
+          focusEl.className = 'mt-1 font-sans text-sm text-navy-600';
+          focusEl.textContent = focusText;
+          item.appendChild(focusEl);
+        }
+
+        const meta: string[] = [];
+        const billCount =
+          typeof meeting.relatedBillCount === 'number' ? meeting.relatedBillCount : 0;
+        const nomCount =
+          typeof meeting.relatedNominationCount === 'number'
+            ? meeting.relatedNominationCount
+            : 0;
+        if (billCount > 0) meta.push(`${billCount} bill${billCount === 1 ? '' : 's'}`);
+        if (nomCount > 0) meta.push(`${nomCount} nomination${nomCount === 1 ? '' : 's'}`);
+        if (meeting.location) meta.push(meeting.location);
+
+        if (meta.length > 0) {
+          const metaEl = document.createElement('p');
+          metaEl.className = 'mt-2 font-sans text-xs text-navy-400';
+          metaEl.textContent = meta.join(' \u00b7 ');
+          item.appendChild(metaEl);
+        }
+
         safeCommitteesEl.appendChild(item);
       });
     }
@@ -423,8 +498,7 @@ const recentBills = allBills
         safeDeckEl.textContent =
           data?.summary?.deck ||
           'Satire desk is waiting for proceedings to escalate beyond procedural verbs.';
-        listItems(
-          safeBulletsEl,
+        renderBullets(
           Array.isArray(data?.summary?.bullets) ? data.summary.bullets.map(String) : [],
         );
 
