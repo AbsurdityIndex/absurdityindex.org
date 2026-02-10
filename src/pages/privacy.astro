@@ -48,6 +48,10 @@ const storageKeys = [
     key: 'absurdity.perf',
     description: 'Optional debug flag for client-side performance logging.',
   },
+  {
+    key: 'analytics-opt-out',
+    description: 'When set to "true", disables Microsoft Clarity analytics. Toggle via the settings gear.',
+  },
 ];
 ---
 
@@ -205,6 +209,10 @@ const storageKeys = [
           Your Choices
         </h2>
         <ul class="mt-4 space-y-2 text-navy-800">
+          <li>
+            <strong>Disable analytics:</strong> Open the settings gear (bottom-right corner) and toggle
+            "Analytics" off to opt out of Microsoft Clarity tracking.
+          </li>
           <li>Clear browser storage to remove saved preferences and game stats.</li>
           <li>
             Block third-party resources (such as remote fonts) using browser settings or extensions.
