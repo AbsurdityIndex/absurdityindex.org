@@ -65,15 +65,14 @@
         </article>
       </div>
 
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div>
-          <h3 class="font-serif text-lg font-bold text-navy-900">At a Glance</h3>
-          <ul id="today-front-bullets" class="mt-2 space-y-1 font-sans text-sm text-navy-700"></ul>
-        </div>
-        <div>
-          <h3 class="font-serif text-lg font-bold text-navy-900">Today&apos;s Meetings</h3>
-          <ul id="today-front-meetings" class="mt-2 space-y-1 font-sans text-sm text-navy-700"></ul>
-        </div>
+      <div>
+        <h3 class="font-serif text-lg font-bold text-navy-900">At a Glance</h3>
+        <div id="today-front-bullets" class="mt-3 grid grid-cols-1 gap-3 min-[520px]:grid-cols-2"></div>
+      </div>
+
+      <div>
+        <h3 class="font-serif text-lg font-bold text-navy-900">Today&apos;s Meetings</h3>
+        <div id="today-front-meetings" class="mt-3 grid grid-cols-1 gap-2 min-[520px]:grid-cols-2"></div>
       </div>
     </div>
   </div>
@@ -114,8 +113,8 @@
       !(houseLineEl instanceof HTMLElement) ||
       !(senateStatusEl instanceof HTMLElement) ||
       !(senateLineEl instanceof HTMLElement) ||
-      !(bulletsEl instanceof HTMLUListElement) ||
-      !(meetingsEl instanceof HTMLUListElement)
+      !(bulletsEl instanceof HTMLElement) ||
+      !(meetingsEl instanceof HTMLElement)
     ) {
       // Markup changed or script is running in a non-DOM context.
       // Fail closed: keep the page static and avoid noisy errors.
@@ -131,8 +130,8 @@
     const safeHouseLineEl: HTMLElement = houseLineEl;
     const safeSenateStatusEl: HTMLElement = senateStatusEl;
     const safeSenateLineEl: HTMLElement = senateLineEl;
-    const safeBulletsEl: HTMLUListElement = bulletsEl;
-    const safeMeetingsEl: HTMLUListElement = meetingsEl;
+    const safeBulletsEl: HTMLElement = bulletsEl;
+    const safeMeetingsEl: HTMLElement = meetingsEl;
 
     function truncate(text: string, max = 170): string {
       if (!text || text.length <= max) return text || '';
@@ -145,12 +144,118 @@
       return 'text-navy-900';
     }
 
-    function appendListItems(target: HTMLUListElement, items: string[]) {
-      target.replaceChildren();
-      items.forEach((item) => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        target.appendChild(li);
+    function renderBulletCards(values: string[]) {
+      safeBulletsEl.replaceChildren();
+
+      const categories: [RegExp, string][] = [
+        [/^Power center/i, 'Activity'],
+        [/^Top agenda/i, 'Agenda'],
+        [/^Policy load/i, 'Policy Load'],
+        [/^Transparency/i, 'Transparency'],
+        [/^Paper trail/i, 'Records'],
+      ];
+
+      values.forEach((value) => {
+        const card = document.createElement('div');
+        card.className = 'rounded-lg border border-gold-200 bg-cream-50 p-3';
+
+        let label = 'Update';
+        let body = value;
+
+        for (const [pattern, catLabel] of categories) {
+          if (pattern.test(value)) {
+            label = catLabel;
+            const colonIdx = value.indexOf(':');
+            if (colonIdx > 0) body = value.slice(colonIdx + 1).trim();
+            break;
+          }
+        }
+
+        const labelEl = document.createElement('p');
+        labelEl.className = 'font-mono text-[10px] uppercase tracking-[0.16em] text-gold-600';
+        labelEl.textContent = label;
+
+        const textEl = document.createElement('p');
+        textEl.className = 'mt-1 font-sans text-sm leading-relaxed text-navy-700';
+        textEl.textContent = body;
+
+        card.appendChild(labelEl);
+        card.appendChild(textEl);
+        safeBulletsEl.appendChild(card);
+      });
+    }
+
+    function renderMeetingCards(meetings: TodayMeeting[]) {
+      safeMeetingsEl.replaceChildren();
+
+      if (meetings.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'col-span-full font-sans text-sm text-navy-600';
+        empty.textContent = 'No House or Senate committee meetings listed today.';
+        safeMeetingsEl.appendChild(empty);
+        return;
+      }
+
+      meetings.forEach((meeting) => {
+        const card = document.createElement('div');
+        card.className = 'rounded-lg border border-gold-200 bg-cream-50 p-3';
+
+        const topRow = document.createElement('div');
+        topRow.className = 'flex flex-wrap items-center gap-2';
+
+        const chamberBadge = document.createElement('span');
+        const isHouse = (meeting.chamber || '').toLowerCase() === 'house';
+        chamberBadge.className = isHouse
+          ? 'rounded-full bg-navy-800 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-cream-100'
+          : 'rounded-full bg-gold-700 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-cream-100';
+        chamberBadge.textContent = meeting.chamber || 'Committee';
+        topRow.appendChild(chamberBadge);
+
+        if (meeting.time) {
+          const timeEl = document.createElement('span');
+          timeEl.className = 'font-mono text-xs text-navy-500';
+          timeEl.textContent = meeting.time;
+          topRow.appendChild(timeEl);
+        }
+
+        if (meeting.isClosed) {
+          const closedBadge = document.createElement('span');
+          closedBadge.className =
+            'rounded bg-red-100 px-1.5 py-0.5 font-mono text-[10px] uppercase text-red-700';
+          closedBadge.textContent = 'Closed';
+          topRow.appendChild(closedBadge);
+        }
+
+        const title = document.createElement('p');
+        title.className = 'mt-1.5 font-serif text-sm font-bold text-navy-900';
+        title.textContent = truncate(meeting.committee || meeting.title || 'Committee meeting', 80);
+
+        const focusText = meeting.focus || '';
+
+        card.appendChild(topRow);
+        card.appendChild(title);
+
+        if (focusText) {
+          const focusEl = document.createElement('p');
+          focusEl.className = 'mt-0.5 font-sans text-xs text-navy-500';
+          focusEl.textContent = focusText;
+          card.appendChild(focusEl);
+        }
+
+        const meta: string[] = [];
+        const billCount = typeof meeting.relatedBillCount === 'number' ? meeting.relatedBillCount : 0;
+        const nomCount = typeof meeting.relatedNominationCount === 'number' ? meeting.relatedNominationCount : 0;
+        if (billCount > 0) meta.push(`${billCount} bill${billCount === 1 ? '' : 's'}`);
+        if (nomCount > 0) meta.push(`${nomCount} nomination${nomCount === 1 ? '' : 's'}`);
+
+        if (meta.length > 0) {
+          const metaEl = document.createElement('p');
+          metaEl.className = 'mt-1 font-sans text-[11px] text-navy-400';
+          metaEl.textContent = meta.join(' \u00b7 ');
+          card.appendChild(metaEl);
+        }
+
+        safeMeetingsEl.appendChild(card);
       });
     }
 
@@ -213,52 +318,12 @@
         const bullets = Array.isArray(data?.summary?.bullets)
           ? data.summary.bullets.slice(0, 4).map(String)
           : ['No summary available yet.'];
-        appendListItems(safeBulletsEl, bullets);
+        renderBulletCards(bullets);
 
-        const meetings = Array.isArray(data?.committees?.meetings)
+        const meetings: TodayMeeting[] = Array.isArray(data?.committees?.meetings)
           ? data.committees.meetings.slice(0, 4)
           : [];
-        if (meetings.length === 0) {
-          appendListItems(safeMeetingsEl, ['No House or Senate committee meetings listed today.']);
-        } else {
-          appendListItems(
-            safeMeetingsEl,
-            meetings.map((meeting: TodayMeeting) => {
-              const chamber = meeting.chamber || 'Committee';
-              const time = meeting.time ? `${meeting.time} - ` : '';
-              const title = meeting.committee || meeting.title || 'Committee meeting';
-              const focus = meeting.focus ? ` (${meeting.focus})` : '';
-              const extras = [];
-              const relatedBillCount =
-                typeof meeting.relatedBillCount === 'number' ? meeting.relatedBillCount : null;
-              if (
-                typeof relatedBillCount === 'number' &&
-                Number.isFinite(relatedBillCount) &&
-                relatedBillCount > 0
-              ) {
-                extras.push(`${relatedBillCount} bill${relatedBillCount === 1 ? '' : 's'}`);
-              }
-              const relatedNominationCount =
-                typeof meeting.relatedNominationCount === 'number'
-                  ? meeting.relatedNominationCount
-                  : null;
-              if (
-                typeof relatedNominationCount === 'number' &&
-                Number.isFinite(relatedNominationCount) &&
-                relatedNominationCount > 0
-              ) {
-                extras.push(
-                  `${relatedNominationCount} nomination${relatedNominationCount === 1 ? '' : 's'}`,
-                );
-              }
-              if (meeting.isClosed) {
-                extras.push('closed');
-              }
-              const extraText = extras.length > 0 ? ` [${extras.join(', ')}]` : '';
-              return `${time}${chamber}: ${truncate(`${title}${focus}${extraText}`, 120)}`;
-            }),
-          );
-        }
+        renderMeetingCards(meetings);
 
         safeLoadingEl.classList.add('hidden');
         safeErrorEl.classList.add('hidden');
