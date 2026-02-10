@@ -205,7 +205,7 @@ function deriveMeetingFocus(meeting) {
 function getApiKey(context, options) {
   if (options?.apiKey) return options.apiKey;
   if (context?.env?.CONGRESS_GOV_API_KEY) return context.env.CONGRESS_GOV_API_KEY;
-  if (process.env.CONGRESS_GOV_API_KEY) return process.env.CONGRESS_GOV_API_KEY;
+  if (typeof process !== 'undefined' && process?.env?.CONGRESS_GOV_API_KEY) return process.env.CONGRESS_GOV_API_KEY;
   return null;
 }
 
@@ -851,12 +851,19 @@ function jsonResponse(data, status = 200) {
 }
 
 export async function onRequestGet(context = {}, options = {}) {
-  const apiKey = getApiKey(context, options);
-  const data = await buildTodayData({ apiKey });
+  try {
+    const apiKey = getApiKey(context, options);
+    const data = await buildTodayData({ apiKey });
 
-  if (data.error) {
-    return jsonResponse(data, 500);
+    if (data.error) {
+      return jsonResponse(data, 500);
+    }
+
+    return jsonResponse(data, 200);
+  } catch (error) {
+    return jsonResponse(
+      { error: error instanceof Error ? error.message : 'Internal error building today data' },
+      500,
+    );
   }
-
-  return jsonResponse(data, 200);
 }
