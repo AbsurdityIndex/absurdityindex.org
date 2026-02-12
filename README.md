@@ -145,6 +145,11 @@ node scripts/deploy-votechain-from-manifest.mjs
 npx wrangler pages deploy dist/ --project-name absurdity-index --branch main --commit-hash $(git rev-parse HEAD)
 ```
 
+Automated deploy pipeline:
+
+- Primary: `.github/workflows/pages-deploy.yml` (GitHub Actions)
+- Fallback: `deploy/argo/` (self-hosted Argo manifests)
+
 ## Content
 
 Bills live in `src/data/bills/` as MDX files. Three types:

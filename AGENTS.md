@@ -82,28 +82,28 @@ API endpoints in `src/pages/api/` return JSON for bills, stats, etc.
 
 #### Automated CI/CD (Push to Deploy)
 
-Pushing to `main` triggers an automatic build and deploy within ~60 seconds. The pipeline runs on a self-hosted Kubernetes cluster using **Argo Workflows**, triggered by a polling CronJob.
+Primary CI/CD runs in **GitHub Actions**:
 
-**How it works:**
+- `/.github/workflows/pages-deploy.yml` in this repo
+- `/.github/workflows/pages-deploy.yml` in `AbsurdityIndex/votechain`
 
-1. `absurdity-index-poller` CronJob (runs every 60s in `argo` namespace) polls the GitHub API for new commits on `main`
-2. On new commit, it submits an Argo Workflow using the `deploy-absurdity-index` WorkflowTemplate
-3. The workflow runs three steps: `clone-repo` → `build` (`npm ci && npm run build`) → `deploy` (`wrangler pages deploy`)
-4. Commit SHA state is tracked in the `absurdity-index-poller-state` ConfigMap to avoid duplicate deploys
+Pushes to `main` run validation/build and deploy test + production Pages projects.
+Manual runs (`workflow_dispatch`) require `deploy_production=true` to promote production.
 
-**K8s resources (all in `argo` namespace on host defined by `K8S_HOST` in `.env`):**
+Required GitHub repository secrets:
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+
+#### Argo Fallback CI/CD
+
+Fallback self-hosted manifests are versioned in `deploy/argo/`:
 
 | Resource | Name | Purpose |
 |----------|------|---------|
-| CronJob | `absurdity-index-poller` | Polls GitHub API every minute for new commits |
-| WorkflowTemplate | `deploy-absurdity-index` | 3-step clone → build → deploy workflow |
-| ConfigMap | `absurdity-index-poller-state` | Stores last-seen commit SHA |
-| Secret | `github-pat` | GitHub token for repo access |
-| Secret | `cloudflare-api-token` | Cloudflare Pages deploy token |
-
-**Cloudflare account ID** is configured via `CLOUDFLARE_ACCOUNT_ID` in `.env` and referenced in the WorkflowTemplate.
-
-**No public DNS or webhooks required** — the poller makes outbound-only calls to GitHub API (polling) and Cloudflare API (deploying). The entire CI infrastructure stays behind the firewall.
+| CronJob | `absurdity-index-poller` | Polls both `AbsurdityIndex/absurdityindex.org` and `AbsurdityIndex/votechain` |
+| WorkflowTemplate | `deploy-absurdity-index` | Coordinated votechain+site test then production deploy |
+| ConfigMap | `absurdity-index-poller-state` | Stores last-seen SHAs (`absurdityindex_sha`, `votechain_sha`) |
 
 #### Manual Deploy to Production
 

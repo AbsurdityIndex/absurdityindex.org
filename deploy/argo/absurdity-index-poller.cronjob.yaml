@@ -1,0 +1,101 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: absurdity-index-poller
+  namespace: argo
+  labels:
+    app: absurdity-index-poller
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 55
+      template:
+        spec:
+          serviceAccountName: argo-events-sa
+          restartPolicy: Never
+          containers:
+            - name: poller
+              image: bitnami/kubectl:latest
+              command: ["/bin/bash", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+
+                  ORG="AbsurdityIndex"
+                  SITE_REPO="absurdityindex.org"
+                  VOTECHAIN_REPO="votechain"
+                  BRANCH="main"
+                  CM_NAME="absurdity-index-poller-state"
+                  NAMESPACE="argo"
+
+                  get_latest_sha() {
+                    local repo="$1"
+                    curl -sf \
+                      -H "Authorization: token ${GITHUB_TOKEN}" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      "https://api.github.com/repos/${ORG}/${repo}/commits/${BRANCH}" \
+                      | grep -m1 '"sha"' | cut -d'"' -f4
+                  }
+
+                  SITE_SHA="$(get_latest_sha "$SITE_REPO" || true)"
+                  VOTECHAIN_SHA="$(get_latest_sha "$VOTECHAIN_REPO" || true)"
+
+                  if [ -z "$SITE_SHA" ] || [ -z "$VOTECHAIN_SHA" ]; then
+                    echo "Failed to fetch one or both SHAs. site='${SITE_SHA}' votechain='${VOTECHAIN_SHA}'"
+                    exit 0
+                  fi
+
+                  LAST_SITE_SHA="$(kubectl get configmap "$CM_NAME" -n "$NAMESPACE" -o jsonpath='{.data.absurdityindex_sha}' 2>/dev/null || true)"
+                  LAST_VOTECHAIN_SHA="$(kubectl get configmap "$CM_NAME" -n "$NAMESPACE" -o jsonpath='{.data.votechain_sha}' 2>/dev/null || true)"
+
+                  if [ "$SITE_SHA" = "$LAST_SITE_SHA" ] && [ "$VOTECHAIN_SHA" = "$LAST_VOTECHAIN_SHA" ]; then
+                    echo "No new commits. site=${SITE_SHA:0:8} votechain=${VOTECHAIN_SHA:0:8}"
+                    exit 0
+                  fi
+
+                  echo "Triggering deploy. site ${LAST_SITE_SHA:0:8}->${SITE_SHA:0:8}, votechain ${LAST_VOTECHAIN_SHA:0:8}->${VOTECHAIN_SHA:0:8}"
+
+                  cat <<WFEOF | kubectl create -n "$NAMESPACE" -f -
+                  apiVersion: argoproj.io/v1alpha1
+                  kind: Workflow
+                  metadata:
+                    generateName: deploy-absurdity-index-
+                    namespace: ${NAMESPACE}
+                    labels:
+                      app: absurdity-index-poller
+                      repo: absurdityindex.org
+                  spec:
+                    workflowTemplateRef:
+                      name: deploy-absurdity-index
+                    arguments:
+                      parameters:
+                        - name: absurdity_sha
+                          value: "${SITE_SHA}"
+                        - name: votechain_sha
+                          value: "${VOTECHAIN_SHA}"
+                  WFEOF
+
+                  kubectl patch configmap "$CM_NAME" -n "$NAMESPACE" \
+                    --type merge -p "{\"data\":{\"absurdityindex_sha\":\"${SITE_SHA}\",\"votechain_sha\":\"${VOTECHAIN_SHA}\"}}" 2>/dev/null || \
+                  kubectl create configmap "$CM_NAME" -n "$NAMESPACE" \
+                    --from-literal="absurdityindex_sha=${SITE_SHA}" \
+                    --from-literal="votechain_sha=${VOTECHAIN_SHA}" 2>/dev/null || true
+
+                  echo "Workflow submitted for site=${SITE_SHA:0:8} votechain=${VOTECHAIN_SHA:0:8}"
+              env:
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: github-pat
+                      key: token
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 64Mi
+                limits:
+                  cpu: 250m
+                  memory: 128Mi

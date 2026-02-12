@@ -40,7 +40,7 @@ node scripts/check-release-manifest.mjs --verify-remote
    - Required CI checks from `CONTRIBUTING.md`
 2. Merge to `main`.
 
-Pushes to `main` trigger the Woodpecker pipeline in `.woodpecker.yml`, which:
+Pushes to `main` trigger the GitHub Actions pipeline in `.github/workflows/pages-deploy.yml`, which:
 
 1. Installs dependencies
 2. Runs security checks
@@ -51,6 +51,14 @@ Pushes to `main` trigger the Woodpecker pipeline in `.woodpecker.yml`, which:
 7. Deploys this site to `absurdity-index-test`
 8. Deploys VoteChain from the pinned manifest SHA to production
 9. Deploys site artifacts to production
+
+Manual runs (`workflow_dispatch`) always run validation + test deploy.
+Production deploy on manual runs requires setting `deploy_production=true`.
+
+Required GitHub repository secrets:
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
 
 ## 3. Create A GitHub Release (Optional, Recommended)
 
@@ -83,3 +91,13 @@ After CI deploys to test projects, verify:
 3. `https://votechain-test.pages.dev/votechain/`
 4. `https://absurdity-index-test.pages.dev/api/votechain/poc/config`
 5. `https://absurdity-index-test.pages.dev/api/today.json`
+
+## 6. Argo Fallback (Optional)
+
+GitHub Actions is now the primary CI/CD path. The K8s/Argo fallback manifests are versioned in `deploy/argo`.
+
+To apply fallback infra:
+
+```bash
+kubectl apply -k deploy/argo
+```

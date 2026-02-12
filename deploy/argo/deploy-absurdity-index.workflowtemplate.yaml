@@ -1,0 +1,215 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: deploy-absurdity-index
+  namespace: argo
+spec:
+  serviceAccountName: argo-workflow-deployer
+  entrypoint: deploy-stack
+  arguments:
+    parameters:
+      - name: absurdity_sha
+        value: ""
+      - name: votechain_sha
+        value: ""
+  templates:
+    - name: deploy-stack
+      steps:
+        - - name: clone-votechain
+            template: clone-votechain
+        - - name: build-votechain
+            template: build-votechain
+        - - name: deploy-votechain-test
+            template: deploy-votechain-test
+        - - name: clone-site
+            template: clone-site
+        - - name: build-site
+            template: build-site
+        - - name: deploy-site-test
+            template: deploy-site-test
+        - - name: deploy-votechain-prod
+            template: deploy-votechain-prod
+        - - name: deploy-site-prod
+            template: deploy-site-prod
+
+    - name: clone-votechain
+      container:
+        image: alpine/git:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -eu
+            git clone --depth 1 --branch main \
+              https://x-access-token:${GITHUB_TOKEN}@github.com/AbsurdityIndex/votechain.git \
+              /workspace/votechain
+            cd /workspace/votechain
+            git fetch --depth 1 origin {{workflow.parameters.votechain_sha}}
+            git checkout --detach {{workflow.parameters.votechain_sha}}
+        env:
+          - name: GITHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: github-pat
+                key: token
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+    - name: build-votechain
+      container:
+        image: node:22-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -eu
+            cd /workspace/votechain
+            npm ci
+            npm run build
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+    - name: deploy-votechain-test
+      container:
+        image: node:22-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -eu
+            cd /workspace/votechain
+            npx wrangler pages deploy dist --project-name votechain-test --branch main --commit-hash {{workflow.parameters.votechain_sha}}
+        env:
+          - name: CLOUDFLARE_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token
+                key: token
+          - name: CLOUDFLARE_ACCOUNT_ID
+            value: cfceabac156f51a56346c036fc7754ee
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+    - name: clone-site
+      container:
+        image: alpine/git:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -eu
+            git clone --depth 1 --branch main \
+              https://x-access-token:${GITHUB_TOKEN}@github.com/AbsurdityIndex/absurdityindex.org.git \
+              /workspace/site
+            cd /workspace/site
+            git fetch --depth 1 origin {{workflow.parameters.absurdity_sha}}
+            git checkout --detach {{workflow.parameters.absurdity_sha}}
+        env:
+          - name: GITHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: github-pat
+                key: token
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+    - name: build-site
+      container:
+        image: node:22-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -eu
+            cd /workspace/site
+            npm ci
+            npm run build
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+    - name: deploy-site-test
+      container:
+        image: node:22-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -eu
+            cd /workspace/site
+            npx wrangler pages deploy dist --project-name absurdity-index-test --branch main --commit-hash {{workflow.parameters.absurdity_sha}}
+        env:
+          - name: CLOUDFLARE_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token
+                key: token
+          - name: CLOUDFLARE_ACCOUNT_ID
+            value: cfceabac156f51a56346c036fc7754ee
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+    - name: deploy-votechain-prod
+      container:
+        image: node:22-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -eu
+            cd /workspace/votechain
+            npx wrangler pages deploy dist --project-name votechain --branch main --commit-hash {{workflow.parameters.votechain_sha}}
+        env:
+          - name: CLOUDFLARE_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token
+                key: token
+          - name: CLOUDFLARE_ACCOUNT_ID
+            value: cfceabac156f51a56346c036fc7754ee
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+    - name: deploy-site-prod
+      container:
+        image: node:22-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -eu
+            cd /workspace/site
+            npx wrangler pages deploy dist --project-name absurdity-index --branch main --commit-hash {{workflow.parameters.absurdity_sha}}
+        env:
+          - name: CLOUDFLARE_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token
+                key: token
+          - name: CLOUDFLARE_ACCOUNT_ID
+            value: cfceabac156f51a56346c036fc7754ee
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 4Gi
