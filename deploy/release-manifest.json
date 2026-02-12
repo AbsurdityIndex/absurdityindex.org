@@ -10,7 +10,7 @@
     },
     "votechain": {
       "repo": "https://github.com/AbsurdityIndex/votechain.git",
-      "sha": "a0559ece49deddfb79136016d32a3885c048c416",
+      "sha": "b2bda23cd0728a0a56c2233b295759119403a865",
       "cloudflareProject": "votechain",
       "deployDir": "dist"
     }

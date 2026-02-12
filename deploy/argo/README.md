@@ -4,6 +4,12 @@ This folder stores the Kubernetes/Argo fallback deployment pipeline for `absurdi
 
 Primary CI/CD now runs in GitHub Actions (`.github/workflows/`), but these manifests remain as an infrastructure backup.
 
+The live fallback CronJob is intentionally suspended when GitHub Actions is the active deploy system:
+
+```bash
+kubectl -n argo patch cronjob absurdity-index-poller -p '{"spec":{"suspend":true}}'
+```
+
 ## Resources
 
 - `absurdity-index-poller.cronjob.yaml`
