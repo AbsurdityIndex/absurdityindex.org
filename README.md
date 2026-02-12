@@ -132,6 +132,19 @@ npm run build --prefix cli
 npm test --prefix cli
 ```
 
+### Deploy Commands
+
+```bash
+# Test stack deploys
+node scripts/check-release-manifest.mjs --verify-remote
+VOTECHAIN_PAGES_PROJECT=votechain-test VOTECHAIN_DEPLOY_BRANCH=main node scripts/deploy-votechain-from-manifest.mjs
+npx wrangler pages deploy dist/ --project-name absurdity-index-test --branch main --commit-hash $(git rev-parse HEAD)
+
+# Production deploys
+node scripts/deploy-votechain-from-manifest.mjs
+npx wrangler pages deploy dist/ --project-name absurdity-index --branch main --commit-hash $(git rev-parse HEAD)
+```
+
 ## Content
 
 Bills live in `src/data/bills/` as MDX files. Three types:

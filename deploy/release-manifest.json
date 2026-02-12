@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "releaseTrain": "main",
+  "components": {
+    "absurdityindex": {
+      "repo": "https://github.com/AbsurdityIndex/absurdityindex.org.git",
+      "sha": "$CI_COMMIT_SHA",
+      "cloudflareProject": "absurdity-index",
+      "deployDir": "dist"
+    },
+    "votechain": {
+      "repo": "https://github.com/AbsurdityIndex/votechain.git",
+      "sha": "a0559ece49deddfb79136016d32a3885c048c416",
+      "cloudflareProject": "votechain",
+      "deployDir": "dist"
+    }
+  }
+}

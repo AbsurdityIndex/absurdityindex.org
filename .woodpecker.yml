@@ -28,6 +28,12 @@ steps:
     commands:
       - npm run security:scan-secrets
 
+  - name: validate-release-manifest
+    image: node:22-alpine
+    commands:
+      - apk add --no-cache git
+      - node scripts/check-release-manifest.mjs --verify-remote
+
   - name: validate-content
     image: node:22-alpine
     commands:
@@ -38,10 +44,59 @@ steps:
     commands:
       - npm run build
 
-  - name: deploy
+  - name: deploy-votechain-test
+    image: node:22-alpine
+    commands:
+      - apk add --no-cache git
+      - VOTECHAIN_PAGES_PROJECT=votechain-test VOTECHAIN_DEPLOY_BRANCH=main node scripts/deploy-votechain-from-manifest.mjs
+    depends_on:
+      - build-site
+    when:
+      - event: [push, manual]
+        branch: main
+    environment:
+      CLOUDFLARE_API_TOKEN:
+        from_secret: cloudflare_api_token
+      CLOUDFLARE_ACCOUNT_ID:
+        from_secret: cloudflare_account_id
+
+  - name: deploy-site-test
+    image: node:22-alpine
+    commands:
+      - npx wrangler pages deploy dist/ --project-name absurdity-index-test --branch main --commit-hash ${CI_COMMIT_SHA}
+    depends_on:
+      - deploy-votechain-test
+    when:
+      - event: [push, manual]
+        branch: main
+    environment:
+      CLOUDFLARE_API_TOKEN:
+        from_secret: cloudflare_api_token
+      CLOUDFLARE_ACCOUNT_ID:
+        from_secret: cloudflare_account_id
+
+  - name: deploy-votechain
+    image: node:22-alpine
+    commands:
+      - apk add --no-cache git
+      - node scripts/deploy-votechain-from-manifest.mjs
+    depends_on:
+      - deploy-site-test
+    when:
+      - event: [push, manual]
+        branch: main
+    environment:
+      CLOUDFLARE_API_TOKEN:
+        from_secret: cloudflare_api_token
+      CLOUDFLARE_ACCOUNT_ID:
+        from_secret: cloudflare_account_id
+
+  - name: deploy-site
     image: node:22-alpine
     commands:
       - npx wrangler pages deploy dist/ --project-name absurdity-index --branch main --commit-hash ${CI_COMMIT_SHA}
+    depends_on:
+      - deploy-votechain
     when:
       - event: [push, manual]
         branch: main

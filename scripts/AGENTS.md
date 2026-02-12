@@ -19,6 +19,8 @@ Node.js scripts for bill fetching, content validation, security scanning, and re
 | `fetch-bills.mjs` | `npm run fetch-bills` | Fetch bills from Congress.gov API, optionally generate AI summaries |
 | `validate-bills.mjs` | `npm run validate` | Validate all bill MDX frontmatter against schema rules |
 | `scan-secrets.mjs` | `npm run security:scan-secrets` | Scan repo for accidentally committed secrets/API keys |
+| `check-release-manifest.mjs` | `node scripts/check-release-manifest.mjs` | Validate deploy manifest for coordinated site + VoteChain releases |
+| `deploy-votechain-from-manifest.mjs` | `node scripts/deploy-votechain-from-manifest.mjs` | Clone, build, and deploy pinned VoteChain SHA from manifest (supports test/prod project overrides) |
 | `release-check.mjs` | `npm run release:check` | Pre-release checklist verification |
 | `generate-theme-song.mjs` | *(manual)* | Generate satirical theme songs for bills using AI |
 
@@ -55,6 +57,19 @@ Use `--strict-warnings` (via `npm run validate:ci`) to also fail on warnings.
 ### `scan-secrets.mjs`
 
 Scans the repo for patterns matching API keys, tokens, passwords, and other secrets. Used in CI via `npm run security:ci`.
+
+### `check-release-manifest.mjs`
+
+Validates `deploy/release-manifest.json` format and required fields. Use `--verify-remote` to confirm pinned SHAs exist in upstream repos.
+
+### `deploy-votechain-from-manifest.mjs`
+
+Reads VoteChain repo + SHA from `deploy/release-manifest.json`, checks out that exact commit, builds it, and deploys to the configured Cloudflare Pages project.
+
+Override behavior via environment variables:
+
+- `VOTECHAIN_PAGES_PROJECT` — target Pages project name (defaults to manifest value)
+- `VOTECHAIN_DEPLOY_BRANCH` — target Pages branch (defaults to CI branch or `main`)
 
 ### `release-check.mjs`
 
