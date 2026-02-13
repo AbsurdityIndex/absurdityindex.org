@@ -1613,80 +1613,81 @@ import Icon from './Icon.astro';
 </style>
 
 <script>
-  // Drawer functionality
-  const drawer = document.getElementById('founding-docs-drawer');
-  const backdrop = document.getElementById('founding-docs-backdrop');
-  const closeBtn = document.getElementById('drawer-close');
-  const tabs = document.querySelectorAll('.drawer-tab');
-  const panels = document.querySelectorAll('.document-panel');
+  let foundingDocsCleanup: AbortController | undefined;
 
-  function openDrawer() {
-    drawer?.classList.add('open');
-    drawer?.setAttribute('aria-hidden', 'false');
-    backdrop?.classList.add('open');
-    backdrop?.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-  }
+  document.addEventListener('astro:page-load', () => {
+    foundingDocsCleanup?.abort();
+    foundingDocsCleanup = new AbortController();
+    const { signal } = foundingDocsCleanup;
 
-  function closeDrawer() {
-    drawer?.classList.remove('open');
-    drawer?.setAttribute('aria-hidden', 'true');
-    backdrop?.classList.remove('open');
-    backdrop?.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  }
+    const drawer = document.getElementById('founding-docs-drawer');
+    const backdrop = document.getElementById('founding-docs-backdrop');
+    const closeBtn = document.getElementById('drawer-close');
+    const tabs = document.querySelectorAll('.drawer-tab');
+    const panels = document.querySelectorAll('.document-panel');
 
-  function switchTab(selectedTab: Element) {
-    tabs.forEach((tab) => {
-      tab.classList.remove('active');
-      tab.setAttribute('aria-selected', 'false');
-    });
-    panels.forEach((panel) => {
-      panel.classList.remove('active');
-      panel.setAttribute('hidden', '');
-    });
-
-    selectedTab.classList.add('active');
-    selectedTab.setAttribute('aria-selected', 'true');
-
-    const panelId = selectedTab.getAttribute('aria-controls');
-    const panel = document.getElementById(panelId!);
-    panel?.classList.add('active');
-    panel?.removeAttribute('hidden');
-  }
-
-  // Event listeners - open via custom event from header
-  document.addEventListener('open-founding-docs', openDrawer);
-  closeBtn?.addEventListener('click', closeDrawer);
-  backdrop?.addEventListener('click', closeDrawer);
-
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => switchTab(tab));
-  });
-
-  // Escape key to close
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && drawer?.classList.contains('open')) {
-      closeDrawer();
+    function openDrawer() {
+      drawer?.classList.add('open');
+      drawer?.setAttribute('aria-hidden', 'false');
+      backdrop?.classList.add('open');
+      backdrop?.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
     }
-  });
 
-  // Text mode toggle (Key Excerpts vs Full Text)
-  const modeBtns = document.querySelectorAll('.mode-btn');
-  const constitutionPanel = document.getElementById('panel-constitution');
+    function closeDrawer() {
+      drawer?.classList.remove('open');
+      drawer?.setAttribute('aria-hidden', 'true');
+      backdrop?.classList.remove('open');
+      backdrop?.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
 
-  modeBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const mode = btn.getAttribute('data-mode');
+    function switchTab(selectedTab: Element) {
+      tabs.forEach((tab) => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+      });
+      panels.forEach((panel) => {
+        panel.classList.remove('active');
+        panel.setAttribute('hidden', '');
+      });
 
-      // Update button states
-      modeBtns.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
+      selectedTab.classList.add('active');
+      selectedTab.setAttribute('aria-selected', 'true');
 
-      // Update panel data attribute
-      if (constitutionPanel) {
-        constitutionPanel.setAttribute('data-mode', mode || 'excerpts');
+      const panelId = selectedTab.getAttribute('aria-controls');
+      const panel = document.getElementById(panelId!);
+      panel?.classList.add('active');
+      panel?.removeAttribute('hidden');
+    }
+
+    document.addEventListener('open-founding-docs', openDrawer, { signal });
+    closeBtn?.addEventListener('click', closeDrawer, { signal });
+    backdrop?.addEventListener('click', closeDrawer, { signal });
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => switchTab(tab), { signal });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer?.classList.contains('open')) {
+        closeDrawer();
       }
+    }, { signal });
+
+    // Text mode toggle (Key Excerpts vs Full Text)
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const constitutionPanel = document.getElementById('panel-constitution');
+
+    modeBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-mode');
+        modeBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (constitutionPanel) {
+          constitutionPanel.setAttribute('data-mode', mode || 'excerpts');
+        }
+      }, { signal });
     });
   });
 </script>

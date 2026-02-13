@@ -1041,9 +1041,16 @@ function getStageColor(stage: Stage) {
 </style>
 
 <script>
-  // Open glossary drawer on help button click
-  const helpBtn = document.querySelector('.glossary-help-btn');
-  helpBtn?.addEventListener('click', () => {
-    document.dispatchEvent(new CustomEvent('open-legislative-glossary'));
+  let bicameralTimelineCleanup: AbortController | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    bicameralTimelineCleanup?.abort();
+    bicameralTimelineCleanup = new AbortController();
+    const { signal } = bicameralTimelineCleanup;
+
+    const helpBtn = document.querySelector('.glossary-help-btn');
+    helpBtn?.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('open-legislative-glossary'));
+    }, { signal });
   });
 </script>

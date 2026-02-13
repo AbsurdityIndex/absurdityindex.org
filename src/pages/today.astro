@@ -13,6 +13,7 @@ const recentBills = allBills
 <BaseLayout
   title="What Did Congress Do Today?"
   description="Live congressional floor and committee activity for today, sourced from official public feeds."
+  ogImage="/og/today.png"
 >
   <div class="mx-auto max-w-6xl px-4 py-10">
     <header class="mb-8">
@@ -148,7 +149,7 @@ const recentBills = allBills
 </BaseLayout>
 
 <script>
-  (() => {
+  document.addEventListener('astro:page-load', () => {
     type TodaySource = {
       key?: string;
       status?: string;
@@ -278,6 +279,7 @@ const recentBills = allBills
       const categories: [RegExp, string][] = [
         [/^Power center/i, 'Activity'],
         [/^Top agenda/i, 'Agenda'],
+        [/^Spotlight/i, 'Spotlight'],
         [/^Policy load/i, 'Policy Load'],
         [/^Transparency/i, 'Transparency'],
         [/^Paper trail/i, 'Records'],
@@ -313,7 +315,7 @@ const recentBills = allBills
       });
     }
 
-    function renderMeetings(meetings: TodayMeeting[] | null | undefined) {
+    function renderMeetings(meetings: TodayMeeting[] | null | undefined, meetingNotes: Record<string, string> = {}) {
       safeCommitteesEl.replaceChildren();
 
       if (!Array.isArray(meetings) || meetings.length === 0) {
@@ -359,13 +361,17 @@ const recentBills = allBills
         committee.className = 'mt-2 font-serif text-base font-bold text-navy-900';
         committee.textContent = meeting.committee || meeting.title || 'Committee meeting';
 
-        const focusText = meeting.focus || meeting.type || '';
+        const committeeKey = meeting.committee || '';
+        const aiNote = meetingNotes[committeeKey];
+        const focusText = aiNote || meeting.focus || meeting.type || '';
         item.appendChild(topRow);
         item.appendChild(committee);
 
         if (focusText) {
           const focusEl = document.createElement('p');
-          focusEl.className = 'mt-1 font-sans text-sm text-navy-600';
+          focusEl.className = aiNote
+            ? 'mt-1 font-sans text-sm italic text-navy-600'
+            : 'mt-1 font-sans text-sm text-navy-600';
           focusEl.textContent = focusText;
           item.appendChild(focusEl);
         }
@@ -492,22 +498,26 @@ const recentBills = allBills
     async function loadTodayLive() {
       try {
         const data = await requestTodayData();
+        const summary = data?.summary || {};
+        const isAi = summary.satireSource === 'ai';
 
         safeDateEl.textContent = data?.today?.label || 'Today';
-        safeHeadlineEl.textContent = data?.summary?.headline || '';
+        safeHeadlineEl.textContent = summary.headline || '';
         safeDeckEl.textContent =
-          data?.summary?.deck ||
+          summary.deck ||
           'Satire desk is waiting for proceedings to escalate beyond procedural verbs.';
         renderBullets(
-          Array.isArray(data?.summary?.bullets) ? data.summary.bullets.map(String) : [],
+          Array.isArray(summary.bullets) ? summary.bullets.map(String) : [],
         );
 
         const house = data?.chambers?.house || {};
         safeHouseStatusEl.textContent = house.status || 'No update';
         safeHouseStatusEl.className = `mt-1 font-serif text-2xl font-bold ${statusClass(house.status)}`;
-        safeHouseLine1El.textContent = house.latestAction?.text
-          ? `${house.latestAction.time ? `${house.latestAction.time}: ` : ''}${truncate(house.latestAction.text, 190)}`
-          : 'No House floor action posted yet.';
+        safeHouseLine1El.textContent = isAi && summary.houseLine
+          ? summary.houseLine
+          : house.latestAction?.text
+            ? `${house.latestAction.time ? `${house.latestAction.time}: ` : ''}${truncate(house.latestAction.text, 190)}`
+            : 'No House floor action posted yet.';
         safeHouseLine2El.textContent = house.nextConvene
           ? `Next House meeting: ${house.nextConvene}`
           : 'Next meeting not posted.';
@@ -515,9 +525,11 @@ const recentBills = allBills
         const senate = data?.chambers?.senate || {};
         safeSenateStatusEl.textContent = senate.status || 'No update';
         safeSenateStatusEl.className = `mt-1 font-serif text-2xl font-bold ${statusClass(senate.status)}`;
-        safeSenateLine1El.textContent = senate.previousSummary
-          ? truncate(senate.previousSummary, 210)
-          : 'No Senate floor summary posted yet.';
+        safeSenateLine1El.textContent = isAi && summary.senateLine
+          ? summary.senateLine
+          : senate.previousSummary
+            ? truncate(senate.previousSummary, 210)
+            : 'No Senate floor summary posted yet.';
         safeSenateLine2El.textContent = senate.nextConvene
           ? `Next Senate meeting: ${senate.nextConvene}`
           : 'Next meeting not posted.';
@@ -526,7 +538,9 @@ const recentBills = allBills
         safeCommitteeCountEl.textContent = Number.isFinite(committeeTotal)
           ? `${committeeTotal} House and Senate meetings listed today.`
           : 'Committee counts are unavailable.';
-        renderMeetings(data?.committees?.meetings);
+
+        const meetingNotes: Record<string, string> = isAi && summary.meetingNotes ? summary.meetingNotes : {};
+        renderMeetings(data?.committees?.meetings, meetingNotes);
 
         renderWeekAgenda(data?.houseWeekAgenda);
         renderSources(data?.sources);
@@ -542,5 +556,5 @@ const recentBills = allBills
     }
 
     loadTodayLive();
-  })();
+  });
 </script>

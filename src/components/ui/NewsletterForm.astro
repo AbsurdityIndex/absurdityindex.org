@@ -54,32 +54,40 @@ import Icon from './Icon.astro';
 </div>
 
 <script>
-  const form = document.getElementById('newsletter-form');
-  const modal = document.getElementById('newsletter-modal');
-  const backdrop = document.getElementById('newsletter-modal-backdrop');
-  const closeBtn = document.getElementById('newsletter-modal-close');
+  let newsletterCleanup: AbortController | undefined;
 
-  function openModal() {
-    modal?.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-  }
+  document.addEventListener('astro:page-load', () => {
+    newsletterCleanup?.abort();
+    newsletterCleanup = new AbortController();
+    const { signal } = newsletterCleanup;
 
-  function closeModal() {
-    modal?.classList.add('hidden');
-    document.body.style.overflow = '';
-  }
+    const form = document.getElementById('newsletter-form');
+    const modal = document.getElementById('newsletter-modal');
+    const backdrop = document.getElementById('newsletter-modal-backdrop');
+    const closeBtn = document.getElementById('newsletter-modal-close');
 
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    openModal();
-  });
-
-  backdrop?.addEventListener('click', closeModal);
-  closeBtn?.addEventListener('click', closeModal);
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !modal?.classList.contains('hidden')) {
-      closeModal();
+    function openModal() {
+      modal?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
     }
+
+    function closeModal() {
+      modal?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      openModal();
+    }, { signal });
+
+    backdrop?.addEventListener('click', closeModal, { signal });
+    closeBtn?.addEventListener('click', closeModal, { signal });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal?.classList.contains('hidden')) {
+        closeModal();
+      }
+    }, { signal });
   });
 </script>

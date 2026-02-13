@@ -128,7 +128,13 @@ if (tabs.length === 0) {
 </div>
 
 <script>
-  function initTabs() {
+  let billTabsCleanup: AbortController | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    billTabsCleanup?.abort();
+    billTabsCleanup = new AbortController();
+    const { signal } = billTabsCleanup;
+
     const tabContainers = document.querySelectorAll('[data-tabs]');
 
     tabContainers.forEach((container) => {
@@ -139,7 +145,6 @@ if (tabs.length === 0) {
         btn.addEventListener('click', () => {
           const tabId = btn.getAttribute('data-tab');
 
-          // Update button states
           buttons.forEach((b) => {
             b.classList.remove('bg-white', 'text-navy-900', 'shadow-sm');
             b.classList.add('text-navy-600');
@@ -149,7 +154,6 @@ if (tabs.length === 0) {
           btn.classList.add('bg-white', 'text-navy-900', 'shadow-sm');
           btn.setAttribute('aria-selected', 'true');
 
-          // Update panel visibility
           panels.forEach((p) => {
             if (p.getAttribute('data-panel') === tabId) {
               p.classList.remove('hidden');
@@ -157,12 +161,8 @@ if (tabs.length === 0) {
               p.classList.add('hidden');
             }
           });
-        });
+        }, { signal });
       });
     });
-  }
-
-  // Run on load and view transitions
-  initTabs();
-  document.addEventListener('astro:after-swap', initTabs);
+  });
 </script>

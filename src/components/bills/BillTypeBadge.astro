@@ -97,11 +97,18 @@ const iconSize = size === 'sm' ? 12 : 14;
 </style>
 
 <script>
-  // Open glossary drawer on help button click
-  const helpBtns = document.querySelectorAll('.bill-type-badge-wrapper .help-btn');
-  helpBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.dispatchEvent(new CustomEvent('open-legislative-glossary'));
+  let billTypeBadgeCleanup: AbortController | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    billTypeBadgeCleanup?.abort();
+    billTypeBadgeCleanup = new AbortController();
+    const { signal } = billTypeBadgeCleanup;
+
+    const helpBtns = document.querySelectorAll('.bill-type-badge-wrapper .help-btn');
+    helpBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.dispatchEvent(new CustomEvent('open-legislative-glossary'));
+      }, { signal });
     });
   });
 </script>

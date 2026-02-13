@@ -375,89 +375,95 @@ const billSchema = {
 </BaseLayout>
 
 <script>
-  // ===== Scroll-spy =====
-  const sections = document.querySelectorAll('[data-section]');
-  const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
-  const mobileButtons = document.querySelectorAll('.mobile-nav-btn');
-  const spendingBars = document.querySelectorAll('.spending-bar');
+  let omnibusCleanup: AbortController | undefined;
+  let omnibusObserver: IntersectionObserver | undefined;
 
-  let currentSection = '';
+  document.addEventListener('astro:page-load', () => {
+    omnibusCleanup?.abort();
+    omnibusObserver?.disconnect();
+    omnibusCleanup = new AbortController();
+    const { signal } = omnibusCleanup;
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          currentSection = (entry.target as HTMLElement).dataset.section || '';
+    // ===== Scroll-spy =====
+    const sections = document.querySelectorAll('[data-section]');
+    const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
+    const mobileButtons = document.querySelectorAll('.mobile-nav-btn');
+    const spendingBars = document.querySelectorAll('.spending-bar');
 
-          // Update sidebar nav
-          sidebarLinks.forEach((link) => {
-            const target = (link as HTMLElement).dataset.navTarget;
-            (link as HTMLElement).dataset.active = String(target === currentSection);
-          });
+    let currentSection = '';
 
-          // Update mobile nav
-          mobileButtons.forEach((btn) => {
-            const target = (btn as HTMLElement).dataset.scrollTo;
-            btn.classList.toggle('text-gold-300', target === currentSection);
-          });
+    omnibusObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            currentSection = (entry.target as HTMLElement).dataset.section || '';
 
-          // Update spending bars for division scroll-spy
-          if (currentSection?.startsWith('division-')) {
-            const divNum = parseInt(currentSection.split('-')[1], 10);
-            spendingBars.forEach((bar) => {
-              (bar as HTMLElement).dataset.active = String(
-                parseInt((bar as HTMLElement).dataset.divisionTarget || '0', 10) === divNum,
-              );
+            sidebarLinks.forEach((link) => {
+              const target = (link as HTMLElement).dataset.navTarget;
+              (link as HTMLElement).dataset.active = String(target === currentSection);
             });
+
+            mobileButtons.forEach((btn) => {
+              const target = (btn as HTMLElement).dataset.scrollTo;
+              btn.classList.toggle('text-gold-300', target === currentSection);
+            });
+
+            if (currentSection?.startsWith('division-')) {
+              const divNum = parseInt(currentSection.split('-')[1], 10);
+              spendingBars.forEach((bar) => {
+                (bar as HTMLElement).dataset.active = String(
+                  parseInt((bar as HTMLElement).dataset.divisionTarget || '0', 10) === divNum,
+                );
+              });
+            }
           }
         }
-      }
-    },
-    { rootMargin: '-20% 0px -60% 0px', threshold: 0 },
-  );
+      },
+      { rootMargin: '-20% 0px -60% 0px', threshold: 0 },
+    );
 
-  sections.forEach((section) => observer.observe(section));
+    sections.forEach((section) => omnibusObserver!.observe(section));
 
-  // ===== Spending bar click-to-jump =====
-  spendingBars.forEach((bar) => {
-    bar.addEventListener('click', () => {
-      const divNum = (bar as HTMLElement).dataset.divisionTarget;
-      const target = document.getElementById(`division-${divNum}`);
-      if (target) {
-        // Open the <details> if closed
-        if (target instanceof HTMLDetailsElement && !target.open) {
-          target.open = true;
+    // ===== Spending bar click-to-jump =====
+    spendingBars.forEach((bar) => {
+      bar.addEventListener('click', () => {
+        const divNum = (bar as HTMLElement).dataset.divisionTarget;
+        const target = document.getElementById(`division-${divNum}`);
+        if (target) {
+          if (target instanceof HTMLDetailsElement && !target.open) {
+            target.open = true;
+          }
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      }, { signal });
     });
-  });
 
-  // ===== Mobile bottom nav =====
-  mobileButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const targetId = (btn as HTMLElement).dataset.scrollTo;
-      const target = document.querySelector(`[data-section="${targetId}"]`);
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+    // ===== Mobile bottom nav =====
+    mobileButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = (btn as HTMLElement).dataset.scrollTo;
+        const target = document.querySelector(`[data-section="${targetId}"]`);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, { signal });
     });
-  });
 
-  // ===== URL hash handling =====
-  function handleHash() {
-    const hash = window.location.hash;
-    if (hash.startsWith('#division-')) {
-      const target = document.getElementById(hash.slice(1));
-      if (target instanceof HTMLDetailsElement) {
-        target.open = true;
-        setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    // ===== URL hash handling =====
+    function handleHash() {
+      const hash = window.location.hash;
+      if (hash.startsWith('#division-')) {
+        const target = document.getElementById(hash.slice(1));
+        if (target instanceof HTMLDetailsElement) {
+          target.open = true;
+          setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        }
       }
     }
-  }
 
-  handleHash();
-  window.addEventListener('hashchange', handleHash);
+    handleHash();
+    window.addEventListener('hashchange', handleHash, { signal });
+  });
 </script>
 
 <style>

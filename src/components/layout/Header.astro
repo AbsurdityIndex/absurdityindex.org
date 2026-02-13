@@ -248,353 +248,355 @@ function isActivePath(href: string) {
 <MobileMenu navLinks={navLinks} toolsLinks={toolsDropdown} currentPath={currentPath} />
 
 <script>
-  const toolsMenuContainer = document.getElementById('tools-menu-container');
-  const toolsMenuButton = document.getElementById('tools-menu-button');
-  const toolsMenu = document.getElementById('tools-menu');
-  const toolsMenuChevron = document.getElementById('tools-menu-chevron');
-  const toolsMenuItems = toolsMenu
-    ? Array.from(toolsMenu.querySelectorAll<HTMLElement>('a[role=\"menuitem\"]'))
-    : [];
-  let toolsCloseTimeoutId: number | null = null;
+  let headerCleanup: AbortController | undefined;
 
-  function clearToolsCloseTimeout() {
-    if (toolsCloseTimeoutId !== null) {
-      window.clearTimeout(toolsCloseTimeoutId);
-      toolsCloseTimeoutId = null;
-    }
-  }
+  document.addEventListener('astro:page-load', () => {
+    headerCleanup?.abort();
+    headerCleanup = new AbortController();
+    const { signal } = headerCleanup;
 
-  function scheduleToolsMenuClose(delay = 140) {
-    clearToolsCloseTimeout();
-    toolsCloseTimeoutId = window.setTimeout(() => closeToolsMenu(), delay);
-  }
+    const toolsMenuContainer = document.getElementById('tools-menu-container');
+    const toolsMenuButton = document.getElementById('tools-menu-button');
+    const toolsMenu = document.getElementById('tools-menu');
+    const toolsMenuChevron = document.getElementById('tools-menu-chevron');
+    const toolsMenuItems = toolsMenu
+      ? Array.from(toolsMenu.querySelectorAll<HTMLElement>('a[role="menuitem"]'))
+      : [];
+    let toolsCloseTimeoutId: number | null = null;
 
-  function isToolsMenuOpen() {
-    return !!toolsMenu && !toolsMenu.classList.contains('hidden');
-  }
-
-  function openToolsMenu(focusFirstItem = false) {
-    if (!toolsMenu || !toolsMenuButton) return;
-    clearToolsCloseTimeout();
-    toolsMenu.classList.remove('hidden');
-    toolsMenuButton.setAttribute('aria-expanded', 'true');
-    toolsMenuChevron?.classList.add('rotate-180');
-    if (focusFirstItem && toolsMenuItems.length > 0) {
-      toolsMenuItems[0].focus();
-    }
-  }
-
-  function closeToolsMenu(focusButton = false) {
-    if (!toolsMenu || !toolsMenuButton) return;
-    clearToolsCloseTimeout();
-    toolsMenu.classList.add('hidden');
-    toolsMenuButton.setAttribute('aria-expanded', 'false');
-    toolsMenuChevron?.classList.remove('rotate-180');
-    if (focusButton) {
-      toolsMenuButton.focus();
-    }
-  }
-
-  function toggleToolsMenu() {
-    if (isToolsMenuOpen()) {
-      closeToolsMenu();
-    } else {
-      openToolsMenu();
-    }
-  }
-
-  toolsMenuButton?.addEventListener('click', (event: MouseEvent) => {
-    event.preventDefault();
-    toggleToolsMenu();
-  });
-
-  toolsMenuButton?.addEventListener('keydown', (event: KeyboardEvent) => {
-    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      openToolsMenu(true);
-    }
-    if (event.key === 'Escape') {
-      closeToolsMenu();
-    }
-  });
-
-  toolsMenu?.addEventListener('keydown', (event: KeyboardEvent) => {
-    if (toolsMenuItems.length === 0) return;
-
-    const currentIndex = toolsMenuItems.findIndex((item) => item === document.activeElement);
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeToolsMenu(true);
-      return;
+    function clearToolsCloseTimeout() {
+      if (toolsCloseTimeoutId !== null) {
+        window.clearTimeout(toolsCloseTimeoutId);
+        toolsCloseTimeoutId = null;
+      }
     }
 
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % toolsMenuItems.length;
-      toolsMenuItems[nextIndex].focus();
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      const prevIndex = currentIndex <= 0 ? toolsMenuItems.length - 1 : currentIndex - 1;
-      toolsMenuItems[prevIndex].focus();
-    }
-
-    if (event.key === 'Home') {
-      event.preventDefault();
-      toolsMenuItems[0].focus();
-    }
-
-    if (event.key === 'End') {
-      event.preventDefault();
-      toolsMenuItems[toolsMenuItems.length - 1].focus();
-    }
-  });
-
-  toolsMenuItems.forEach((item) => {
-    item.addEventListener('click', () => closeToolsMenu());
-  });
-
-  document.addEventListener('click', (event: MouseEvent) => {
-    if (!toolsMenuContainer) return;
-    const targetNode = event.target instanceof Node ? event.target : null;
-    if (targetNode && !toolsMenuContainer.contains(targetNode)) {
-      closeToolsMenu();
-    }
-  });
-
-  if (window.matchMedia('(hover: hover)').matches) {
-    toolsMenuContainer?.addEventListener('mouseenter', () => {
+    function scheduleToolsMenuClose(delay = 140) {
       clearToolsCloseTimeout();
-      openToolsMenu();
-    });
-    toolsMenuContainer?.addEventListener('mouseleave', () => {
-      scheduleToolsMenuClose(160);
-    });
-  }
-
-  const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-  const mobileMenu = document.getElementById('mobile-menu');
-  const mobileMenuPanel = document.getElementById('mobile-menu-panel');
-  const mobileMenuClose = document.getElementById('mobile-menu-close');
-  const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
-  const mobileMenuLinks = Array.from(document.querySelectorAll('[data-mobile-link]'));
-  const mobileSectionToggles = Array.from(
-    document.querySelectorAll('[data-mobile-section-toggle]'),
-  );
-
-  let isMobileMenuOpen = false;
-  let mobileCloseTimeoutId: number | null = null;
-  let previousFocusedElement: HTMLElement | null = null;
-
-  function clearMobileCloseTimeout() {
-    if (mobileCloseTimeoutId !== null) {
-      window.clearTimeout(mobileCloseTimeoutId);
-      mobileCloseTimeoutId = null;
+      toolsCloseTimeoutId = window.setTimeout(() => closeToolsMenu(), delay);
     }
-  }
 
-  function lockDocumentScroll() {
-    document.documentElement.classList.add('overflow-hidden');
-    document.body.classList.add('overflow-hidden');
-  }
+    function isToolsMenuOpen() {
+      return !!toolsMenu && !toolsMenu.classList.contains('hidden');
+    }
 
-  function unlockDocumentScroll() {
-    document.documentElement.classList.remove('overflow-hidden');
-    document.body.classList.remove('overflow-hidden');
-  }
+    function openToolsMenu(focusFirstItem = false) {
+      if (!toolsMenu || !toolsMenuButton) return;
+      clearToolsCloseTimeout();
+      toolsMenu.classList.remove('hidden');
+      toolsMenuButton.setAttribute('aria-expanded', 'true');
+      toolsMenuChevron?.classList.add('rotate-180');
+      if (focusFirstItem && toolsMenuItems.length > 0) {
+        toolsMenuItems[0].focus();
+      }
+    }
 
-  function getMobileFocusableElements(): HTMLElement[] {
-    if (!mobileMenuPanel) return [];
+    function closeToolsMenu(focusButton = false) {
+      if (!toolsMenu || !toolsMenuButton) return;
+      clearToolsCloseTimeout();
+      toolsMenu.classList.add('hidden');
+      toolsMenuButton.setAttribute('aria-expanded', 'false');
+      toolsMenuChevron?.classList.remove('rotate-180');
+      if (focusButton) {
+        toolsMenuButton.focus();
+      }
+    }
 
-    const selector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex=\"-1\"])';
-    return Array.from(mobileMenuPanel.querySelectorAll(selector)).filter(
-      (element): element is HTMLElement => {
-        if (!(element instanceof HTMLElement)) return false;
-        if (element.hidden || element.closest('[hidden]')) return false;
-        const style = window.getComputedStyle(element);
-        return style.display !== 'none' && style.visibility !== 'hidden';
-      },
+    function toggleToolsMenu() {
+      if (isToolsMenuOpen()) {
+        closeToolsMenu();
+      } else {
+        openToolsMenu();
+      }
+    }
+
+    toolsMenuButton?.addEventListener('click', (event: MouseEvent) => {
+      event.preventDefault();
+      toggleToolsMenu();
+    }, { signal });
+
+    toolsMenuButton?.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openToolsMenu(true);
+      }
+      if (event.key === 'Escape') {
+        closeToolsMenu();
+      }
+    }, { signal });
+
+    toolsMenu?.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (toolsMenuItems.length === 0) return;
+
+      const currentIndex = toolsMenuItems.findIndex((item) => item === document.activeElement);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeToolsMenu(true);
+        return;
+      }
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        const nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % toolsMenuItems.length;
+        toolsMenuItems[nextIndex].focus();
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        const prevIndex = currentIndex <= 0 ? toolsMenuItems.length - 1 : currentIndex - 1;
+        toolsMenuItems[prevIndex].focus();
+      }
+
+      if (event.key === 'Home') {
+        event.preventDefault();
+        toolsMenuItems[0].focus();
+      }
+
+      if (event.key === 'End') {
+        event.preventDefault();
+        toolsMenuItems[toolsMenuItems.length - 1].focus();
+      }
+    }, { signal });
+
+    toolsMenuItems.forEach((item) => {
+      item.addEventListener('click', () => closeToolsMenu(), { signal });
+    });
+
+    document.addEventListener('click', (event: MouseEvent) => {
+      if (!toolsMenuContainer) return;
+      const targetNode = event.target instanceof Node ? event.target : null;
+      if (targetNode && !toolsMenuContainer.contains(targetNode)) {
+        closeToolsMenu();
+      }
+    }, { signal });
+
+    if (window.matchMedia('(hover: hover)').matches) {
+      toolsMenuContainer?.addEventListener('mouseenter', () => {
+        clearToolsCloseTimeout();
+        openToolsMenu();
+      }, { signal });
+      toolsMenuContainer?.addEventListener('mouseleave', () => {
+        scheduleToolsMenuClose(160);
+      }, { signal });
+    }
+
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuPanel = document.getElementById('mobile-menu-panel');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
+    const mobileMenuLinks = Array.from(document.querySelectorAll('[data-mobile-link]'));
+    const mobileSectionToggles = Array.from(
+      document.querySelectorAll('[data-mobile-section-toggle]'),
     );
-  }
 
-  function setMobileSectionState(sectionName: string, expanded: boolean) {
-    const sectionToggle = document.querySelector(`[data-mobile-section-toggle=\"${sectionName}\"]`);
-    const section = document.querySelector(`[data-mobile-section=\"${sectionName}\"]`);
-    const icon = document.querySelector(`[data-mobile-section-icon=\"${sectionName}\"]`);
+    let isMobileMenuOpen = false;
+    let mobileCloseTimeoutId: number | null = null;
+    let previousFocusedElement: HTMLElement | null = null;
 
-    if (!sectionToggle || !section) return;
+    function clearMobileCloseTimeout() {
+      if (mobileCloseTimeoutId !== null) {
+        window.clearTimeout(mobileCloseTimeoutId);
+        mobileCloseTimeoutId = null;
+      }
+    }
 
-    sectionToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-    section.classList.toggle('hidden', !expanded);
-    icon?.classList.toggle('rotate-180', expanded);
-  }
+    function lockDocumentScroll() {
+      document.documentElement.classList.add('overflow-hidden');
+      document.body.classList.add('overflow-hidden');
+    }
 
-  function initializeMobileSections() {
-    const sectionNames = mobileSectionToggles
-      .map((sectionToggle) => sectionToggle.getAttribute('data-mobile-section-toggle'))
-      .filter((sectionName): sectionName is string => Boolean(sectionName));
+    function unlockDocumentScroll() {
+      document.documentElement.classList.remove('overflow-hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
 
-    const expandedSections = sectionNames.filter((sectionName) => {
-      const sectionToggle = document.querySelector(
-        `[data-mobile-section-toggle=\"${sectionName}\"]`,
+    function getMobileFocusableElements(): HTMLElement[] {
+      if (!mobileMenuPanel) return [];
+
+      const selector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      return Array.from(mobileMenuPanel.querySelectorAll(selector)).filter(
+        (element): element is HTMLElement => {
+          if (!(element instanceof HTMLElement)) return false;
+          if (element.hidden || element.closest('[hidden]')) return false;
+          const style = window.getComputedStyle(element);
+          return style.display !== 'none' && style.visibility !== 'hidden';
+        },
       );
-      return sectionToggle?.getAttribute('aria-expanded') === 'true';
-    });
-
-    if (expandedSections.length > 1) {
-      expandedSections.slice(1).forEach((sectionName) => setMobileSectionState(sectionName, false));
     }
 
-    mobileSectionToggles.forEach((sectionToggle) => {
-      const sectionName = sectionToggle.getAttribute('data-mobile-section-toggle');
-      if (!sectionName) return;
+    function setMobileSectionState(sectionName: string, expanded: boolean) {
+      const sectionToggle = document.querySelector(`[data-mobile-section-toggle="${sectionName}"]`);
+      const section = document.querySelector(`[data-mobile-section="${sectionName}"]`);
+      const icon = document.querySelector(`[data-mobile-section-icon="${sectionName}"]`);
 
-      const expanded = sectionToggle.getAttribute('aria-expanded') === 'true';
-      setMobileSectionState(sectionName, expanded);
+      if (!sectionToggle || !section) return;
 
-      sectionToggle.addEventListener('click', () => {
-        const isExpanded = sectionToggle.getAttribute('aria-expanded') === 'true';
-        if (isExpanded) {
-          setMobileSectionState(sectionName, false);
-          return;
-        }
+      sectionToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      section.classList.toggle('hidden', !expanded);
+      icon?.classList.toggle('rotate-180', expanded);
+    }
 
-        sectionNames.forEach((name) => {
-          if (name !== sectionName) {
-            setMobileSectionState(name, false);
-          }
-        });
-        setMobileSectionState(sectionName, true);
+    function initializeMobileSections() {
+      const sectionNames = mobileSectionToggles
+        .map((sectionToggle) => sectionToggle.getAttribute('data-mobile-section-toggle'))
+        .filter((sectionName): sectionName is string => Boolean(sectionName));
+
+      const expandedSections = sectionNames.filter((sectionName) => {
+        const sectionToggle = document.querySelector(
+          `[data-mobile-section-toggle="${sectionName}"]`,
+        );
+        return sectionToggle?.getAttribute('aria-expanded') === 'true';
       });
-    });
-  }
 
-  function finishMobileMenuClose(restoreFocus = true) {
-    if (!mobileMenu || !mobileMenuPanel) return;
+      if (expandedSections.length > 1) {
+        expandedSections.slice(1).forEach((sectionName) => setMobileSectionState(sectionName, false));
+      }
 
-    mobileMenu.classList.add('hidden');
-    mobileMenu.setAttribute('aria-hidden', 'true');
-    mobileMenuToggle?.setAttribute('aria-expanded', 'false');
-    mobileMenuToggle?.setAttribute('aria-label', 'Open menu');
-    unlockDocumentScroll();
+      mobileSectionToggles.forEach((sectionToggle) => {
+        const sectionName = sectionToggle.getAttribute('data-mobile-section-toggle');
+        if (!sectionName) return;
 
-    if (
-      restoreFocus &&
-      previousFocusedElement &&
-      previousFocusedElement instanceof HTMLElement &&
-      previousFocusedElement.isConnected
-    ) {
-      previousFocusedElement.focus();
+        const expanded = sectionToggle.getAttribute('aria-expanded') === 'true';
+        setMobileSectionState(sectionName, expanded);
+
+        sectionToggle.addEventListener('click', () => {
+          const isExpanded = sectionToggle.getAttribute('aria-expanded') === 'true';
+          if (isExpanded) {
+            setMobileSectionState(sectionName, false);
+            return;
+          }
+
+          sectionNames.forEach((name) => {
+            if (name !== sectionName) {
+              setMobileSectionState(name, false);
+            }
+          });
+          setMobileSectionState(sectionName, true);
+        }, { signal });
+      });
     }
 
-    previousFocusedElement = null;
-    clearMobileCloseTimeout();
-  }
+    function finishMobileMenuClose(restoreFocus = true) {
+      if (!mobileMenu || !mobileMenuPanel) return;
 
-  function closeMobileMenu(options: { restoreFocus?: boolean } = {}) {
-    if (!mobileMenu || !mobileMenuPanel || !isMobileMenuOpen) return;
+      mobileMenu.classList.add('hidden');
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      mobileMenuToggle?.setAttribute('aria-expanded', 'false');
+      mobileMenuToggle?.setAttribute('aria-label', 'Open menu');
+      unlockDocumentScroll();
 
-    const { restoreFocus = true } = options;
-    isMobileMenuOpen = false;
-    document.removeEventListener('keydown', handleMobileMenuKeydown);
-    mobileMenuPanel.classList.add('translate-x-full');
+      if (
+        restoreFocus &&
+        previousFocusedElement &&
+        previousFocusedElement instanceof HTMLElement &&
+        previousFocusedElement.isConnected
+      ) {
+        previousFocusedElement.focus();
+      }
 
-    const onTransitionEnd = (event: TransitionEvent) => {
-      if (event.target !== mobileMenuPanel) return;
-      finishMobileMenuClose(restoreFocus);
+      previousFocusedElement = null;
+      clearMobileCloseTimeout();
+    }
+
+    function closeMobileMenu(options: { restoreFocus?: boolean } = {}) {
+      if (!mobileMenu || !mobileMenuPanel || !isMobileMenuOpen) return;
+
+      const { restoreFocus = true } = options;
+      isMobileMenuOpen = false;
+      document.removeEventListener('keydown', handleMobileMenuKeydown);
+      mobileMenuPanel.classList.add('translate-x-full');
+
+      const onTransitionEnd = (event: TransitionEvent) => {
+        if (event.target !== mobileMenuPanel) return;
+        finishMobileMenuClose(restoreFocus);
+      };
+
+      mobileMenuPanel.addEventListener('transitionend', onTransitionEnd, { once: true });
+      clearMobileCloseTimeout();
+      mobileCloseTimeoutId = window.setTimeout(() => finishMobileMenuClose(restoreFocus), 360);
+    }
+
+    function openMobileMenu() {
+      if (!mobileMenu || !mobileMenuPanel || isMobileMenuOpen) return;
+
+      clearMobileCloseTimeout();
+      isMobileMenuOpen = true;
+      closeToolsMenu();
+      previousFocusedElement =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+      mobileMenu.classList.remove('hidden');
+      mobileMenu.setAttribute('aria-hidden', 'false');
+      mobileMenuToggle?.setAttribute('aria-expanded', 'true');
+      mobileMenuToggle?.setAttribute('aria-label', 'Close menu');
+      lockDocumentScroll();
+      document.addEventListener('keydown', handleMobileMenuKeydown);
+
+      requestAnimationFrame(() => {
+        mobileMenuPanel.classList.remove('translate-x-full');
+        const [firstFocusable] = getMobileFocusableElements();
+        (mobileMenuClose || firstFocusable)?.focus();
+      });
+    }
+
+    function handleMobileMenuKeydown(event: KeyboardEvent) {
+      if (!isMobileMenuOpen) return;
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMobileMenu();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const focusableElements = getMobileFocusableElements();
+      if (focusableElements.length === 0) return;
+
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    mobileMenuToggle?.addEventListener('click', openMobileMenu, { signal });
+    mobileMenuClose?.addEventListener('click', () => closeMobileMenu(), { signal });
+    mobileMenuBackdrop?.addEventListener('click', () => closeMobileMenu(), { signal });
+
+    mobileMenuLinks.forEach((link) => {
+      link.addEventListener('click', () => closeMobileMenu({ restoreFocus: false }), { signal });
+    });
+
+    const desktopMediaQuery = window.matchMedia('(min-width: 768px)');
+    const handleDesktopMediaChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        closeMobileMenu({ restoreFocus: false });
+      }
     };
 
-    mobileMenuPanel.addEventListener('transitionend', onTransitionEnd, { once: true });
-    clearMobileCloseTimeout();
-    mobileCloseTimeoutId = window.setTimeout(() => finishMobileMenuClose(restoreFocus), 360);
-  }
-
-  function openMobileMenu() {
-    if (!mobileMenu || !mobileMenuPanel || isMobileMenuOpen) return;
-
-    clearMobileCloseTimeout();
-    isMobileMenuOpen = true;
-    closeToolsMenu();
-    previousFocusedElement =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-    mobileMenu.classList.remove('hidden');
-    mobileMenu.setAttribute('aria-hidden', 'false');
-    mobileMenuToggle?.setAttribute('aria-expanded', 'true');
-    mobileMenuToggle?.setAttribute('aria-label', 'Close menu');
-    lockDocumentScroll();
-    document.addEventListener('keydown', handleMobileMenuKeydown);
-
-    requestAnimationFrame(() => {
-      mobileMenuPanel.classList.remove('translate-x-full');
-      const [firstFocusable] = getMobileFocusableElements();
-      (mobileMenuClose || firstFocusable)?.focus();
-    });
-  }
-
-  function handleMobileMenuKeydown(event: KeyboardEvent) {
-    if (!isMobileMenuOpen) return;
-
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      closeMobileMenu();
-      return;
+    if (typeof desktopMediaQuery.addEventListener === 'function') {
+      desktopMediaQuery.addEventListener('change', handleDesktopMediaChange, { signal });
     }
 
-    if (event.key !== 'Tab') return;
+    initializeMobileSections();
 
-    const focusableElements = getMobileFocusableElements();
-    if (focusableElements.length === 0) return;
+    // Founding Documents trigger
+    const foundingDocsTrigger = document.getElementById('founding-docs-trigger');
+    foundingDocsTrigger?.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('open-founding-docs'));
+    }, { signal });
 
-    const first = focusableElements[0];
-    const last = focusableElements[focusableElements.length - 1];
-
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
-
-  mobileMenuToggle?.addEventListener('click', openMobileMenu);
-  mobileMenuClose?.addEventListener('click', () => closeMobileMenu());
-  mobileMenuBackdrop?.addEventListener('click', () => closeMobileMenu());
-
-  mobileMenuLinks.forEach((link) => {
-    link.addEventListener('click', () => closeMobileMenu({ restoreFocus: false }));
-  });
-
-  const desktopMediaQuery = window.matchMedia('(min-width: 768px)');
-  const handleDesktopMediaChange = (event: MediaQueryListEvent) => {
-    if (event.matches) {
-      closeMobileMenu({ restoreFocus: false });
-    }
-  };
-
-  if (typeof desktopMediaQuery.addEventListener === 'function') {
-    desktopMediaQuery.addEventListener('change', handleDesktopMediaChange);
-  } else {
-    // Older Safari: `addListener` / `removeListener`.
-    const legacyMq = desktopMediaQuery as unknown as {
-      addListener?: (cb: (event: MediaQueryListEvent) => void) => void;
-    };
-    legacyMq.addListener?.(handleDesktopMediaChange);
-  }
-
-  initializeMobileSections();
-
-  // Founding Documents trigger
-  const foundingDocsTrigger = document.getElementById('founding-docs-trigger');
-  foundingDocsTrigger?.addEventListener('click', () => {
-    document.dispatchEvent(new CustomEvent('open-founding-docs'));
-  });
-
-  document.addEventListener('keydown', (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && isToolsMenuOpen()) {
-      closeToolsMenu(true);
-    }
+    document.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isToolsMenuOpen()) {
+        closeToolsMenu(true);
+      }
+    }, { signal });
   });
 </script>

@@ -592,35 +592,43 @@ const timelineStages = currentPathInfo.stages.map((label, i) => ({
 </style>
 
 <script>
-  document.querySelectorAll('.leg-path-popover').forEach((popover) => {
-    const trigger = popover.querySelector('[data-popover-trigger]');
-    const panel = popover.querySelector('[data-popover-panel]');
-    const closeBtn = popover.querySelector('[data-popover-close]');
-    const glossaryBtn = popover.querySelector('[data-open-glossary]');
+  let legPathPopoverCleanup: AbortController | undefined;
 
-    if (!trigger || !panel) return;
+  document.addEventListener('astro:page-load', () => {
+    legPathPopoverCleanup?.abort();
+    legPathPopoverCleanup = new AbortController();
+    const { signal } = legPathPopoverCleanup;
 
-    const close = () => panel.classList.remove('open');
-    const toggle = () => panel.classList.toggle('open');
+    document.querySelectorAll('.leg-path-popover').forEach((popover) => {
+      const trigger = popover.querySelector('[data-popover-trigger]');
+      const panel = popover.querySelector('[data-popover-panel]');
+      const closeBtn = popover.querySelector('[data-popover-close]');
+      const glossaryBtn = popover.querySelector('[data-open-glossary]');
 
-    trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggle();
-    });
+      if (!trigger || !panel) return;
 
-    closeBtn?.addEventListener('click', close);
+      const close = () => panel.classList.remove('open');
+      const toggle = () => panel.classList.toggle('open');
 
-    glossaryBtn?.addEventListener('click', () => {
-      close();
-      document.dispatchEvent(new CustomEvent('open-legislative-glossary'));
-    });
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggle();
+      }, { signal });
 
-    document.addEventListener('click', (e) => {
-      if (!popover.contains(e.target as Node)) close();
-    });
+      closeBtn?.addEventListener('click', close, { signal });
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && panel.classList.contains('open')) close();
+      glossaryBtn?.addEventListener('click', () => {
+        close();
+        document.dispatchEvent(new CustomEvent('open-legislative-glossary'));
+      }, { signal });
+
+      document.addEventListener('click', (e) => {
+        if (!popover.contains(e.target as Node)) close();
+      }, { signal });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && panel.classList.contains('open')) close();
+      }, { signal });
     });
   });
 </script>

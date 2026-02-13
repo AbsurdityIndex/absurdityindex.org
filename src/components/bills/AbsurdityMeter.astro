@@ -104,10 +104,17 @@ const tierBadge = tier.color.pill;
 }
 
 <script>
-  // Open absurdity help drawer when help button is clicked
-  document.querySelectorAll('.absurdity-help-trigger').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.dispatchEvent(new CustomEvent('open-absurdity-help'));
+  let absurdityMeterCleanup: AbortController | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    absurdityMeterCleanup?.abort();
+    absurdityMeterCleanup = new AbortController();
+    const { signal } = absurdityMeterCleanup;
+
+    document.querySelectorAll('.absurdity-help-trigger').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.dispatchEvent(new CustomEvent('open-absurdity-help'));
+      }, { signal });
     });
   });
 </script>

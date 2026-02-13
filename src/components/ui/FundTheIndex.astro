@@ -749,59 +749,61 @@ const DONATE_URL = 'https://www.gofundme.com/f/fund-the-absurdity-index-were-not
 </style>
 
 <script>
-  const drawer = document.getElementById('fund-drawer');
-  const backdrop = document.getElementById('fund-backdrop');
-  const closeBtn = document.getElementById('fund-drawer-close');
-  const tab = document.getElementById('fund-tab');
+  let fundCleanup: AbortController | undefined;
 
-  function openFundDrawer() {
-    drawer?.classList.add('open');
-    drawer?.setAttribute('aria-hidden', 'false');
-    backdrop?.classList.add('open');
-    backdrop?.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('fund-tabs-hidden');
-    document.body.style.overflow = 'hidden';
-  }
+  document.addEventListener('astro:page-load', () => {
+    fundCleanup?.abort();
+    fundCleanup = new AbortController();
+    const { signal } = fundCleanup;
 
-  function closeFundDrawer() {
-    drawer?.classList.remove('open');
-    drawer?.setAttribute('aria-hidden', 'true');
-    backdrop?.classList.remove('open');
-    backdrop?.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('fund-tabs-hidden');
-    document.body.style.overflow = '';
-  }
+    const drawer = document.getElementById('fund-drawer');
+    const backdrop = document.getElementById('fund-backdrop');
+    const closeBtn = document.getElementById('fund-drawer-close');
+    const tab = document.getElementById('fund-tab');
 
-  // Tab trigger opens the drawer
-  tab?.addEventListener('click', openFundDrawer);
-
-  // Custom event (matching other drawer conventions)
-  document.addEventListener('open-fund-the-index', openFundDrawer);
-
-  // Close triggers
-  closeBtn?.addEventListener('click', closeFundDrawer);
-  backdrop?.addEventListener('click', closeFundDrawer);
-
-  // Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && drawer?.classList.contains('open')) {
-      closeFundDrawer();
+    function openFundDrawer() {
+      drawer?.classList.add('open');
+      drawer?.setAttribute('aria-hidden', 'false');
+      backdrop?.classList.add('open');
+      backdrop?.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('fund-tabs-hidden');
+      document.body.style.overflow = 'hidden';
     }
+
+    function closeFundDrawer() {
+      drawer?.classList.remove('open');
+      drawer?.setAttribute('aria-hidden', 'true');
+      backdrop?.classList.remove('open');
+      backdrop?.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('fund-tabs-hidden');
+      document.body.style.overflow = '';
+    }
+
+    tab?.addEventListener('click', openFundDrawer, { signal });
+    document.addEventListener('open-fund-the-index', openFundDrawer, { signal });
+    closeBtn?.addEventListener('click', closeFundDrawer, { signal });
+    backdrop?.addEventListener('click', closeFundDrawer, { signal });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer?.classList.contains('open')) {
+        closeFundDrawer();
+      }
+    }, { signal });
+
+    // Position fund tab below header on narrow viewports
+    function positionFundTab() {
+      if (!tab || window.innerWidth > 430) {
+        tab?.style.removeProperty('--fund-tab-top');
+        return;
+      }
+      const header = document.querySelector('header');
+      if (header) {
+        const bottom = Math.ceil(header.getBoundingClientRect().bottom);
+        tab.style.setProperty('--fund-tab-top', Math.max(bottom, 0) + 'px');
+      }
+    }
+    positionFundTab();
+    window.addEventListener('scroll', positionFundTab, { passive: true, signal });
+    window.addEventListener('resize', positionFundTab, { signal });
   });
-
-  // Position fund tab below header on narrow viewports
-  function positionFundTab() {
-    if (!tab || window.innerWidth > 430) {
-      tab?.style.removeProperty('--fund-tab-top');
-      return;
-    }
-    const header = document.querySelector('header');
-    if (header) {
-      const bottom = Math.ceil(header.getBoundingClientRect().bottom);
-      tab.style.setProperty('--fund-tab-top', Math.max(bottom, 0) + 'px');
-    }
-  }
-  positionFundTab();
-  window.addEventListener('scroll', positionFundTab, { passive: true });
-  window.addEventListener('resize', positionFundTab);
 </script>

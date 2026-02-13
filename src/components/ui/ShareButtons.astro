@@ -72,12 +72,20 @@ const twitterText = encodeURIComponent(`${title}\n\n${summary}`);
 </div>
 
 <script>
-  const btn = document.getElementById('copy-link-btn');
-  const feedback = document.getElementById('copy-feedback');
-  btn?.addEventListener('click', async () => {
-    const url = btn.getAttribute('data-url') || window.location.href;
-    await navigator.clipboard.writeText(url);
-    feedback?.classList.remove('hidden');
-    setTimeout(() => feedback?.classList.add('hidden'), 2000);
+  let shareButtonsCleanup: AbortController | undefined;
+
+  document.addEventListener('astro:page-load', () => {
+    shareButtonsCleanup?.abort();
+    shareButtonsCleanup = new AbortController();
+    const { signal } = shareButtonsCleanup;
+
+    const btn = document.getElementById('copy-link-btn');
+    const feedback = document.getElementById('copy-feedback');
+    btn?.addEventListener('click', async () => {
+      const url = btn.getAttribute('data-url') || window.location.href;
+      await navigator.clipboard.writeText(url);
+      feedback?.classList.remove('hidden');
+      setTimeout(() => feedback?.classList.add('hidden'), 2000);
+    }, { signal });
   });
 </script>

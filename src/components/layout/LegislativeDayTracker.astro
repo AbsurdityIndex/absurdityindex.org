@@ -170,63 +170,64 @@ const legislativeDayOfWeek = featured.data.currentLegislativeDay.startDayOfWeek;
 </div>
 
 <script>
-  // Popover functionality
-  const infoBtn = document.querySelector('.tracker-info-btn');
-  const popover = document.getElementById('legislative-day-popover');
-  const closeBtn = document.getElementById('close-leg-day-popover');
+  let legDayCleanup: AbortController | undefined;
 
-  function showPopover() {
-    if (!infoBtn || !popover) return;
+  document.addEventListener('astro:page-load', () => {
+    legDayCleanup?.abort();
+    legDayCleanup = new AbortController();
+    const { signal } = legDayCleanup;
 
-    const rect = infoBtn.getBoundingClientRect();
-    const popoverWidth = 320;
+    const infoBtn = document.querySelector('.tracker-info-btn');
+    const popover = document.getElementById('legislative-day-popover');
+    const closeBtn = document.getElementById('close-leg-day-popover');
 
-    // Position below the button, centered
-    let left = rect.left + rect.width / 2 - popoverWidth / 2;
+    function showPopover() {
+      if (!infoBtn || !popover) return;
 
-    // Keep within viewport
-    left = Math.max(16, Math.min(left, window.innerWidth - popoverWidth - 16));
+      const rect = infoBtn.getBoundingClientRect();
+      const popoverWidth = 320;
 
-    popover.style.top = `${rect.bottom + 12}px`;
-    popover.style.left = `${left}px`;
-    popover.style.width = `${popoverWidth}px`;
+      let left = rect.left + rect.width / 2 - popoverWidth / 2;
+      left = Math.max(16, Math.min(left, window.innerWidth - popoverWidth - 16));
 
-    // Adjust arrow position
-    const arrow = popover.querySelector('.absolute.-top-2') as HTMLElement;
-    if (arrow) {
-      const arrowOffset = rect.left + rect.width / 2 - left;
-      arrow.style.left = `${arrowOffset}px`;
-      arrow.style.transform = 'translateX(-50%) rotate(45deg)';
+      popover.style.top = `${rect.bottom + 12}px`;
+      popover.style.left = `${left}px`;
+      popover.style.width = `${popoverWidth}px`;
+
+      const arrow = popover.querySelector('.absolute.-top-2') as HTMLElement;
+      if (arrow) {
+        const arrowOffset = rect.left + rect.width / 2 - left;
+        arrow.style.left = `${arrowOffset}px`;
+        arrow.style.transform = 'translateX(-50%) rotate(45deg)';
+      }
+
+      popover.classList.remove('hidden');
     }
 
-    popover.classList.remove('hidden');
-  }
-
-  function hidePopover() {
-    popover?.classList.add('hidden');
-  }
-
-  infoBtn?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (popover?.classList.contains('hidden')) {
-      showPopover();
-    } else {
-      hidePopover();
+    function hidePopover() {
+      popover?.classList.add('hidden');
     }
-  });
 
-  closeBtn?.addEventListener('click', hidePopover);
+    infoBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (popover?.classList.contains('hidden')) {
+        showPopover();
+      } else {
+        hidePopover();
+      }
+    }, { signal });
 
-  // Close on click outside
-  document.addEventListener('click', (e) => {
-    if (!popover?.contains(e.target as Node) && e.target !== infoBtn) {
-      hidePopover();
-    }
-  });
+    closeBtn?.addEventListener('click', hidePopover, { signal });
 
-  // Close on escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') hidePopover();
+    document.addEventListener('click', (e) => {
+      if (!popover?.contains(e.target as Node) && e.target !== infoBtn) {
+        hidePopover();
+      }
+    }, { signal });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') hidePopover();
+    }, { signal });
   });
 </script>
 

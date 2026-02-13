@@ -224,27 +224,36 @@ function toCategorySlug(value: string) {
 </section>
 
 <script>
-  const controlsContainer = document.getElementById('bill-directory-controls');
-  const searchInput = document.getElementById('bill-search') as HTMLInputElement | null;
-  const billSort = document.getElementById('bill-sort') as HTMLSelectElement | null;
-  const categoryButtons = Array.from(
-    document.querySelectorAll('[data-category-filter]'),
-  ) as HTMLButtonElement[];
-  const clearFiltersButton = document.getElementById('clear-filters') as HTMLButtonElement | null;
-  const resultsSummary = document.getElementById('results-summary');
-  const sortSummary = document.getElementById('sort-summary');
-  const moreFiltersToggle = document.getElementById(
-    'more-filters-toggle',
-  ) as HTMLButtonElement | null;
-  const extraFilters = document.getElementById('extra-category-filters');
-  const noResults = document.getElementById('no-results');
-  const billsGrid = document.getElementById('bills-grid');
-  const loadMoreButton = document.getElementById('load-more-bills') as HTMLButtonElement | null;
-  const loadMoreStatus = document.getElementById('load-more-status');
+  let directoryCleanup: AbortController | undefined;
 
-  if (!billsGrid || !controlsContainer) {
-    // No directory controls found on this page.
-  } else {
+  document.addEventListener('astro:page-load', () => {
+    directoryCleanup?.abort();
+    directoryCleanup = new AbortController();
+    const { signal } = directoryCleanup;
+
+    const controlsContainer = document.getElementById('bill-directory-controls');
+    const searchInput = document.getElementById('bill-search') as HTMLInputElement | null;
+    const billSort = document.getElementById('bill-sort') as HTMLSelectElement | null;
+    const categoryButtons = Array.from(
+      document.querySelectorAll('[data-category-filter]'),
+    ) as HTMLButtonElement[];
+    const clearFiltersButton = document.getElementById('clear-filters') as HTMLButtonElement | null;
+    const resultsSummary = document.getElementById('results-summary');
+    const sortSummary = document.getElementById('sort-summary');
+    const moreFiltersToggle = document.getElementById(
+      'more-filters-toggle',
+    ) as HTMLButtonElement | null;
+    const extraFilters = document.getElementById('extra-category-filters');
+    const noResults = document.getElementById('no-results');
+    const billsGrid = document.getElementById('bills-grid');
+    const loadMoreButton = document.getElementById('load-more-bills') as HTMLButtonElement | null;
+    const loadMoreStatus = document.getElementById('load-more-status');
+
+    if (!billsGrid || !controlsContainer) {
+      return;
+    }
+
+    {
     const billsGridEl = billsGrid;
     let billItems = Array.from(document.querySelectorAll('.bill-item')) as HTMLElement[];
     let activeCategory = 'all';
@@ -1157,7 +1166,7 @@ function toCategorySlug(value: string) {
         activeCategory = button.dataset.categoryFilter || 'all';
         updateCategoryButtonStates();
         applyControls(true, 'category');
-      });
+      }, { signal });
     });
 
     clearFiltersButton?.addEventListener('click', () => {
@@ -1166,17 +1175,17 @@ function toCategorySlug(value: string) {
       if (billSort) billSort.value = defaultSortValue;
       updateCategoryButtonStates();
       applyControls(true, 'reset');
-    });
+    }, { signal });
 
     loadMoreButton?.addEventListener('click', async () => {
       const loaded = await loadNextPage(false);
       if (loaded) {
         applyControls(false, 'load_more');
       }
-    });
+    }, { signal });
 
-    searchInput?.addEventListener('input', scheduleApplyControls);
-    billSort?.addEventListener('change', () => applyControls(true, 'sort'));
+    searchInput?.addEventListener('input', scheduleApplyControls, { signal });
+    billSort?.addEventListener('change', () => applyControls(true, 'sort'), { signal });
 
     moreFiltersToggle?.addEventListener('click', () => {
       if (!extraFilters) return;
@@ -1185,11 +1194,11 @@ function toCategorySlug(value: string) {
       extraFilters.classList.toggle('flex', isHidden);
       moreFiltersToggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
       moreFiltersToggle.textContent = isHidden ? 'Fewer filters' : 'More filters';
-    });
+    }, { signal });
 
     window.addEventListener('pagehide', () => {
       emitSessionSummary('pagehide');
-    });
+    }, { signal });
 
     const queryFromUrl = urlParams.get('q')?.trim() || '';
     const sortFromUrl = urlParams.get('sort');
@@ -1226,5 +1235,6 @@ function toCategorySlug(value: string) {
     updateCategoryButtonStates();
     updateLoadMoreUi();
     applyControls(true, 'initial');
-  }
+    }
+  });
 </script>

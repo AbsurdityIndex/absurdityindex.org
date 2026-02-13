@@ -79,7 +79,7 @@
 </section>
 
 <script>
-  (() => {
+  document.addEventListener('astro:page-load', () => {
     type TodayMeeting = {
       chamber?: string;
       time?: string;
@@ -150,6 +150,7 @@
       const categories: [RegExp, string][] = [
         [/^Power center/i, 'Activity'],
         [/^Top agenda/i, 'Agenda'],
+        [/^Spotlight/i, 'Spotlight'],
         [/^Policy load/i, 'Policy Load'],
         [/^Transparency/i, 'Transparency'],
         [/^Paper trail/i, 'Records'],
@@ -185,7 +186,7 @@
       });
     }
 
-    function renderMeetingCards(meetings: TodayMeeting[]) {
+    function renderMeetingCards(meetings: TodayMeeting[], meetingNotes: Record<string, string> = {}) {
       safeMeetingsEl.replaceChildren();
 
       if (meetings.length === 0) {
@@ -230,14 +231,18 @@
         title.className = 'mt-1.5 font-serif text-sm font-bold text-navy-900';
         title.textContent = truncate(meeting.committee || meeting.title || 'Committee meeting', 80);
 
-        const focusText = meeting.focus || '';
+        const committeeKey = meeting.committee || '';
+        const aiNote = meetingNotes[committeeKey];
+        const focusText = aiNote || meeting.focus || '';
 
         card.appendChild(topRow);
         card.appendChild(title);
 
         if (focusText) {
           const focusEl = document.createElement('p');
-          focusEl.className = 'mt-0.5 font-sans text-xs text-navy-500';
+          focusEl.className = aiNote
+            ? 'mt-0.5 font-sans text-xs italic text-navy-600'
+            : 'mt-0.5 font-sans text-xs text-navy-500';
           focusEl.textContent = focusText;
           card.appendChild(focusEl);
         }
@@ -288,42 +293,48 @@
       try {
         const data = await requestTodayData();
         safeDateEl.textContent = data?.today?.label || 'Today';
+        const summary = data?.summary || {};
+        const isAi = summary.satireSource === 'ai';
 
         const house = data?.chambers?.house || {};
         safeHouseStatusEl.textContent = house.status || 'No update';
         safeHouseStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(house.status)}`;
 
-        const houseLine = house.latestAction?.text
-          ? `${house.latestAction.time ? `${house.latestAction.time}: ` : ''}${house.latestAction.text}`
-          : house.nextConvene
-            ? `Next House meeting: ${house.nextConvene}`
-            : 'No House floor action posted yet.';
+        const houseLine = isAi && summary.houseLine
+          ? summary.houseLine
+          : house.latestAction?.text
+            ? `${house.latestAction.time ? `${house.latestAction.time}: ` : ''}${house.latestAction.text}`
+            : house.nextConvene
+              ? `Next House meeting: ${house.nextConvene}`
+              : 'No House floor action posted yet.';
         safeHouseLineEl.textContent = truncate(houseLine);
 
         const senate = data?.chambers?.senate || {};
         safeSenateStatusEl.textContent = senate.status || 'No update';
         safeSenateStatusEl.className = `mt-1 font-serif text-xl font-bold ${statusColor(senate.status)}`;
 
-        const senateLine =
-          senate.previousSummary ||
-          (senate.nextConvene
-            ? `Next Senate meeting: ${senate.nextConvene}`
-            : 'No Senate floor summary posted yet.');
+        const senateLine = isAi && summary.senateLine
+          ? summary.senateLine
+          : senate.previousSummary ||
+            (senate.nextConvene
+              ? `Next Senate meeting: ${senate.nextConvene}`
+              : 'No Senate floor summary posted yet.');
         safeSenateLineEl.textContent = truncate(senateLine);
 
         safeDeckEl.textContent =
-          data?.summary?.deck ||
+          summary.deck ||
           'Satire desk is still warming up the teleprompter for this legislative day.';
 
-        const bullets = Array.isArray(data?.summary?.bullets)
-          ? data.summary.bullets.slice(0, 4).map(String)
+        const bullets = Array.isArray(summary.bullets)
+          ? summary.bullets.slice(0, 4).map(String)
           : ['No summary available yet.'];
         renderBulletCards(bullets);
 
+        const meetingNotes: Record<string, string> = isAi && summary.meetingNotes ? summary.meetingNotes : {};
         const meetings: TodayMeeting[] = Array.isArray(data?.committees?.meetings)
           ? data.committees.meetings.slice(0, 4)
           : [];
-        renderMeetingCards(meetings);
+        renderMeetingCards(meetings, meetingNotes);
 
         safeLoadingEl.classList.add('hidden');
         safeErrorEl.classList.add('hidden');
@@ -336,5 +347,5 @@
     }
 
     loadTodayFront();
-  })();
+  });
 </script>

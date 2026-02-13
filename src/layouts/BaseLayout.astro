@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
@@ -60,6 +61,15 @@ const jsonLd = {
     '@type': 'Organization',
     name: 'Absurdity Index',
     url: siteUrl,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${siteUrl}/og-image.png`,
+      width: 1200,
+      height: 630,
+    },
+    sameAs: [
+      'https://x.com/CartelPirate',
+    ],
   },
   potentialAction: {
     '@type': 'SearchAction',
@@ -158,9 +168,22 @@ const jsonLd = {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Pinyon+Script&display=swap"
+    />
+    <link
       href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Pinyon+Script&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Pinyon+Script&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
 
     <!-- Open Graph -->
     <meta property="og:title" content={fullTitle} />
@@ -222,6 +245,7 @@ const jsonLd = {
       }
     </script>
 
+    <ClientRouter />
     <slot name="head" />
   </head>
   <body class="bg-cream-100 text-navy-900 font-sans min-h-screen flex flex-col pb-10 sm:pb-9">
