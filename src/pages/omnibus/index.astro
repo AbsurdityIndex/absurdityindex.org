@@ -23,12 +23,34 @@ function fmtB(b: number): string {
   if (b % 1 !== 0) return `$${b}B`;
   return `$${b}B`;
 }
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Omnibus Bills',
+  description: 'Explore massive omnibus appropriations bills — the legislative sausage factories where thousands of pages and trillions of dollars go to be negotiated in secret.',
+  url: `${siteOrigin}/omnibus/`,
+  numberOfItems: omnibusBills.length,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: omnibusBills.length,
+    itemListElement: omnibusBills.map((bill, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${siteOrigin}/omnibus/${bill.id}/`,
+      name: `${bill.data.billNumber} — ${bill.data.title}`,
+    })),
+  },
+};
 ---
 
 <BaseLayout
   title="Omnibus Bills"
   description="Explore massive omnibus appropriations bills — the legislative sausage factories where thousands of pages and trillions of dollars go to be negotiated in secret."
+  ogImage="/og/omnibus.png"
 >
+  <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
   <main class="bg-parchment min-h-screen">
     <!-- Hero Section -->
     <section class="bg-navy-900 py-10" data-theme-fixed>

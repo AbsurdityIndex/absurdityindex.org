@@ -12,18 +12,96 @@ const SECURITY_HEADERS = {
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
   'X-Permitted-Cross-Domain-Policies': 'none',
-  'Content-Security-Policy':
-    "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: https://*.clarity.ms https://c.bing.com; connect-src 'self' https://cloudflareinsights.com https://challenges.cloudflare.com https://*.corey-steinwand.workers.dev https://*.clarity.ms https://c.bing.com; frame-src https://challenges.cloudflare.com; upgrade-insecure-requests",
 };
 
-function applySecurityHeaders(response) {
+// CSP template — the nonce placeholder is replaced per-request for HTML responses.
+// Non-HTML responses (redirects, 403s) use a static fallback with 'unsafe-inline'.
+const CSP_TEMPLATE =
+  "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'nonce-{{NONCE}}' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: https://*.clarity.ms https://c.bing.com; connect-src 'self' https://cloudflareinsights.com https://challenges.cloudflare.com https://*.corey-steinwand.workers.dev https://*.clarity.ms https://c.bing.com; frame-src https://challenges.cloudflare.com; upgrade-insecure-requests";
+
+const CSP_STATIC =
+  "default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: https://*.clarity.ms https://c.bing.com; connect-src 'self' https://cloudflareinsights.com https://challenges.cloudflare.com https://*.corey-steinwand.workers.dev https://*.clarity.ms https://c.bing.com; frame-src https://challenges.cloudflare.com; upgrade-insecure-requests";
+
+function generateNonce() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  let b64 = '';
+  for (const b of bytes) b64 += String.fromCharCode(b);
+  return btoa(b64);
+}
+
+function applySecurityHeaders(response, csp) {
   const patched = new Response(response.body, response);
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     patched.headers.set(key, value);
   }
+  patched.headers.set('Content-Security-Policy', csp || CSP_STATIC);
   return patched;
+}
+
+/**
+ * For HTML responses, inject nonce attributes into <script> tags
+ * and set the CSP header with the matching nonce.
+ */
+function applyNoncedSecurityHeaders(response, nonce) {
+  const csp = CSP_TEMPLATE.replace('{{NONCE}}', nonce);
+  const rewritten = new HTMLRewriter()
+    .on('script', {
+      element(el) {
+        // Only add nonce to inline scripts (no src) that are executable.
+        // JSON-LD and other data types don't need nonces.
+        const src = el.getAttribute('src');
+        const type = (el.getAttribute('type') || '').toLowerCase();
+        if (!src && type !== 'application/ld+json' && type !== 'application/json') {
+          el.setAttribute('nonce', nonce);
+        }
+      },
+    })
+    .transform(response);
+
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    rewritten.headers.set(key, value);
+  }
+  rewritten.headers.set('Content-Security-Policy', csp);
+  return rewritten;
+}
+
+/**
+ * Known good bot User-Agent patterns. These crawlers are allowed through
+ * geo-restriction so search engines and archiving services can index the site.
+ * The Cloudflare WAF rule also exempts cf.client.bot, but Workers on the Free
+ * plan don't expose that field — so we match User-Agent strings here as well.
+ */
+const KNOWN_BOT_UA_PATTERNS = [
+  'Googlebot',
+  'Bingbot',
+  'bingbot',
+  'Slurp',           // Yahoo
+  'DuckDuckBot',
+  'Baiduspider',
+  'YandexBot',
+  'ia_archiver',     // Wayback Machine / Internet Archive
+  'archive.org_bot',
+  'W3C_Validator',
+  'W3C-checklink',
+  'Jigsaw',          // W3C CSS validator
+  'facebookexternalhit',
+  'Twitterbot',
+  'LinkedInBot',
+  'Applebot',
+  'PingdomBot',       // Uptime monitors
+  'UptimeRobot',
+  'GTmetrix',
+  'SecurityHeaders',  // securityheaders.com scanner
+  'Mozilla/5.0 (compatible; WAVE',
+  'satire-cron-worker', // Internal cron worker for daily satire generation
+];
+
+function isKnownBot(request) {
+  const ua = request.headers.get('User-Agent') || '';
+  return KNOWN_BOT_UA_PATTERNS.some((pattern) => ua.includes(pattern));
 }
 
 const POC_COOKIE_NAME = 'vc_poc_access';
@@ -121,13 +199,12 @@ export async function onRequest(context) {
   if (url.hostname === 'www.absurdityindex.org') {
     url.hostname = 'absurdityindex.org';
 
-    return new Response(null, {
-      status: 301,
-      headers: {
-        Location: url.toString(),
-        ...SECURITY_HEADERS,
-      },
-    });
+    return applySecurityHeaders(
+      new Response(null, {
+        status: 301,
+        headers: { Location: url.toString() },
+      }),
+    );
   }
 
   const country = context.request.cf?.country;
@@ -142,9 +219,9 @@ export async function onRequest(context) {
     'MP', // Northern Mariana Islands
   ]);
 
-  // Allow requests with no country info (local dev, health checks, bots).
-  // If Turnstile gating is enabled, we still gate VoteChain POC module routes.
-  const isCountryAllowed = !country || allowed.has(country);
+  // Allow requests with no country info (local dev, health checks),
+  // US traffic, and known good bots (search engines, archivers, validators).
+  const isCountryAllowed = !country || allowed.has(country) || isKnownBot(context.request);
   if (isCountryAllowed) {
     const turnstileEnabled = Boolean(
       context.env?.PUBLIC_TURNSTILE_SITE_KEY &&
@@ -174,12 +251,21 @@ export async function onRequest(context) {
     }
 
     const response = await context.next();
+
+    // Use nonce-based CSP for HTML responses (eliminates 'unsafe-inline').
+    // Non-HTML (JS, CSS, images, JSON) gets the static CSP.
+    const ct = (response.headers.get('Content-Type') || '').toLowerCase();
+    if (ct.includes('text/html')) {
+      const nonce = generateNonce();
+      return applyNoncedSecurityHeaders(response, nonce);
+    }
     return applySecurityHeaders(response);
   }
 
   // Block with a 403 and a themed response
-  return new Response(
-    `<!DOCTYPE html>
+  return applySecurityHeaders(
+    new Response(
+      `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -214,15 +300,14 @@ export async function onRequest(context) {
   </div>
 </body>
 </html>`,
-    {
-      status: 403,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-store',
-        // Avoid indexing the geo-block interstitial if a crawler hits it.
-        'X-Robots-Tag': 'noindex, nofollow',
-        ...SECURITY_HEADERS,
+      {
+        status: 403,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'X-Robots-Tag': 'noindex, nofollow',
+        },
       },
-    }
+    ),
   );
 }

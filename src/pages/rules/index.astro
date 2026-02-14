@@ -23,12 +23,35 @@ const rulesByCongress = congressNumbers.map((num) => ({
   years: rules.find((r) => r.data.congressNumber === num)?.data.congressYears || '',
   rules: rules.filter((r) => r.data.congressNumber === num),
 }));
+
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Congressional Rules',
+  description: 'Explore the rules packages adopted by each Congress — the procedural frameworks that determine how (or whether) anything gets done.',
+  url: `${siteOrigin}/rules/`,
+  numberOfItems: rules.length,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: rules.length,
+    itemListElement: rules.map((r, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${siteOrigin}/rules/${r.id}/`,
+      name: `${r.data.resolution} — ${r.data.chamber === 'house' ? 'House' : 'Senate'} Rules (${r.data.congressNumber}th Congress)`,
+    })),
+  },
+};
 ---
 
 <BaseLayout
   title="Congressional Rules"
   description="Explore the rules packages adopted by each Congress — the procedural frameworks that determine how (or whether) anything gets done."
+  ogImage="/og/rules.png"
 >
+  <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
   <style slot="head">
     /* Hide scrollbar but keep functionality */
     .scrollbar-hide {

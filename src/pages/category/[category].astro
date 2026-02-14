@@ -34,12 +34,45 @@ export async function getStaticPaths() {
 }
 
 const { category, categorySlug, bills, totalCount, totalPages, currentPage } = Astro.props;
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+const pageUrl = `${siteOrigin}/category/${categorySlug}/`;
+
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${category} Bills`,
+  description: `All Absurdity Index bills in the ${category} category.`,
+  url: pageUrl,
+  numberOfItems: totalCount,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: totalCount,
+    itemListElement: bills.map((bill, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${siteOrigin}/bills/${bill.id}/`,
+      name: `${bill.data.billNumber} — ${bill.data.title}`,
+    })),
+  },
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Real Bills', item: `${siteOrigin}/bills/` },
+    { '@type': 'ListItem', position: 3, name: category, item: pageUrl },
+  ],
+};
 ---
 
 <BaseLayout
   title={`${category} Bills`}
   description={`All Absurdity Index bills in the ${category} category.`}
 >
+  <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
+  <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
   {totalPages > 1 && (
     <link slot="head" rel="next" href={`/category/${categorySlug}/page/2/`} />
   )}

@@ -42,7 +42,7 @@ const billSchema = {
   isBasedOn: d.realSource,
   inLanguage: 'en-US',
   isAccessibleForFree: true,
-  image: `${siteOrigin}/og-image.png`,
+  image: `${siteOrigin}/og/not-bills/${bill.id}.png`,
   genre: 'Satire',
   publisher: {
     '@type': 'Organization',
@@ -73,6 +73,7 @@ const breadcrumbSchema = {
 <BaseLayout
   title={`${d.billNumber} — ${d.title}`}
   description={d.summary}
+  ogImage={`/og/not-bills/${bill.id}.png`}
   ogType="article"
   article={{
     publishedTime:

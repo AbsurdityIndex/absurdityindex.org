@@ -19,13 +19,35 @@ const totalCount = sortedBills.length;
 const totalPages = Math.max(1, Math.ceil(totalCount / DIRECTORY_PAGE_SIZE));
 const currentPage = 1;
 const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
+
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+
+const itemListSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Real Bills — Absurdity Index',
+  description: 'Real federal bills from Congress, scored on our Absurdity Index.',
+  url: `${siteOrigin}/bills/`,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: totalCount,
+    itemListElement: bills.map((bill, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${siteOrigin}/bills/${bill.id}/`,
+      name: bill.data.title,
+    })),
+  },
+};
 ---
 
 <BaseLayout
   title="Real Bills"
   description="Real federal bills from Congress, scored on our Absurdity Index. You can't make this stuff up."
+  ogImage="/og/bills.png"
 >
   {totalPages > 1 && <link slot="head" rel="next" href="/bills/page/2/" />}
+  <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
 
   <div class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-8 text-center min-[430px]:mb-10">
@@ -41,6 +63,13 @@ const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
         class="mt-2 font-serif italic text-sm text-navy-600 min-[375px]:mt-3 min-[375px]:text-base"
       >
         Real legislation, ranked by absurdity - because reality is stranger than satire
+      </p>
+      <p class="mx-auto mt-4 max-w-2xl font-sans text-sm leading-relaxed text-navy-500">
+        The Absurdity Index tracks real federal legislation introduced in Congress and scores each
+        bill on a 1&ndash;10 absurdity scale. Every entry links to its official text on
+        <a href="https://www.congress.gov" target="_blank" rel="noopener noreferrer" class="underline hover:text-gold-600">Congress.gov</a>
+        so you can verify our editorial ratings for yourself. Browse by category, search by keyword,
+        or sort by absurdity score.
       </p>
     </div>
     <div class="gold-rule"></div>

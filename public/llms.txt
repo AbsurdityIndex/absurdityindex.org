@@ -1,0 +1,50 @@
+# Absurdity Index
+
+> A satirical commentary site that scores real federal legislation on an Absurdity Index (1-10), paired with tongue-in-cheek satirical bills that actually make common sense. Non-partisan. Every factual claim includes a proof link to authoritative sources (congress.gov, law.cornell.edu).
+
+The Absurdity Index reads actual congressional bills and rates them on a 1-10 absurdity scale based on wasteful spending, tortured acronyms, time spent vs. importance, actual impact vs. stated goals, and unintended consequences. Scores are editorial opinion, not objective fact. The site also publishes satirical "Not Bills" — legislation so reasonable that no actual Congress would ever pass it.
+
+## Core Content
+
+- [Real Bills](https://absurdityindex.org/bills/): All real federal legislation scored on the Absurdity Index, with Congress.gov links
+- [Not Bills (Satirical)](https://absurdityindex.org/not-bills/): Satirical bills that make common sense
+- [How We Score](https://absurdityindex.org/how-we-score/): Scoring methodology — 1-3 Suspiciously Reasonable, 4-6 Pork-Adjacent, 7-8 Hold My Gavel, 9-10 Fish on Meth
+- [About](https://absurdityindex.org/about/): Mission, accuracy policy, and FAQ
+- [Compare Bills](https://absurdityindex.org/compare/): Side-by-side comparison of real bills and their satirical counterparts
+
+## Browse & Discover
+
+- [Search](https://absurdityindex.org/search/): Full-text search across all bills
+- [Sponsors](https://absurdityindex.org/sponsors/): Browse bills by congressional sponsor
+- [Trends](https://absurdityindex.org/trends/): Trending topics and legislative patterns
+- [Congressional Rules](https://absurdityindex.org/rules/): House and Senate rules packages
+- [Omnibus Tracker](https://absurdityindex.org/omnibus/): Track omnibus spending bills
+- [Under Consideration](https://absurdityindex.org/under-consideration/): Bills currently in committee
+
+## Interactive Tools
+
+- [Quiz](https://absurdityindex.org/quiz/): Can you tell real bills from satire?
+- [Bill Generator](https://absurdityindex.org/generator/): Generate satirical legislation
+- [Cost Calculator](https://absurdityindex.org/cost-calculator/): Calculate bill impact costs
+- [Pork Index](https://absurdityindex.org/pork-index/): Track pork barrel spending by bill
+- [Bingo](https://absurdityindex.org/bingo/): Congressional absurdity bingo
+
+## Data & APIs
+
+- [RSS Feed](https://absurdityindex.org/feed.xml): All bills, newest first
+- [Sitemap](https://absurdityindex.org/sitemap-index.xml): Complete site index
+- [All Bills JSON](https://absurdityindex.org/api/bills.json): Paginated JSON API of all bills
+- [Real Bills JSON](https://absurdityindex.org/api/real-bills.json): Real legislation only
+- [Not Bills JSON](https://absurdityindex.org/api/not-bills.json): Satirical bills only
+- [Stats JSON](https://absurdityindex.org/api/stats.json): Site-wide statistics
+- [Bill Detail JSON](https://absurdityindex.org/api/bills/{id}.json): Individual bill by ID
+
+## Optional
+
+- [Swipe](https://absurdityindex.org/swipe/): Tinder-style bill swiping
+- [ASMR](https://absurdityindex.org/asmr/): Relaxing bill readings
+- [Filibuster](https://absurdityindex.org/filibuster/): Interactive filibuster simulator
+- [Marathon](https://absurdityindex.org/marathon/): Extended bill reading marathon
+- [Calendar](https://absurdityindex.org/calendar/): Legislative calendar view
+- [Bracket](https://absurdityindex.org/bracket/): Bill tournament bracket
+- [Submit a Bill](https://absurdityindex.org/submit/): Community bill submissions

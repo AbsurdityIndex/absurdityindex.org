@@ -68,12 +68,25 @@ const {
   currentPage,
   avgAbsurdity,
 } = Astro.props;
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+const pageUrl = `${siteOrigin}/sponsors/${sponsorSlug}/`;
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteOrigin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Sponsors', item: `${siteOrigin}/sponsors/` },
+    { '@type': 'ListItem', position: 3, name: sponsor, item: pageUrl },
+  ],
+};
 ---
 
 <BaseLayout
   title={sponsor}
   description={`All bills sponsored by ${sponsor} on the Absurdity Index.`}
 >
+  <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
   {totalPages > 1 && <link slot="head" rel="next" href={`/sponsors/${sponsorSlug}/page/2/`} />}
 
   <section class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">

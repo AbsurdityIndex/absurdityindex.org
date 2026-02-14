@@ -73,14 +73,19 @@ User-agent: PerplexityBot
 Allow: /
 
 # =============================================================================
-# Bad Actor Bots — Blocked from the chamber
+# SEO Tool Crawlers — Allowed for discoverability
 # =============================================================================
 User-agent: AhrefsBot
-Disallow: /
+Allow: /
+Crawl-delay: 2
 
 User-agent: SemrushBot
-Disallow: /
+Allow: /
+Crawl-delay: 2
 
+# =============================================================================
+# Bad Actor Bots — Blocked from the chamber
+# =============================================================================
 User-agent: MJ12bot
 Disallow: /
 

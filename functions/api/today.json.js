@@ -53,6 +53,20 @@ function getEtDateParts(now = new Date()) {
   };
 }
 
+function datePartsFromIso(isoDate) {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  const date = new Date(`${isoDate}T12:00:00Z`);
+  const weekday = WEEKDAY_NAMES[date.getUTCDay()];
+  return {
+    year,
+    month,
+    day,
+    weekday,
+    isoDate,
+    label: `${weekday}, ${MONTH_NAMES[month - 1]} ${day}, ${year}`,
+  };
+}
+
 function getCongressAndSession(etYear, etMonth, etDay) {
   const congress = Math.floor((etYear - 1789) / 2) + 1;
 
@@ -566,6 +580,203 @@ function buildSenateStatus({ senateMeetings, dailyRecord }) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// AI satire generation (Claude Opus)
+// ---------------------------------------------------------------------------
+
+export function buildClaudePrompt({ today, houseStatus, senateStatus, houseMeetings, senateMeetings, houseVotes, dailyRecord }) {
+  const allMeetings = [...houseMeetings.meetings, ...senateMeetings.meetings].sort(byDateTimeAsc)
+  const meetingList = allMeetings.slice(0, 12).map((m) => {
+    const time = m.time || 'TBA'
+    return `- ${time} | [${m.chamber}] ${m.committee}: ${m.title} [focus: ${m.focus}]${m.isClosed ? ' (CLOSED)' : ''}`
+  }).join('\n')
+
+  const closedCount = allMeetings.filter((m) => m.isClosed).length
+  const totalBills = allMeetings.reduce((s, m) => s + (m.relatedBillCount || 0), 0)
+  const totalNoms = allMeetings.reduce((s, m) => s + (m.relatedNominationCount || 0), 0)
+
+  return `You are the editorial satirist for AbsurdityIndex.org's "Today in Congress" page. Your job: turn today's real congressional data into sharp, factually grounded satire.
+
+DATE: ${today.label} (${today.isoDate})
+
+HOUSE STATUS: ${houseStatus.status}
+${houseStatus.summary}
+${houseVotes.countToday > 0 ? `Roll-call votes today: ${houseVotes.countToday}` : 'No roll-call votes published today.'}
+
+SENATE STATUS: ${senateStatus.status}
+${senateStatus.summary}
+
+COMMITTEE MEETINGS (${allMeetings.length} total — ${houseMeetings.count} House, ${senateMeetings.count} Senate):
+${meetingList || '(none scheduled)'}
+
+STATS:
+- Bills referenced: ${totalBills}
+- Nomination items referenced: ${totalNoms}
+- Closed sessions: ${closedCount}
+- Congressional Record latest issue: ${dailyRecord.issueDateUsed || 'not yet published'}
+
+Write the sections below. Each label must start on its own line.
+
+HEADLINE: A single sentence (max 180 chars) summarizing today's congressional activity with dry editorial wit. Factually accurate. No emoji.
+
+DECK: One punchy sentence (max 200 chars) — the satirical subhead. Think C-SPAN meets John Oliver. No emoji.
+
+HOUSE: One satirical sentence (max 140 chars) summarizing the House's day. Grounded in actual House data above.
+SENATE: One satirical sentence (max 140 chars) summarizing the Senate's day. Grounded in actual Senate data above.
+
+BULLET: Power center: [1-2 sentences, max 200 chars total] Where power is flowing today (floor votes vs committees). Ground it in the actual numbers above.
+BULLET: Spotlight: [1-2 sentences, max 220 chars total] Spotlight 1-2 specific meetings from the list — pick the most interesting, absurd, or consequential ones.
+BULLET: Policy load: [1-2 sentences, max 200 chars total] The policy load (meeting count, bill refs, nomination refs). Use exact numbers from STATS.
+BULLET: Transparency: [1-2 sentences, max 200 chars total] Any transparency gaps (closed sessions, missing Congressional Record, quiet vote board). If none, note what IS transparent.
+
+For each committee meeting listed above, write one satirical sentence (max 120 chars). Use the committee name WITHOUT the [House]/[Senate] chamber prefix. Format:
+MEETING: [committee name only, no chamber prefix] | [satirical one-liner]
+
+RULES:
+- Factually accurate — only reference data provided above. Do not invent meetings, votes, or numbers.
+- Dry wit, punches up at process absurdity. Never partisan, never mean to individuals.
+- No emoji. No exclamation marks. No "folks" or "buckle up" filler.
+- If both chambers are quiet, lean into the absurdity of government doing nothing on the record.`
+}
+
+export function parseClaudeResponse(text) {
+  if (!text) return null
+
+  const headlineMatch = text.match(/^HEADLINE:\s*(.+)$/m)
+  const deckMatch = text.match(/^DECK:\s*(.+)$/m)
+  const houseMatch = text.match(/^HOUSE:\s*(.+)$/m)
+  const senateMatch = text.match(/^SENATE:\s*(.+)$/m)
+  const bulletMatches = [...text.matchAll(/^BULLET:\s*(.+)$/gm)]
+  const meetingMatches = [...text.matchAll(/^MEETING:\s*(.+?)\s*\|\s*(.+)$/gm)]
+
+  if (!headlineMatch || !deckMatch || bulletMatches.length < 2) return null
+
+  const meetingNotes = {}
+  for (const m of meetingMatches) {
+    meetingNotes[m[1].trim()] = m[2].trim()
+  }
+
+  return {
+    headline: headlineMatch[1].trim(),
+    deck: deckMatch[1].trim(),
+    houseLine: houseMatch ? houseMatch[1].trim() : null,
+    senateLine: senateMatch ? senateMatch[1].trim() : null,
+    bullets: bulletMatches.map((m) => m[1].trim()),
+    meetingNotes,
+  }
+}
+
+export async function callClaudeApi(apiKey, prompt) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 25_000)
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-6',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => '')
+      throw new Error(`Anthropic API ${response.status}: ${errBody.slice(0, 200)}`)
+    }
+
+    const data = await response.json()
+    return data.content?.[0]?.text || null
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// KV cache helpers (Cloudflare KV — namespace: TODAY_SATIRE)
+// ---------------------------------------------------------------------------
+
+export async function getCachedSatire(kv, dateKey) {
+  try {
+    const raw = await kv.get(`satire:${dateKey}`)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+export async function setCachedSatire(kv, dateKey, data) {
+  await kv.put(`satire:${dateKey}`, JSON.stringify(data), { expirationTtl: 48 * 60 * 60 })
+}
+
+export async function acquireLock(kv, dateKey) {
+  const lockKey = `satire-lock:${dateKey}`
+  const existing = await kv.get(lockKey)
+  if (existing) return false
+  await kv.put(lockKey, '1', { expirationTtl: 60 })
+  return true
+}
+
+export async function releaseLock(kv, dateKey) {
+  try {
+    await kv.delete(`satire-lock:${dateKey}`)
+  } catch {
+    // best-effort release; TTL will clean up regardless
+  }
+}
+
+// ---------------------------------------------------------------------------
+// AI satire orchestrator
+// ---------------------------------------------------------------------------
+
+// Check KV cache only (1 subrequest). Does NOT call Claude.
+async function getCachedOrNull(env, dateKey) {
+  const kv = env?.TODAY_SATIRE
+  if (!kv || typeof kv.get !== 'function') return null
+  return getCachedSatire(kv, dateKey)
+}
+
+// Background generation — runs in waitUntil(). On warm-cache requests the
+// Congress API fetches are served from Cloudflare edge cache and don't count
+// as subrequests, leaving budget for the Claude call. On cold-cache requests
+// this may hit the subrequest limit and fail silently; the next warm-cache
+// request will retry.
+async function generateInBackground({ env, congressData }) {
+  const kv = env?.TODAY_SATIRE
+  const anthropicKey = env?.ANTHROPIC_API_KEY
+  if (!kv || typeof kv.get !== 'function' || !anthropicKey) return
+
+  const dateKey = congressData.today.isoDate
+
+  // Re-check cache (another request may have filled it)
+  const cached = await getCachedSatire(kv, dateKey)
+  if (cached) return
+
+  const gotLock = await acquireLock(kv, dateKey)
+  if (!gotLock) return
+
+  try {
+    const prompt = buildClaudePrompt(congressData)
+    const responseText = await callClaudeApi(anthropicKey, prompt)
+    const parsed = parseClaudeResponse(responseText)
+    if (!parsed) return
+
+    const satireGeneratedAt = new Date().toISOString()
+    await setCachedSatire(kv, dateKey, { ...parsed, satireGeneratedAt })
+  } catch {
+    // Silently fail — next request will retry
+  } finally {
+    await releaseLock(kv, dateKey)
+  }
+}
+
 function buildSummary({ houseStatus, senateStatus, houseMeetings, senateMeetings, houseVotes, dailyRecord }) {
   const totalMeetings = houseMeetings.count + senateMeetings.count;
   const allMeetings = [...houseMeetings.meetings, ...senateMeetings.meetings].sort(byDateTimeAsc);
@@ -623,9 +834,9 @@ function buildSummary({ houseStatus, senateStatus, houseMeetings, senateMeetings
   };
 }
 
-export async function buildTodayData({ apiKey, now = new Date() }) {
+export async function buildTodayData({ apiKey, env, now = new Date(), targetDate = null }) {
   if (!apiKey) {
-    const today = getEtDateParts(now);
+    const today = targetDate ? datePartsFromIso(targetDate) : getEtDateParts(now);
     return {
       generatedAt: new Date().toISOString(),
       timezone: ET_TIME_ZONE,
@@ -718,7 +929,7 @@ export async function buildTodayData({ apiKey, now = new Date() }) {
     };
   }
 
-  const today = getEtDateParts(now);
+  const today = targetDate ? datePartsFromIso(targetDate) : getEtDateParts(now);
   const { congress, session } = getCongressAndSession(today.year, today.month, today.day);
   const sourceHealth = [];
 
@@ -746,7 +957,7 @@ export async function buildTodayData({ apiKey, now = new Date() }) {
 
   const allMeetings = [...houseMeetings.meetings, ...senateMeetings.meetings].sort(byDateTimeAsc);
 
-  const summary = buildSummary({
+  const ruleBasedSummary = buildSummary({
     houseStatus,
     senateStatus,
     houseMeetings,
@@ -754,6 +965,25 @@ export async function buildTodayData({ apiKey, now = new Date() }) {
     houseVotes,
     dailyRecord,
   });
+
+  // Check KV cache for AI satire (1 subrequest, no Claude call here)
+  const cachedAi = await getCachedOrNull(env, today.isoDate)
+  const congressData = { today, houseStatus, senateStatus, houseMeetings, senateMeetings, houseVotes, dailyRecord }
+
+  let summary
+  let _pendingGeneration = null
+  if (cachedAi) {
+    summary = { ...cachedAi, satireSource: 'ai' }
+  } else {
+    summary = { ...ruleBasedSummary, satireSource: 'rule-based', satireGeneratedAt: null }
+    const kv = env?.TODAY_SATIRE
+    if (kv && typeof kv.put === 'function' && env?.ANTHROPIC_API_KEY) {
+      // Store prompt context in main request flow (not waitUntil) so the cron-triggered
+      // satire generator endpoint can reliably read it even if background generation fails
+      try { await kv.put(`prompt-ctx:${today.isoDate}`, JSON.stringify(congressData), { expirationTtl: 48 * 60 * 60 }) } catch {}
+      _pendingGeneration = () => generateInBackground({ env, congressData })
+    }
+  }
 
   return {
     generatedAt: new Date().toISOString(),
@@ -836,6 +1066,7 @@ export async function buildTodayData({ apiKey, now = new Date() }) {
     },
     summary,
     sources: sourceHealth,
+    _pendingGeneration,
   };
 }
 
@@ -844,7 +1075,7 @@ function jsonResponse(data, status = 200) {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=120, s-maxage=300',
+      'Cache-Control': status >= 400 ? 'no-store' : 'public, max-age=120, s-maxage=300',
       'Access-Control-Allow-Origin': '*',
     },
   });
@@ -852,11 +1083,48 @@ function jsonResponse(data, status = 200) {
 
 export async function onRequestGet(context = {}, options = {}) {
   try {
+    const env = context.env || {}
+    const kv = env.TODAY_SATIRE
+    const url = context.request ? new URL(context.request.url) : null
+    const forceRefresh = url?.searchParams.get('refresh') === '1'
+    const dateParam = url?.searchParams.get('date')
+    const targetDate = (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) ? dateParam : null
+    const todayKey = targetDate || getEtDateParts().isoDate
+
+    // Fast path: serve full response from KV cache
+    if (!forceRefresh && kv && typeof kv.get === 'function') {
+      try {
+        const cached = await kv.get(`today-response:${todayKey}`)
+        if (cached) {
+          return new Response(cached, {
+            status: 200,
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Cache-Control': 'public, max-age=300, s-maxage=600',
+              'Access-Control-Allow-Origin': '*',
+            },
+          })
+        }
+      } catch { /* fall through to full fetch */ }
+    }
+
     const apiKey = getApiKey(context, options);
-    const data = await buildTodayData({ apiKey });
+    const data = await buildTodayData({ apiKey, env, targetDate });
+
+    // Fire background AI generation if needed (runs after response is sent)
+    if (data._pendingGeneration && context.waitUntil) {
+      context.waitUntil(data._pendingGeneration())
+    }
+    delete data._pendingGeneration
 
     if (data.error) {
       return jsonResponse(data, 500);
+    }
+
+    // Cache full response in KV (30 min TTL) for fast subsequent loads
+    const responseJson = JSON.stringify(data, null, 2)
+    if (kv && typeof kv.put === 'function') {
+      try { await kv.put(`today-response:${todayKey}`, responseJson, { expirationTtl: 1800 }) } catch {}
     }
 
     return jsonResponse(data, 200);

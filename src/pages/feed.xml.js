@@ -21,6 +21,10 @@ export async function GET(context) {
       link: bill.data.billType === 'real' ? `/bills/${bill.id}/` : `/not-bills/${bill.id}/`,
       categories: [bill.data.category, ...(bill.data.tags || [])],
     })),
-    customData: '<language>en-us</language>',
+    customData: [
+      '<language>en-us</language>',
+      '<atom:link href="https://absurdityindex.org/feed.xml" rel="self" type="application/rss+xml" xmlns:atom="http://www.w3.org/2005/Atom"/>',
+      '<atom:link href="https://pubsubhubbub.appspot.com/" rel="hub" xmlns:atom="http://www.w3.org/2005/Atom"/>',
+    ].join(''),
   });
 }

@@ -1,0 +1,262 @@
+# Absurdity Index — Complete Documentation
+
+> A satirical commentary site that scores real federal legislation on an Absurdity Index (1-10), paired with tongue-in-cheek satirical bills that actually make common sense. Non-partisan. Every factual claim includes a proof link to authoritative sources.
+
+Website: https://absurdityindex.org
+RSS Feed: https://absurdityindex.org/feed.xml
+Sitemap: https://absurdityindex.org/sitemap-index.xml
+
+---
+
+## Mission
+
+The Absurdity Index exists to:
+- Make congressional records accessible to humans without law degrees
+- Score real federal legislation on a 1-10 absurdity scale
+- Highlight wasteful, illogical, or absurd federal spending and legislation
+- Publish satirical "Not Bills" — legislation so reasonable no actual Congress would pass it
+- Encourage public participation in legislative analysis
+- Maintain strict non-partisan absurdity analysis
+
+Every factual claim on the site includes a proof link to authoritative sources such as congress.gov, law.cornell.edu, .gov press releases, and clerk.house.gov roll calls. If a source cannot be found, the claim is not made.
+
+---
+
+## Bill Types
+
+The site features three types of bills:
+
+### Real Bills
+Actual federal legislation sourced from Congress.gov. Each real bill includes:
+- An Absurdity Index score (1-10)
+- Sponsor name, party (R/D/I), and state
+- Congress number and committee assignments
+- Vote records (yeas, nays, passed status, roll call number)
+- Pork barrel spending tracking (total pork, per capita)
+- Bill evolution stages with amendments
+- Direct link to the full text on Congress.gov
+- Plain language summary
+
+### Sensible Bills ("Not Bills")
+Satirical legislative proposals that make common sense. These are tongue-in-cheek bills written as if they were real legislation, but their proposals are so fundamentally obvious and reasonable that no actual Congress would ever pass them. Examples include requiring bills to be read before voting on them, or mandating that government websites work on modern browsers.
+
+### Absurd Bills
+Purely fictional satirical bills that push absurdity to its logical extreme for comedic effect.
+
+---
+
+## Scoring Methodology
+
+The Absurdity Index uses a 1-10 scale divided into four tiers:
+
+### 1-3: Suspiciously Reasonable
+Legislation that accidentally makes sense. Post office namings, routine budget authorizations, and other bills that somehow slipped through without being loaded with riders. We score these low not because they're unimportant, but because they're suspiciously functional.
+
+### 4-6: Pork-Adjacent
+Bills flirting with absurdity. Creative acronyms (COVFEFE Act, COVFEFE = Communications Over Various Feeds Electronically For Engagement), suspiciously specific regulations, and bills that make you wonder if someone lost a bet.
+
+### 7-8: Hold My Gavel
+Genuinely reckless legislating. This is where bills start costing real money for questionable purposes. Think pork barrel projects, studies on things that don't need studying, and legislative priorities that make you question the democratic process.
+
+### 9-10: Fish on Meth
+Peak absurdity. The pinnacle of legislative dysfunction. Named after a real government-funded study that put fish on methamphetamine. This tier is reserved for bills so absurd that satire writers couldn't make them up.
+
+### Scoring Criteria
+When scoring a bill, the site considers:
+- Wasteful spending relative to the bill's stated purpose
+- Tortured acronyms and creative naming
+- Time spent by Congress vs. importance of the issue
+- Actual impact vs. stated goals
+- Unintended consequences (real or potential)
+- Presence of unrelated riders or pork barrel items
+- Creative lobbying influence
+
+Scores are explicitly editorial opinion, not objective fact. Non-partisan absurdity is a core principle — both parties produce equally absurd legislation.
+
+---
+
+## Bill Data Model
+
+Each bill in the system contains:
+
+### Core Fields
+- title: Full bill title
+- billNumber: Official bill number (e.g., H.R. 1234, S. 567)
+- billType: "real", "sensible", or "absurd"
+- category: Primary category (Budget, Technology, Common Sense, Ethics, Infrastructure, Tax Reform, etc.)
+- tags: Array of topic tags
+- sponsor: Name of the bill's sponsor
+- status: Current legislative status
+
+### Congressional Details (Real Bills)
+- sponsorParty: R (Republican), D (Democrat), or I (Independent)
+- sponsorState: Two-letter state code
+- congressNumber: Congress number (e.g., 118, 119)
+- committee: Committee assignments and activities
+- cosponsors: Number of cosponsoring legislators
+- congressDotGovUrl: Direct link to full bill text
+
+### Scoring & Analysis
+- absurdityIndex: Score from 1-10 (real bills only)
+- summary: Editorial plain-language summary
+- officialTitle: Official legislative title
+
+### Vote Records
+- votes.yeas: Number of yea votes
+- votes.nays: Number of nay votes
+- votes.passed: Boolean
+- votes.rollCallNumber: Official roll call reference
+
+### Pork Tracking
+- totalPork: Total pork barrel spending in dollars
+- porkPerCapita: Per-capita pork cost
+- porkItems: Array of individual pork items with descriptions and amounts
+
+### Bill Evolution
+Multi-stage tracking of legislative progress including:
+- Stage name and date
+- Amendments added
+- Vote records at each stage
+- Status changes
+
+---
+
+## JSON API Reference
+
+All API endpoints return JSON. Bills are paginated with 12 items per page.
+
+### List Endpoints
+- GET /api/bills.json — All bills (first page)
+- GET /api/bills/page/{n}.json — All bills (page n)
+- GET /api/real-bills.json — Real legislation only (first page)
+- GET /api/real-bills/page/{n}.json — Real bills (page n)
+- GET /api/not-bills.json — Satirical bills (first page, includes sensible + absurd)
+- GET /api/not-bills/page/{n}.json — Satirical bills (page n)
+- GET /api/sensible-bills.json — Sensible bills only (first page)
+- GET /api/sensible-bills/page/{n}.json — Sensible bills (page n)
+- GET /api/absurd-bills.json — Absurd bills only (first page)
+- GET /api/absurd-bills/page/{n}.json — Absurd bills (page n)
+
+### Detail Endpoints
+- GET /api/bills/{id}.json — Individual bill by slug ID
+
+### Filter Endpoints
+- GET /api/categories/{category}/page/{n}.json — Bills by category
+- GET /api/sponsors/{slug}/page/{n}.json — Bills by sponsor
+
+### Statistics
+- GET /api/stats.json — Site-wide statistics
+
+### Response Format
+List endpoints return:
+```json
+{
+  "bills": [...],
+  "pagination": {
+    "page": 1,
+    "pageSize": 12,
+    "totalPages": 3,
+    "totalItems": 30
+  }
+}
+```
+
+---
+
+## Site Pages
+
+### Core Content
+- /bills/ — Browse all real federal legislation scored on the Absurdity Index
+- /bills/{slug}/ — Individual real bill detail page
+- /not-bills/ — Browse satirical bills
+- /not-bills/{slug}/ — Individual satirical bill detail page
+- /how-we-score/ — Complete scoring methodology explanation
+- /about/ — Mission statement, accuracy policy, FAQ
+- /compare/ — Side-by-side bill comparison tool
+- /compare/{slug}/ — Specific bill comparison (real vs. satirical counterpart)
+
+### Discovery
+- /search/ — Full-text search powered by Pagefind
+- /sponsors/ — Browse bills by congressional sponsor
+- /sponsors/{slug}/ — Individual sponsor detail page
+- /trends/ — Trending legislative topics and patterns
+- /rules/ — House and Senate rules packages
+- /rules/{slug}/ — Individual rules package detail
+- /omnibus/ — Omnibus spending bill tracker
+- /under-consideration/ — Bills currently in committee
+- /today/ — Today's featured content
+- /calendar/ — Legislative calendar view
+
+### Interactive Tools
+- /quiz/ — Real or satire? Test your knowledge
+- /generator/ — Generate satirical legislation
+- /cost-calculator/ — Calculate bill impact costs
+- /pork-index/ — Track pork barrel spending across all bills
+- /pork/ — Pork barrel spending explorer
+- /bingo/ — Congressional absurdity bingo card
+- /swipe/ — Tinder-style bill swiping interface
+- /bracket/ — Bill tournament bracket
+- /diff/ — Bill text diff viewer
+
+### Entertainment
+- /asmr/ — Relaxing bill readings
+- /filibuster/ — Interactive filibuster simulator
+- /marathon/ — Extended bill reading marathon
+- /lobbyists/ — Satirical lobbyist explorer
+
+### Meta
+- /privacy/ — Privacy policy
+- /security/ — Security practices
+- /submit/ — Community bill submissions
+- /embed/ — Embeddable widgets for other sites
+- /extension/ — Browser extension for Congress.gov
+- /history/ — Site update history
+
+---
+
+## Technical Stack
+
+- Static site generator: Astro 5 with MDX
+- Styling: Tailwind CSS v4 with government-parody design palette
+- Search: Pagefind (client-side full-text search)
+- Hosting: Cloudflare Pages
+- Content: MDX files with Zod-validated frontmatter schemas
+- Fonts: Libre Caslon Text (serif), Inter (sans-serif), JetBrains Mono (monospace)
+
+---
+
+## Categories
+
+Bills are organized into the following categories:
+- Budget & Spending
+- Technology
+- Common Sense
+- Ethics & Oversight
+- Infrastructure
+- Tax Reform
+- Healthcare
+- National Security
+- Education
+- Environment
+- Agriculture
+- Government Reform
+- Civil Rights
+- Trade & Commerce
+
+---
+
+## Related Projects
+
+- Absurdity Index CLI — Command-line tool for auto-posting to X, bill discovery, and engagement
+- VoteChain — Cryptographic voter verification protocol
+- Absurdity Index Browser Extension — Chrome/Firefox extension for Congress.gov integration
+
+---
+
+## Contact & Attribution
+
+- Website: https://absurdityindex.org
+- Hashtag: #AbsurdityIndex
+- Content is satirical commentary and editorial opinion
+- All real bill data is sourced from and linked to Congress.gov
+- Every factual claim includes authoritative source links

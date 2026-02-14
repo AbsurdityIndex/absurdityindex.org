@@ -2,12 +2,64 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import OfficialSeal from '../components/ui/OfficialSeal.astro';
 import Divider from '../components/ui/Divider.astro';
+
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+
+const aboutSchema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About the Absurdity Index',
+    description: 'Learn about the Absurdity Index of the United States — a satirical institution dedicated to common sense legislation and cataloging real absurdity.',
+    url: `${siteOrigin}/about/`,
+    mainEntity: {
+      '@type': 'Organization',
+      name: 'Absurdity Index',
+      url: siteOrigin,
+      description: 'A satirical commentary site that scores real federal legislation on an absurdity scale and proposes common-sense satirical bills.',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Is the Absurdity Index a real government website?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'No. The Absurdity Index is a satirical commentary site. If this were a real government website, it would have taken four years and twelve billion dollars to build, the search function wouldn\'t work, and it would only be compatible with Internet Explorer 6.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Are the "Real Absurdity" bills actually real?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes. Every bill tagged as a "Real Absurdity" is based on actual legislation or laws. Source links to Congress.gov are provided so you can verify for yourself.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can I submit a bill to the Absurdity Index?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Absolutely. Unlike actual Congress, the Absurdity Index encourages public participation and promises to read your submission within a reasonable timeframe — faster than Congress reads anything.',
+        },
+      },
+    ],
+  },
+];
 ---
 
 <BaseLayout
   title="About This Institution"
   description="Learn about the Absurdity Index of the United States — a satirical institution dedicated to common sense legislation and cataloging real absurdity."
+  ogImage="/og/about.png"
 >
+  {aboutSchema.map((schema) => (
+    <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+  ))}
   <div class="max-w-4xl mx-auto px-4 py-12">
     <div class="text-center mb-10">
       <OfficialSeal size="160" />

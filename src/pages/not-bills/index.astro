@@ -17,13 +17,35 @@ const totalCount = sortedBills.length;
 const totalPages = Math.max(1, Math.ceil(totalCount / DIRECTORY_PAGE_SIZE));
 const currentPage = 1;
 const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
+
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+
+const itemListSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Not Bills — Absurdity Index',
+  description: 'Satirical parody bills that actually make sense, proposed by the Absurdity Index.',
+  url: `${siteOrigin}/not-bills/`,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: totalCount,
+    itemListElement: bills.map((bill, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${siteOrigin}/not-bills/${bill.id}/`,
+      name: bill.data.title,
+    })),
+  },
+};
 ---
 
 <BaseLayout
   title="Not Bills"
   description="Satirical parody bills that actually make sense - proposed by the Absurdity Index, where common sense isn't an oxymoron."
+  ogImage="/og/not-bills.png"
 >
   {totalPages > 1 && <link slot="head" rel="next" href="/not-bills/page/2/" />}
+  <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
 
   <div class="mx-auto max-w-6xl px-3 py-8 min-[375px]:px-4 min-[430px]:py-10 md:py-12">
     <div class="mb-8 text-center min-[430px]:mb-10">
@@ -39,6 +61,11 @@ const bills = sortedBills.slice(0, DIRECTORY_PAGE_SIZE);
         class="mt-2 font-serif italic text-sm text-navy-600 min-[375px]:mt-3 min-[375px]:text-base"
       >
         Satirical legislation that actually makes sense - a novel concept
+      </p>
+      <p class="mx-auto mt-4 max-w-2xl font-sans text-sm leading-relaxed text-navy-500">
+        Not Bills are satirical proposals from the Absurdity Index &mdash; legislation so reasonable
+        that no actual Congress would ever pass it. Each one highlights a gap between common sense
+        and what really happens on Capitol Hill. Think of them as the bills you wish existed.
       </p>
     </div>
     <div class="gold-rule"></div>

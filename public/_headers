@@ -1,14 +1,16 @@
 # Security headers are authoritatively set by functions/_middleware.js.
 # This file acts as a defense-in-depth fallback for any static assets
 # that Cloudflare serves directly from the edge cache (bypassing Functions).
+# NOTE: The middleware uses nonce-based CSP for HTML. This fallback keeps
+# 'unsafe-inline' because static _headers can't generate per-request nonces.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   X-Permitted-Cross-Domain-Policies: none
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://cloudflareinsights.com https://*.corey-steinwand.workers.dev; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: https://*.clarity.ms https://c.bing.com; connect-src 'self' https://cloudflareinsights.com https://challenges.cloudflare.com https://*.corey-steinwand.workers.dev https://*.clarity.ms https://c.bing.com; frame-src https://challenges.cloudflare.com; upgrade-insecure-requests
 
 /api/*
   Access-Control-Allow-Origin: *
@@ -16,8 +18,14 @@
   Access-Control-Allow-Headers: Content-Type
   X-Robots-Tag: noindex
 
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
+
+/pagefind/*
+  Cache-Control: public, max-age=86400
 
 /*.svg
   Cache-Control: public, max-age=604800

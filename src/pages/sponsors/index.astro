@@ -36,18 +36,47 @@ const sponsors = Array.from(sponsorMap.entries())
     return { sponsor, slug, bills: sponsorBills, avgAbsurdity, categories };
   })
   .sort((a, b) => b.bills.length - a.bills.length);
+
+const siteOrigin = Astro.site?.origin ?? Astro.url.origin;
+
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Congressional Sponsors',
+  description: 'Every sponsor on record at the Absurdity Index, ranked by legislative output.',
+  url: `${siteOrigin}/sponsors/`,
+  numberOfItems: sponsors.length,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: sponsors.length,
+    itemListElement: sponsors.map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${siteOrigin}/sponsors/${s.slug}/`,
+      name: s.sponsor,
+    })),
+  },
+};
 ---
 
 <BaseLayout
   title="All Sponsors"
   description="Every sponsor on record at the Absurdity Index, ranked by legislative output."
+  ogImage="/og/sponsors.png"
 >
+  <script slot="head" is:inline type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
   <section class="max-w-5xl mx-auto px-4 py-12">
     <h1 class="font-serif text-3xl md:text-4xl text-navy-900 font-bold mb-2">
       Congressional Sponsors
     </h1>
-    <p class="text-navy-600 font-serif italic mb-6">
+    <p class="text-navy-600 font-serif italic mb-4">
       Every legislator on record, ranked by volume of output
+    </p>
+    <p class="max-w-2xl font-sans text-sm leading-relaxed text-navy-500 mb-6">
+      This table lists every member of Congress who has sponsored legislation tracked by the
+      Absurdity Index. Each sponsor is ranked by the number of bills they have introduced, with
+      average absurdity scores calculated from our editorial ratings. Click any name to see their
+      full legislative record.
     </p>
     <div class="gold-rule"></div>
 
