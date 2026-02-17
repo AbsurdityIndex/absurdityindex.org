@@ -1,0 +1,3 @@
+[submodule "votechain"]
+	path = votechain
+	url = https://github.com/AbsurdityIndex/votechain.git
